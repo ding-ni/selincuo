@@ -1,0 +1,38 @@
+# Local source material and generated research products remain on disk.
+/任务书最终盖章签字版本.pdf
+/数据/原始资料/
+/数据/外部衍生成果/
+/数据/标准数据/*
+!/数据/标准数据/接入说明.md
+/成果/
+/文档/核查记录/
+/参考资料/旧项目参考/*
+!/参考资料/旧项目参考/使用限制.md
+
+# Dependencies, local environments and build output.
+node_modules/
+dist/
+build/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+playwright-report/
+test-results/
+*.log
+
+# Credentials and machine-local settings.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.sqlite
+*.sqlite3
+.DS_Store
+Thumbs.db
