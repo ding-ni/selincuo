@@ -11,6 +11,7 @@
 
 # Dependencies, local environments and build output.
 node_modules/
+/前端/依赖/
 dist/
 build/
 .venv/

@@ -1,0 +1,44 @@
+[
+  {
+    "name": "vue.global.prod.js",
+    "url": "https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js",
+    "sha256": "c459ba7cc8db65c982589fa5d64c7ff478877e8e5b0fd75683207cec6a4e89e8",
+    "bytes": 157924
+  },
+  {
+    "name": "maplibre-gl.js",
+    "url": "https://cdn.jsdelivr.net/npm/maplibre-gl@5.3.0/dist/maplibre-gl.js",
+    "sha256": "e380deae560bc5d182be4124a1b9cdd5086304b0cb82c92a5af23d018aa81015",
+    "bytes": 913906
+  },
+  {
+    "name": "maplibre-gl.css",
+    "url": "https://cdn.jsdelivr.net/npm/maplibre-gl@5.3.0/dist/maplibre-gl.css",
+    "sha256": "792ac997dcf6ae6f643eb4e2dee4630c85e7056526bd8fb85ffe83c67d6c41b4",
+    "bytes": 69422
+  },
+  {
+    "name": "lucide.js",
+    "url": "https://unpkg.com/lucide@0.468.0/dist/umd/lucide.js",
+    "sha256": "857bd2f08ac818c3c03099a46891e7ef0664e6c1c25503818539099776c45644",
+    "bytes": 601990
+  },
+  {
+    "name": "vue-LICENSE",
+    "url": "https://unpkg.com/vue@3.5.13/LICENSE",
+    "sha256": "1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175",
+    "bytes": 1091
+  },
+  {
+    "name": "maplibre-LICENSE",
+    "url": "https://unpkg.com/maplibre-gl@5.3.0/LICENSE.txt",
+    "sha256": "ee5fc05a0677eaf69601d2c7db0d9ecd6cc27c3abc1d0733bc9ed34707cf8ef2",
+    "bytes": 5984
+  },
+  {
+    "name": "lucide-LICENSE",
+    "url": "https://unpkg.com/lucide@0.468.0/LICENSE",
+    "sha256": "1e7290b35280a048667bbf0ebabac1c7fd52a75300e8b2946ac165715997f2bc",
+    "bytes": 880
+  }
+]

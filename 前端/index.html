@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <title>色林错 · 流域监测预报预警</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/vendor/maplibre-gl.css">
+  <link rel="stylesheet" href="/static/工作台.css">
+  <script defer src="/vendor/vue.global.prod.js"></script>
+  <script defer src="/vendor/maplibre-gl.js"></script>
+  <script defer src="/vendor/lucide.js"></script>
+  <script defer src="/static/工作台.js"></script>
+</head>
+<body>
+<div id="app" v-cloak>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark"><i data-lucide="waves"></i></span><div><strong>色林错</strong><span>流域监测预报预警</span></div></div>
+    <div class="project-name">湖泊漫溢风险 · 天空地一体化</div>
+    <span class="prototype">研究原型</span>
+  </header>
+  <div class="shell">
+    <nav class="navigation" aria-label="业务导航">
+      <div class="nav-label">流域工作台</div>
+      <button v-for="item in navigation" :key="item.id" :class="{active: view === item.id}" @click="setView(item.id)" :aria-current="view === item.id ? 'page' : undefined"><i :data-lucide="item.icon"></i><span>{{item.name}}</span><small v-if="!item.ready">待接入</small></button>
+      <div class="nav-bottom"><i data-lucide="database"></i><span>本地资料库<br><small>只读查询 · 静态空间资料</small></span></div>
+    </nav>
+    <main>
+      <div class="page-heading"><div><div class="eyebrow">色林错流域 / {{currentTitle}}</div><h1>{{currentTitle}}</h1></div><button class="icon-button" title="重新加载资料" aria-label="重新加载资料" @click="load" :disabled="loading"><i data-lucide="refresh-cw"></i></button></div>
+      <div v-if="error" class="error-banner" role="alert">{{error}}<button @click="load">重试</button></div>
+      <div class="summary-strip" v-if="!error"><div><span>空间对象</span><strong>{{loading ? '…' : objects.length}}</strong><small>候选范围与位置目录</small></div><div><span>资料图层</span><strong>{{loading ? '…' : datasets.length}}</strong><small>来源与年代待核实</small></div><div><span>观测时序</span><strong class="no-value">未接入</strong><small>湖位 / 流量 / 降水</small></div><div><span>漫溢风险</span><strong class="no-value">待研判</strong><small>无有效模型运行依据</small></div></div>
+      <section v-show="view === 'map'" class="map-workspace" aria-label="流域空间资料">
+        <aside class="object-panel">
+          <div class="panel-heading"><h2>空间对象</h2><span>{{filteredObjects.length}}</span></div>
+          <label class="search"><i data-lucide="search"></i><input v-model="query" aria-label="检索空间对象" placeholder="检索湖泊、流域或站点"></label>
+          <label class="type-select">对象类型<select v-model="type"><option value="">全部类型</option><option value="basin">候选总边界</option><option value="subbasin">入湖子流域</option><option value="lake">湖泊</option><option value="station">降水位置</option></select></label>
+          <div class="object-list" aria-label="对象列表"><p v-if="loading" class="empty">正在读取空间目录…</p><p v-else-if="!filteredObjects.length" class="empty">{{error ? '空间目录不可用' : '没有匹配的空间对象'}}</p><button v-for="object in filteredObjects" :key="object.object_id" :class="['object-row', {selected: selected?.object_id === object.object_id}]" @click="selectObject(object.object_id)"><span class="object-dot" :style="{background: colors[object.type]}"></span><span>{{object.name}}<small>{{typeNames[object.type]}}</small></span><i data-lucide="chevron-right"></i></button></div>
+          <div class="layer-options"><h2>图层可见性</h2><label v-for="(name, key) in typeNames" :key="key"><input type="checkbox" v-model="visible[key]" @change="updateVisibility"><span class="legend-line" :style="{background: colors[key]}"></span>{{name}}</label></div>
+        </aside>
+        <div class="map-column">
+          <div class="map-header"><span><span class="status-dot"></span>静态空间资料</span><span>资料年代：待核实</span></div>
+          <div class="map-container"><div id="map" aria-label="色林错真实空间图层"></div><div class="map-message" v-if="mapError" role="alert">{{mapError}}<button @click="load">重新加载</button></div><button class="map-home icon-button" title="显示全部范围" aria-label="显示全部范围" @click="fitAll"><i data-lucide="scan"></i></button><div class="map-caption">WGS 84 · 候选边界 / 降水位置<br><span>原始资料来源与时效待核实</span></div></div>
+          <div class="map-footer"><span>{{coordinates}}</span><span>空间展示，不代表实时监测</span></div>
+        </div>
+        <aside class="detail-panel" aria-label="对象详情">
+          <div class="panel-heading"><h2>对象详情</h2><i data-lucide="info"></i></div>
+          <p v-if="detailLoading" class="empty">正在读取对象详情…</p><p v-else-if="detailError" class="detail-error" role="alert">{{detailError}}</p>
+          <template v-else-if="selected"><div class="object-title"><span class="section-kicker">{{typeNames[selected.type]}}</span><h2>{{selected.name}}</h2><code>{{selected.object_id}}</code></div><span class="quality-badge">{{selected.quality_status}}</span><dl><dt>数据有效时间</dt><dd>待核实</dd><dt>空间坐标</dt><dd>{{selected.type === 'station' ? '原表未声明，暂按 WGS 84' : 'WGS 84 / EPSG:4326'}}</dd><dt v-if="selected.area_km2">椭球面积</dt><dd v-if="selected.area_km2">{{formatArea(selected.area_km2)}} km²</dd><dt v-if="selected.source_association">原表归属</dt><dd v-if="selected.source_association">{{selected.source_association}}</dd><dt>关联关系</dt><dd>{{selected.association_status}}</dd></dl><h3>关联资料 <span>{{selectedDatasets.length}}</span></h3><button class="related-dataset" v-for="ds in selectedDatasets" @click="openDataset(ds.dataset_id)"><i data-lucide="file-stack"></i><span>{{ds.name}}<small>{{ds.dataset_id}} · {{ds.source_type}}</small></span><i data-lucide="arrow-up-right"></i></button><div class="data-gap"><i data-lucide="clock-3"></i><div>观测时序未接入<p>暂无湖位、流量或降水记录</p></div></div></template><p v-else class="empty">选择空间对象查看资料</p>
+        </aside>
+      </section>
+      <section v-if="view === 'catalog'" class="catalog-section">
+        <div class="catalog-toolbar"><h2>空间资料目录</h2><label class="search"><i data-lucide="search"></i><input v-model="datasetQuery" aria-label="检索资料" placeholder="检索资料名称或编号"></label></div>
+        <div class="table-scroll"><table><thead><tr><th>资料名称 / 编号</th><th>关联对象</th><th>来源类别</th><th>质量状态</th><th>时间覆盖</th><th></th></tr></thead><tbody><tr v-for="ds in filteredDatasets" :key="ds.dataset_id" :class="{focused: focusedDataset === ds.dataset_id}"><td><strong>{{ds.name}}</strong><code>{{ds.dataset_id}}</code></td><td>{{ds.object_ids.length}} 个</td><td>{{ds.source_type}}</td><td><span class="quality-badge">{{ds.quality_status}}</span></td><td>待核实</td><td><button class="text-button" @click="focusedDataset = focusedDataset === ds.dataset_id ? null : ds.dataset_id">{{focusedDataset === ds.dataset_id ? '收起' : '来源与质量'}}</button></td></tr></tbody></table><p class="empty" v-if="!filteredDatasets.length">没有匹配的资料</p></div>
+        <div v-if="activeDataset" class="dataset-detail"><div><h2>{{activeDataset.name}}</h2><p>{{activeDataset.source_description}}</p><dl><dt>标准批次</dt><dd>{{activeDataset.version}}</dd><dt>原始坐标系</dt><dd>{{activeDataset.source_crs}}</dd><dt>展示坐标系 / 单位</dt><dd>{{activeDataset.crs}} / {{activeDataset.coordinate_unit}}</dd><dt>垂直基准</dt><dd>{{activeDataset.vertical_datum || '未声明'}}</dd><dt>使用范围</dt><dd>{{activeDataset.license_status}}</dd></dl><p class="quality-note" v-for="item in activeDataset.limitations">{{item}}</p><h3>几何检查</h3><p v-if="!activeDataset.geometry_checks.length">位置表，无面几何修复；坐标基准待核实。</p><p v-for="check in activeDataset.geometry_checks">要素 {{check.feature_index + 1}}：{{check.valid_before ? '原几何有效' : '原几何无效，已修复'}}；修复后{{check.valid_after ? '有效' : '无效'}}；面积变化 {{check.area_change_km2.toFixed(6)}} km²</p></div><div class="source-list"><h3>来源文件与 SHA-256</h3><div v-for="file in activeDataset.source_files"><span>{{file.name}}</span><code>{{file.sha256}}</code></div></div></div>
+      </section>
+      <section v-if="!['map','catalog'].includes(view)" class="pending-section"><i :data-lucide="navigation.find(n => n.id === view).icon"></i><h2>{{pending[view].title}}</h2><p>{{pending[view].description}}</p><div class="dependency-list"><div v-for="item in pending[view].inputs"><i data-lucide="circle-dashed"></i><span>{{item}}</span><small>待接入</small></div></div><button class="text-button" @click="setView('catalog')">查看已有资料 <i data-lucide="arrow-right"></i></button></section>
+      <footer class="page-footer"><span>XZ202402ZY0009</span><span>{{dataVersion || '空间目录尚未加载'}}</span></footer>
+    </main>
+  </div>
+</div>
+<noscript>请启用 JavaScript 以查询空间资料。</noscript>
+</body>
+</html>
