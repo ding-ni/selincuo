@@ -4,6 +4,7 @@ import hashlib
 import importlib.util
 import json
 import unittest
+import sys
 from pathlib import Path
 from uuid import uuid4
 
@@ -11,6 +12,7 @@ from fastapi.testclient import TestClient
 from shapely.geometry import shape
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 spec = importlib.util.spec_from_file_location("service", ROOT / "后端/应用.py")
 service = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(service)

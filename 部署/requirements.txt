@@ -1,4 +1,5 @@
 fastapi==0.115.11
+pydantic==2.10.6
 uvicorn==0.34.0
 shapely==2.0.2
 pyproj==3.6.1

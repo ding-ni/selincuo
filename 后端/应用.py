@@ -2,20 +2,23 @@
 import hashlib
 import json
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import Literal, Optional
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from 后端.监测资料 import VARIABLES, Channel, Quality, read_products
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DATA = ROOT / "数据/标准数据/空间标准化-20260916-02"
 
 
-def create_app(data_dir=None):
+def create_app(data_dir=None, monitoring_dir=None):
     directory = Path(data_dir or os.environ.get("SELINCO_DATA_DIR", DEFAULT_DATA)).resolve()
-    app = FastAPI(title="色林错空间资料服务", version="0.1.0")
+    monitoring = Path(monitoring_dir or os.environ.get("SELINCO_MONITOR_DIR", ROOT / "数据/标准数据/监测接入")).resolve()
+    app = FastAPI(title="色林错资料服务", version="0.2.0")
 
     def catalog():
         try:
@@ -82,6 +85,50 @@ def create_app(data_dir=None):
     @app.get("/", include_in_schema=False)
     def home():
         return FileResponse(ROOT / "前端/index.html")
+
+    def monitoring_products():
+        try:
+            return read_products(monitoring, catalog()["objects"])
+        except (OSError, ValueError, KeyError, TypeError):
+            raise HTTPException(503, "监测资料缺失、损坏或关联失效，请核查接入回执")
+
+    @app.get("/api/v1/monitoring/variables")
+    def monitoring_variables():
+        return {"items": [{"variable": k, **v} for k, v in VARIABLES.items()], "total": len(VARIABLES)}
+
+    @app.get("/api/v1/monitoring/products")
+    def monitoring_catalog(object_id: Optional[str] = None, variable: Optional[str] = None,
+                           channel: Optional[Channel] = None):
+        if object_id is not None:
+            object_detail(object_id)
+        if variable is not None and variable not in VARIABLES:
+            raise HTTPException(422, "未知监测变量")
+        products = monitoring_products()
+        items = [summary for product, summary in products
+                 if (object_id is None or product.object_id == object_id)
+                 and (variable is None or product.variable == variable)
+                 and (channel is None or product.channel == channel)]
+        return {"items": items, "total": len(items), "registered_total": len(products),
+                "status": "available" if products else "not_connected",
+                "message": "" if products else "尚未接入监测时序；空间位置不代表设备在线或已有观测"}
+
+    @app.get("/api/v1/observations")
+    def observations(product_id: str = Query(max_length=129), start: Optional[datetime] = None,
+                     end: Optional[datetime] = None, quality: Optional[Quality] = None,
+                     offset: int = Query(default=0, ge=0), limit: int = Query(default=100, ge=1, le=500)):
+        if any(t is not None and t.tzinfo is None for t in (start, end)):
+            raise HTTPException(422, "查询时刻必须带时区")
+        if start is not None and end is not None and start > end:
+            raise HTTPException(422, "开始时间不能晚于结束时间")
+        entry = next(((p, s) for p, s in monitoring_products() if s["product_id"] == product_id), None)
+        if entry is None:
+            raise HTTPException(404, "监测产品版本不存在")
+        product, summary = entry
+        items = [r.model_dump(mode="json") for r in product.records
+                 if (start is None or r.time >= start) and (end is None or r.time <= end)
+                 and (quality is None or r.quality == quality)]
+        return {"items": items[offset:offset + limit], "total": len(items), "offset": offset,
+                "limit": limit, "product": summary, "time_basis": "UTC", "interval_inclusive": True}
 
     app.mount("/static", StaticFiles(directory=ROOT / "前端/页面"), name="frontend")
     app.mount("/vendor", StaticFiles(directory=ROOT / "前端/依赖", check_dir=False), name="vendor")

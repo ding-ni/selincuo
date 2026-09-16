@@ -1,9 +1,10 @@
 const { createApp, ref, computed, nextTick, onMounted, onUpdated } = Vue;
 createApp({
+  components: { MonitoringWorkspace: window.MonitoringWorkspace },
   setup() {
     const navigation = [
       { id: 'map', name: '流域一张图', icon: 'map', ready: true },
-      { id: 'monitor', name: '天空地监测', icon: 'satellite' },
+      { id: 'monitor', name: '天空地监测', icon: 'satellite', ready: true },
       { id: 'forecast', name: '模型预报', icon: 'workflow' },
       { id: 'risk', name: '漫溢风险', icon: 'waves' },
       { id: 'warning', name: '预警管理', icon: 'bell' },
@@ -21,6 +22,9 @@ createApp({
     const selected = ref(null), selectedDatasets = ref([]), datasetQuery = ref(''), focusedDataset = ref(null);
     const loading = ref(false), error = ref(''), mapError = ref(''), detailError = ref(''), detailLoading = ref(false);
     const dataVersion = ref(''), coordinates = ref('经纬度 / WGS 84');
+    const monitorObject = ref('');
+    function openMonitoring(id) { monitorObject.value = id; setView('monitor'); }
+    async function locateMonitoring(id) { await setView('map'); await selectObject(id); }
     const visible = ref({ basin: true, subbasin: true, lake: true, station: true });
     let map = null, mapLayers = [], markers = [], loadSequence = 0, detailSequence = 0;
     const currentTitle = computed(() => navigation.find(n => n.id === view.value).name);
@@ -142,6 +146,7 @@ createApp({
     return { navigation, pending, typeNames, colors, view, objects, datasets, query, type, selected, selectedDatasets,
       datasetQuery, focusedDataset, loading, error, mapError, detailError, detailLoading, dataVersion, coordinates, visible,
       currentTitle, filteredObjects, filteredDatasets, activeDataset, setView, openDataset, fitAll, selectObject, updateVisibility, load,
+      monitorObject, openMonitoring, locateMonitoring,
       formatArea: value => value.toLocaleString('zh-CN', { maximumFractionDigits: 2 }) };
   },
 }).mount('#app');

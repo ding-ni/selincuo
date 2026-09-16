@@ -80,7 +80,14 @@ def main():
             page.get_by_role("textbox", name="检索资料").fill("not-found")
             expect(page.locator(".table-scroll")).to_contain_text("没有匹配的资料")
             page.get_by_role("textbox", name="检索资料").fill("")
-            for name, text in [("天空地监测", "监测资料尚未接入"), ("模型预报", "尚无可运行的预报方案"), ("漫溢风险", "漫溢风险待研判"), ("预警管理", "暂无业务预警依据")]:
+            page.get_by_role("button", name="天空地监测", exact=True).click()
+            expect(page.locator(".monitor-empty h3")).to_have_text("尚未接入监测时序")
+            for name, width, height in [("监测空状态桌面", 1440, 1000), ("监测空状态手机", 390, 844)]:
+                page.set_viewport_size({"width": width, "height": height})
+                assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+                page.screenshot(path=str(output / (name + ".png")), full_page=True)
+            page.set_viewport_size({"width": 1440, "height": 1000})
+            for name, text in [("模型预报", "尚无可运行的预报方案"), ("漫溢风险", "漫溢风险待研判"), ("预警管理", "暂无业务预警依据")]:
                 page.get_by_role("button", name=name).click()
                 expect(page.locator(".pending-section h2")).to_have_text(text)
             report["checks"].append("资料来源与哈希、资料检索、未接入模块状态")
