@@ -1,11 +1,12 @@
 import os
 from PyInstaller.utils.hooks import collect_submodules, copy_metadata, collect_data_files
 ROOT = os.path.abspath(os.path.join(SPECPATH, '..'))
-hidden = ['h5py','h5netcdf','xarray','openpyxl','xlrd','numba','llvmlite','geopandas','rasterio','scipy.ndimage','pyogrio','pyproj','shapely','fiona']
+hidden = ['cdsapi', 'ecmwf.datastores', 'h5py','h5netcdf','xarray','openpyxl','xlrd','numba','llvmlite','geopandas','rasterio','scipy.ndimage','pyogrio','pyproj','shapely','fiona']
 hidden += collect_submodules('shapely', filter=lambda n: '.tests' not in n)
 hidden += collect_submodules('rasterio', filter=lambda n: '.tests' not in n and not n.startswith('rasterio.rio'))
 hidden += collect_submodules('fiona', filter=lambda n: '.tests' not in n)
-datas = copy_metadata('h5netcdf') + copy_metadata('h5py')
+hidden += collect_submodules('ecmwf.datastores')
+datas = copy_metadata('ecmwf-datastores-client') + copy_metadata('cdsapi') + copy_metadata('h5netcdf') + copy_metadata('h5py')
 datas += collect_data_files('pyproj', includes=['proj_dir/**'])
 datas += collect_data_files('rasterio', includes=['gdal_data/**', 'proj_data/**'])
 datas += collect_data_files('fiona', includes=['gdal_data/**', 'proj_data/**'])

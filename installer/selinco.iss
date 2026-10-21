@@ -1,5 +1,5 @@
 #define AppName "色林错预警预报平台"
-#define AppVersion "0.1.0"
+#define AppVersion "0.2.0"
 #ifndef AppSource
   #define AppSource "..\build\verified-dist\SelincoPlatform"
 #endif
@@ -11,7 +11,7 @@ DefaultDirName={localappdata}\Programs\SelincoPlatform
 DefaultGroupName={#AppName}
 PrivilegesRequired=lowest
 OutputDir=..\releases
-OutputBaseFilename=色林错预警预报平台-v0.1.0-Setup
+OutputBaseFilename=色林错预警预报平台-v0.2.0-Setup
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 Compression=lzma/fast

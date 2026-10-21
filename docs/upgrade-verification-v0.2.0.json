@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-21T17:22:24+00:00",
+  "health": {
+    "instanceId": "f6e47e0e1f2946eca4c98251cd1ed772",
+    "projectId": "selinco",
+    "version": "0.2.0",
+    "workspace": "F:\\色林错预警预报平台\\运行程序\\workspace"
+  },
+  "counts": {
+    "input_products": 5,
+    "observations": 59119,
+    "parameter_versions": 0,
+    "sources": 33,
+    "states": 0,
+    "stations": 8,
+    "tasks": 0
+  },
+  "existingCountsPreserved": true,
+  "existingTaskIdsPreserved": true,
+  "backup": {
+    "bytes": 39820567,
+    "filename": "backup-2026-10-21T171848-0000-87bc1f.zip",
+    "files": 54,
+    "sha256": "4680fd8884007bb168cd5bcbaadf96bec59fcd169853b2b8f4e614b740d39a14"
+  },
+  "coverage": {
+    "completeMonths": 10,
+    "requiredMonths": 37,
+    "accountStatus": "account-disabled"
+  },
+  "annualValidation": {
+    "message": "完整2023—2025年真实驱动尚未齐备，年度率定验证待开展",
+    "ready": false
+  },
+  "originalPlatformModified": false
+}

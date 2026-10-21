@@ -139,6 +139,9 @@ class Handler(SimpleHTTPRequestHandler):
         if path == 'import-preview':
             from .observations import scan
             return self.send_json({'files': scan(ROOT / 'data/raw/observations/slc')})
+        if path == 'acquisition':
+            from .acquisition import inventory
+            return self.send_json(inventory(self.db.workspace))
         if path == 'input-files':
             files = [p for name in ('downloads', 'incoming') for p in (self.db.workspace / name).rglob('*.nc')]
             return self.send_json({'files': [{'path': p.relative_to(self.db.workspace).as_posix(), 'bytes': p.stat().st_size} for p in sorted(files)]})

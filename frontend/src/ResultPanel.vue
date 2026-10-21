@@ -1,0 +1,38 @@
+<script setup>
+import {ref,computed,watch} from 'vue'
+import Chart from './Chart.vue'
+import {kindLabel,groups,compatibleComparison} from './workflow.mjs'
+const props=defineProps({detail:Object,completed:Array,boot:Object,busy:Boolean})
+const emit=defineEmits(['reuse','replay','state','metadata','stop','save-parameters'])
+const tab=ref('lake'),compareId=ref(''),other=ref(null),loading=ref(false),failure=ref(''),parameterName=ref('')
+const result=computed(()=>props.detail?.result)
+const number=(v,n=3)=>v==null||!Number.isFinite(Number(v))?'—':Number(v).toLocaleString('zh-CN',{maximumFractionDigits:n})
+const compareNote=computed(()=>other.value?compatibleComparison(result.value,other.value.result):'')
+const canCompare=computed(()=>other.value?.result&&(!compareNote.value||compareNote.value.startsWith('输入版本不同')))
+const rows=computed(()=>{const index=new Map((canCompare.value?other.value.result.daily:[]).map(r=>[r.date,r]));return (result.value?.daily||[]).map(r=>({...r,comparedLake:index.get(r.date)?.lakeLevel,comparedFlow:index.get(r.date)?.duja}))})
+const href=f=>`/api/model/export?taskId=${props.detail.id}&format=${f}`
+let sequence=0
+watch(()=>props.detail?.id,()=>{compareId.value='';other.value=null;failure.value='';tab.value='lake'})
+watch(compareId,async id=>{const token=++sequence;other.value=null;failure.value='';loading.value=!!id;if(!id)return;try{const r=await fetch('/api/model/tasks/'+id);const d=await r.json();if(!r.ok)throw Error(d.error);if(token===sequence)other.value=d}catch(e){if(token===sequence)failure.value=e.message}finally{if(token===sequence)loading.value=false}})
+const latestMetrics=computed(()=>Object.values(result.value?.metrics||{}).find(m=>m.lake.count)||null)
+</script>
+<template>
+ <section v-if="!detail" class="panel result-empty"><span>◈</span><h3>准备一次历史计算</h3><p>在左侧选择输入和时段。完成后可查看湖位、来水、水量收支，保存参数或从末状态继续计算。</p></section>
+ <section v-else class="panel calculation-result">
+  <div class="panel-title"><h3>{{detail.name||'未命名计算'}}</h3><span class="badge">{{kindLabel(detail.kind)}}</span><button v-if="['running','queued','stopping'].includes(detail.status)" @click="emit('stop',detail.id)">停止任务</button></div>
+  <p class="note record-id">{{detail.id}} · {{detail.created_at?.slice(0,19).replace('T',' ')}}</p>
+  <div v-if="!result?.daily" class="result-progress"><p>{{detail.message||'等待计算'}}</p><progress :value="detail.progress" max="100"></progress><b>{{number(detail.progress,1)}}%</b><button v-if="detail.request?.parameters" @click="emit('replay')">恢复条件重新计算</button></div>
+  <template v-else>
+   <div class="record-actions"><button @click="emit('metadata',detail,{favorite:!detail.favorite})">{{detail.favorite?'★ 已保留成果':'☆ 保留成果'}}</button><button @click="emit('reuse')">采用本组参数</button><button @click="emit('replay')">恢复本次条件</button><button @click="emit('state')">查看状态 / 继续模拟</button><a class="button" :href="href('daily.csv')">导出日过程</a><details class="more-export"><summary>更多导出</summary><a :href="href('hourly.npz')">逐时数组</a><a :href="href('checkpoint.json')">末状态</a><a :href="href('request.json')">计算条件</a></details></div>
+   <div class="result-metrics"><div><span>日湖位RMSE · m</span><b>{{number(latestMetrics?.lake.rmse)}}</b></div><div><span>日湖位MAE · m</span><b>{{number(latestMetrics?.lake.mae)}}</b></div><div><span>湖位匹配天数</span><b>{{number(latestMetrics?.lake.count,0)}}</b></div><div><span>计算起止 · 北京时间</span><strong>{{detail.request.start?.slice(0,16).replace('T',' ')}}<br>{{detail.request.end?.slice(0,16).replace('T',' ')}}</strong></div></div><p class="note">上方指标为首个有匹配观测年份；完整分年评价见“评价与收支”。部分时段结果不代表完整年度验证。</p>
+   <nav class="workspace-tabs result-tabs" aria-label="成果详情"><button v-for="t in [['lake','湖位过程'],['flow','入湖来水'],['evaluation','评价与收支'],['parameters','本组参数'],['conditions','本次条件']]" :key="t[0]" :class="{active:tab===t[0]}" @click="tab=t[0]">{{t[1]}}</button></nav>
+   <div v-if="['lake','flow'].includes(tab)" class="comparison-row"><label>叠加成果<select v-model="compareId"><option value="">不叠加</option><option v-for="t in completed.filter(t=>t.id!==detail.id&&!t.trashed)" :key="t.id" :value="t.id">{{t.name||t.id}}</option></select></label><span>{{loading?'读取比较过程…':failure||compareNote}}</span></div>
+   <template v-if="tab==='lake'"><p v-if="rows.every(r=>r.lakeLevel==null)" class="note warning">当前时段缺少可续接的可靠湖位起点，流域已计算；请从可靠观测窗口起点回放或选择同条件父状态。</p><Chart :rows="rows" :series="[{key:'lakeLevel',label:'模拟湖位'},{key:'observedLevel',label:'主站实测'},...(canCompare?[{key:'comparedLake',label:'对比湖位'}]:[])]" unit="m"/><p class="note">每个无冰期窗口只用首个可靠观测初始化，之后独立演算；四岸水位分别查询。</p></template>
+   <template v-if="tab==='flow'"><Chart :rows="rows" :series="[{key:'duja',label:'杜加模拟'},{key:'observedFlow',label:'杜加实测'},{key:'total',label:'总入湖流量'},...(canCompare?[{key:'comparedFlow',label:'对比杜加'}]:[])]" unit="m³/s"/><Chart :rows="rows" :series="[{key:'zajia',label:'扎加藏布'},{key:'zagen',label:'扎根藏布'},{key:'boqu',label:'波曲藏布'},{key:'ali',label:'阿里藏布'},{key:'fringe',label:'湖周来水'}]" unit="m³/s"/><p class="note">杜加是内部控制断面，不重复计入总入湖流量。其余河流尚未独立验证。</p></template>
+   <template v-if="tab==='evaluation'"><div class="table-wrap"><table><thead><tr><th>年份 / 用途</th><th>流量天数</th><th>NSE / KGE</th><th>PBIAS %</th><th>湖位天数</th><th>RMSE / MAE m</th><th>偏差 m</th></tr></thead><tbody><tr v-for="(m,y) in result.metrics" :key="y"><td>{{y}} / {{m.purpose}}</td><td>{{m.flow.count}}</td><td>{{number(m.flow.nse)}} / {{number(m.flow.kge)}}</td><td>{{number(m.flow.pbias)}}</td><td>{{m.lake.count}}</td><td>{{number(m.lake.rmse)}} / {{number(m.lake.mae)}}</td><td>{{number(m.lake.bias)}}</td></tr></tbody></table></div><Chart :rows="rows" :series="[{key:'lakeRainMm',label:'湖面降水',type:'bar'},{key:'lakeEvaporationMm',label:'湖面蒸发',type:'bar'},{key:'snowmeltMm',label:'融雪补给'},{key:'icemeltMm',label:'融冰补给'}]" unit="mm/d"/><p class="note">融水诊断已包含在产汇流中，不与总入湖流量再次相加。首版保存相对蓄水变化，地下水净交换与外流按零处理。</p><p v-if="result.calibration" class="note">搜索 {{result.calibration.evaluations}} 次 · {{result.calibration.termination==='converged'?'达到收敛条件':'预算耗尽'}} · 仅使用2024观测</p><details><summary>水量守恒诊断与假设</summary><pre>{{JSON.stringify(result.diagnostics,null,2)}}</pre></details></template>
+   <template v-if="tab==='parameters'"><div v-for="g in groups" :key="g.key"><h4>{{g.label}}</h4><div class="frozen-parameters"><div v-for="d in boot.parameterDefinitions.filter(d=>d.group===g.key)" :key="d.key"><span>{{d.label}} <small>{{d.key}}</small></span><b>{{result.parameters[d.key]}} {{d.unit}}</b></div></div></div><div class="form-row"><label class="grow">保存成果参数<input v-model="parameterName" placeholder="参数名称"></label><button :disabled="!parameterName.trim()||busy" @click="emit('save-parameters',parameterName,result.parameters,detail.id)">保存到参数库</button></div></template>
+   <template v-if="tab==='conditions'"><dl><dt>真实输入版本</dt><dd>{{result.inputId}}</dd><dt>空间版本</dt><dd>{{result.spatialVersion}}</dd><dt>计算起止</dt><dd>{{detail.request.start}} — {{detail.request.end}}</dd><dt>来源状态</dt><dd>{{detail.request.stateId||'新起算'}}</dd><dt>模型实现</dt><dd>{{result.identity?.modelImplementation}}</dd></dl><details><summary>冻结计算条件</summary><pre>{{JSON.stringify(detail.request,null,2)}}</pre></details></template>
+   <details class="result-organize"><summary>成果命名与整理</summary><div class="form-row"><label class="grow">名称<input :value="detail.name" @change="emit('metadata',detail,{name:$event.target.value})"></label><label class="grow">备注<input :value="detail.notes" @change="emit('metadata',detail,{notes:$event.target.value})"></label><label>分组<input :value="detail.collection" @change="emit('metadata',detail,{collection:$event.target.value})"></label></div></details>
+  </template>
+ </section>
+</template>

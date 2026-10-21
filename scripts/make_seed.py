@@ -38,6 +38,19 @@ def main():
     assert summary['counts']['tasks'] == summary['counts']['states'] == summary['counts']['parameter_versions'] == 0
     with db.connect() as conn:
         conn.execute('PRAGMA wal_checkpoint(TRUNCATE)')
+    from backend.acquisition import inventory
+    coverage = inventory(source.workspace)
+    for record in coverage['files']:
+        origin = source.workspace / record['path']
+        target = db.workspace / record['path']
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(origin, target)
+    # Seed contains public originals and provenance, never credentials or remote task history.
+    target = db.workspace / 'downloads/era5-land'
+    target.mkdir(parents=True, exist_ok=True)
+    write_json(target / 'source-manifest.json', {'dataset':'reanalysis-era5-land','files':coverage['files']})
+    write_json(target / 'download-status.json', {'status':'incomplete' if coverage['completeMonths'] < coverage['requiredMonths'] else 'downloaded',
+               'message':'已保留经过核验的公开格网原件；缺失月份可使用本机授权CDS账户继续下载。','at':now()})
     write_json(db.workspace / 'seed-report.json', {'createdAt': now(), 'projectId': 'selinco', 'counts': summary['counts'],
                'databaseSHA256': sha_file(db.path), 'spatialVersion': read_json(ROOT / 'data/derived/spatial/manifest.json')['version']})
     if args.activate:

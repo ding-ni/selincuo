@@ -23,7 +23,7 @@ class Jobs:
         return self.db.rows("SELECT id,kind,status,progress,message FROM tasks WHERE status IN ('queued','running','stopping')")
 
     def submit(self, kind, payload):
-        if kind not in ('simulation', 'trial', 'continuation', 'calibration', 'import-observations', 'build-spatial', 'register-inputs'):
+        if kind not in ('simulation', 'trial', 'continuation', 'calibration', 'import-observations', 'build-spatial', 'register-inputs', 'download-forcing'):
             raise ValueError('未知任务类型')
         payload = {k: v for k, v in dict(payload).items() if not k.startswith('_')}
         if payload.get('projectId', 'selinco') != 'selinco' or payload.get('contextKey', CONTEXT_KEY) != CONTEXT_KEY:
@@ -111,7 +111,10 @@ class Jobs:
             with self.db.connect() as db:
                 db.execute("UPDATE tasks SET status='running',updated_at=? WHERE id=?", (now(), identifier))
             kind = task['kind']
-            if kind == 'import-observations':
+            if kind == 'download-forcing':
+                from .acquisition import acquire
+                result = acquire(self.db.workspace, direct=bool(request.get('direct')), progress=progress, cancelled=is_cancelled)
+            elif kind == 'import-observations':
                 from .observations import import_observations
                 result = import_observations(self.db, progress=progress)
             elif kind == 'build-spatial':

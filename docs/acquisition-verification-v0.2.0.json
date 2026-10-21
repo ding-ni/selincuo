@@ -1,0 +1,43 @@
+{
+  "runtime": "frozen-exe",
+  "coverage": {
+    "complete": 10,
+    "required": 37,
+    "missing": [
+      "2023-05",
+      "2023-06",
+      "2023-07",
+      "2023-08",
+      "2023-09",
+      "2023-10",
+      "2023-11",
+      "2023-12",
+      "2024-02",
+      "2024-03",
+      "2024-04",
+      "2024-05",
+      "2024-06",
+      "2024-07",
+      "2024-08",
+      "2024-09",
+      "2024-10",
+      "2024-11",
+      "2025-01",
+      "2025-02",
+      "2025-03",
+      "2025-04",
+      "2025-05",
+      "2025-06",
+      "2025-07",
+      "2025-08",
+      "2025-09"
+    ]
+  },
+  "taskId": "JOB-66cb42c9c433451fb5f2",
+  "status": "failed",
+  "reason": "account-disabled",
+  "message": "CDS账户已被停用。请联系CDS支持恢复账户，或在本机配置另一个已授权账户；恢复后点击继续下载。",
+  "existingFilesRetained": true,
+  "authenticationAndTLSModulesLoaded": true,
+  "newRemoteTasksSubmitted": false
+}

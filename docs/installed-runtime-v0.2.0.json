@@ -1,0 +1,180 @@
+{
+  "at": "2026-10-21T17:31:29+00:00",
+  "health": {
+    "instanceId": "f6e47e0e1f2946eca4c98251cd1ed772",
+    "projectId": "selinco",
+    "version": "0.2.0",
+    "workspace": "F:\\色林错预警预报平台\\运行程序\\workspace"
+  },
+  "taskId": "JOB-506abf288c7146468531",
+  "kind": "simulation",
+  "status": "succeeded",
+  "request": {
+    "inputId": "INPUT-48908a3122e52f990b854465",
+    "start": "2023-01-01T00:00",
+    "end": "2023-05-01T00:00",
+    "parameters": {
+      "B": 0.3,
+      "C": 0.15,
+      "EX": 1.2,
+      "IM": 0.01,
+      "KC": 0.8,
+      "KG": 0.012,
+      "KI": 0.018,
+      "SM": 30,
+      "WM": 150,
+      "glacierRecessionDay": 0.5,
+      "iceDdf": 7,
+      "lagHours": 0,
+      "lakeCoefficient": 0.8,
+      "lapseRate": -0.0065,
+      "liquidCapacity": 0.05,
+      "rainTemperature": 2,
+      "refreezeFactor": 1,
+      "snowDdf": 4,
+      "snowSublimation": 0.35,
+      "snowTemperature": -1,
+      "tauHours": 24
+    }
+  },
+  "metrics": {
+    "2022": {
+      "flow": {
+        "bias": null,
+        "count": 0,
+        "kge": null,
+        "mae": null,
+        "nse": null,
+        "observedVolumeM3": null,
+        "pbias": null,
+        "rmse": null,
+        "simulatedVolumeM3OnObservedDays": null
+      },
+      "lake": {
+        "bias": null,
+        "count": 0,
+        "kge": null,
+        "mae": null,
+        "nse": null,
+        "pbias": null,
+        "rmse": null
+      },
+      "purpose": "历史回算"
+    },
+    "2023": {
+      "flow": {
+        "bias": null,
+        "count": 0,
+        "kge": null,
+        "mae": null,
+        "nse": null,
+        "observedVolumeM3": null,
+        "pbias": null,
+        "rmse": null,
+        "simulatedVolumeM3OnObservedDays": null
+      },
+      "lake": {
+        "bias": 0.03672432114190087,
+        "count": 10,
+        "kge": -0.0016697837865846665,
+        "mae": 0.04305743706581779,
+        "nse": -1.2347792859695939,
+        "observedMean": 4543.984999999999,
+        "pbias": 0.000808196355003392,
+        "rmse": 0.04739148850175657,
+        "simulatedMean": 4544.021724321143
+      },
+      "purpose": "预热"
+    }
+  },
+  "diagnostics": {
+    "assumptions": [
+      "定面积湖泊，仅保存相对蓄水变化",
+      "地下水净交换和外流暂按零处理",
+      "冰川面积固定；长年冰体消融为显式外部水源",
+      "无冰期起点使用实测湖位，其后独立演算",
+      "未率定初值为通用模型初值，不代表已通过业务验证"
+    ],
+    "glacierAreaKm2": 228.83446053008615,
+    "lakeAreaKm2": 2422.1998218977847,
+    "lakeWindows": [
+      {
+        "end": "2021-12-25T23:00:00",
+        "firstHourFraction": 0.0,
+        "id": "2021-04-23T12:00:00",
+        "initialization": "source-daily-mean-anchored-at-noon",
+        "observationTime": "2021-04-23T12:00:00",
+        "start": "2021-04-23T12:00:00"
+      },
+      {
+        "end": "2022-12-08T23:00:00",
+        "firstHourFraction": 0.0,
+        "id": "2022-03-15T12:00:00",
+        "initialization": "source-daily-mean-anchored-at-noon",
+        "observationTime": "2022-03-15T12:00:00",
+        "start": "2022-03-15T12:00:00"
+      },
+      {
+        "end": "2023-11-12T23:00:00",
+        "firstHourFraction": 0.0,
+        "id": "2023-04-20T12:00:00",
+        "initialization": "source-daily-mean-anchored-at-noon",
+        "observationTime": "2023-04-20T12:00:00",
+        "start": "2023-04-20T12:00:00"
+      },
+      {
+        "end": "2023-12-12T23:00:00",
+        "firstHourFraction": 0.0,
+        "id": "2023-11-28T12:00:00",
+        "initialization": "source-daily-mean-anchored-at-noon",
+        "observationTime": "2023-11-28T12:00:00",
+        "start": "2023-11-28T12:00:00"
+      },
+      {
+        "end": "2024-12-09T23:00:00",
+        "firstHourFraction": 0.0,
+        "id": "2024-04-22T00:00:00",
+        "initialization": "first-reliable-subdaily-level",
+        "observationTime": "2024-04-22T00:00:00",
+        "start": "2024-04-22T00:00:00"
+      },
+      {
+        "end": "2025-12-20T23:00:00",
+        "firstHourFraction": 0.0,
+        "id": "2025-04-09T08:00:00",
+        "initialization": "first-reliable-subdaily-level",
+        "observationTime": "2025-04-09T08:00:00",
+        "start": "2025-04-09T08:00:00"
+      },
+      {
+        "end": "2026-08-31T23:00:00",
+        "firstHourFraction": 0.0,
+        "id": "2026-08-24T00:00:00",
+        "initialization": "first-reliable-subdaily-level",
+        "observationTime": "2026-08-24T00:00:00",
+        "start": "2026-08-24T00:00:00"
+      }
+    ],
+    "landGlacierMaxBalanceErrorMm": 2.4239535075312735e-14,
+    "routingBalanceErrorM3": {
+      "ali": -8.731149137020111e-11,
+      "boqu": 9.094947017729282e-12,
+      "duja": -1.7462298274040222e-10,
+      "fringe": 1.8189894035458565e-11,
+      "zagen": 1.6007106751203537e-10,
+      "zajia_rest": -5.229594535194337e-12
+    },
+    "unvalidatedRivers": [
+      "zagen",
+      "boqu",
+      "ali",
+      "fringe"
+    ]
+  },
+  "frontendAssets": {
+    "index.html": "f6281682c286e76354a8d1333ba634a0c1f5210e448cbba1f149981546e0d334",
+    "assets/index-BWOk3cUb.js": "d4327b2ce04e4000c9963c2fb232e0871ded979b9cae36998f150b8d2fb5eea4",
+    "assets/index-EKBOD8PB.css": "76179570a1aa90492bc3a48f5daee53f826ae30ee7757239eed01f6dcbe0e62c"
+  },
+  "limitations": "Only 10 matched lake days; partial uncalibrated baseline, not annual calibration/validation."
+}
