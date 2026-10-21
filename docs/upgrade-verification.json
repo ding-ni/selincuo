@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-21T15:40:31+00:00",
+  "retainedFiles": {
+    "workspace/database/hydrology.sqlite3": "c7feb9283dd06dfef3fbc8fc3c68f4a31331459f0a13053fd42a0ff99e07f38e",
+    "restored-workspaces/restored-45192827a2a2/database/hydrology.sqlite3": "61ff7f851ab0f02a6f2e2d5159639bac55c0a3880944c26180e2d4aef0ba9774",
+    "workspace/upgrade-retention-sentinel.txt": "e2035b3839a17c2665ff6a84b388e627fa0d81dd9848d66552b687e1a1ae10a4",
+    "config/active-workspace.json": "4222855a82ee5f6229d029618a93fc8853372bee695e5f82de8dfc6db6471800"
+  },
+  "allUnchanged": true,
+  "installerLog": "build/upgrade-install.log",
+  "uninstallRetention": "installer has no user-data deletion actions; not executed against user data"
+}
