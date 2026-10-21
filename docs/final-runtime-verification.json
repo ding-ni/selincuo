@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-21T15:46:18+00:00",
+  "health": {
+    "instanceId": "d67d237433754a79889f74278fb3c0f6",
+    "projectId": "selinco",
+    "version": "0.1.0",
+    "workspace": "F:\\色林错预警预报平台\\运行程序\\workspace"
+  },
+  "counts": {
+    "input_products": 5,
+    "observations": 59119,
+    "parameter_versions": 0,
+    "sources": 33,
+    "states": 0,
+    "stations": 8,
+    "tasks": 0
+  },
+  "annualValidation": {
+    "message": "完整2023—2025年真实驱动尚未齐备，年度率定验证待开展",
+    "ready": false
+  },
+  "launcher": "Windows PowerShell 5 UTF-8 BOM, hidden process, verified health endpoint",
+  "startupScriptSHA256": "90eb7eb073f642e76d1558c32abf22982b161ed28e71f7e4efe3c04cadccdd9c",
+  "gitBranch": "codex/selinco-initial"
+}

@@ -1,4 +1,4 @@
-param([switch]$NoBrowser)
+﻿param([switch]$NoBrowser)
 $ErrorActionPreference = 'Stop'
 $applicationRoot = Split-Path -Parent $PSScriptRoot
 $workspacePath = Join-Path $applicationRoot 'workspace'
