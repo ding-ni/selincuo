@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 cd /d "%~dp0"
 if exist "%~dp0运行程序\SelincoPlatform.exe" (
   powershell -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "%~dp0运行程序\installer\start_platform.ps1"
