@@ -1,0 +1,18 @@
+{
+  "projectId": "selinco",
+  "name": "色林错预警预报平台",
+  "version": "0.1.0",
+  "host": "127.0.0.1",
+  "port": 8879,
+  "workspace": "workspace",
+  "forcingResolution": "0.1°",
+  "timeStepHours": 1,
+  "evaluationStep": "day",
+  "elevationBandMeters": 500,
+  "warmupYear": 2023,
+  "calibrationYear": 2024,
+  "validationYear": 2025,
+  "extensionYear": 2026,
+  "forecastEnabled": false,
+  "soilFrostEnabled": false
+}

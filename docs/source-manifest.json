@@ -1,0 +1,2802 @@
+{
+  "projectId": "selinco",
+  "createdAt": "2026-10-21T13:49:36+00:00",
+  "files": [
+    {
+      "path": "data/raw/observations/slc/115daoban/2024_115道班雨量报表.xls",
+      "bytes": 29696,
+      "sha256": "cf2f7343755ebb94243b36e82e2c9531a3556bd960b2fa41743405eb1ff60c95"
+    },
+    {
+      "path": "data/raw/observations/slc/115daoban/2025_115道班雨量报表.xls",
+      "bytes": 29184,
+      "sha256": "9bf43ce77e3bbc76f2cc057c7b7d6be569940a6c438216123ac842b05ae1c1b5"
+    },
+    {
+      "path": "data/raw/observations/slc/blq/2024_巴勒切逐时雨量.xlsx",
+      "bytes": 11612,
+      "sha256": "ff6cd6cb2e5c65be7f8d299f10bd2c73d42fa6f0d305e36b3df1c70d23f1117a"
+    },
+    {
+      "path": "data/raw/observations/slc/blq/2024_巴勒切雨量报表.xls",
+      "bytes": 29184,
+      "sha256": "57c8b735d314fc72b779a9d5403ccab18d464ddd1cf7a395c62b1e5b42b2d95d"
+    },
+    {
+      "path": "data/raw/observations/slc/blq/2025_巴勒切逐时雨量.xlsx",
+      "bytes": 11638,
+      "sha256": "80b69084c2f08dd6a9877a74b4579daa1fcc736fa54b4a1b5e6dbbad07152d1b"
+    },
+    {
+      "path": "data/raw/observations/slc/blq/2025_巴勒切雨量报表.xls",
+      "bytes": 29184,
+      "sha256": "a45c8cce6bcbcc6e2aae29b2ba5041750cd0f4a8960e1b4a18e8e93b9e5ffb8e"
+    },
+    {
+      "path": "data/raw/observations/slc/blq/2026_巴勒切逐时雨量.xlsx",
+      "bytes": 11005,
+      "sha256": "1bfacb7d59b60ed02a7b9f6a8e178013e43392baeeded6617c7f5b5dc0885e86"
+    },
+    {
+      "path": "data/raw/observations/slc/dj/水位/2024_杜加逐时水位.xlsx",
+      "bytes": 66435,
+      "sha256": "c8fc141587e921454941e324c861287cbf4dae5bf83272d8dbb4ed140e1bda58"
+    },
+    {
+      "path": "data/raw/observations/slc/dj/水位/2025-杜加逐时水位.xlsx",
+      "bytes": 83567,
+      "sha256": "7b29ea43fa1e5a6ea0122ef4bbec6c21f7a538da5002d38938d6b5a070942d4c"
+    },
+    {
+      "path": "data/raw/observations/slc/dj/水位/2026-杜加逐时水位.xlsx",
+      "bytes": 37577,
+      "sha256": "4100450d4d0e681a21573f1fddb45077595a3f71f03a8c3f1b98f251f06a0e14"
+    },
+    {
+      "path": "data/raw/observations/slc/dj/水位/90306953-2024年杜加站逐日平均水位表.xls",
+      "bytes": 33280,
+      "sha256": "4aa6cbe486b00509648402ff0f75d114d031d77749878ea5a659a4fddd640516"
+    },
+    {
+      "path": "data/raw/observations/slc/dj/水位/90306953-2025年杜加站逐日平均水位表.xls",
+      "bytes": 39424,
+      "sha256": "d3f5e4a9bfcf660776778b91411c79e56e440f26c5fedcdd9860c521c189c9ab"
+    },
+    {
+      "path": "data/raw/observations/slc/dj/流量/90306953-2024年杜加站逐日平均流量表.xls",
+      "bytes": 40960,
+      "sha256": "3d4156b0aa79fb5df6a83d2febec42bee1f908f23e654051c43d937e4d1eb41f"
+    },
+    {
+      "path": "data/raw/observations/slc/dj/流量/90306953-2025年杜加站逐日平均流量表.xls",
+      "bytes": 35328,
+      "sha256": "3080c7a5f3adbab8a867f0130a0675991aa92abe6bda714049b630c0f89757fd"
+    },
+    {
+      "path": "data/raw/observations/slc/dj/雨量/2025_杜加逐时雨量.xlsx",
+      "bytes": 12754,
+      "sha256": "2b1b1008e5d9d3358903509d91c50db968d2af43d1c75f1831d9911b7f42aad0"
+    },
+    {
+      "path": "data/raw/observations/slc/dj/雨量/2025_杜加雨量报表.xls",
+      "bytes": 28672,
+      "sha256": "0b12b762db8e5a70e6fb4d583288aa9feefa6181ca624d93cc15c0163d8ee2b1"
+    },
+    {
+      "path": "data/raw/observations/slc/dj/雨量/2026_杜加逐时雨量.xlsx",
+      "bytes": 17352,
+      "sha256": "8aaa2c5495680df2e69a80a4a4fbcb9b5cd41898b6d2d5d543837682acbd2fe9"
+    },
+    {
+      "path": "data/raw/observations/slc/slc/水位/2024_色林错逐时水位.xlsx",
+      "bytes": 246028,
+      "sha256": "5817f99858ab33693671c9a355f8fc5086dc68e3c3414e9f46c36c6256eab918"
+    },
+    {
+      "path": "data/raw/observations/slc/slc/水位/2025_色林错东南西北逐时水位.xlsx",
+      "bytes": 215813,
+      "sha256": "5aa53c571edca661d17c2d0dce871079bffed35d270f859baae9e1b716e11a35"
+    },
+    {
+      "path": "data/raw/observations/slc/slc/水位/2025_色林错逐时水位.xlsx",
+      "bytes": 86582,
+      "sha256": "3daa45a2df0e8dff7533e7f39130d6469c8756316faab90a8c42c76a41f8a59a"
+    },
+    {
+      "path": "data/raw/observations/slc/slc/水位/2026_色林错东南西北逐时水位.xlsx",
+      "bytes": 107420,
+      "sha256": "56097430275a8ea51da628415c6b02cd9da93661cc8803e51ba24cbf3639cd26"
+    },
+    {
+      "path": "data/raw/observations/slc/slc/水位/2026_色林错逐时水位.xlsx",
+      "bytes": 28787,
+      "sha256": "30281508d8ef1168cffb75d477d36f325283f0440567d0b6951f448f83762e2f"
+    },
+    {
+      "path": "data/raw/observations/slc/slc/水位/99999999-2021年色林错站逐日平均水位表.xls",
+      "bytes": 32256,
+      "sha256": "d7eff698092bca1191d6e1a82f9513029c2313be66a7792b04d0e6c099fb0793"
+    },
+    {
+      "path": "data/raw/observations/slc/slc/水位/99999999-2022年色林错站逐日平均水位表.xls",
+      "bytes": 32256,
+      "sha256": "0690b73c060f309280d956802a746f0e3505d811863341ff270ff366afb97f45"
+    },
+    {
+      "path": "data/raw/observations/slc/slc/水位/99999999-2023年色林错站逐日平均水位表.xls",
+      "bytes": 32256,
+      "sha256": "8145e95d4f37b3b3dc746d9b130a1662ccd35013caf574e77a7f09dbd51c6b8f"
+    },
+    {
+      "path": "data/raw/observations/slc/slc/水位/99999999-2024年色林错站逐日平均水位表.xls",
+      "bytes": 31744,
+      "sha256": "c78415a1c94bf07875c1948c2455e8c7a1c2f2809b08bf76850261ba11f2680a"
+    },
+    {
+      "path": "data/raw/observations/slc/slc/水位/99999999-2025年色林错站逐日平均水位表.xls",
+      "bytes": 39424,
+      "sha256": "e16a26f9b7e95030ac2a3c59859f94df57512db80f0ff470df1ff052c796aef8"
+    },
+    {
+      "path": "data/raw/observations/slc/slc/雨量/2024_色林错逐时雨量.xlsx",
+      "bytes": 12110,
+      "sha256": "c48b6215b59237236c96c8e25157f422b5195af5ce52197e19b07d156663c02e"
+    },
+    {
+      "path": "data/raw/observations/slc/slc/雨量/2024_色林错雨量报表.xls",
+      "bytes": 29184,
+      "sha256": "fcaaec6d0886d81d37db685d897a9d1ccb144b335390e1bd50f42e0be8ba5eb4"
+    },
+    {
+      "path": "data/raw/observations/slc/slc/雨量/2025_色林错逐时雨量.xlsx",
+      "bytes": 12121,
+      "sha256": "a659a2039139d0b6e21ee9a78a77087a51b2e99b622d14565b8cffb74fd68385"
+    },
+    {
+      "path": "data/raw/observations/slc/slc/雨量/2025_色林错雨量报表.xls",
+      "bytes": 28672,
+      "sha256": "a1315a0e397dce501058ad752afeae080d9c74fc19b80786617c0d93a4535f05"
+    },
+    {
+      "path": "data/raw/observations/slc/slc/雨量/2026_色林错逐时雨量.xlsx",
+      "bytes": 12958,
+      "sha256": "da6249dd6c48b3327300bcde16f4163e4431425721cdb297fb9df861c96d3063"
+    },
+    {
+      "path": "data/raw/observations/slc/降水_站点位置.xls",
+      "bytes": 26624,
+      "sha256": "fcd93145e41effba577a6527bfe6ec072a9a0ec9535e0f1518a8065ef9a774f6"
+    },
+    {
+      "path": "data/raw/spatial/source-package/dem_1km/ali_dem_1km.tif",
+      "bytes": 23186,
+      "sha256": "69d65f4c9f4237c25ffb56e71baded33690961515c1d294bab5c7e780feab673"
+    },
+    {
+      "path": "data/raw/spatial/source-package/dem_1km/boqu_dem_1km.tif",
+      "bytes": 6706,
+      "sha256": "6f718080c2ab95318644a680c03589d5d19a5991a825a2f08b2b9d407aa80476"
+    },
+    {
+      "path": "data/raw/spatial/source-package/dem_1km/zagen_dem_1km.tif",
+      "bytes": 70577,
+      "sha256": "9191d819cc2562d1abe02f8294485b2d1f5957a6b3589e2e0892a240939d570b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/dem_1km/zajia_dem_1km.tif",
+      "bytes": 71002,
+      "sha256": "b1853e933a28d1dbb0e35e59055535db5f299d33b6a77cfa34ab368c1679ca7c"
+    },
+    {
+      "path": "data/raw/spatial/source-package/full_basin_shp/basin1.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/full_basin_shp/basin1.dbf",
+      "bytes": 164,
+      "sha256": "6ddd089592268a7c36ecb47d61f1815120ecd6f706a4bb44ec7a196e6d37836d"
+    },
+    {
+      "path": "data/raw/spatial/source-package/full_basin_shp/basin1.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/full_basin_shp/basin1.sbn",
+      "bytes": 132,
+      "sha256": "938841bec8e6a8881f5e3ed9609c607a7e43021880b5b75cec2463e5e90effd8"
+    },
+    {
+      "path": "data/raw/spatial/source-package/full_basin_shp/basin1.sbx",
+      "bytes": 116,
+      "sha256": "5e8a8fd0495d601f57303598401a975a9512462d472b72ce0dd538e0492071ea"
+    },
+    {
+      "path": "data/raw/spatial/source-package/full_basin_shp/basin1.shp",
+      "bytes": 380172,
+      "sha256": "2a6a197264a93f73348759674a55e8c7ef3d9269e437056b90c05d6dd3899ff8"
+    },
+    {
+      "path": "data/raw/spatial/source-package/full_basin_shp/basin1.shp.xml",
+      "bytes": 5859,
+      "sha256": "e4062b4ed1e7fea4e2253651db30c501d76a652712886daae5bf95c5871f05d3"
+    },
+    {
+      "path": "data/raw/spatial/source-package/full_basin_shp/basin1.shx",
+      "bytes": 108,
+      "sha256": "20e8ac09dbbf5842b2d35d9e0a3a580ef6c6dbc9665212931b5a99902effba88"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/A.txt.xml",
+      "bytes": 1345,
+      "sha256": "80ace164cf0fc3888eb9a25f69cd4b3222a68d95c7aab64b25fbaf3aed32a253"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/alzb/glacier_alzb.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/alzb/glacier_alzb.dbf",
+      "bytes": 2597,
+      "sha256": "09679371849fc7c8820e0a9cd76e314ab7ccef9654171872830e1e063183d271"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/alzb/glacier_alzb.prj",
+      "bytes": 440,
+      "sha256": "251a8adef0308c5ddbe270fee04a70de51184907aa086d1e80754e24933c429a"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/alzb/glacier_alzb.sbn",
+      "bytes": 172,
+      "sha256": "f811d99e8bcbf0c482e2e9e58c32cb8979749de184f047598ac45eb0765378e6"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/alzb/glacier_alzb.sbx",
+      "bytes": 124,
+      "sha256": "cabd6b50551b41fea4a1a39df944035a167abee6b3802c2f3cdbde263b12b249"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/alzb/glacier_alzb.shp",
+      "bytes": 2316,
+      "sha256": "05b1c398d84b5e9bb3657b68e0a9a613c5a396bdf0b44e00ccde52e5ca62bf71"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/alzb/glacier_alzb.shp.xml",
+      "bytes": 12138,
+      "sha256": "ed0845b9dac0cf5ff272a73ed7b2a11e3a1bc6df8cd96279cc67268e15a45e97"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/alzb/glacier_alzb.shx",
+      "bytes": 124,
+      "sha256": "1526d78561fd212e9aba84059eb1cff7d1a19b3381f84929529265e0a9edde92"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/glacier_in_basin.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/glacier_in_basin.dbf",
+      "bytes": 133487,
+      "sha256": "376db42b95a606f7719ec1a998813c468f7aed89ee69803b7e6e60e646e90609"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/glacier_in_basin.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/glacier_in_basin.shp",
+      "bytes": 159080,
+      "sha256": "b576fcc96dfc7f6fbfaf45258f61c993ace928880838d7c2bc241e7d134e571c"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/glacier_in_basin.shx",
+      "bytes": 844,
+      "sha256": "4110136da3d060274618b207e44f03ac6d6c64ee9d95bee42c3fc9ba1c1ab816"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/glacier_mask_1km.tif",
+      "bytes": 464,
+      "sha256": "c98da1dd0791b40de02ddddbdb9b7c6037ea8cb912948896a3ede23ee87a2762"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/glacier_mask_debug.png",
+      "bytes": 49352,
+      "sha256": "06d26dd541f48d02ec9368d1a294042c5381dd792c0fa97c47c1dae0949e246f"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/glacier_mask_final.png",
+      "bytes": 83415,
+      "sha256": "9f19372b1a18eeb0c4c0196868631e6bfe6469849bf1e2ee2c36a242461653c1"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/glacier_raster_1km.png",
+      "bytes": 87977,
+      "sha256": "e176ca25e6fc167c2d2c2534615389e04a31abe60a00f262754a665cbb789311"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/schema.ini",
+      "bytes": 1838,
+      "sha256": "7299641a4078bdc22701a66bf9b078820b47dfd0a71784ff8700836429620fd0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zagen_glacier_mask.tif",
+      "bytes": 66832,
+      "sha256": "c0ac7a0dc4dff0f9ee6e786c0838d5ddb0a3c27e9de27e54b1ed445f64866a62"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zagen_glacier_mask.tif.ovr",
+      "bytes": 8422,
+      "sha256": "9d285d5dab936607d07dd1e742a278df843338eaaafda1e7274b89cd3b11dc51"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zajiang_glacier_mask.tif",
+      "bytes": 457,
+      "sha256": "e6e0d7573ee15a802c181e77ef70aef57fac1f940d5d0e5b4fe195690de6f010"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zajiang_glacier_mask.tif.ovr",
+      "bytes": 3829,
+      "sha256": "2cd81bd7e9e898e158b871d6cae2ce182bc12a92b0d64ff7144eadad0c663686"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zajiang_glacier_mask_correct.tif",
+      "bytes": 421,
+      "sha256": "269f7f088fe87ec8787f188d044ef2e7a7364c9289242ac6636ee60ae3f2d9bc"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zajiang_glacier_mask_era5grid.tif",
+      "bytes": 457,
+      "sha256": "e6e0d7573ee15a802c181e77ef70aef57fac1f940d5d0e5b4fe195690de6f010"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zajiang_glacier_mask_final.tif",
+      "bytes": 457,
+      "sha256": "e6e0d7573ee15a802c181e77ef70aef57fac1f940d5d0e5b4fe195690de6f010"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zajiang_glacier_mask_wgs84.tif",
+      "bytes": 460,
+      "sha256": "932216db0e1e5196eb486cc6348d0c5956552c1a11f5ace0a7287d200f2820ad"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zgzb/glacier_zgzb.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zgzb/glacier_zgzb.dbf",
+      "bytes": 101787,
+      "sha256": "f8460ebe1bcf6e78038ccf8dbf9b4106f9def3d04174a13c22aa0b6a77c40ee0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zgzb/glacier_zgzb.prj",
+      "bytes": 440,
+      "sha256": "251a8adef0308c5ddbe270fee04a70de51184907aa086d1e80754e24933c429a"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zgzb/glacier_zgzb.sbn",
+      "bytes": 1908,
+      "sha256": "44f5605246c484f4c238815602e552114187f2d399956f7a951fabd48683e27b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zgzb/glacier_zgzb.sbx",
+      "bytes": 196,
+      "sha256": "ecd9f334a31ae19f27156e3e4e4f97cd4c83add2144f8c93fff438e7b56f9f97"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zgzb/glacier_zgzb.shp",
+      "bytes": 303576,
+      "sha256": "46dd28636be10f55e32cc7e7c481ad5dbbac7f01ad500a6e8370c38bbc7d63ee"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zgzb/glacier_zgzb.shp.xml",
+      "bytes": 12138,
+      "sha256": "00f4c5998c3acfaffb1c245ed675a78b478ad8067ac38254bee79abf26109111"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zgzb/glacier_zgzb.shx",
+      "bytes": 1580,
+      "sha256": "265d135ab0b5964c537e9662f95ae3d7750ae34d1812c0e164d6996d9d915a68"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zjzb/glacier_zjzb.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zjzb/glacier_zjzb.dbf",
+      "bytes": 51647,
+      "sha256": "b042843d5881c516c1b7187ec047f842ae9102645a69243c7acea979a502e8d0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zjzb/glacier_zjzb.prj",
+      "bytes": 440,
+      "sha256": "251a8adef0308c5ddbe270fee04a70de51184907aa086d1e80754e24933c429a"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zjzb/glacier_zjzb.sbn",
+      "bytes": 996,
+      "sha256": "45a394673c9a34491a1a891579d70619f6aa11e59e3ae26487718c63cafed9d7"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zjzb/glacier_zjzb.sbx",
+      "bytes": 148,
+      "sha256": "a3fc46bb153ba23b435af5eda8af3c5ac171da63297faf3b2b78881d48a639a1"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zjzb/glacier_zjzb.shp",
+      "bytes": 157320,
+      "sha256": "677562ed180069d32e006bb5a92a047d4c22b268c3dcb5f9c754e350e61b24e7"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zjzb/glacier_zjzb.shp.xml",
+      "bytes": 12138,
+      "sha256": "29d0bb64684827bbd14beb02b6e622a9ca406f7da7c62f8ecc2e7010fd643ec9"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/zjzb/glacier_zjzb.shx",
+      "bytes": 844,
+      "sha256": "c34c4285b34583cb32799c49c00f479d8881f27274945b268b0c1ee5d309f0b1"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/冰川高程及坡向.mxd",
+      "bytes": 8054272,
+      "sha256": "af7597b92b041b187781fd5952fccfd20872b1191ae030a47ef857725616fd67"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加dem分类冰.txt",
+      "bytes": 4572,
+      "sha256": "460454e61a746b67d24e0eface6ae3448b8801453fe3055aa90e45b4f8c7e89d"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加dem分类冰.txt.xml",
+      "bytes": 1333,
+      "sha256": "7d10f6947f8e2330369d27f0eab806d14fe2530a1407dac6d20fd481882736bb"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类.tfw",
+      "bytes": 81,
+      "sha256": "7b077c032bddbd69aa15b13ad3170996c2a2bc38d0ddeb7d7dcb1c1d96d41ce4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类.tif",
+      "bytes": 331028,
+      "sha256": "d1a35e4d6ea4527aecf750df420d111fbe32d80c118f030b23c7472edcff0b15"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类.tif.aux.xml",
+      "bytes": 131471,
+      "sha256": "28f6482ffd55741ca7111e8119abdd16b310735293ed905b9671f801a710de29"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类.tif.ovr",
+      "bytes": 66606,
+      "sha256": "52c6fe0f1ad1076ee6987db9d2bd3e472fb3d7dc62eec1754cdad10c82207e54"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类.tif.vat.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类.tif.vat.dbf",
+      "bytes": 368,
+      "sha256": "204378d927add23b5cc7fbe411e16c6fb8c25994dc72c9212a2466dab0e66e6c"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类.tif.xml",
+      "bytes": 605,
+      "sha256": "97f8104b7f32626253028645ea14c5460f8bc8061502ef5ec68cb2c765c77640"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰.tfw",
+      "bytes": 81,
+      "sha256": "429e9497acc2eb2647bba028b1e0ed4b720c2da16f94473d45547e34b856ddc2"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰.tif",
+      "bytes": 26799,
+      "sha256": "9f6b9ea9a7c3b758a8ccc7422ca9d5bfab5bb727c7f7ef86d39c93456d91aa39"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰.tif.aux.xml",
+      "bytes": 1263,
+      "sha256": "aedb25cc62d538c12b0fc139be74385334c11afe775df57fc5bc9ee83aaf7ba2"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰.tif.ovr",
+      "bytes": 4076,
+      "sha256": "f1e1cc056a15df8a28747212c10759d9af76da8c9d2a6ebedba63a6a84b059e2"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰.tif.vat.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰.tif.vat.dbf",
+      "bytes": 248,
+      "sha256": "decb95e6e42efc25b47e21092953ec7553edd1448394f3095ee18443ff13d348"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰.tif.xml",
+      "bytes": 500,
+      "sha256": "a3e289b35d6109a1438897acf0cabd6f8f6c04d02285f66fc8b199f1d70b4582"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰面.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰面.dbf",
+      "bytes": 4865,
+      "sha256": "0494f0a0d7a1a4fedec22dfc4e9a3a6cb4de791bc39dad96aee76ef943bac038"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰面.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰面.sbn",
+      "bytes": 2204,
+      "sha256": "6eb54e37d06086acaac3deffeeffd46d9119c607bdf72a11d22d6dc33e9334a2"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰面.sbx",
+      "bytes": 172,
+      "sha256": "ced46ecb9d7770fdb0f8815c9d164be71ef11d33920f5468b0bb77d2bf8f2046"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰面.shp",
+      "bytes": 52724,
+      "sha256": "e4d40f60a446ddeb43b81b1a156e3f2ecea16195154a8dde5b845b2b1b1b1b98"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰面.shp.xml",
+      "bytes": 527,
+      "sha256": "63fa9623eb92f318c9dc140fc808d6c260bf8e88cc729c4106e7b3c7404180d1"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰面.shx",
+      "bytes": 1916,
+      "sha256": "69aed6ea8fe0531137ca176761a8dd5bea8fdb08ad504f5070036f6ee0e67c4b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰面1.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰面1.dbf",
+      "bytes": 6713,
+      "sha256": "3f756ca66d6f0c597a694df786e2611bdacd2a5084d0ac89cee2c1fb0cb4ff12"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰面1.prj",
+      "bytes": 401,
+      "sha256": "8403c41c5fb2c9c1336e8626200a2e9431c714b4b682802205b8fd7d6591aec0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰面1.sbn",
+      "bytes": 2204,
+      "sha256": "ece0e37f03e31c0ea0c65221ab89d7e0ad3a20f5741c276cf75bcbeb6017a844"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰面1.sbx",
+      "bytes": 172,
+      "sha256": "310db1b0c2861736f687f47e61b8f4e41d4510cd2253f29b4c78a9ba4e67cdd4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰面1.shp",
+      "bytes": 52724,
+      "sha256": "1ee3a331cb2321b51caf3f68c780a42dbc5cd3cff4f23bc6246f92436bdee6b2"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰面1.shp.xml",
+      "bytes": 1333,
+      "sha256": "34e43922d42dae1efea66a611e592a8f19f45ece2fbff0545b784f7a3a92923d"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加分类冰面1.shx",
+      "bytes": 1916,
+      "sha256": "d3aa5d5cc394b80be126d349f553086669a44f6a2673d14a472fd5531c032597"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向.tfw",
+      "bytes": 81,
+      "sha256": "7b077c032bddbd69aa15b13ad3170996c2a2bc38d0ddeb7d7dcb1c1d96d41ce4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向.tif",
+      "bytes": 27537986,
+      "sha256": "5177b83a602dd274bb1242f46c79c6292699e732083736555116274c6384f6c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向.tif.aux.xml",
+      "bytes": 2154,
+      "sha256": "29396ad5c7fd97fb47ad609d3f9550f30d55bb20da056bf4950ab71c591a4788"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向.tif.ovr",
+      "bytes": 1901651,
+      "sha256": "f85c9cd7e50471a510581b6f889b28dc436f5ac72c6ce1b7cb261d38cec56b78"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向.tif.xml",
+      "bytes": 489,
+      "sha256": "99849c86e7145eb5043d80bb90af3e67dba4a427999960e46b93e63043149085"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向.txt",
+      "bytes": 3204228,
+      "sha256": "a3810d93f83dbd9f77ab91df283006d59d04624c118b1e2efb5c88251dc58507"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向.txt.xml",
+      "bytes": 1330,
+      "sha256": "44c4d4e543a90e39e1473c327256aefc89b5628592447b5d0f740e0eb8a0ea77"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川.tfw",
+      "bytes": 81,
+      "sha256": "429e9497acc2eb2647bba028b1e0ed4b720c2da16f94473d45547e34b856ddc2"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川.tif",
+      "bytes": 27686,
+      "sha256": "892f03e3849bf81226ae08e789e5ef54036ca3c0223c122abc395184334abc4e"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川.tif.aux.xml",
+      "bytes": 1260,
+      "sha256": "2b37ed9e24bb608464c32de57575acc5bb31fd72fe3655a751debaeefd839ffa"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川.tif.ovr",
+      "bytes": 4476,
+      "sha256": "8572b95bac356c892a3ab7c1011963c0c89748efa41992566a118869f3142d4b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川.tif.vat.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川.tif.vat.dbf",
+      "bytes": 218,
+      "sha256": "95b309e94930ab21f05011e4b9e0ea06012df955c10b769e8945ca96f197ae50"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川.tif.xml",
+      "bytes": 512,
+      "sha256": "9919c0e0303790cf95962f44c957406a2a2d3f4d2016f13288c2063aec311120"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川.txt.xml",
+      "bytes": 1345,
+      "sha256": "649fd071ab911ade641eb1a6084b2b38c57a486d8c45d157c748da465b267e98"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川1 (2).txt",
+      "bytes": 13160,
+      "sha256": "7613d56841fb6fa34cf65850552450f8bc0273f379172cfdea7bef6ff896c64d"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川1.txt.xml",
+      "bytes": 1345,
+      "sha256": "5330fa8fff997b46e4ffca0515b2452413bbd3a07cb8b9ba13ea97845133af8b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川面.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川面.dbf",
+      "bytes": 17302,
+      "sha256": "deb3a8fbb6b9c541052ab584fae41c9a71afda094194d9523601be098ca10244"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川面.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川面.sbn",
+      "bytes": 6236,
+      "sha256": "01fe6660240a411882864cc8374a1a7beb85b9e12456aebcdf3638843537e1ff"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川面.sbx",
+      "bytes": 276,
+      "sha256": "8dd632f02db7e2f574de2aedba1013e6abf73b8ac8c9b0dcd7740c595cace08f"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川面.shp",
+      "bytes": 132364,
+      "sha256": "0179d9b5e2f79caaba4ef8a3c6866ce56d8e0bd94e1ca01e27d1321d90b7e8dd"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川面.shp.xml",
+      "bytes": 533,
+      "sha256": "c2d17fdbb5ce77644525bd6e5b86e3f1fdc2f50a4fc604bfc80199198bf04ba8"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川面.shx",
+      "bytes": 5188,
+      "sha256": "b00b26a7610b3633526e887fd25051ff584c309386456faab378031d9b61e137"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川面1.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川面1.dbf",
+      "bytes": 17302,
+      "sha256": "1b5b4f56be29b4e95246b61131657c05abf0cbd02723813356744178445343dc"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川面1.prj",
+      "bytes": 401,
+      "sha256": "8403c41c5fb2c9c1336e8626200a2e9431c714b4b682802205b8fd7d6591aec0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川面1.sbn",
+      "bytes": 6276,
+      "sha256": "7b5620cbc573aa65e9a98d4b59ba210f639bd623454bdba82147a8ded2fd95ae"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川面1.sbx",
+      "bytes": 308,
+      "sha256": "ed44501d3030d845de2afd25adb0f9b770fd6c9449c31989625dfc173ed27050"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川面1.shp",
+      "bytes": 132364,
+      "sha256": "7a18bfada1c4c463b3001212a197403c74dc4f88a92d6f288e71ac84b9c3f428"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川面1.shp.xml",
+      "bytes": 1345,
+      "sha256": "14ce28e307cfa3c414992cfc9b4ee8432f1f0c23cdc478b91b0a37cb12b50066"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向冰川面1.shx",
+      "bytes": 5188,
+      "sha256": "7bc053f43505afaa1304e25217f4a056de758d66b83c1ac9f5956ebc05b165af"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向重分类.tfw",
+      "bytes": 81,
+      "sha256": "7b077c032bddbd69aa15b13ad3170996c2a2bc38d0ddeb7d7dcb1c1d96d41ce4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向重分类.tif",
+      "bytes": 748213,
+      "sha256": "12900ba6ae443b88512bb1894693e661eda1f6f1346908b0bf23360dc15e1c16"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向重分类.tif.aux.xml",
+      "bytes": 131453,
+      "sha256": "04dbf7f87839af52efb2d86e572c105bb4e14b29a8e1da0806b6e55bd43742b3"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向重分类.tif.ovr",
+      "bytes": 229773,
+      "sha256": "2666079dafa8c0656d08bc2b166146d46b3d1315d2dc8d6ad6947ed8eb6d3d7e"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向重分类.tif.vat.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向重分类.tif.vat.dbf",
+      "bytes": 218,
+      "sha256": "26714b1e95002ab237ca84922cf79c1e7ceb0a959f42985f6cfe5cbf5c18a4a9"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向重分类.tif.xml",
+      "bytes": 586,
+      "sha256": "09ef0ec5e646da959429d392f4d1c5e8fce9935b7c6619f35ea146499bc503ac"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向面.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向面.dbf",
+      "bytes": 2664977,
+      "sha256": "dde2a52790a67d6fae4098a5aae480b6ca5ace3e26a83f5d4f9fc4e90d7aca63"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向面.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向面.sbn",
+      "bytes": 1193964,
+      "sha256": "4d8d60a20497ba6961c8b0598cf5fdc4309abcf1568f44a7ffa62f8c1d18ee53"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向面.sbx",
+      "bytes": 47812,
+      "sha256": "988ebe67740771a5b6842fa3235e48c5d21d9830b26b4848ae4ecffd69b5251b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向面.shp",
+      "bytes": 26001496,
+      "sha256": "cc93aed07a2182f78c915736d9d36083512ff726f808fbfc7dbc60a136b4583d"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向面.shp.xml",
+      "bytes": 530,
+      "sha256": "4eb03bc7e84edf5939e457638ac27142caa24defad3ae4efc34606db1922a4e9"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向面.shx",
+      "bytes": 1015292,
+      "sha256": "2583dedacb8d912c45c9886aafab24259f6e5c1817ab67ec2a3c252b75e91be2"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向面1.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向面1.dbf",
+      "bytes": 3680201,
+      "sha256": "38029ddec8d0e71b95592aa154a2be687e9f3497057d43f30844f9cd5e15e441"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向面1.prj",
+      "bytes": 401,
+      "sha256": "8403c41c5fb2c9c1336e8626200a2e9431c714b4b682802205b8fd7d6591aec0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向面1.sbn",
+      "bytes": 1192972,
+      "sha256": "3b4b93bf1f46f637ad6680f1ebdbf82e41a90f5a08548cd95abbefe23e366596"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向面1.sbx",
+      "bytes": 46820,
+      "sha256": "c5c167e07c5e55e31214e3845d9e12fa2f51374f46966e75aaef4d056aa7f2ee"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向面1.shp",
+      "bytes": 26001496,
+      "sha256": "7b26334d19b12c56eee636fc0468bdade77e2a96a22e1d725c11ce1881f8d91e"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向面1.shp.xml",
+      "bytes": 1330,
+      "sha256": "48078e88e0cc7415260edda3ed15794f7a7af2b5bd0cd8f21c9098b3d63ca06a"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加坡向面1.shx",
+      "bytes": 1015292,
+      "sha256": "f40bc6a5f66373c19ab9e2f07ba21f5521436bc95320a506e5f7e31f2c300730"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加边界1.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加边界1.dbf",
+      "bytes": 159,
+      "sha256": "84d272359528011b17ff1aa16b8115ef650feccd88da78959be0169b3545ea91"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加边界1.prj",
+      "bytes": 401,
+      "sha256": "8403c41c5fb2c9c1336e8626200a2e9431c714b4b682802205b8fd7d6591aec0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加边界1.sbn",
+      "bytes": 132,
+      "sha256": "6062b3d72504fd24bc317e36cafb5f680d8849bc7fa30089a5ae362b5dd2720b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加边界1.sbx",
+      "bytes": 116,
+      "sha256": "9face361562dc2bfc1cdeed9f816a1071706d5c14e343eb00a0e557abd833af7"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加边界1.shp",
+      "bytes": 39804,
+      "sha256": "c46382694860b80bf1a7bec01e887c1332a276517f921ff5954d934d5166bfc5"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加边界1.shp.xml",
+      "bytes": 1317,
+      "sha256": "1167c4f249bf263650f4669c709889efbb56c2795c45acf3fb73e4f2c32c762c"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎加边界1.shx",
+      "bytes": 108,
+      "sha256": "8381a71142a0559fa49d4aad37ba174b6c062a2de28d029d00160bbbd3ffb6b0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根dem分类冰.txt",
+      "bytes": 8204,
+      "sha256": "dac8bb696f1ee1bb33db52869ebfa3d0f6a03574f816eae19ae60f693898ae4f"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根dem分类冰.txt.xml",
+      "bytes": 1333,
+      "sha256": "045d5b1cf4194e7e7259c730c47d0262cc05e350bae29fea246cc144c3a31939"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类.tfw",
+      "bytes": 81,
+      "sha256": "e08f3791bcc5481c53d532825f96418b5450ac2154774ed5b5d34c44b2774643"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类.tif",
+      "bytes": 379422,
+      "sha256": "926c4737a75d23daf95a416ad73e7d0e997e7a66be66520fd9c6d7eb9ebacc65"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类.tif.aux.xml",
+      "bytes": 131474,
+      "sha256": "cb345fe3354590628643c9a2c0ab059ec43ad583c788f60fa1622fb79dc17757"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类.tif.ovr",
+      "bytes": 107339,
+      "sha256": "42509c3baebc8bf0909f2fd131e7cf85b1370dbb4cc43d80468e34db6350fb0a"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类.tif.vat.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类.tif.vat.dbf",
+      "bytes": 398,
+      "sha256": "89e7d571583d67b1ef1915a21564387f29fa76f1bae1ae7b93a8f9d72d98506b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类.tif.xml",
+      "bytes": 618,
+      "sha256": "4025fcaa9e49fad05329a05f7373bd9be827aa47bb69b57ef4e1474d10fb921f"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰.tfw",
+      "bytes": 81,
+      "sha256": "735a9426bdb33931c3e5022932a1d713c294963b8f6356edffad71726fad3120"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰.tif",
+      "bytes": 64330,
+      "sha256": "2ea1abee6fd6f5c4e2c9ac75700539fb315452d8854be09d87912791c23e18c7"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰.tif.aux.xml",
+      "bytes": 1262,
+      "sha256": "c83a54994c72a3eb419aedfc8b375580335fa50f5b5de91ec7400ea623a05f01"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰.tif.ovr",
+      "bytes": 7636,
+      "sha256": "5e080bcf652d6d00b69fca4c471d65ec12f13746709b9b718d2ecf3361a0e8a7"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰.tif.vat.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰.tif.vat.dbf",
+      "bytes": 278,
+      "sha256": "74cf22a6d60d357ad7b4c9ebc8772fb11f61607cc1166e1f7304f5562d596611"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰.tif.xml",
+      "bytes": 500,
+      "sha256": "5afcfd7869e79686ea19d5277a5af57753c3f62ff8b9f2419c47caf386f9dfc9"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰面.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰面.dbf",
+      "bytes": 8498,
+      "sha256": "bc3c1c03e46d2b64d441df3cb6c631da303ce11bdda415ec2796d530dcdf8925"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰面.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰面.sbn",
+      "bytes": 3908,
+      "sha256": "ddcaf6e05575aabc99cc11dbfe78cc302f2faed3768b0988117507149c82acf2"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰面.sbx",
+      "bytes": 236,
+      "sha256": "96610b25cd3ebb55e64d11b2170428a93740aaa0568c9aa162d9625c59d3381b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰面.shp",
+      "bytes": 77756,
+      "sha256": "53321743623a8240779f610156ef499b825ab75aec0d921ff77929fecacdf111"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰面.shp.xml",
+      "bytes": 527,
+      "sha256": "b12b63f4631d9bcd9f9432dc8693ffb8ddcdf39f097f663c6ade6853771cdabe"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰面.shx",
+      "bytes": 3300,
+      "sha256": "fa32ae47a93c1def56e06c4aaab6f7fc69aa45f8d588d98bf645acd69acfede6"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰面1.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰面1.dbf",
+      "bytes": 11730,
+      "sha256": "dc1ef1a373069be260b7ee38a113323f9815adaf72de2b4468890fee3d725250"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰面1.prj",
+      "bytes": 401,
+      "sha256": "8403c41c5fb2c9c1336e8626200a2e9431c714b4b682802205b8fd7d6591aec0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰面1.sbn",
+      "bytes": 3908,
+      "sha256": "8408c4980dbee29884ff828e3c72085ec94337c1cf9e96cba83b4b038cd139eb"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰面1.sbx",
+      "bytes": 236,
+      "sha256": "0714cc8cd466d55a420dc3d9b3c20a24920ebb23c52733654364e0c227f6181c"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰面1.shp",
+      "bytes": 77756,
+      "sha256": "daf41dba888b15dc3bf41e9370f1c36fedee1e76f058da38dfd1647c39a04225"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰面1.shp.xml",
+      "bytes": 1333,
+      "sha256": "afa0135817bd4d53e120291ada6f840ecb91d3ee37a19768d5c1c201bb60c4ad"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根分类冰面1.shx",
+      "bytes": 3300,
+      "sha256": "7a3e8deb0e89d828a700dcf19c9614565387a5196255b0a96635d815cd3b9173"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向.tfw",
+      "bytes": 81,
+      "sha256": "e08f3791bcc5481c53d532825f96418b5450ac2154774ed5b5d34c44b2774643"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向.tif",
+      "bytes": 22424308,
+      "sha256": "6a398bfa9e9262a12493d225427ced434178337032e495b5117131a5267490cd"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向.tif.aux.xml",
+      "bytes": 2127,
+      "sha256": "b1ad4eed98515b4ca3bffe34f4f2fec5280dcab7feae47e190ed5808c99acf2a"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向.tif.ovr",
+      "bytes": 2073132,
+      "sha256": "2f8075ba6a07cb99355b6543d53173a3bea5b26c07cd95e827f092bfd8f08edc"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向.tif.xml",
+      "bytes": 489,
+      "sha256": "09d01a1d4fde027f15acd6413a2022ce2edd1ca828282ffd59fd26d6b588c6ec"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向.txt",
+      "bytes": 1758554,
+      "sha256": "412b77c0b1456c99e923b6a1429faedd48dfbc7c6dc941a20d130241ee377545"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向.txt.xml",
+      "bytes": 1330,
+      "sha256": "415145a5719938f9ed26cd35c5a95ad78dc46d7cb737c060928e5a48fac1d8cd"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川.tfw",
+      "bytes": 81,
+      "sha256": "735a9426bdb33931c3e5022932a1d713c294963b8f6356edffad71726fad3120"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川.tif",
+      "bytes": 64904,
+      "sha256": "6ebdcbbb201c988d569dccac2d974128bb1afaad4249c7d9db6e3886648b5acf"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川.tif.aux.xml",
+      "bytes": 1260,
+      "sha256": "c43a3a39e65d68daa38bebc3bdf759ec6d90cdce61351deec6859e82ece25eaa"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川.tif.ovr",
+      "bytes": 7899,
+      "sha256": "2e88f9c75dec3820a0a49e4cce6aa64a266aaa7146ec624b57094cd0f2a7efdb"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川.tif.vat.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川.tif.vat.dbf",
+      "bytes": 218,
+      "sha256": "723f3f4d7c95f01ce8a41d9760ba0e780d292908df5567a314eb20107a1303d8"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川.tif.xml",
+      "bytes": 512,
+      "sha256": "5f806735dea1da7cae4b728d5b051dc2342623bf585b5db3d0801caa0c789f11"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川.txt",
+      "bytes": 14271,
+      "sha256": "2d677b8d6840beb1df7c2e1fe1bb67d59a326d2702b454c81b7c3c7166eaedba"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川.txt.xml",
+      "bytes": 1345,
+      "sha256": "4768488b27b84ea2ee73023c34d79ae6e0c04d2456e7d00f8c65558ccfd74a69"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川1.txt",
+      "bytes": 14271,
+      "sha256": "8b087654252fd5d7215fa147059cebb78042048cc8fd69c99efba1579172c9fc"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川1.txt.xml",
+      "bytes": 1345,
+      "sha256": "e069145ab1fbeeeabcc0756654b109a8bfdec70bc864c1adcbe70d940bbbe2aa"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川面.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川面.dbf",
+      "bytes": 14567,
+      "sha256": "d769b68a9ef39c1b5a1f192ea46ebed7dd7ff1f9f2dddf181262ca8b650f5dd6"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川面.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川面.sbn",
+      "bytes": 6740,
+      "sha256": "3eaedfb7898176a01d20c84e895fb79b1c106c54b5fcb79f67dfbd4cfc2b0934"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川面.sbx",
+      "bytes": 292,
+      "sha256": "fbeadeec9699531af8482671b98e9429101c1dd1e6fa19577558c4d747498c92"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川面.shp",
+      "bytes": 129996,
+      "sha256": "67b80d457ecbc9af160f3350b0c6a8f0341927134f7b8dd0ee32e12d6a408ab9"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川面.shp.xml",
+      "bytes": 533,
+      "sha256": "99c5adf1d1c3ad1455783502e4ca73d197f42d9a797eb07ed582e7f49a9e6a8e"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川面.shx",
+      "bytes": 5612,
+      "sha256": "6e0d7ddb65c9612ae14026ca1eade5dfc997dd5f7e8ff16bb574d2f9d5610af5"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川面1.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川面1.dbf",
+      "bytes": 18733,
+      "sha256": "2a4212c7998e67b17a9049eae5a5d22acefe08a636d0d5c810b56f4082cec165"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川面1.prj",
+      "bytes": 401,
+      "sha256": "8403c41c5fb2c9c1336e8626200a2e9431c714b4b682802205b8fd7d6591aec0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川面1.sbn",
+      "bytes": 6748,
+      "sha256": "ad282f75caa6adfd253e4c30f5470d153280a84a8e573b5c5bed9f969c7d1b05"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川面1.sbx",
+      "bytes": 300,
+      "sha256": "87d8c5c547b6af62ed49ac0e6a4cca8e08883725a40a3097611d5ad767d7901d"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川面1.shp",
+      "bytes": 129996,
+      "sha256": "761c0bc9329ce65f990ac1135bcd8a4b3dc5ae4a09b6da1629b2c3d392bb8c43"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川面1.shp.xml",
+      "bytes": 1345,
+      "sha256": "826a46c98068de1f57804134ded9b80e2135e1b787148911557214aa117ba5b2"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向冰川面1.shx",
+      "bytes": 5612,
+      "sha256": "470e77f8e38c7606c873ea92cd01393a5220cc7729c7d3ab3f90eda5a59675e1"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向重分类.tfw",
+      "bytes": 81,
+      "sha256": "e08f3791bcc5481c53d532825f96418b5450ac2154774ed5b5d34c44b2774643"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向重分类.tif",
+      "bytes": 630559,
+      "sha256": "eebc52b19b9200809af1e07dd65bbfa87f919e7bc069b6d3b0c2e0bf884f8dd3"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向重分类.tif.aux.xml",
+      "bytes": 131453,
+      "sha256": "6c144dd3468a41e5eb64a7b3253b157e4a1413b743b340043f06cb8ffb15f1a8"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向重分类.tif.ovr",
+      "bytes": 204892,
+      "sha256": "e52d996a1dedeebec3daf2ba51ee2e4dd2ebec0a020cd487eff6e35a203049f7"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向重分类.tif.vat.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向重分类.tif.vat.dbf",
+      "bytes": 218,
+      "sha256": "1b4a51b64816caf617164b54482e3e9a2a677eb429b5b4b5740fd9745f84efb3"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向重分类.tif.xml",
+      "bytes": 586,
+      "sha256": "f99df56ab2f7f9eeaf95d9671273aaf97e681e9e7f34206d1de8aa02cc052119"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向面.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向面.dbf",
+      "bytes": 1495781,
+      "sha256": "21223a8e45491bc644e1e2fadbc5e780ad95db9d5d9ddeb9fca36908be533845"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向面.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向面.sbn",
+      "bytes": 738868,
+      "sha256": "790a518296ab027ba5ab7a49a15103880df9c5475b8a3ed83b3b74a221016272"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向面.sbx",
+      "bytes": 44852,
+      "sha256": "e1725c7c5d4288ad514a30fca4290634d2fbd131774b0763832bc0ce190786da"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向面.shp",
+      "bytes": 15493608,
+      "sha256": "d4e266c9e13b991149fd9cc401b240f7770a301110617e37befd1b45665aa002"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向面.shp.xml",
+      "bytes": 530,
+      "sha256": "32db94beac60a81b139f6c596aa2c5c49d8e5b00ecfda8628cfe34ee325f428d"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向面.shx",
+      "bytes": 569884,
+      "sha256": "6a70918c2778d8fbc5b04ab64554f07ee400e631f8955b8aefd13c4bec2c8c82"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向面1.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向面1.dbf",
+      "bytes": 2065597,
+      "sha256": "b665a0908a31bd22eb5012fa2e7dad7223e3fc20687f7fed2ae02a2b717a53cb"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向面1.prj",
+      "bytes": 401,
+      "sha256": "8403c41c5fb2c9c1336e8626200a2e9431c714b4b682802205b8fd7d6591aec0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向面1.sbn",
+      "bytes": 738452,
+      "sha256": "6bbc617c04c39c1cfd8c606c0b8e3ec1659f426cdf8ac9b1d320dc7996553c4a"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向面1.sbx",
+      "bytes": 44436,
+      "sha256": "5865bb748dbf1cc13ff3f4abc6d4a17bedfe17a96d35a37b8fad75f8e5e029f7"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向面1.shp",
+      "bytes": 15493608,
+      "sha256": "3e0206fa6f397296881085e53d0511e97dde34ef87dd5ba908e4a1a23da62e6e"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向面1.shp.xml",
+      "bytes": 1330,
+      "sha256": "506d538b765c333b725a771d4c3c61e57863f1c1a411a7e8d5ab75ea296fecff"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根坡向面1.shx",
+      "bytes": 569884,
+      "sha256": "567cf74fbb740c3616338bda47ddb5c0486702f938d57c7e1d67b598d3a1e473"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根边界1.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根边界1.dbf",
+      "bytes": 159,
+      "sha256": "ce6ce9e212862c13c9888e6e7d689f5fb713d43fab93d40b26e04b800d238504"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根边界1.prj",
+      "bytes": 401,
+      "sha256": "8403c41c5fb2c9c1336e8626200a2e9431c714b4b682802205b8fd7d6591aec0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根边界1.sbn",
+      "bytes": 132,
+      "sha256": "19fd4a873aa1c5b082eafd110312a5fb42710b44e125995320a156c60a7cd023"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根边界1.sbx",
+      "bytes": 116,
+      "sha256": "3bb77e299a976d7ba40fc4bedd00b5d587b79656b4717136f1e88b22bc6dfe05"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根边界1.shp",
+      "bytes": 38060,
+      "sha256": "54dad2b3b9d335e05232ab528a45b0d519902a4b31a8b0a7ad10f00e6318ff0e"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根边界1.shp.xml",
+      "bytes": 1317,
+      "sha256": "07f6d5eb35740ab83440862b968c479a33b6646bd7f321e9f0336a1f1a17b172"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/扎根边界1.shx",
+      "bytes": 108,
+      "sha256": "2794f722ace39ad75465a697b025e5b708f37a8ae8022e66792c081bf7636755"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲分类.tfw",
+      "bytes": 81,
+      "sha256": "d5e6189729758aed4a503f250c5af73cd4e104b0282f3e61562073e9cf6bc18b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲分类.tif",
+      "bytes": 31394,
+      "sha256": "b9af5a1052174b784a259c19ac7adeee0b14808a6c79e10e755dd4ae6d1b472a"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲分类.tif.aux.xml",
+      "bytes": 131454,
+      "sha256": "378f4cab3a003f723d5ed3b6d15290b12d1204d78282b97a42cde4700587d9a3"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲分类.tif.vat.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲分类.tif.vat.dbf",
+      "bytes": 278,
+      "sha256": "0617c46bde4e17f36e43ae23bb2b842f125752892ea43adbec01153e4f6f8362"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲分类.tif.xml",
+      "bytes": 569,
+      "sha256": "2e028cd8cdb73291e1c238bad4c1940b14d4ec93eca48d9cf18c11ea4a8b4e27"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向.tfw",
+      "bytes": 81,
+      "sha256": "d5e6189729758aed4a503f250c5af73cd4e104b0282f3e61562073e9cf6bc18b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向.tif",
+      "bytes": 1640334,
+      "sha256": "858771470b31ef24faec5cf5b8903d02cc0618af756762723d7af6fc85340063"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向.tif.aux.xml",
+      "bytes": 1864,
+      "sha256": "ce661403389a91676ceb5aed83dacb0ee8fa9aa055923d82eb547735d9d8e670"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向.tif.xml",
+      "bytes": 489,
+      "sha256": "91573f7c21d5182b5375fc6e704e719ac6ccba32f292b3a745093352809a1e0f"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向.txt",
+      "bytes": 165671,
+      "sha256": "ab11634b0e8be8afbee98cfa2ea73fde5d9300a15b01016bbd1f21931010ffec"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向.txt.xml",
+      "bytes": 1330,
+      "sha256": "dec936569ae396d347981fae63791e0c5336e6d4e3b0f7df7154dd82b2626e76"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向重分类.tfw",
+      "bytes": 81,
+      "sha256": "d5e6189729758aed4a503f250c5af73cd4e104b0282f3e61562073e9cf6bc18b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向重分类.tif",
+      "bytes": 57380,
+      "sha256": "5a787b981865f9c69af97fab5204dc00335e4fefd37daa4395e3f58fff8e57f8"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向重分类.tif.aux.xml",
+      "bytes": 131449,
+      "sha256": "a82c47bea7f43758ae3c6d2a53dc886a2fd99f2b1d9e5c1b384c37bd4cf6f731"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向重分类.tif.vat.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向重分类.tif.vat.dbf",
+      "bytes": 218,
+      "sha256": "5b524ef4924d5910cd8b0d8e5ac6d41de8d7f1c5d4dc079ec81a4f6ea4fa9544"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向重分类.tif.xml",
+      "bytes": 586,
+      "sha256": "809c5b54b521160d8422ca7fc3e92719b873b9e76fba7f6c8706cc509f5d5c2b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向面.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向面.dbf",
+      "bytes": 153356,
+      "sha256": "7955a26ddd0e9173bb32a712a13e572e2110163b131d8caa2f0d1690fdc88344"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向面.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向面.sbn",
+      "bytes": 70324,
+      "sha256": "92f28b751f7dcbc6673c622167c7b53d8621927ffb974dc182e1e9b6b967988a"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向面.sbx",
+      "bytes": 3900,
+      "sha256": "09c134de350dec5f4bda9fec46207dddf432a95c2c0a9fe3dd44cbc6d4734d06"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向面.shp",
+      "bytes": 1530924,
+      "sha256": "70b85d2392909375c08af0acf7df915e950177f2889a6943681316471fd4ae11"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向面.shp.xml",
+      "bytes": 530,
+      "sha256": "2ccd59269fba20a2329cf7d77411ccb903e6faaff1b92e2c72179af6ac9faf84"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向面.shx",
+      "bytes": 58484,
+      "sha256": "2a86445720769ff7ed0ae6019e5f28eb29597384e42d1439c0df7fb9f5591a7a"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向面1.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向面1.dbf",
+      "bytes": 211772,
+      "sha256": "77248d66a2bd7fdf93b5912352ba12dda7f3048412cd850ed64509222ba1d045"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向面1.prj",
+      "bytes": 401,
+      "sha256": "8403c41c5fb2c9c1336e8626200a2e9431c714b4b682802205b8fd7d6591aec0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向面1.sbn",
+      "bytes": 70388,
+      "sha256": "2a242eb626d7979fb8f71454cf993da06ae078f5d9c8fd358baa798dab7a8f15"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向面1.sbx",
+      "bytes": 3964,
+      "sha256": "eced2ab97019b58223a01af5cef5fc23ca3a5f4c08029efbe10feb2dbb4d434b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向面1.shp",
+      "bytes": 1530924,
+      "sha256": "d21cc5c1dc9a13dd5691a692d1937431aa41204db0836534bfb59b8cd50f0625"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向面1.shp.xml",
+      "bytes": 1330,
+      "sha256": "e022a45b1b38db507bc8316faef6cbdf6e435d9bb501323ac27bf6ca1c0f3d16"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲坡向面1.shx",
+      "bytes": 58484,
+      "sha256": "6d72b1d389eb419d26cea2acfa23c27c7c0f69a66c8223bb3b2143b8568f086e"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲边界1.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲边界1.dbf",
+      "bytes": 188,
+      "sha256": "6532c2cb5915cdb76b1a7bad74e19e688620ce5c6d2e0ac650495f01b1b76c4b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲边界1.prj",
+      "bytes": 401,
+      "sha256": "8403c41c5fb2c9c1336e8626200a2e9431c714b4b682802205b8fd7d6591aec0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲边界1.sbn",
+      "bytes": 164,
+      "sha256": "389b22d75b7a6f469f03c3f90585fe81ebefd82d88045a7e38e83a7fbbbf8c4f"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲边界1.sbx",
+      "bytes": 124,
+      "sha256": "757b3b37ddb083961c1e18c93615f161133dc958ddb7acd3d3e063552fc07179"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲边界1.shp",
+      "bytes": 9124,
+      "sha256": "877938ec3bea9ced7d0d4a9f3b78b106d3493a95a8632b0837a964dca0b181aa"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲边界1.shp.xml",
+      "bytes": 1317,
+      "sha256": "9f5ce76bd35dd90a32f71e5b8187b704622d0453b89900d8b52d650ca4ce146b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/波曲边界1.shx",
+      "bytes": 116,
+      "sha256": "c712dc5092819c862f4d15e832dd5eb622124cc7a4391ec8ab3210bb7ce838f0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/湖泊边界1.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/湖泊边界1.dbf",
+      "bytes": 113,
+      "sha256": "36f2f679e297e12ca60f8b9b774860aad56cea452f9ae56f0cdd8c387cf510b4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/湖泊边界1.prj",
+      "bytes": 401,
+      "sha256": "8403c41c5fb2c9c1336e8626200a2e9431c714b4b682802205b8fd7d6591aec0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/湖泊边界1.sbn",
+      "bytes": 132,
+      "sha256": "b0dc871b735fbda9116c7c667511b71fb0e3fac4b03a3188bb7b152e4b75609b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/湖泊边界1.sbx",
+      "bytes": 116,
+      "sha256": "a19e8c3f9d52c222a1aa1e3935653760d112bbfcb24ac5ea6358f94bff5f2606"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/湖泊边界1.shp",
+      "bytes": 6252,
+      "sha256": "fd7079185b5ab83ccd2af9f1d5e311b634fd296819708d72305ab4cbd65dec06"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/湖泊边界1.shp.xml",
+      "bytes": 1487,
+      "sha256": "d1d767d010a369b0f7b4f627b57fefded5fdedff068e0819d5b0bcd34619302e"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/湖泊边界1.shx",
+      "bytes": 108,
+      "sha256": "ae78373a71e12bfed095e92cd681dbfd7678e522bf472fe52e5fb03946c736f8"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里dem分类冰.txt",
+      "bytes": 88,
+      "sha256": "847f400c43ac71f7dbd18951a2a0b9c4ee93ec84265a391fd6b0116da77a35fa"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里dem分类冰.txt.xml",
+      "bytes": 1333,
+      "sha256": "1445a0bfc93b497b803fa926eaca0ca3e2b6528413e9896e80f50531fda93d55"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类.tfw",
+      "bytes": 81,
+      "sha256": "cdb592b9ebb573a4942fa607f5083edb0bd877b49c088ebfffd9bac19c1a448d"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类.tif",
+      "bytes": 107272,
+      "sha256": "07addb76dba7e04e6484673c60dfb4a4840d8ea1f39c72199def9605996e30fb"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类.tif.aux.xml",
+      "bytes": 131457,
+      "sha256": "f709053814cb0c8e44f53cbd7b750b320c0e31a55e75d946baca2c9b8bafac66"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类.tif.ovr",
+      "bytes": 27153,
+      "sha256": "b8560fc90d39187fa280c8789d82d0501dfab5a5cc178c1482fa140eff883023"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类.tif.vat.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类.tif.vat.dbf",
+      "bytes": 278,
+      "sha256": "5058ca51c443a38a870f44b5feb4490465ce55f25604ffdfe4825071d90cc234"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类.tif.xml",
+      "bytes": 576,
+      "sha256": "c29e04ade6bbe801405a82c7f3c301281becee1b3d4c8ec6c5f904e6eb1ecb68"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰.tfw",
+      "bytes": 81,
+      "sha256": "f8f4f5b60d9e9f08ece246110001e292eb168e01870ca03b616eb95884561374"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰.tif",
+      "bytes": 2212,
+      "sha256": "81695398525f05b3fd8d2bb5cb3a470d012a262ec1538deb4c03453086ed8b51"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰.tif.aux.xml",
+      "bytes": 1250,
+      "sha256": "a3f95b3d2a644ccd0e7e406bb9d70b663db5b5eaa33bef4b007e95081c49a89c"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰.tif.vat.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰.tif.vat.dbf",
+      "bytes": 158,
+      "sha256": "d7eb3d1ba857e948fbeebb4a7dbcb53c53f5d563d8a50e42d695706821ea0e9d"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰.tif.xml",
+      "bytes": 500,
+      "sha256": "426c0f17d1a2c3a9fb4adefb32bc3cd7d3f095990269e12e4fdd3c4504dbd50f"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰面.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰面.dbf",
+      "bytes": 182,
+      "sha256": "3db446504921436d122dd3206d1953f05f6fc81e08db17fae2f97ce429d2c14f"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰面.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰面.sbn",
+      "bytes": 180,
+      "sha256": "80a3e229f6f2724eaac2c658985ce4bb9abb24ba72182bb5299ef125931fc4a3"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰面.sbx",
+      "bytes": 124,
+      "sha256": "4666844cef91c8e58a97ea8ee13d1b59b30eddf176415bae0b45c8e9d6710441"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰面.shp",
+      "bytes": 660,
+      "sha256": "da55c3b0594868e58167db721eab20e9369a7099843862a94bb3245ede93a30a"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰面.shp.xml",
+      "bytes": 527,
+      "sha256": "1073bbfe0c25885f6ea4706d4bdb1e53cbb0001f36b8640eb01fdc5591d65880"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰面.shx",
+      "bytes": 132,
+      "sha256": "87ae6184a3611198914333067ff77546d8e71d9903a296014b5d83afa8bb9ee8"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰面1.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰面1.dbf",
+      "bytes": 246,
+      "sha256": "1dbc46311aa1461b9de132eddcd6a8c17d2a7791ebfdc09c39f46fc7e185d613"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰面1.prj",
+      "bytes": 401,
+      "sha256": "8403c41c5fb2c9c1336e8626200a2e9431c714b4b682802205b8fd7d6591aec0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰面1.sbn",
+      "bytes": 180,
+      "sha256": "a9d823df7f6425e5389e2df67296c360e23b1b25cee4f7a2ccebd8dd97bbc090"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰面1.sbx",
+      "bytes": 124,
+      "sha256": "a312634f65090e364b28a847a7f8d56446c4cc0893030f5e3131cd76d176be30"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰面1.shp",
+      "bytes": 660,
+      "sha256": "2535cb9339585a3d6eb0ca34deee02998e146d77108c3f2de7fcf54557a074dc"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰面1.shp.xml",
+      "bytes": 1333,
+      "sha256": "aabcf3cd0c3aba5b4fd45bcf18f895216ed7e3262700c8b10843bd41983b5ce0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里分类冰面1.shx",
+      "bytes": 132,
+      "sha256": "8a831f713e2ee2895151659e3797c8a4b8476cc92414266e3713904f6528d158"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向.tfw",
+      "bytes": 81,
+      "sha256": "cdb592b9ebb573a4942fa607f5083edb0bd877b49c088ebfffd9bac19c1a448d"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向.tif",
+      "bytes": 6493228,
+      "sha256": "7c8746f44cd6a1d0fec3988458cc57356787b7348b40f93210ff7dcd3bebfae1"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向.tif.aux.xml",
+      "bytes": 2098,
+      "sha256": "b6b161aefc46e20296869f0a4e5cf7b8ace19f4aba2cd776abf8a029f94d830b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向.tif.ovr",
+      "bytes": 642618,
+      "sha256": "e5f3fb1e02e633599ba9d6f415c922ba42966ebc24bcc47cbe37e2cbc3614e58"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向.tif.xml",
+      "bytes": 489,
+      "sha256": "365d62a6e46512df2e116d60e42e87dc39c14b1453987899401059b8b7022c2f"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向.txt",
+      "bytes": 638956,
+      "sha256": "3a30825bd8d59967a2dd8ca8dfc70015bcfeb27b8f661687c502abbb3cd2a917"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向.txt.xml",
+      "bytes": 1330,
+      "sha256": "70eb4910b2e527bce4ae9b2aece97851bac0be408c1f1e5d062b9a009994fedc"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川.tfw",
+      "bytes": 81,
+      "sha256": "f8f4f5b60d9e9f08ece246110001e292eb168e01870ca03b616eb95884561374"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川.tif",
+      "bytes": 2207,
+      "sha256": "d6d7dc5aac27265bad66db5fe7be91c52c6b17b66aceeef99078d7157b024afc"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川.tif.aux.xml",
+      "bytes": 1250,
+      "sha256": "d818fdaeea1ed05015e4cc22d03767c34cb437d06f0e6aa2469a0e3c206c127e"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川.tif.vat.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川.tif.vat.dbf",
+      "bytes": 188,
+      "sha256": "6729b9437c06f3c8bf60c791c94399f286ca5b19a54b03adebf9523ee59ca4cb"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川.tif.xml",
+      "bytes": 512,
+      "sha256": "206ebe7978a34f29ead09d72c64e405c374bdc92458910af20276bd8fc865634"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川.txt.xml",
+      "bytes": 1345,
+      "sha256": "d536e08a106dda34354362249997a42a3e375410c0feb56b70b0bdf89a36bfa7"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川1.txt",
+      "bytes": 105,
+      "sha256": "0fef20a0e2652f6353bb4eae7cbd2c8d88d3d21dd70f17f2913d367e95cd4905"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川1.txt.xml",
+      "bytes": 1345,
+      "sha256": "6f1d11f8a518f2d0ea6cec93375d75ef97721d54c7a2b800e1fb81cabe378802"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川面.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川面.dbf",
+      "bytes": 203,
+      "sha256": "4841fe99ce3fd812bcf397ad3fffbb0806988bfb38e2c4e88d6af41dfad29ded"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川面.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川面.sbn",
+      "bytes": 188,
+      "sha256": "69d4da3a45c09f75558dfd428df7d308afafc7caef884ab7a2c2b8cb321bc053"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川面.sbx",
+      "bytes": 124,
+      "sha256": "5e8520579251564f736806398585ecf0305f2255088f6fb8f14e3c7ee8bdf75b"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川面.shp",
+      "bytes": 732,
+      "sha256": "6aae8a0e5a3d8a2ffc45ba5e825c893c8ec448a482761d6e09e74c202d8040e1"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川面.shp.xml",
+      "bytes": 533,
+      "sha256": "19ec5f06ca95ffd0e6a9f2f04e5e57204dcb469f6603a283dd03b620320e8b48"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川面.shx",
+      "bytes": 140,
+      "sha256": "ae3e856603d06cd2a923017b0aee85006fe26ed2136445cd75af5a5309a70cb1"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川面1.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川面1.dbf",
+      "bytes": 265,
+      "sha256": "881a8ec0234722bbc2d48a233d5e7d1e84e3941f48317ba88b01ad17a45ad66e"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川面1.prj",
+      "bytes": 401,
+      "sha256": "8403c41c5fb2c9c1336e8626200a2e9431c714b4b682802205b8fd7d6591aec0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川面1.sbn",
+      "bytes": 188,
+      "sha256": "9563bd77cadf4fde4e4e6d0f988350d5321871558a08bb16f6b0a55d364ae8ea"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川面1.sbx",
+      "bytes": 124,
+      "sha256": "a18090af1c80fad448cb031871f69956d8d0b0157580e41d67afefe5910d6410"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川面1.shp",
+      "bytes": 732,
+      "sha256": "56073d264df6cfb1ad64a3d9dd4aa6b302085506fe758e2ee4a4d611d3913519"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川面1.shp.xml",
+      "bytes": 1345,
+      "sha256": "83cba32d9b4a4d44d0f2b4f87e907b26e923c688ffce495eeb60dbab31944d89"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向冰川面1.shx",
+      "bytes": 140,
+      "sha256": "c86442ac2b6d9518de72f3190b61e29c24d5014ad492f107116fa3d2dd86cd0f"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向重分类.tfw",
+      "bytes": 81,
+      "sha256": "cdb592b9ebb573a4942fa607f5083edb0bd877b49c088ebfffd9bac19c1a448d"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向重分类.tif",
+      "bytes": 206261,
+      "sha256": "dff4face9bedd768e27f0b33ea28781ed77152e0851971515c651fc0b216310a"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向重分类.tif.aux.xml",
+      "bytes": 131453,
+      "sha256": "f36972de477529f7e7e219806d0245245c3db65eeb929f3a3d5f49b9e505cf03"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向重分类.tif.ovr",
+      "bytes": 66749,
+      "sha256": "1b20458a3c800b89ba1fbec4eed749fb6694470ecf3568b8694320585bf699bb"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向重分类.tif.vat.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向重分类.tif.vat.dbf",
+      "bytes": 218,
+      "sha256": "71f27fc3586ff10798513f63ba469e156b971b4dc71b3ab7c4f6de448ee15456"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向重分类.tif.xml",
+      "bytes": 586,
+      "sha256": "f9b299a0dad4b5334d74b0acdfaac6e9889ec9746a8c38ca7d3219c0d7417b61"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向面.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向面.dbf",
+      "bytes": 555422,
+      "sha256": "c8bc238796e0e335faeafeaa50550b47361d83060ec8932ebf91a9ad382b74aa"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向面.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向面.sbn",
+      "bytes": 256972,
+      "sha256": "46adbd55d89a8652676dd18a48a12a87db651cc3d67e144c36df7bff7f0b2df7"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向面.sbx",
+      "bytes": 14564,
+      "sha256": "873dfa410c08d7bc42db52fd236d1df472e99b43be2b1317d0e3198dd80a7eaa"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向面.shp",
+      "bytes": 5566156,
+      "sha256": "252c648ed8a35de3b9689417b595f3634b92db3910187d03722b64d5e32f13bf"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向面.shp.xml",
+      "bytes": 530,
+      "sha256": "0c7fc4607d694ca675a5abbfaa1516933f6c62952412c83e3646600c8b6fd5db"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向面.shx",
+      "bytes": 211652,
+      "sha256": "5d6ed5ba0cadc08759ed3025b45c13b3c2f7e063a8c4ddb3e8a324ef6f77b914"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向面1.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向面1.dbf",
+      "bytes": 767006,
+      "sha256": "1835a4e2e19f9c4da37c0739f72663c5caefa73f3d5c5f81b1c848097876cb90"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向面1.prj",
+      "bytes": 401,
+      "sha256": "8403c41c5fb2c9c1336e8626200a2e9431c714b4b682802205b8fd7d6591aec0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向面1.sbn",
+      "bytes": 257220,
+      "sha256": "e578681b2830b44d331e9f12912fd8ff8a5402b6e47ad53e402c5cc91b9762c7"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向面1.sbx",
+      "bytes": 14780,
+      "sha256": "3c4f49a727d9abd4c80a15ca99528a9b7ca305b4ebf7c9ce27d089fbcf48ebe6"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向面1.shp",
+      "bytes": 5566156,
+      "sha256": "5f38f820f8cfff6e424eb98d9a1f1f76390c3c105f1a9bdd6ef01468de6f5f71"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向面1.shp.xml",
+      "bytes": 1330,
+      "sha256": "327493fd6afc07ffb94c12715ed105d57f5e595242dd07a8d0792ae3ff6fe5b0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里坡向面1.shx",
+      "bytes": 211652,
+      "sha256": "641263da60cd578b65f75d335d919f8013be36e50573186fa90fcadda3c55faf"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里边界1.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里边界1.dbf",
+      "bytes": 188,
+      "sha256": "b0c7d8b4132eeb872e6284edf400c4449db59f942b2d2757110704ff06fc4e3d"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里边界1.prj",
+      "bytes": 401,
+      "sha256": "8403c41c5fb2c9c1336e8626200a2e9431c714b4b682802205b8fd7d6591aec0"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里边界1.sbn",
+      "bytes": 164,
+      "sha256": "1928d66d5b3d0416a23084dd8140ca6d31472e45d42e97d480064b9314625e8e"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里边界1.sbx",
+      "bytes": 124,
+      "sha256": "36bd118439227497dc57627aa85c40e211578391640b12e3483a23de8cc726b3"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里边界1.shp",
+      "bytes": 15764,
+      "sha256": "fa6d3801684085a85b18242d9385c56228fb0c31d346f84a9fe5edd16c1b3096"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里边界1.shp.xml",
+      "bytes": 1317,
+      "sha256": "e17ea9be208e2bec9f2fe928e723457211d41962a00b1a89db4852e79b1447b4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/glacier/阿里边界1.shx",
+      "bytes": 116,
+      "sha256": "e9554d058539baef7ddaa7e4063fa56c677ff5f5143b52e7c0b6b6f901fb082c"
+    },
+    {
+      "path": "data/raw/spatial/source-package/lake_shp/湖泊边界.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/lake_shp/湖泊边界.dbf",
+      "bytes": 112,
+      "sha256": "c78d28a85444afc5fc6727800bb874c6b68e3ca3a4fba24b512edcf3005e9414"
+    },
+    {
+      "path": "data/raw/spatial/source-package/lake_shp/湖泊边界.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/lake_shp/湖泊边界.sbn",
+      "bytes": 132,
+      "sha256": "e45df21568e6376b75016b04fd43968c7cd0691054f8cda766e55f90d071c47f"
+    },
+    {
+      "path": "data/raw/spatial/source-package/lake_shp/湖泊边界.sbx",
+      "bytes": 116,
+      "sha256": "4506667a2547354048421f3b98c9f7fbecdf18ea27cfb7c8d0e31a57f45aab26"
+    },
+    {
+      "path": "data/raw/spatial/source-package/lake_shp/湖泊边界.shp",
+      "bytes": 6252,
+      "sha256": "c3726517a0ad6f9a93d535f5dc32f40cd08f8832665ebbb9fd25005e4509c5f5"
+    },
+    {
+      "path": "data/raw/spatial/source-package/lake_shp/湖泊边界.shp.xml",
+      "bytes": 693,
+      "sha256": "7a5fa72ae1e7c71ca9376669600687e740e91a564e424ed97b963b19ea66d027"
+    },
+    {
+      "path": "data/raw/spatial/source-package/lake_shp/湖泊边界.shx",
+      "bytes": 108,
+      "sha256": "54c971d935f03094adc410220103ab639fbc8aef77dffd3a249639c1e3a093bf"
+    },
+    {
+      "path": "data/raw/spatial/source-package/stations/降水_站点位置.xls",
+      "bytes": 20480,
+      "sha256": "2c6b7f629d48ded92b515a8a8db6923c1d2e4c6e4e3d97d3aa0b2f7b8c116578"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/扎加藏布边界.CPG",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/扎加藏布边界.dbf",
+      "bytes": 159,
+      "sha256": "c07aea13a4ad11b2b649d7828f869a2ff19e6a179c2b75a2b3f2038ba6d43ba8"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/扎加藏布边界.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/扎加藏布边界.sbn",
+      "bytes": 132,
+      "sha256": "fe42606753ee312d5c600bf4a5a85e9316abd12d62e34afafd5bab85cc8ef4ac"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/扎加藏布边界.sbx",
+      "bytes": 116,
+      "sha256": "31b6e11ecca4eca05b3a1cdf61df513fd4aaecec753a209fc8166430299056c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/扎加藏布边界.shp",
+      "bytes": 39804,
+      "sha256": "157d7394cdc3b7f295255e0bffbc95eceb866fb20dfcca0282e7518ddb498554"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/扎加藏布边界.shp.xml",
+      "bytes": 517,
+      "sha256": "55592a3567fb08c1f093d0781e04ae5e0172a01a813e1df3abb66a974238fdac"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/扎加藏布边界.shx",
+      "bytes": 108,
+      "sha256": "44701e00beee3f4404031920b90b8a5e5cf339cea1f8c55c3d5faa681a5ae9ee"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/扎根藏布边界.CPG",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/扎根藏布边界.dbf",
+      "bytes": 119,
+      "sha256": "a1671d68f4939bceca74d7f7c94b05bb65c1fe0d887f821e4d14972960dccced"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/扎根藏布边界.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/扎根藏布边界.sbn",
+      "bytes": 132,
+      "sha256": "0fa088856f779c4b0615c1e8befa918bc3721dc7e24635908653459413c443ab"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/扎根藏布边界.sbx",
+      "bytes": 116,
+      "sha256": "ae3b39802b0ad2f0f6ee299fb1d5a98b21b4ea485e48f3ff30d95f9d7415df81"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/扎根藏布边界.shp",
+      "bytes": 38060,
+      "sha256": "a74b44362750afb717dea4e964bc8f40880a58c2edfabd9b4a0f3a922d3b2067"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/扎根藏布边界.shp.xml",
+      "bytes": 517,
+      "sha256": "a87af7c433b793bfa56fe1046a6332b03d309c2529b7f7fcf1b0ecf44c33482e"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/扎根藏布边界.shx",
+      "bytes": 108,
+      "sha256": "fb3d31473df8ffa80a2e095054791ab64a0bb655a9cadcd8fc989e8f122082d4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/波曲藏布边界.CPG",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/波曲藏布边界.dbf",
+      "bytes": 140,
+      "sha256": "c22c01277f9d8b59c54f10b6492e2740a2ce2b92eb83ae0fa1d9e78216b420bb"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/波曲藏布边界.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/波曲藏布边界.sbn",
+      "bytes": 164,
+      "sha256": "2ab6fbce65403bf318b1cfbf9f68e48a5929e8caa5b2fb5e8cb4d5e0ecd2e2eb"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/波曲藏布边界.sbx",
+      "bytes": 124,
+      "sha256": "6f1d298aeab764fba409e6c7d5b969a067fd6d6767161f9df5b376640ef2743f"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/波曲藏布边界.shp",
+      "bytes": 9124,
+      "sha256": "b4d3b5f1cfe62973d2f9ec42ea020da22badddb89a7db7d0fadde6d1b2c27b7d"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/波曲藏布边界.shp.xml",
+      "bytes": 517,
+      "sha256": "dda57a90c7f0bbfd63d64c75e4f08c5333d2da3ea83b87a4afe07579609bf408"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/波曲藏布边界.shx",
+      "bytes": 116,
+      "sha256": "a9fbf5eceaf31dbe41adde02bcb669700ce2a7e19812a104c82268685c0120fb"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/阿里藏布边界.CPG",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/阿里藏布边界.dbf",
+      "bytes": 140,
+      "sha256": "c22c01277f9d8b59c54f10b6492e2740a2ce2b92eb83ae0fa1d9e78216b420bb"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/阿里藏布边界.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/阿里藏布边界.sbn",
+      "bytes": 164,
+      "sha256": "ea5d474deb3b0b3aef1b1dcfeb5408641d6588f5a7668725fe0fac213f58b529"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/阿里藏布边界.sbx",
+      "bytes": 124,
+      "sha256": "b492e2dab5914d4cb11f97478045ad1c12ca18b8f90a00028c6719e9b960b5ce"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/阿里藏布边界.shp",
+      "bytes": 15764,
+      "sha256": "ae051c3f14d65aea7bc4bd6500542074cc40f1ce1c6fb3c7c1cf5b27caeabfd7"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/阿里藏布边界.shp.xml",
+      "bytes": 517,
+      "sha256": "35bf3f82a504962caff76b7478dee28607b84d8ef10cfec9d39445ada6df9529"
+    },
+    {
+      "path": "data/raw/spatial/source-package/subbasin_shp/阿里藏布边界.shx",
+      "bytes": 116,
+      "sha256": "79ad379088f1ca56563ece2e1dddf6939b796b0681a58e151a6b4fb6b32cbd91"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/ali/ali_d8_pointer.tif",
+      "bytes": 22532,
+      "sha256": "d2f4d92a705fe86c071e99d6ac4f4bc5715e3fdfc810f02241ad1deb3d692d8b"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/ali/ali_dem_filled.tif",
+      "bytes": 86562,
+      "sha256": "5b0458c8b4d6875f353291d779d26befbbda3e541ce67a28f3dc5f97d1cdec79"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/ali/ali_flow_accum_cells.tif",
+      "bytes": 43876,
+      "sha256": "f81bb7aef521692e88b2a46d1b450d86e162d015c36c0e8ec794d62d5e6ca361"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/ali/ali_streams_thr150cells.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/ali/ali_streams_thr150cells.dbf",
+      "bytes": 4238,
+      "sha256": "7fccb0d3461f8a6bf999cc5521734fac413d9269891f7263e4227c89ee3dd16a"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/ali/ali_streams_thr150cells.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/ali/ali_streams_thr150cells.shp",
+      "bytes": 3244,
+      "sha256": "ab33447ae38a895fb2c6f50f6d52e5fe0f5ad0380444a62a74a840851be2d3ea"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/ali/ali_streams_thr150cells.shx",
+      "bytes": 236,
+      "sha256": "632c196e21fe9512316c8a3398c1550490c91517d8a2bc5f2f90cff8e754f8af"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/ali/ali_streams_thr150cells.tif",
+      "bytes": 43876,
+      "sha256": "28b3097cdb3f6d78dec516740f174af061e56aaefbee3bfed180e3060525e90f"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/ali/ali_streams_thr50cells.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/ali/ali_streams_thr50cells.dbf",
+      "bytes": 12026,
+      "sha256": "868b7af9cc7797a594c912435735ff21997ef6dee9a2c4e567d24646169c18de"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/ali/ali_streams_thr50cells.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/ali/ali_streams_thr50cells.shp",
+      "bytes": 7028,
+      "sha256": "313dc64d0353be887126519657e285f85a6f0b1f7df8717368c3c71d0bd360ab"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/ali/ali_streams_thr50cells.shx",
+      "bytes": 500,
+      "sha256": "9cf048de1b5835c47a89aeb2e92ff4584229606387aecfd1d02ca14ee7eff36d"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/ali/ali_streams_thr50cells.tif",
+      "bytes": 43876,
+      "sha256": "4697c78bd2a2aba241d2b8a6800573cd88f4d228c6c54779fbd5e3bc1321f612"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/boqu/boqu_d8_pointer.tif",
+      "bytes": 6282,
+      "sha256": "dface649a16aa9ce4b4581f17d443abc5927f1893f6d6e3c718093f9d06f323e"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/boqu/boqu_dem_filled.tif",
+      "bytes": 22498,
+      "sha256": "57edb5e96a1f3f9363b6e417280dfeb6c178b224b7fe02fa3baafb1de58b243c"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/boqu/boqu_flow_accum_cells.tif",
+      "bytes": 11688,
+      "sha256": "8876a47ee2d92877506896e07c50b9bfa8a9f2a4a85d3c8a63917c981627af57"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/boqu/boqu_streams_thr150cells.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/boqu/boqu_streams_thr150cells.dbf",
+      "bytes": 934,
+      "sha256": "87d1e3f4e6158da7e57dc1f6a92cac57e1c0f2052e1144450569c89d0588292e"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/boqu/boqu_streams_thr150cells.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/boqu/boqu_streams_thr150cells.shp",
+      "bytes": 684,
+      "sha256": "acb02a2953033d583dfa9d6b4828a163a3007a13c8c20cd6572d06c698ec7acd"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/boqu/boqu_streams_thr150cells.shx",
+      "bytes": 124,
+      "sha256": "ec9fe1ba199faf6f867bf20806b37affeb6f3fdf408f4f50595d1dc46f80ffbe"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/boqu/boqu_streams_thr150cells.tif",
+      "bytes": 11688,
+      "sha256": "35d62d1e9faa797101895035310a0973475a1a8618bb2ee046c782a1ba3dffea"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/boqu/boqu_streams_thr50cells.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/boqu/boqu_streams_thr50cells.dbf",
+      "bytes": 2350,
+      "sha256": "22a0ba77107d9c09213d5897fa5c7b31e97a8880db9cac0560718bbd0ee76f6d"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/boqu/boqu_streams_thr50cells.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/boqu/boqu_streams_thr50cells.shp",
+      "bytes": 1420,
+      "sha256": "77d422def9a80ad92c53afd8aa1a664e861068e2e7ba1d834baf8cad2ce081a6"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/boqu/boqu_streams_thr50cells.shx",
+      "bytes": 172,
+      "sha256": "eed4029dcd70b6135e83365a4d0b64b7b999fdc8b9d7484455f17794e1dfd453"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/boqu/boqu_streams_thr50cells.tif",
+      "bytes": 11688,
+      "sha256": "066b57fb86c60024a4aad907fbd73d8e8200a7611b8aa6bda4195bef6bf10274"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/merged/selinco_4basin_streams_thr150cells.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/merged/selinco_4basin_streams_thr150cells.dbf",
+      "bytes": 28310,
+      "sha256": "79d10c1e839c2b8bfb224c17f325623fc6ad3d9d7c610203fc1b34826b430c07"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/merged/selinco_4basin_streams_thr150cells.gpkg",
+      "bytes": 135168,
+      "sha256": "82688ca0daff759cb6476e250239646d3be616c5e3c6409a8d7ebd4594de5b57"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/merged/selinco_4basin_streams_thr150cells.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/merged/selinco_4basin_streams_thr150cells.shp",
+      "bytes": 22460,
+      "sha256": "6f039aaad127e5e4e82cfac4c6f02bad282dc7c82638aafdb10ac4ee79e3773f"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/merged/selinco_4basin_streams_thr150cells.shx",
+      "bytes": 1052,
+      "sha256": "12e7b1238b54a4724345971008d19e560dbb6f06e64cd3bdce7c360b8dd07015"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/merged/selinco_4basin_streams_thr50cells.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/merged/selinco_4basin_streams_thr50cells.dbf",
+      "bytes": 89906,
+      "sha256": "856cea3952a60455eb52243effa938b65c20956a928e108fb8d0e34e3b6fcda9"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/merged/selinco_4basin_streams_thr50cells.gpkg",
+      "bytes": 188416,
+      "sha256": "661c218f1dd7c398ca3c682a470625b0b51732447bff5a064205ad124088cf95"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/merged/selinco_4basin_streams_thr50cells.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/merged/selinco_4basin_streams_thr50cells.shp",
+      "bytes": 52516,
+      "sha256": "6cb38a2d0095ff5e83d8d553fa44d62cb7a0a47711219f238650cd80d6b4f0d1"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/merged/selinco_4basin_streams_thr50cells.shx",
+      "bytes": 3140,
+      "sha256": "1880a1589d96e22818d511e3a933b81e1b4c328084c04c10a8f09b7247decafd"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/selinco_4basin_stream_network_overview.png",
+      "bytes": 287796,
+      "sha256": "027ff6e0d69f218accc86dce3dbbacd791f23cdb5a1cd60b88f496918478df76"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/summary.json",
+      "bytes": 1315,
+      "sha256": "57413ac097595993b10a93a5012905ebb8a144957139edce4f53b898a51cac30"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zagen/zagen_d8_pointer.tif",
+      "bytes": 77456,
+      "sha256": "e2b262d1f12fe4419e8a8f2e08f652650f00cc3cb05f7f554d3ae95931e19ce4"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zagen/zagen_dem_filled.tif",
+      "bytes": 304002,
+      "sha256": "a6ee08e5ff9b7f245830ef91dc3082416371d1b90bb7a90248d67c2e012ca2d3"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zagen/zagen_flow_accum_cells.tif",
+      "bytes": 152972,
+      "sha256": "1068554e616c0033b9f8d60bb446adf023b2c6b7c920830e661569f764b0d4c5"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zagen/zagen_streams_thr150cells.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zagen/zagen_streams_thr150cells.dbf",
+      "bytes": 12498,
+      "sha256": "d4c96396e80979b7f15d23bfb8dd11208ae73832cd139032dadaf89145950c82"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zagen/zagen_streams_thr150cells.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zagen/zagen_streams_thr150cells.shp",
+      "bytes": 9268,
+      "sha256": "a622fec57df10b71d685bb01d449a87b518787ccd769d42f5cc1e9889b23cb04"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zagen/zagen_streams_thr150cells.shx",
+      "bytes": 516,
+      "sha256": "aced86fd2b2a7ad21659462ee16d9d9c58635ea18a702870fba364d200f93216"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zagen/zagen_streams_thr150cells.tif",
+      "bytes": 152972,
+      "sha256": "2c94a729da0184e9c755934d7321d823348bf5eba374ba629464e203c4ae1e61"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zagen/zagen_streams_thr50cells.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zagen/zagen_streams_thr50cells.dbf",
+      "bytes": 36570,
+      "sha256": "5686c0afab635718e5c2d817a6c9c764d799fb087a668352a606087cc30656d3"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zagen/zagen_streams_thr50cells.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zagen/zagen_streams_thr50cells.shp",
+      "bytes": 21556,
+      "sha256": "58ccfa6d3cc5a4f954958ef6653756657096bf672417ef9824ee80e29f727479"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zagen/zagen_streams_thr50cells.shx",
+      "bytes": 1332,
+      "sha256": "88e4957e4c42d0cfeba20f7f7ac590368fc40f60ffae64ac177ab02301ee9a96"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zagen/zagen_streams_thr50cells.tif",
+      "bytes": 152972,
+      "sha256": "2939c604aa72b14b1564381d5bd5cd1d5f305ada8037465810448ecfcf4a2ec0"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zajia/zajia_d8_pointer.tif",
+      "bytes": 91172,
+      "sha256": "f0cae3cd6cff27ef55de40ce3051e1acbc292c8ead802c0472adce64766eb14f"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zajia/zajia_dem_filled.tif",
+      "bytes": 359874,
+      "sha256": "245a33428783f0f095f598770fb75164d9978bc6bf4467043f8683c2119c4a05"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zajia/zajia_flow_accum_cells.tif",
+      "bytes": 180740,
+      "sha256": "568cb253f4602b466f32f85b7d27f3dfdb45375ee24df100a4b8f6cafd55c178"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zajia/zajia_streams_thr150cells.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zajia/zajia_streams_thr150cells.dbf",
+      "bytes": 11318,
+      "sha256": "5a43b7cce5a1017610a4f814da9be08cb3a79cb0dd6c435f659dcd1296cfe5c2"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zajia/zajia_streams_thr150cells.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zajia/zajia_streams_thr150cells.shp",
+      "bytes": 9564,
+      "sha256": "108b2acb9c20ad0db75a2ef3b64275fb6a32c8ed0b98f42a1b3618cbdaac69f9"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zajia/zajia_streams_thr150cells.shx",
+      "bytes": 476,
+      "sha256": "aa7afa98eaf31e85d68d736cd168ad79dd4604c7efcdd42def6799da4e5f8bbd"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zajia/zajia_streams_thr150cells.tif",
+      "bytes": 180740,
+      "sha256": "365169937372cf2e5979a6ba1206dc913600bbf49e2e52b7e8034694c2ca2ab4"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zajia/zajia_streams_thr50cells.cpg",
+      "bytes": 5,
+      "sha256": "3ad3031f5503a4404af825262ee8232cc04d4ea6683d42c5dd0a2f2a27ac9824"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zajia/zajia_streams_thr50cells.dbf",
+      "bytes": 39638,
+      "sha256": "c46f6efcdf7a1a799e4fe21729717f3ddb83d969d2cf4a18afe62df25434b9d4"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zajia/zajia_streams_thr50cells.prj",
+      "bytes": 145,
+      "sha256": "a02a27b1d1982c8516d83398e85a3c8b1aef1713c13ef4d84d7bde17430c07c4"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zajia/zajia_streams_thr50cells.shp",
+      "bytes": 22812,
+      "sha256": "903f831315f86ce60f1e52e3c648e69f77019a5c4415fbdd9c0fb387b09b77f5"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zajia/zajia_streams_thr50cells.shx",
+      "bytes": 1436,
+      "sha256": "ef9fa7143b11658ae69076979f94f1e3b6909b8e4dabf2164315eecfbc57f503"
+    },
+    {
+      "path": "data/raw/spatial/stream-package/zajia/zajia_streams_thr50cells.tif",
+      "bytes": 180740,
+      "sha256": "8337f4e8e606e69a5ba289b9f452bafa08ee6e98441ad34049dde951afe5fee3"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/analysis.json",
+      "bytes": 1110,
+      "sha256": "a00062c97c25edf7e8bc181fd4fbeb3b81ac1305a34ede693f9cdd86958c9cd0"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/dem-1km-filled.tif",
+      "bytes": 117569,
+      "sha256": "9d4d45d7dc72bcc6828c1f0cc7ca8513a48425f5ac4b1278071703ebb72f4c04"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/dem-1km-raw.tif",
+      "bytes": 614651,
+      "sha256": "ef662247a138f16e6dfa49c29ae9d0fc5079b9e007304ec078faaf3c0bdc4b9b"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/flow-accumulation-1km.tif",
+      "bytes": 72122,
+      "sha256": "b6086da4cb6d1f5174e67372bef26d292004d9044cca0fe19691e673d52d6750"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/flow-direction-d8-1km.tif",
+      "bytes": 25975,
+      "sha256": "331da0ad46b10da47fa1771292b0f371dada738b766c9d737b93ebd718cdeae6"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/provided/ali_d8_pointer.tif",
+      "bytes": 22532,
+      "sha256": "d2f4d92a705fe86c071e99d6ac4f4bc5715e3fdfc810f02241ad1deb3d692d8b"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/provided/ali_dem_filled.tif",
+      "bytes": 86562,
+      "sha256": "5b0458c8b4d6875f353291d779d26befbbda3e541ce67a28f3dc5f97d1cdec79"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/provided/ali_flow_accum_cells.tif",
+      "bytes": 43876,
+      "sha256": "f81bb7aef521692e88b2a46d1b450d86e162d015c36c0e8ec794d62d5e6ca361"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/provided/boqu_d8_pointer.tif",
+      "bytes": 6282,
+      "sha256": "dface649a16aa9ce4b4581f17d443abc5927f1893f6d6e3c718093f9d06f323e"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/provided/boqu_dem_filled.tif",
+      "bytes": 22498,
+      "sha256": "57edb5e96a1f3f9363b6e417280dfeb6c178b224b7fe02fa3baafb1de58b243c"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/provided/boqu_flow_accum_cells.tif",
+      "bytes": 11688,
+      "sha256": "8876a47ee2d92877506896e07c50b9bfa8a9f2a4a85d3c8a63917c981627af57"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/provided/zagen_d8_pointer.tif",
+      "bytes": 77456,
+      "sha256": "e2b262d1f12fe4419e8a8f2e08f652650f00cc3cb05f7f554d3ae95931e19ce4"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/provided/zagen_dem_filled.tif",
+      "bytes": 304002,
+      "sha256": "a6ee08e5ff9b7f245830ef91dc3082416371d1b90bb7a90248d67c2e012ca2d3"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/provided/zagen_flow_accum_cells.tif",
+      "bytes": 152972,
+      "sha256": "1068554e616c0033b9f8d60bb446adf023b2c6b7c920830e661569f764b0d4c5"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/provided/zajia_d8_pointer.tif",
+      "bytes": 91172,
+      "sha256": "f0cae3cd6cff27ef55de40ce3051e1acbc292c8ead802c0472adce64766eb14f"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/provided/zajia_dem_filled.tif",
+      "bytes": 359874,
+      "sha256": "245a33428783f0f095f598770fb75164d9978bc6bf4467043f8683c2119c4a05"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/provided/zajia_flow_accum_cells.tif",
+      "bytes": 180740,
+      "sha256": "568cb253f4602b466f32f85b7d27f3dfdb45375ee24df100a4b8f6cafd55c178"
+    },
+    {
+      "path": "data/raw/spatial/terrain-reference/stream-order-strahler-1km.tif",
+      "bytes": 9749,
+      "sha256": "1c8dcdc6f42df328bffbb9df134a47ea2e38f5f5694493aeff119d09fd8006cb"
+    }
+  ],
+  "originalLocation": "用户提供的原始色林错资料；复制保留原件"
+}
