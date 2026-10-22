@@ -35,13 +35,35 @@ def main():
     for _,row in g.iterrows():
         geom=row.geometry
         if geom is not None and not geom.is_empty:
-            features.append({'type':'Feature','properties':{'kind':'river'},'geometry':geom.simplify(.0006,preserve_topology=True).__geo_interface__})
+            features.append({'type':'Feature','properties':{'kind':'river','basinId':str(row['basin_id']),'name':str(row['basin_cn']),'lengthKm':float(row['len_km'])},'geometry':geom.simplify(.0006,preserve_topology=True).__geo_interface__})
     write_json(folder/'rivers-display.geojson',{'type':'FeatureCollection','features':features})
     from shapely.geometry import shape,mapping
+    from shapely.ops import polylabel
     units=json.loads((folder/'units.geojson').read_text(encoding='utf-8'))
     units['features']=[{**f,'geometry':mapping(shape(f['geometry']).simplify(.0015,preserve_topology=True))} for f in units['features']]
     write_json(folder/'units-display.geojson',units)
-    write_json(folder/'display-context.json',{'createdAt':now(),'bounds':bounds,'displayOnly':True,
+    display=json.loads((folder/'map.geojson').read_text(encoding='utf-8'))
+    labels=[]
+    for f in display['features']:
+        prop=f['properties']
+        if prop['kind'] not in ('basin','lake'):continue
+        geom=shape(f['geometry'])
+        pieces=list(geom.geoms) if geom.geom_type=='MultiPolygon' else [geom]
+        largest=max(pieces,key=lambda p:p.area)
+        anchor=polylabel(largest,tolerance=.0005)
+        labels.append({**prop,'anchor':[anchor.x,anchor.y], 'placement':'largest-polygon-interior-pole'})
+    domain=next(shape(f['geometry']) for f in display['features'] if f['properties']['kind']=='domain')
+    riverLabels=[]
+    for basin in ('zajia','zagen','boqu','ali'):
+        candidates=[f for f in features if f['properties']['basinId']==basin]
+        longest=max(candidates,key=lambda f:f['properties']['lengthKm'])
+        line=shape(longest['geometry'])
+        if line.geom_type=='MultiLineString':line=max(line.geoms,key=lambda g:g.length)
+        anchor=line.interpolate(.5,normalized=True)
+        riverLabels.append({'id':basin,'name':longest['properties']['name'],'anchor':[anchor.x,anchor.y],
+                            'placement':'longest-supplied-segment-midpoint','featureLengthKm':longest['properties']['lengthKm']})
+    write_json(folder/'display-context.json',{'createdAt':now(),'bounds':bounds,'domainBounds':list(domain.bounds),
+        'lakeBounds':list(next(shape(f['geometry']) for f in display['features'] if f['properties']['kind']=='lake').bounds),'labels':labels,'riverLabels':riverLabels,'displayOnly':True,
         'note':'基于已提供的1km地形与150格阈值河网制作，仅作地图展示，不改变模型汇流。',
         'terrainSource':{'path':terrain.relative_to(ROOT).as_posix(),'sha256':sha_file(terrain)},
         'riverSource':{'path':rivers.relative_to(ROOT).as_posix(),'sha256':sha_file(rivers),'features':len(features)}})

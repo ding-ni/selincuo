@@ -9,7 +9,7 @@ export function runIssue(run, inputs, mode, active = false) {
   if (run.start.length < 16 || run.end.length < 16 || run.start.slice(14,16) !== '00' || run.end.slice(14,16) !== '00') return '模型按整小时演算，请将起止时间的分钟设为00。'
   if (run.start < source.manifest.start.slice(0,16) || run.end > source.manifest.end.slice(0,16)) return '计算时段超出所选输入的真实覆盖范围，请补齐资料或缩短时段。'
   if (mode === 'calibration') {
-    if (run.start > '2023-01-01T00:00' || run.end < '2024-12-31T23:00') return '自动率定需要完整2023年预热和2024年评价驱动，当前条件尚未满足。'
+    if (run.start > '2023-01-01T00:00' || run.end < '2025-01-01T00:00') return '自动率定需要完整2023年预热和2024年评价驱动，当前条件尚未满足。'
     if (!Number.isInteger(run.maxEvaluations) || run.maxEvaluations < 10 || run.maxEvaluations > 2000) return '评价预算须为10—2000之间的整数。'
     if (run.stage === 'lake' && !run.baseTaskId) return '请选择同输入版本的成功成果，以冻结流域参数。'
   }
@@ -34,4 +34,13 @@ export function compatibleComparison(current, other) {
 }
 export function readDraft(storage) {
   try { const d = JSON.parse(storage.getItem('selinco:workbench:v2')); return d?.version === 2 ? d : null } catch { return null }
+}
+
+export function preferredHistoricalInput(inputs) {
+ const list=inputs.filter(i=>i.compatible!==false)
+ return list.find(i=>i.manifest.start<='2023-01-01T00:00:00'&&i.manifest.end>='2026-01-01T00:00:00')||[...list].sort((a,b)=>b.manifest.hours-a.manifest.hours)[0]
+}
+export function historicalPeriod(manifest) {
+ if(manifest.start<='2023-01-01T00:00:00'&&manifest.end>='2026-01-01T00:00:00')return {start:'2023-01-01T00:00',end:'2026-01-01T00:00'}
+ return {start:manifest.start.slice(0,16),end:manifest.end.slice(0,16)}
 }

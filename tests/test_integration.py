@@ -76,6 +76,10 @@ class IntegrationTests(unittest.TestCase):
                 for key in ('flow', 'unitStates', 'unitDiagnostics', 'routingStorage'):
                     np.testing.assert_allclose(f[key], np.concatenate([p[key], t[key]]), atol=1e-9, rtol=1e-12)
             self.assertEqual(full['resultSource'], 'model-backend')
+            midnight = run_simulation(db, {**request, 'start': '2023-01-02T00:00:00', 'end': '2023-01-04T00:00:00'})
+            self.assertEqual([r['date'][:10] for r in midnight['daily']], ['2023-01-02', '2023-01-03'])
+            self.assertTrue(all(r['forcingHours'] == 24 for r in midnight['daily']))
+            self.assertEqual(set(midnight['metrics']), {'2023'})
             self.assertLess(full['diagnostics']['landGlacierMaxBalanceErrorMm'], 1e-9)
             with self.assertRaises(ValueError):
                 run_simulation(db, {**request, 'projectId': 'foreign'})

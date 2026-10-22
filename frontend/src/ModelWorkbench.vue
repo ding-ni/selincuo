@@ -1,6 +1,6 @@
 <script setup>
 import {ref,computed,watch} from 'vue'
-import {groups,runIssue,parameterIssue} from './workflow.mjs'
+import {groups,runIssue,parameterIssue,preferredHistoricalInput,historicalPeriod} from './workflow.mjs'
 const props=defineProps({boot:Object,run:Object,params:Object,page:String,busy:Boolean,active:Array,completed:Array})
 const emit=defineEmits(['submit','scheme','parameters','save-scheme','save-parameters','data','defaults','base'])
 const method=ref('automatic'),tab=ref('result'),group=ref('land'),schemeId=ref(''),parameterId=ref(''),schemeName=ref(''),parameterName=ref('')
@@ -10,8 +10,9 @@ const input=computed(()=>props.boot.inputs.find(i=>i.id===props.run.inputId))
 const definitions=computed(()=>props.boot.parameterDefinitions.filter(d=>d.group===group.value))
 const baseTasks=computed(()=>props.completed.filter(t=>!t.trashed))
 const automaticLocked=d=>mode.value==='calibration'&&(props.run.stage==='lake'||d.group==='snow'||d.group==='lake')
-function selectInput(e){const i=props.boot.inputs.find(i=>i.id===e.target.value);props.run.inputId=i?.id||'';props.run.baseTaskId='';if(i){props.run.start=i.manifest.start.slice(0,16);props.run.end=i.manifest.end.slice(0,16)}}
-function preset(year){props.run.start=(year===2024?'2023':year)+'-01-01T00:00';props.run.end=year+'-12-31T23:00'}
+function selectInput(e){const i=props.boot.inputs.find(i=>i.id===e.target.value);props.run.inputId=i?.id||'';props.run.baseTaskId='';if(i){Object.assign(props.run,historicalPeriod(i.manifest))}}
+function preset(year){props.run.start=(year===2024?'2023':year)+'-01-01T00:00';props.run.end=(year+1)+'-01-01T00:00'}
+function completeHistory(){const i=preferredHistoricalInput(props.boot.inputs);if(i){props.run.inputId=i.id;props.run.baseTaskId='';Object.assign(props.run,historicalPeriod(i.manifest))}}
 watch(()=>props.page,()=>{tab.value='result'})
 </script>
 <template>
@@ -24,13 +25,13 @@ watch(()=>props.page,()=>{tab.value='result'})
      <label>真实气象输入<select :value="run.inputId" @change="selectInput"><option value="">请选择已登记输入</option><option v-for="i in boot.inputs" :key="i.id" :value="i.id" :disabled="i.compatible===false">{{i.name}} · {{i.manifest.start.slice(0,10)}}—{{i.manifest.end.slice(0,10)}}</option></select></label>
      <p v-if="input" class="note coverage-hint">可用 {{input.manifest.start.slice(0,16).replace('T',' ')}}<br>至 {{input.manifest.end.slice(0,16).replace('T',' ')}} · 北京时间</p>
      <label>开始时间<input v-model="run.start" type="datetime-local" step="3600"></label><label>结束时间<input v-model="run.end" type="datetime-local" step="3600"></label>
-     <div class="period-presets"><button @click="preset(2024)">2024率定</button><button @click="preset(2025)">2025验证</button><button @click="preset(2026)">2026检验</button></div>
+     <div class="period-presets"><button :disabled="!boot.annualValidation.ready" @click="completeHistory">完整历史（含预热）</button><button @click="preset(2024)">2024率定</button><button @click="preset(2025)">2025单年回算</button><button @click="preset(2026)">2026检验</button></div>
      <template v-if="page==='calibration'"><div class="segmented" aria-label="调参方式"><button :class="{active:method==='automatic'}" @click="method='automatic'">自动率定</button><button :class="{active:method==='manual'}" @click="method='manual';tab='parameters'">人工试调</button></div><template v-if="method==='automatic'"><label>率定阶段<select v-model="run.stage"><option value="runoff">① 产汇流 · 杜加流量</option><option value="lake">② 湖泊 · 主站湖位</option></select></label><label>评价次数预算<input type="number" min="10" max="2000" step="1" v-model.number="run.maxEvaluations"></label><label v-if="run.stage==='lake'">冻结参数的基准成果<select v-model="run.baseTaskId" @change="emit('base',run.baseTaskId)"><option value="">选择成功成果（提交时核验同输入）</option><option v-for="t in baseTasks" :key="t.id" :value="t.id">{{t.name||t.id}}</option></select></label></template></template>
      <p v-if="issue" class="note warning" role="status">{{issue}}</p><button class="primary run-primary" :disabled="busy||!!issue" @click="tab='result';emit('submit',mode)">{{mode==='calibration'?'开始分步率定':mode==='trial'?'运行人工试调':'开始历史模拟'}}</button>
      <button v-if="page==='simulation'" :disabled="busy||!!issue" @click="tab='parameters'">调整参数 / 人工试调</button><button class="link" @click="emit('data')">查看资料覆盖与下载 →</button>
     </div>
    </section>
-   <section class="panel compact-guide"><b>本次计算规则</b><p>小时演算 · 日尺度评价<br>2023预热 → 2024率定 → 2025验证<br>湖面面积固定，可靠观测窗口起算。</p><span class="badge">冰雪全年连续</span></section>
+   <section class="panel compact-guide"><b>本次计算规则</b><p>小时演算 · 日尺度评价<br>2023预热 → 2024率定 → 2025验证<br>正式验证沿用预热后的连续状态。<br>湖面面积固定，可靠观测窗口起算。</p><span class="badge">冰雪全年连续</span></section>
   </aside>
   <div class="workbench-main"><nav class="workspace-tabs" aria-label="模型工作区"><button :class="{active:tab==='result'}" @click="tab='result'">过程与评价</button><button :class="{active:tab==='parameters'}" @click="tab='parameters'">参数试调</button><button :class="{active:tab==='readiness'}" @click="tab='readiness'">计算准备</button></nav>
    <div v-if="tab==='result'"><slot/><section v-if="!$slots.default" class="panel empty">完成计算后，在此查看过程、评价和状态。</section></div>

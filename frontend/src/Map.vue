@@ -1,10 +1,6 @@
 <script setup>
-import {ref,onMounted,computed} from 'vue'
-const features=ref([]),selected=ref(null),showIce=ref(true),showControl=ref(true)
-const box=[87.1,29.8,92.5,33.6]
-const xy=([x,y])=>[(x-box[0])/(box[2]-box[0])*1000,(box[3]-y)/(box[3]-box[1])*650]
-function path(g){const polygons=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[];return polygons.map(p=>p.map(r=>r.map((c,i)=>`${i?'L':'M'}${xy(c).map(n=>n.toFixed(2)).join(',')}`).join(' ')+'Z').join(' ')).join(' ')}
-const visible=computed(()=>features.value.filter(f=>(showIce.value||f.properties.kind!=='glacier')&&(showControl.value||f.properties.kind!=='control')))
-onMounted(async()=>{try{const r=await fetch('/spatial/display.geojson');if(r.ok)features.value=(await r.json()).features}catch{}})
+import {ref} from 'vue'
+import ScreenMap from './ScreenMap.vue'
+const selected=ref(null)
 </script>
-<template><div class="basin-map"><div class="map-tools"><label><input type="checkbox" v-model="showIce">冰川</label><label><input type="checkbox" v-model="showControl">杜加控制区</label><span>离线矢量地图 · WGS84</span></div><svg viewBox="0 0 1000 650" aria-label="色林错流域及湖泊地图"><defs><pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse"><path d="M 100 0 L 0 0 0 100" fill="none" stroke="#d7e5e5" stroke-width=".7"/></pattern></defs><rect width="1000" height="650" fill="url(#grid)"/><g v-for="(f,i) in visible" :key="i"><path :d="path(f.geometry)" :class="'geo '+f.properties.kind" :data-id="f.properties.id" fill-rule="evenodd" @click="selected=f.properties"><title>{{f.properties.name||f.properties.id}}</title></path></g><g class="map-station" :transform="`translate(${xy([89.15997904,32.03057137]).join(',')})`"><circle r="5"/><text x="10" y="3">杜加</text></g><text x="929" y="48" fill="#547b7a" font-size="18">↑ N</text><text x="40" y="610" fill="#698282" font-size="14">87.1° E</text><text x="870" y="610" fill="#698282" font-size="14">92.5° E</text></svg><div class="map-legend"><i class="lake-key"></i>湖面 <i class="land-key"></i>陆面分区 <i class="ice-key"></i>冰川 <span v-if="selected">{{selected.name||selected.id}} {{selected.areaKm2?Number(selected.areaKm2).toFixed(2)+' km²':''}}</span></div></div></template>
+<template><div class="lake-screen basin-reference"><ScreenMap variable="basin" :focus="selected?.id" :stations="[]" :show-ice="true" :show-rivers="true" :show-terrain="true" :show-names="true" :show-control="false" @feature="selected=$event"/><p v-if="selected" class="note">{{selected.name}} · {{selected.areaKm2?.toFixed(2)}} km²</p></div></template>

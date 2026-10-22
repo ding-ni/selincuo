@@ -130,8 +130,9 @@ class Handler(SimpleHTTPRequestHandler):
                                    'parameterDefinitions': PARAMETER_DEFINITIONS, 'defaultParameters': DEFAULT_PARAMETERS,
                                    'forecast': {'enabled': False, 'reason': '本版完成历史计算，7—15天滚动预报在下一阶段接入'},
                                    'ready': bool(spatial and inputs), 'missingInputs': [] if inputs else ['ERA5-Land真实逐小时降水、气温与蒸发能力输入'],
+                                   'historicalPlan': {'warmupYear': 2023, 'calibrationYear': 2024, 'validationYear': 2025, 'start': '2023-01-01T00:00:00', 'end': '2026-01-01T00:00:00', 'dailyConvention': '(day 00:00, next day 00:00] Asia/Shanghai', 'futureObservationsUsedInSearch': False},
                                    'annualValidation': {'ready': annual_ready, 'message': '年度历史驱动完整' if annual_ready else '完整2023—2025年真实驱动尚未齐备，年度率定验证待开展'},
-                                   'periodDefaults': {'start': '2023-01-01T00:00', 'end': '2025-12-31T23:00'},
+                                   'periodDefaults': {'start': '2023-01-01T00:00', 'end': '2026-01-01T00:00'},
                                    'latestObservation': self.db.rows('SELECT MAX(time) time FROM observations WHERE value IS NOT NULL')[0]['time']})
         if path == 'cds-help':
             return self.file(ROOT/'docs/CDS账户恢复与继续下载.md',download=True)

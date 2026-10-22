@@ -1,0 +1,757 @@
+{
+  "createdAt": "2026-10-22T08:25:55+00:00",
+  "inputId": "INPUT-967613234ca58f1c6cfb44e2",
+  "tasks": {
+    "baseline": "JOB-053e32553c8e41b785db",
+    "runoff": "JOB-1de857c58b73448e801d",
+    "lake": "JOB-25a4e32481394e928ca7"
+  },
+  "baseline": {
+    "metrics": {
+      "2023": {
+        "flow": {
+          "bias": null,
+          "count": 0,
+          "kge": null,
+          "mae": null,
+          "nse": null,
+          "observedVolumeM3": null,
+          "pbias": null,
+          "rmse": null,
+          "simulatedVolumeM3OnObservedDays": null
+        },
+        "lake": {
+          "bias": 0.5089508781504057,
+          "count": 220,
+          "kge": -0.7744086485192692,
+          "mae": 0.5102868922557263,
+          "nse": -6.129223875920853,
+          "observedMean": 4544.259181818183,
+          "pbias": 0.011199864659717137,
+          "rmse": 0.7103669029593486,
+          "simulatedMean": 4544.768132696333
+        },
+        "purpose": "预热"
+      },
+      "2024": {
+        "flow": {
+          "bias": -8.912442088822658,
+          "count": 229,
+          "kge": 0.6688063620798665,
+          "mae": 49.14831658902661,
+          "nse": 0.41357861409670027,
+          "observedMean": 80.89737991266375,
+          "observedVolumeM3": 1600603200.0,
+          "pbias": -11.016972488409968,
+          "rmse": 66.2492243002992,
+          "simulatedMean": 71.9849378238411,
+          "simulatedVolumeM3OnObservedDays": 1424265185.8073905
+        },
+        "lake": {
+          "bias": 0.43758718594161117,
+          "count": 231,
+          "kge": -1.4025662769048757,
+          "mae": 0.4399203983276174,
+          "nse": -17.713010550946453,
+          "observedMean": 4544.520952380953,
+          "pbias": 0.009628895774203698,
+          "rmse": 0.560506184725008,
+          "simulatedMean": 4544.958539566894
+        },
+        "purpose": "率定"
+      },
+      "2025": {
+        "flow": {
+          "bias": 0.5849246257736443,
+          "count": 211,
+          "kge": 0.460696148929982,
+          "mae": 27.1811765838855,
+          "nse": 0.07130613985795176,
+          "observedMean": 49.027630331753564,
+          "observedVolumeM3": 893793312.0000001,
+          "pbias": 1.1930509833244136,
+          "rmse": 36.56568460727743,
+          "simulatedMean": 49.6125549575272,
+          "simulatedVolumeM3OnObservedDays": 904456721.897704
+        },
+        "lake": {
+          "bias": 0.43130723394317066,
+          "count": 255,
+          "kge": -2.185980023520209,
+          "mae": 0.43130723394317066,
+          "nse": -37.984838204870705,
+          "observedMean": 4544.200602076125,
+          "pbias": 0.00949137750974545,
+          "rmse": 0.5476635911256261,
+          "simulatedMean": 4544.631909310067
+        },
+        "purpose": "独立验证"
+      }
+    },
+    "parameters": {
+      "B": 0.3,
+      "C": 0.15,
+      "EX": 1.2,
+      "IM": 0.01,
+      "KC": 0.8,
+      "KG": 0.012,
+      "KI": 0.018,
+      "SM": 30.0,
+      "WM": 150.0,
+      "glacierRecessionDay": 0.5,
+      "iceDdf": 7.0,
+      "lagHours": 0.0,
+      "lakeCoefficient": 0.8,
+      "lapseRate": -0.0065,
+      "liquidCapacity": 0.05,
+      "rainTemperature": 2.0,
+      "refreezeFactor": 1.0,
+      "snowDdf": 4.0,
+      "snowSublimation": 0.35,
+      "snowTemperature": -1.0,
+      "tauHours": 24.0
+    },
+    "identity": {
+      "contextKey": "selinco:semidistributed-cold-lake:0p1deg",
+      "inputId": "INPUT-967613234ca58f1c6cfb44e2",
+      "inputSHA256": "c7b8672e0300244010a9b8ea4f072b5117d2274e4b792164b44369fd69d5dc14",
+      "modelImplementation": "fe912b381d1c08abafbdb8dbd888ea616438d40b11223e3d8343c7a993428b6a",
+      "observationSHA256": "6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e",
+      "parameterSHA256": "2980f7e5b6a2afd84fb32975fa42390c3a19c85b3ef88d9c76815f94ed81e53c",
+      "projectId": "selinco",
+      "spatialVersion": "SPATIAL-1e6a229e51f0da4f1ffd"
+    },
+    "diagnostics": {
+      "assumptions": [
+        "定面积湖泊，仅保存相对蓄水变化",
+        "地下水净交换和外流暂按零处理",
+        "冰川面积固定；长年冰体消融为显式外部水源",
+        "无冰期起点使用实测湖位，其后独立演算",
+        "未率定初值为通用模型初值，不代表已通过业务验证"
+      ],
+      "glacierAreaKm2": 228.83446053008615,
+      "lakeAreaKm2": 2422.1998218977847,
+      "lakeWindows": [
+        {
+          "end": "2021-12-25T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2021-04-23T12:00:00",
+          "initialization": "source-daily-mean-anchored-at-noon",
+          "observationTime": "2021-04-23T12:00:00",
+          "start": "2021-04-23T12:00:00"
+        },
+        {
+          "end": "2022-12-08T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2022-03-15T12:00:00",
+          "initialization": "source-daily-mean-anchored-at-noon",
+          "observationTime": "2022-03-15T12:00:00",
+          "start": "2022-03-15T12:00:00"
+        },
+        {
+          "end": "2023-11-12T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2023-04-20T12:00:00",
+          "initialization": "source-daily-mean-anchored-at-noon",
+          "observationTime": "2023-04-20T12:00:00",
+          "start": "2023-04-20T12:00:00"
+        },
+        {
+          "end": "2023-12-12T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2023-11-28T12:00:00",
+          "initialization": "source-daily-mean-anchored-at-noon",
+          "observationTime": "2023-11-28T12:00:00",
+          "start": "2023-11-28T12:00:00"
+        },
+        {
+          "end": "2024-12-09T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2024-04-22T00:00:00",
+          "initialization": "first-reliable-subdaily-level",
+          "observationTime": "2024-04-22T00:00:00",
+          "start": "2024-04-22T00:00:00"
+        },
+        {
+          "end": "2025-12-20T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2025-04-09T08:00:00",
+          "initialization": "first-reliable-subdaily-level",
+          "observationTime": "2025-04-09T08:00:00",
+          "start": "2025-04-09T08:00:00"
+        },
+        {
+          "end": "2026-08-31T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2026-08-24T00:00:00",
+          "initialization": "first-reliable-subdaily-level",
+          "observationTime": "2026-08-24T00:00:00",
+          "start": "2026-08-24T00:00:00"
+        }
+      ],
+      "landGlacierMaxBalanceErrorMm": 9.870859690600323e-11,
+      "routingBalanceErrorM3": {
+        "ali": -3.336646497282022e-13,
+        "boqu": -2.9802327100266783e-08,
+        "duja": 9.536137217874147e-07,
+        "fringe": -5.960466357032197e-08,
+        "zagen": -6.535724423883948e-07,
+        "zajia_rest": -2.2351832676158235e-08
+      },
+      "unvalidatedRivers": [
+        "zagen",
+        "boqu",
+        "ali",
+        "fringe"
+      ]
+    }
+  },
+  "runoff": {
+    "metrics": {
+      "2023": {
+        "flow": {
+          "bias": null,
+          "count": 0,
+          "kge": null,
+          "mae": null,
+          "nse": null,
+          "observedVolumeM3": null,
+          "pbias": null,
+          "rmse": null,
+          "simulatedVolumeM3OnObservedDays": null
+        },
+        "lake": {
+          "bias": 0.2607338310064237,
+          "count": 220,
+          "kge": 0.08461280535197446,
+          "mae": 0.2620660502160635,
+          "nse": -0.9693735026855503,
+          "observedMean": 4544.259181818183,
+          "pbias": 0.005737653170172013,
+          "rmse": 0.37335815137457357,
+          "simulatedMean": 4544.519915649188
+        },
+        "purpose": "预热"
+      },
+      "2024": {
+        "flow": {
+          "bias": -11.05991649540474,
+          "count": 229,
+          "kge": 0.7854682443527627,
+          "mae": 35.094610548014664,
+          "nse": 0.6842306753296026,
+          "observedMean": 80.89737991266375,
+          "observedVolumeM3": 1600603200.0,
+          "pbias": -13.6715385681773,
+          "rmse": 48.61394515811054,
+          "simulatedMean": 69.83746341725902,
+          "simulatedVolumeM3OnObservedDays": 1381776116.18852
+        },
+        "lake": {
+          "bias": 0.33834184171299064,
+          "count": 231,
+          "kge": -0.95755697983035,
+          "mae": 0.3425720474931249,
+          "nse": -11.037363336433373,
+          "observedMean": 4544.520952380953,
+          "pbias": 0.007445049659980719,
+          "rmse": 0.44954612921655634,
+          "simulatedMean": 4544.859294222665
+        },
+        "purpose": "率定"
+      },
+      "2025": {
+        "flow": {
+          "bias": -12.807223362675598,
+          "count": 211,
+          "kge": 0.6807891653949472,
+          "mae": 19.21004917617556,
+          "nse": 0.6046701478539968,
+          "observedMean": 49.027630331753564,
+          "observedVolumeM3": 893793312.0000001,
+          "pbias": -26.12246049016321,
+          "rmse": 23.857076701898514,
+          "simulatedMean": 36.220406969077956,
+          "simulatedVolumeM3OnObservedDays": 660312507.2090788
+        },
+        "lake": {
+          "bias": 0.29488172884003316,
+          "count": 255,
+          "kge": -0.9225338102990506,
+          "mae": 0.29488172884003316,
+          "nse": -16.96397850712419,
+          "observedMean": 4544.200602076125,
+          "pbias": 0.006489188190884652,
+          "rmse": 0.3717639425243284,
+          "simulatedMean": 4544.495483804965
+        },
+        "purpose": "独立验证"
+      }
+    },
+    "parameters": {
+      "B": 0.08475148517233684,
+      "C": 0.15,
+      "EX": 1.2,
+      "IM": 0.01,
+      "KC": 0.7294530893648382,
+      "KG": 0.0001,
+      "KI": 0.0922935896415091,
+      "SM": 5.0,
+      "WM": 226.55679731833598,
+      "glacierRecessionDay": 0.5,
+      "iceDdf": 7.0,
+      "lagHours": 0.0,
+      "lakeCoefficient": 0.8,
+      "lapseRate": -0.0065,
+      "liquidCapacity": 0.05,
+      "rainTemperature": 2.0,
+      "refreezeFactor": 1.0,
+      "snowDdf": 4.0,
+      "snowSublimation": 0.35,
+      "snowTemperature": -1.0,
+      "tauHours": 168.0
+    },
+    "identity": {
+      "contextKey": "selinco:semidistributed-cold-lake:0p1deg",
+      "inputId": "INPUT-967613234ca58f1c6cfb44e2",
+      "inputSHA256": "c7b8672e0300244010a9b8ea4f072b5117d2274e4b792164b44369fd69d5dc14",
+      "modelImplementation": "fe912b381d1c08abafbdb8dbd888ea616438d40b11223e3d8343c7a993428b6a",
+      "observationSHA256": "6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e",
+      "parameterSHA256": "951a06295a19f24e170cc4175d1c2757aded908e2ab3ae18751a969f12c8c321",
+      "projectId": "selinco",
+      "spatialVersion": "SPATIAL-1e6a229e51f0da4f1ffd"
+    },
+    "diagnostics": {
+      "assumptions": [
+        "定面积湖泊，仅保存相对蓄水变化",
+        "地下水净交换和外流暂按零处理",
+        "冰川面积固定；长年冰体消融为显式外部水源",
+        "无冰期起点使用实测湖位，其后独立演算",
+        "未率定初值为通用模型初值，不代表已通过业务验证"
+      ],
+      "glacierAreaKm2": 228.83446053008615,
+      "lakeAreaKm2": 2422.1998218977847,
+      "lakeWindows": [
+        {
+          "end": "2021-12-25T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2021-04-23T12:00:00",
+          "initialization": "source-daily-mean-anchored-at-noon",
+          "observationTime": "2021-04-23T12:00:00",
+          "start": "2021-04-23T12:00:00"
+        },
+        {
+          "end": "2022-12-08T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2022-03-15T12:00:00",
+          "initialization": "source-daily-mean-anchored-at-noon",
+          "observationTime": "2022-03-15T12:00:00",
+          "start": "2022-03-15T12:00:00"
+        },
+        {
+          "end": "2023-11-12T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2023-04-20T12:00:00",
+          "initialization": "source-daily-mean-anchored-at-noon",
+          "observationTime": "2023-04-20T12:00:00",
+          "start": "2023-04-20T12:00:00"
+        },
+        {
+          "end": "2023-12-12T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2023-11-28T12:00:00",
+          "initialization": "source-daily-mean-anchored-at-noon",
+          "observationTime": "2023-11-28T12:00:00",
+          "start": "2023-11-28T12:00:00"
+        },
+        {
+          "end": "2024-12-09T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2024-04-22T00:00:00",
+          "initialization": "first-reliable-subdaily-level",
+          "observationTime": "2024-04-22T00:00:00",
+          "start": "2024-04-22T00:00:00"
+        },
+        {
+          "end": "2025-12-20T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2025-04-09T08:00:00",
+          "initialization": "first-reliable-subdaily-level",
+          "observationTime": "2025-04-09T08:00:00",
+          "start": "2025-04-09T08:00:00"
+        },
+        {
+          "end": "2026-08-31T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2026-08-24T00:00:00",
+          "initialization": "first-reliable-subdaily-level",
+          "observationTime": "2026-08-24T00:00:00",
+          "start": "2026-08-24T00:00:00"
+        }
+      ],
+      "landGlacierMaxBalanceErrorMm": 6.238565924705092e-11,
+      "routingBalanceErrorM3": {
+        "ali": 8.549727681383956e-08,
+        "boqu": -7.457142459088573e-09,
+        "duja": 5.608247874988592e-07,
+        "fringe": 3.0999224520655844e-08,
+        "zagen": -1.6631383914500475e-07,
+        "zajia_rest": -7.938658619366379e-09
+      },
+      "unvalidatedRivers": [
+        "zagen",
+        "boqu",
+        "ali",
+        "fringe"
+      ]
+    },
+    "search": {
+      "algorithm": "differential-evolution",
+      "baselineMetrics": {
+        "bias": -8.912442088822658,
+        "count": 229,
+        "kge": 0.6688063620798665,
+        "mae": 49.14831658902661,
+        "nse": 0.41357861409670027,
+        "observedMean": 80.89737991266375,
+        "observedVolumeM3": 1600603200.0,
+        "pbias": -11.016972488409968,
+        "rmse": 66.2492243002992,
+        "simulatedMean": 71.9849378238411,
+        "simulatedVolumeM3OnObservedDays": 1424265185.8073905
+      },
+      "bestObjective": 0.32944086323857474,
+      "calibrationYear": 2024,
+      "converged": false,
+      "evaluations": 120,
+      "frozenParameters": [
+        "C",
+        "EX",
+        "IM",
+        "snowDdf",
+        "iceDdf",
+        "snowTemperature",
+        "rainTemperature",
+        "liquidCapacity",
+        "refreezeFactor",
+        "snowSublimation",
+        "glacierRecessionDay",
+        "lagHours",
+        "lakeCoefficient",
+        "lapseRate"
+      ],
+      "maxEvaluations": 120,
+      "searchParameters": [
+        "KC",
+        "WM",
+        "B",
+        "SM",
+        "KI",
+        "KG",
+        "tauHours"
+      ],
+      "seed": 42,
+      "stage": "runoff",
+      "termination": "budget-exhausted",
+      "validationYearsExcludedFromSearch": [
+        2025,
+        2026
+      ]
+    },
+    "boundaryParameters": [
+      {
+        "key": "SM",
+        "label": "自由水容量",
+        "value": 5.0,
+        "bound": "lower"
+      },
+      {
+        "key": "KG",
+        "label": "小时地下出流系数",
+        "value": 0.0001,
+        "bound": "lower"
+      },
+      {
+        "key": "tauHours",
+        "label": "子流域调蓄时间",
+        "value": 168.0,
+        "bound": "upper"
+      }
+    ]
+  },
+  "lake": {
+    "metrics": {
+      "2023": {
+        "flow": {
+          "bias": null,
+          "count": 0,
+          "kge": null,
+          "mae": null,
+          "nse": null,
+          "observedVolumeM3": null,
+          "pbias": null,
+          "rmse": null,
+          "simulatedVolumeM3OnObservedDays": null
+        },
+        "lake": {
+          "bias": 0.07458357845990081,
+          "count": 220,
+          "kge": 0.555953084135933,
+          "mae": 0.11279359300037868,
+          "nse": 0.6476429732963912,
+          "observedMean": 4544.259181818183,
+          "pbias": 0.001641270347393775,
+          "rmse": 0.1579257909539633,
+          "simulatedMean": 4544.333765396642
+        },
+        "purpose": "预热"
+      },
+      "2024": {
+        "flow": {
+          "bias": -11.05991649540474,
+          "count": 229,
+          "kge": 0.7854682443527627,
+          "mae": 35.094610548014664,
+          "nse": 0.6842306753296026,
+          "observedMean": 80.89737991266375,
+          "observedVolumeM3": 1600603200.0,
+          "pbias": -13.6715385681773,
+          "rmse": 48.61394515811054,
+          "simulatedMean": 69.83746341725902,
+          "simulatedVolumeM3OnObservedDays": 1381776116.18852
+        },
+        "lake": {
+          "bias": 0.09049854811002102,
+          "count": 231,
+          "kge": 0.23043081300074064,
+          "mae": 0.12748816550010736,
+          "nse": -0.4989365045273695,
+          "observedMean": 4544.520952380953,
+          "pbias": 0.001991377068304796,
+          "rmse": 0.15863543213983797,
+          "simulatedMean": 4544.611450929063
+        },
+        "purpose": "率定"
+      },
+      "2025": {
+        "flow": {
+          "bias": -12.807223362675598,
+          "count": 211,
+          "kge": 0.6807891653949472,
+          "mae": 19.21004917617556,
+          "nse": 0.6046701478539968,
+          "observedMean": 49.027630331753564,
+          "observedVolumeM3": 893793312.0000001,
+          "pbias": -26.12246049016321,
+          "rmse": 23.857076701898514,
+          "simulatedMean": 36.220406969077956,
+          "simulatedVolumeM3OnObservedDays": 660312507.2090788
+        },
+        "lake": {
+          "bias": 0.035180265746823675,
+          "count": 255,
+          "kge": 0.763942065350206,
+          "mae": 0.05170667996341816,
+          "nse": 0.46181771265373794,
+          "observedMean": 4544.200602076125,
+          "pbias": 0.0007741794174040367,
+          "rmse": 0.0643473552847979,
+          "simulatedMean": 4544.235782341872
+        },
+        "purpose": "独立验证"
+      }
+    },
+    "parameters": {
+      "B": 0.08475148517233684,
+      "C": 0.15,
+      "EX": 1.2,
+      "IM": 0.01,
+      "KC": 0.7294530893648382,
+      "KG": 0.0001,
+      "KI": 0.0922935896415091,
+      "SM": 5.0,
+      "WM": 226.55679731833598,
+      "glacierRecessionDay": 0.5,
+      "iceDdf": 7.0,
+      "lagHours": 0.0,
+      "lakeCoefficient": 1.5,
+      "lapseRate": -0.0065,
+      "liquidCapacity": 0.05,
+      "rainTemperature": 2.0,
+      "refreezeFactor": 1.0,
+      "snowDdf": 4.0,
+      "snowSublimation": 0.35,
+      "snowTemperature": -1.0,
+      "tauHours": 168.0
+    },
+    "identity": {
+      "contextKey": "selinco:semidistributed-cold-lake:0p1deg",
+      "inputId": "INPUT-967613234ca58f1c6cfb44e2",
+      "inputSHA256": "c7b8672e0300244010a9b8ea4f072b5117d2274e4b792164b44369fd69d5dc14",
+      "modelImplementation": "fe912b381d1c08abafbdb8dbd888ea616438d40b11223e3d8343c7a993428b6a",
+      "observationSHA256": "6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e",
+      "parameterSHA256": "220abe84e71238ba034bdd35683e273cc98509a32ba139940f348a40f199e7e1",
+      "projectId": "selinco",
+      "spatialVersion": "SPATIAL-1e6a229e51f0da4f1ffd"
+    },
+    "diagnostics": {
+      "assumptions": [
+        "定面积湖泊，仅保存相对蓄水变化",
+        "地下水净交换和外流暂按零处理",
+        "冰川面积固定；长年冰体消融为显式外部水源",
+        "无冰期起点使用实测湖位，其后独立演算",
+        "未率定初值为通用模型初值，不代表已通过业务验证"
+      ],
+      "glacierAreaKm2": 228.83446053008615,
+      "lakeAreaKm2": 2422.1998218977847,
+      "lakeWindows": [
+        {
+          "end": "2021-12-25T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2021-04-23T12:00:00",
+          "initialization": "source-daily-mean-anchored-at-noon",
+          "observationTime": "2021-04-23T12:00:00",
+          "start": "2021-04-23T12:00:00"
+        },
+        {
+          "end": "2022-12-08T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2022-03-15T12:00:00",
+          "initialization": "source-daily-mean-anchored-at-noon",
+          "observationTime": "2022-03-15T12:00:00",
+          "start": "2022-03-15T12:00:00"
+        },
+        {
+          "end": "2023-11-12T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2023-04-20T12:00:00",
+          "initialization": "source-daily-mean-anchored-at-noon",
+          "observationTime": "2023-04-20T12:00:00",
+          "start": "2023-04-20T12:00:00"
+        },
+        {
+          "end": "2023-12-12T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2023-11-28T12:00:00",
+          "initialization": "source-daily-mean-anchored-at-noon",
+          "observationTime": "2023-11-28T12:00:00",
+          "start": "2023-11-28T12:00:00"
+        },
+        {
+          "end": "2024-12-09T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2024-04-22T00:00:00",
+          "initialization": "first-reliable-subdaily-level",
+          "observationTime": "2024-04-22T00:00:00",
+          "start": "2024-04-22T00:00:00"
+        },
+        {
+          "end": "2025-12-20T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2025-04-09T08:00:00",
+          "initialization": "first-reliable-subdaily-level",
+          "observationTime": "2025-04-09T08:00:00",
+          "start": "2025-04-09T08:00:00"
+        },
+        {
+          "end": "2026-08-31T23:00:00",
+          "firstHourFraction": 0.0,
+          "id": "2026-08-24T00:00:00",
+          "initialization": "first-reliable-subdaily-level",
+          "observationTime": "2026-08-24T00:00:00",
+          "start": "2026-08-24T00:00:00"
+        }
+      ],
+      "landGlacierMaxBalanceErrorMm": 6.238565924705092e-11,
+      "routingBalanceErrorM3": {
+        "ali": 8.549727681383956e-08,
+        "boqu": -7.457142459088573e-09,
+        "duja": 5.608247874988592e-07,
+        "fringe": 3.0999224520655844e-08,
+        "zagen": -1.6631383914500475e-07,
+        "zajia_rest": -7.938658619366379e-09
+      },
+      "unvalidatedRivers": [
+        "zagen",
+        "boqu",
+        "ali",
+        "fringe"
+      ]
+    },
+    "search": {
+      "algorithm": "differential-evolution",
+      "baselineMetrics": {
+        "bias": 0.33834184171299064,
+        "count": 231,
+        "kge": -0.95755697983035,
+        "mae": 0.3425720474931249,
+        "nse": -11.037363336433373,
+        "observedMean": 4544.520952380953,
+        "pbias": 0.007445049659980719,
+        "rmse": 0.44954612921655634,
+        "simulatedMean": 4544.859294222665
+      },
+      "bestObjective": 0.15863543213983797,
+      "calibrationYear": 2024,
+      "converged": false,
+      "evaluations": 30,
+      "frozenParameters": [
+        "KC",
+        "WM",
+        "B",
+        "C",
+        "SM",
+        "EX",
+        "KI",
+        "KG",
+        "IM",
+        "snowDdf",
+        "iceDdf",
+        "snowTemperature",
+        "rainTemperature",
+        "liquidCapacity",
+        "refreezeFactor",
+        "snowSublimation",
+        "glacierRecessionDay",
+        "tauHours",
+        "lagHours",
+        "lapseRate"
+      ],
+      "maxEvaluations": 30,
+      "searchParameters": [
+        "lakeCoefficient"
+      ],
+      "seed": 42,
+      "stage": "lake",
+      "termination": "budget-exhausted",
+      "validationYearsExcludedFromSearch": [
+        2025,
+        2026
+      ]
+    },
+    "boundaryParameters": [
+      {
+        "key": "lakeCoefficient",
+        "label": "湖面蒸发转换系数",
+        "value": 1.5,
+        "bound": "upper"
+      }
+    ]
+  },
+  "parameterVersion": "PARAM-a85f9648c7b442ad",
+  "scheme": "SCHEME-3ce342c211564379",
+  "completedAt": "2026-10-22T08:27:57+00:00",
+  "status": "complete",
+  "dayCount": 1096,
+  "futureForcingAvailable": false,
+  "calibrationAndValidationSeparated": true,
+  "note": "First bounded search; numerical completion does not imply operational predictive skill.",
+  "limitations": [
+    "初轮有限预算，两个阶段均因预算耗尽结束，未达到收敛判据。",
+    "湖面蒸发系数为1.5，达到当前搜索上界；需核对蒸发基准、来水偏差与水量平衡假设。",
+    "产汇流自由水容量SM、地下出流系数KG达到下界，汇流时间tauHours达到上界；参数仍需结合过程和资料进行敏感性诊断。",
+    "2025年杜加匹配日径流量PBIAS约-26.12%，存在系统低估。",
+    "扎根藏布、波曲藏布、阿里藏布与湖周来水没有独立流量验证；冰雪参数本轮固定。",
+    "2026年全年气象、未来气象与7—15天滚动预报尚未接入。"
+  ]
+}

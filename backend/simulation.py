@@ -219,7 +219,8 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
     counts = hourly.total.resample('D', closed='right', label='left').count()
     daily.loc[counts < 24, list(q)] = np.nan
     h_series = pd.Series(levels, index=times)
-    daily['lakeLevel'] = h_series.resample('D').mean().where(h_series.resample('D').count() >= 12)
+    daily['lakeLevel'] = h_series.resample('D', closed='right', label='left').mean().where(h_series.resample('D', closed='right', label='left').count() >= 12)
+    daily['forcingHours'] = counts
     daily['volumeChange'] = pd.Series(volumes, index=times).resample('D', closed='right', label='left').last()
     daily['lakeRainMm'] = pd.Series(source['lakeRain'][select], index=times).resample('D', closed='right', label='left').sum()
     daily['lakeEvaporationMm'] = pd.Series(source['lakeEvaporation'][select] * p['lakeCoefficient'], index=times).resample('D', closed='right', label='left').sum()
@@ -238,6 +239,8 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
         daily[k + 'Mm'] = pd.Series((diagnostics[:, :, col] * areas[None, :]).sum(axis=1) / areas.sum(), index=times).resample('D', closed='right', label='left').sum()
     for k, col in [('RS', 0), ('RI', 1), ('RG', 2), ('glacierRunoff', 3)]:
         daily[k + 'M3'] = pd.Series((diagnostics[:, :, col] * areas[None, :] * 1000).sum(axis=1), index=times).resample('D', closed='right', label='left').sum()
+    # A start at midnight has no preceding-day simulation; do not emit a phantom year.
+    daily = daily.loc[daily.index >= start.normalize()].copy()
     flow_obs = snapshot_series(observation, 'flow')
     lake_obs = snapshot_series(observation, 'level')
     daily['observedFlow'] = flow_obs.reindex(daily.index)

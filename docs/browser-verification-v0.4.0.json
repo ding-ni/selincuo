@@ -1,0 +1,44 @@
+{
+  "at": "2026-10-22T08:40:21+00:00",
+  "url": "http://127.0.0.1:8879/",
+  "version": "0.4.0",
+  "desktop": {
+    "viewport": [
+      1920,
+      1080
+    ],
+    "document": [
+      1920,
+      1080
+    ],
+    "horizontalOverflow": false,
+    "mapSize": [
+      1174.84375,
+      452
+    ]
+  },
+  "narrow": {
+    "viewport": [
+      760,
+      900
+    ],
+    "horizontalOverflow": false,
+    "mapSize": [
+      711,
+      531
+    ]
+  },
+  "labelsFromGeometry": true,
+  "riverNamesFromSourceAttributes": true,
+  "basinBoundariesPersistOver535Cells": true,
+  "lightAndDarkVerified": true,
+  "wholeDomainAndLakeViewVerified": true,
+  "defaultTask": "JOB-25a4e32481394e928ca7",
+  "defaultEvaluationYear": 2025,
+  "parameterBoundaryWarningVisible": true,
+  "consoleErrors": [],
+  "screenshots": [
+    "dashboard-light-v0.4.0.png",
+    "dashboard-dark-v0.4.0.png"
+  ]
+}

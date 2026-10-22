@@ -44,6 +44,18 @@ class ProtocolTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             calibrate(None, {'calibrationYear': 2025}, Path(temp))
 
+    def test_map_labels_are_within_their_actual_basins_and_rivers_keep_source_ids(self):
+        from shapely.geometry import shape, Point
+        context = read_json(ROOT / 'data/derived/spatial/display-context.json')
+        collection = read_json(ROOT / 'data/derived/spatial/map.geojson')
+        for label in context['labels']:
+            feature = next(f for f in collection['features'] if f['properties']['kind'] == label['kind'] and f['properties'].get('id') == label.get('id'))
+            self.assertTrue(shape(feature['geometry']).covers(Point(label['anchor'])), label['name'])
+        rivers = read_json(ROOT / 'data/derived/spatial/rivers-display.geojson')['features']
+        self.assertEqual({f['properties']['basinId'] for f in rivers}, {'zajia','zagen','boqu','ali'})
+        expected = {b['id']: b['name'] for b in read_json(ROOT / 'data/derived/spatial/manifest.json')['basins']}
+        self.assertTrue(all(f['properties']['name'] == expected[f['properties']['basinId']] for f in rivers))
+
     def test_real_spatial_closure_and_small_glaciers(self):
         m = read_json(ROOT / 'data/derived/spatial/manifest.json')
         if not m:

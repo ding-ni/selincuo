@@ -4,17 +4,20 @@ import Chart from './Chart.vue'
 import {kindLabel,groups,compatibleComparison} from './workflow.mjs'
 const props=defineProps({detail:Object,completed:Array,boot:Object,busy:Boolean})
 const emit=defineEmits(['reuse','replay','state','metadata','stop','save-parameters'])
-const tab=ref('lake'),compareId=ref(''),other=ref(null),loading=ref(false),failure=ref(''),parameterName=ref('')
+const tab=ref('lake'),compareId=ref(''),other=ref(null),loading=ref(false),failure=ref(''),parameterName=ref(''),evaluationYear=ref('2025')
 const result=computed(()=>props.detail?.result)
 const number=(v,n=3)=>v==null||!Number.isFinite(Number(v))?'—':Number(v).toLocaleString('zh-CN',{maximumFractionDigits:n})
 const compareNote=computed(()=>other.value?compatibleComparison(result.value,other.value.result):'')
 const canCompare=computed(()=>other.value?.result&&(!compareNote.value||compareNote.value.startsWith('输入版本不同')))
 const rows=computed(()=>{const index=new Map((canCompare.value?other.value.result.daily:[]).map(r=>[r.date,r]));return (result.value?.daily||[]).map(r=>({...r,comparedLake:index.get(r.date)?.lakeLevel,comparedFlow:index.get(r.date)?.duja}))})
+const boundaryParameters=computed(()=>result.value?.calibration?props.boot.parameterDefinitions.filter(d=>result.value.calibration.searchParameters.includes(d.key)&&(Math.abs(result.value.parameters[d.key]-d.min)<1e-8||Math.abs(result.value.parameters[d.key]-d.max)<1e-8)):[])
 const href=f=>`/api/model/export?taskId=${props.detail.id}&format=${f}`
 let sequence=0
 watch(()=>props.detail?.id,()=>{compareId.value='';other.value=null;failure.value='';tab.value='lake'})
 watch(compareId,async id=>{const token=++sequence;other.value=null;failure.value='';loading.value=!!id;if(!id)return;try{const r=await fetch('/api/model/tasks/'+id);const d=await r.json();if(!r.ok)throw Error(d.error);if(token===sequence)other.value=d}catch(e){if(token===sequence)failure.value=e.message}finally{if(token===sequence)loading.value=false}})
-const latestMetrics=computed(()=>Object.values(result.value?.metrics||{}).find(m=>m.lake.count)||null)
+const metricYears=computed(()=>Object.keys(result.value?.metrics||{}))
+const metricYear=computed(()=>metricYears.value.includes(evaluationYear.value)?evaluationYear.value:(metricYears.value.includes('2024')?'2024':metricYears.value.at(-1)))
+const latestMetrics=computed(()=>result.value?.metrics?.[metricYear.value]||null)
 </script>
 <template>
  <section v-if="!detail" class="panel result-empty"><span>◈</span><h3>准备一次历史计算</h3><p>在左侧选择输入和时段。完成后可查看湖位、来水、水量收支，保存参数或从末状态继续计算。</p></section>
@@ -24,8 +27,8 @@ const latestMetrics=computed(()=>Object.values(result.value?.metrics||{}).find(m
   <div v-if="!result?.daily" class="result-progress"><p>{{detail.message||'等待计算'}}</p><progress :value="detail.progress" max="100"></progress><b>{{number(detail.progress,1)}}%</b><button v-if="detail.request?.parameters" @click="emit('replay')">恢复条件重新计算</button></div>
   <template v-else>
    <div class="record-actions"><button @click="emit('metadata',detail,{favorite:!detail.favorite})">{{detail.favorite?'★ 已保留成果':'☆ 保留成果'}}</button><button @click="emit('reuse')">采用本组参数</button><button @click="emit('replay')">恢复本次条件</button><button @click="emit('state')">查看状态 / 继续模拟</button><a class="button" :href="href('daily.csv')">导出日过程</a><details class="more-export"><summary>更多导出</summary><a :href="href('hourly.npz')">逐时数组</a><a :href="href('checkpoint.json')">末状态</a><a :href="href('request.json')">计算条件</a></details></div>
-   <div class="result-metrics"><div><span>日湖位RMSE · m</span><b>{{number(latestMetrics?.lake.rmse)}}</b></div><div><span>日湖位MAE · m</span><b>{{number(latestMetrics?.lake.mae)}}</b></div><div><span>湖位匹配天数</span><b>{{number(latestMetrics?.lake.count,0)}}</b></div><div><span>计算起止 · 北京时间</span><strong>{{detail.request.start?.slice(0,16).replace('T',' ')}}<br>{{detail.request.end?.slice(0,16).replace('T',' ')}}</strong></div></div><p class="note">上方指标为首个有匹配观测年份；完整分年评价见“评价与收支”。部分时段结果不代表完整年度验证。</p>
-   <nav class="workspace-tabs result-tabs" aria-label="成果详情"><button v-for="t in [['lake','湖位过程'],['flow','入湖来水'],['evaluation','评价与收支'],['parameters','本组参数'],['conditions','本次条件']]" :key="t[0]" :class="{active:tab===t[0]}" @click="tab=t[0]">{{t[1]}}</button></nav>
+   <div class="form-row"><label>评价年份<select :value="metricYear" @change="evaluationYear=$event.target.value"><option v-for="y in metricYears" :key="y" :value="y">{{y}} · {{result.metrics[y].purpose}}</option></select></label><span class="note">预热、率定与独立验证分别评价</span></div><div class="result-metrics"><div><span>日湖位RMSE · m</span><b>{{number(latestMetrics?.lake.rmse)}}</b></div><div><span>日湖位MAE · m</span><b>{{number(latestMetrics?.lake.mae)}}</b></div><div><span>湖位匹配天数</span><b>{{number(latestMetrics?.lake.count,0)}}</b></div><div><span>计算起止 · 北京时间</span><strong>{{detail.request.start?.slice(0,16).replace('T',' ')}}<br>{{detail.request.end?.slice(0,16).replace('T',' ')}}</strong></div></div><p class="note">上方指标对应 {{metricYear}} 年{{latestMetrics?.purpose}}；完整分年流量和湖位评价见“评价与收支”。未率定基线与率定成果均保留实际指标。</p>
+   <p v-if="boundaryParameters.length" class="note warning" role="status">搜索边界提示：{{boundaryParameters.map(d=>d.label+' = '+result.parameters[d.key]).join('；')}}。最优值触及当前允许范围边界，需要复核蒸发基准、来水量和湖泊收支假设。</p><nav class="workspace-tabs result-tabs" aria-label="成果详情"><button v-for="t in [['lake','湖位过程'],['flow','入湖来水'],['evaluation','评价与收支'],['parameters','本组参数'],['conditions','本次条件']]" :key="t[0]" :class="{active:tab===t[0]}" @click="tab=t[0]">{{t[1]}}</button></nav>
    <div v-if="['lake','flow'].includes(tab)" class="comparison-row"><label>叠加成果<select v-model="compareId"><option value="">不叠加</option><option v-for="t in completed.filter(t=>t.id!==detail.id&&!t.trashed)" :key="t.id" :value="t.id">{{t.name||t.id}}</option></select></label><span>{{loading?'读取比较过程…':failure||compareNote}}</span></div>
    <template v-if="tab==='lake'"><p v-if="rows.every(r=>r.lakeLevel==null)" class="note warning">当前时段缺少可续接的可靠湖位起点，流域已计算；请从可靠观测窗口起点回放或选择同条件父状态。</p><Chart :rows="rows" :series="[{key:'lakeLevel',label:'模拟湖位'},{key:'observedLevel',label:'主站实测'},...(canCompare?[{key:'comparedLake',label:'对比湖位'}]:[])]" unit="m"/><p class="note">每个无冰期窗口只用首个可靠观测初始化，之后独立演算；四岸水位分别查询。</p></template>
    <template v-if="tab==='flow'"><Chart :rows="rows" :series="[{key:'duja',label:'杜加模拟'},{key:'observedFlow',label:'杜加实测'},{key:'total',label:'总入湖流量'},...(canCompare?[{key:'comparedFlow',label:'对比杜加'}]:[])]" unit="m³/s"/><Chart :rows="rows" :series="[{key:'zajia',label:'扎加藏布'},{key:'zagen',label:'扎根藏布'},{key:'boqu',label:'波曲藏布'},{key:'ali',label:'阿里藏布'},{key:'fringe',label:'湖周来水'}]" unit="m³/s"/><p class="note">杜加是内部控制断面，不重复计入总入湖流量。其余河流尚未独立验证。</p></template>

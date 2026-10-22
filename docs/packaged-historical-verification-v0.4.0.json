@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-22T08:32:24+00:00",
+  "version": "0.4.0",
+  "fullTaskId": "JOB-25a4e32481394e928ca7",
+  "partTaskId": "JOB-1f85306da5b64655ad5d",
+  "tailTaskId": "JOB-12cec91358644a248476",
+  "hours": 26305,
+  "completeDays": 1096,
+  "continuationMaxDifference": {
+    "flow": 0.0,
+    "unitStates": 0.0,
+    "unitDiagnostics": 0.0,
+    "routingStorage": 0.0,
+    "lakeLevel": 0.0,
+    "volumeChange": 0.0
+  },
+  "finalCheckpointIdentical": true,
+  "mapCells": 535,
+  "snowUnits": 30,
+  "lakeDailyBalanceMaxErrorM3": 7.5e-09,
+  "missingFutureDayRemainsEmpty": true
+}
