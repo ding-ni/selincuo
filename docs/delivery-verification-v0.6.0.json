@@ -1,0 +1,54 @@
+{
+  "at": "2026-10-22T13:06:25+00:00",
+  "version": "0.6.0",
+  "health": {
+    "instanceId": "2a878a65f1034d358b053e124722d038",
+    "projectId": "selinco",
+    "version": "0.6.0",
+    "workspace": "F:\\色林错预警预报平台\\运行程序\\workspace"
+  },
+  "oldTaskIdsPreserved": true,
+  "oldInputAndObservationCountsPreserved": true,
+  "currentCounts": {
+    "input_products": 6,
+    "observations": 59119,
+    "parameter_versions": 5,
+    "sources": 33,
+    "states": 25,
+    "stations": 8,
+    "tasks": 28
+  },
+  "noActiveTasks": true,
+  "gridMonths": 37,
+  "sourceRuntimeBundleBackendMatch": true,
+  "installedExecutableAndFrontendMatchBundle": true,
+  "cleanSeedCounts": {
+    "tasks": 0,
+    "states": 0,
+    "parameter_versions": 0,
+    "observations": 59119,
+    "sources": 33,
+    "stations": 8,
+    "input_products": 6
+  },
+  "seedContainsCredentials": false,
+  "installer": {
+    "filename": "色林错预警预报平台-v0.6.0-Setup.exe",
+    "bytes": 703556210,
+    "sha256": "8377f75dc99c03dd348288e2eda86b42c15efbfe887103814e5c9eb05185ede5"
+  },
+  "backup": {
+    "bytes": 1279995550,
+    "filename": "backup-2026-10-22T123943-0000-2625cf.zip",
+    "files": 1109,
+    "sha256": "def491fbe95d9cdfb2a44244d252987438b8fd7bc886579c3577f50246060dbb"
+  },
+  "numericVerification": "packaged-routing-v0.6.0.json",
+  "browserVerification": "browser-verification-v0.6.0.json",
+  "modelIdentity": "eb2a9e1244f278e0a1b332f0c743ab4d697f3ae8333c3c752c14361fbcb365b8",
+  "pythonTests": 32,
+  "frontendTests": 11,
+  "referenceIsOperationallyValidated": false,
+  "initialStateSensitivityRemains": true,
+  "longestRoutingTimeAtUpperBound": true
+}

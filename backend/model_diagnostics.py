@@ -2,9 +2,81 @@
 import numpy as np
 import pandas as pd
 
+PARTITION_NAMES = {'duja': '杜加控制区', 'zajia_rest': '扎加藏布下游补充区',
+                   'zagen': '扎根藏布', 'boqu': '波曲藏布', 'ali': '阿里藏布', 'fringe': '湖周补充区'}
+
+
+def partition_budgets(times, source, select, diagnostic, states, initial, flows, routing,
+                      spatial, parameters, initial_routing=None):
+    """Mutually exclusive control partitions, in water volume and area depth.
+
+    Duja and the small downstream remainder are disjoint; the full Zajia river
+    is deliberately absent from the sum to avoid counting Duja twice.
+    """
+    result = []
+    period = (times - pd.Timedelta(nanoseconds=1)).to_period('M')
+    for key, label in PARTITION_NAMES.items():
+        ids = [i for i, u in enumerate(spatial['units']) if u.get('partition') == key]
+        if not ids:
+            continue
+        units = [spatial['units'][i] for i in ids]
+        scale = np.array([u['areaKm2'] for u in units]) * 1000.
+        ice = np.array([u['kind'] == 'glacier' for u in units])
+        h, old = states[:, ids], initial[ids]
+        stored = (h[:, :, 0] + h[:, :, 1] + np.where(ice, h[:, :, 7],
+                  h[:, :, 2] + h[:, :, 3] + h[:, :, 4] + h[:, :, 5]*h[:, :, 6])) @ scale
+        before = float((old[:, 0]+old[:, 1]+np.where(ice, old[:, 7],
+                       old[:, 2]+old[:, 3]+old[:, 4]+old[:, 5]*old[:, 6])) @ scale)
+        routed = flows['zajia']-flows['duja'] if key == 'zajia_rest' else flows[key]
+        d = diagnostic[:, ids]
+        table = pd.DataFrame({
+            'precipitationM3': source['precipitation'][select][:, ids] @ scale,
+            'evaporationBaselineM3': source['evaporation'][select][:, ids] @ scale,
+            'actualEtM3': d[:, :, 6] @ scale,
+            'iceExternalM3': (d[:, :, 5]+d[:, :, 8]) @ scale,
+            'snowmeltM3': d[:, :, 4] @ scale,
+            'icemeltM3': d[:, :, 5] @ scale,
+            'generatedRunoffM3': d[:, :, :4].sum(axis=2) @ scale,
+            'routedRunoffM3': routed*3600.,
+            'unitStorageChangeM3': np.diff(np.r_[before, stored]),
+            'routingStorageChangeM3': np.diff(np.r_[(initial_routing or {}).get(key, 0.), routing[key]]),
+        }, index=times)
+        table['balanceErrorM3'] = (table.precipitationM3+table.iceExternalM3-table.actualEtM3-
+                                  table.routedRunoffM3-table.unitStorageChangeM3-table.routingStorageChangeM3)
+        area = float(scale.sum()/1000.)
+        months = []
+        for month, block in table.groupby(period):
+            if month.start_time < times[0].normalize() and len(block) == 1:
+                continue
+            row = {'month': str(month), 'hours': len(block), 'complete': len(block) == month.days_in_month*24,
+                   **{k: float(v) for k, v in block.sum().items()}}
+            for k in ('precipitation', 'evaporationBaseline', 'actualEt', 'generatedRunoff', 'routedRunoff', 'iceExternal',
+                      'unitStorageChange', 'routingStorageChange', 'snowmelt', 'icemelt'):
+                row[k+'Mm'] = row[k+'M3'] / (area*1000.)
+            months.append(row)
+        result.append({'id': key, 'name': label, 'areaKm2': area, 'glacierAreaKm2': float(scale[ice].sum()/1000.),
+                       'observationConstraint': '杜加日流量约束' if key == 'duja' else '参数移用，未独立验证',
+                       'monthly': months, 'balanceMaxErrorM3': float(table.balanceErrorM3.abs().max())})
+    return result
+
+
+def flow_timing_report(times, flows, observation):
+    """Compare only coincident complete days; missing days are never zero."""
+    daily = pd.Series(flows['duja'], index=times).resample('D', closed='right', label='left').agg(['mean', 'count'])
+    values = observation.get('flow', {})
+    observed = pd.Series(list(values.values()), index=pd.to_datetime(list(values)), dtype=float)
+    paired = pd.concat([daily['mean'].where(daily['count'] == 24).rename('sim'), observed.rename('obs')], axis=1).dropna()
+    monthly = []
+    for month, block in paired.groupby(paired.index.to_period('M')):
+        o, s = block.obs, block.sim
+        monthly.append({'month': str(month), 'matchedDays': len(block), 'calendarDays': month.days_in_month,
+                        'observedMean': float(o.mean()), 'simulatedMean': float(s.mean()),
+                        'observedVolumeM3': float(o.sum()*86400), 'simulatedVolumeM3': float(s.sum()*86400),
+                        'biasM3s': float((s-o).mean()), 'pbias': float((s.sum()-o.sum())/o.sum()*100) if o.sum() else None})
+    return {'monthly': monthly, 'definition': '仅匹配完整日，月表总量是观测匹配日累计，不外推缺测日。'}
 
 def diagnose(times, source, select, diagnostic, states, initial, flows, routing, flux,
-             levels, volumes, windows, parameters, spatial, mode, observation, initial_routing_volume=0.):
+             levels, volumes, windows, parameters, spatial, mode, observation, initial_routing_volume=0., initial_partition_routing=None):
     areas = np.array([u['areaKm2'] for u in spatial['units']])
     scale = areas * 1000
     ice = np.array([u['kind'] == 'glacier' for u in spatial['units']])
@@ -74,7 +146,11 @@ def diagnose(times, source, select, diagnostic, states, initial, flows, routing,
         windows_report.append({'id': window['id'], 'start': first.isoformat(), 'end': last.isoformat(),
                                'initialization': window['method'], 'conditionalOnObservedStart': True, 'openWaterIndependentlyVerified': False,
                                'windowVolumeChangeM3': float(volumes[ids[-1]]), 'residual': residual})
-    return {'schemaVersion': 1, 'routingMode': mode, 'monthly': monthly, 'lakeWindows': windows_report,
+    partitions = partition_budgets(times, source, select, diagnostic, states, initial, flows, routing, spatial,
+                                   parameters, initial_partition_routing)
+    return {'schemaVersion': 2, 'routingMode': mode, 'monthly': monthly, 'lakeWindows': windows_report,
+            'partitions': partitions, 'flowTiming': flow_timing_report(times, flows, observation) if 'duja' in flows else {},
+            'partitionDefinition': '六个互斥产汇流分区；杜加与扎加下游补充区合为扎加藏布，求和时不重复加入整条扎加。',
             'catchmentBalanceMaxErrorM3': float(np.max(np.abs(frame.catchmentBalanceErrorM3))), 'landBalanceMaxErrorM3': float(np.max(np.abs(frame.landBalanceErrorM3))),
             'definitions': ['融雪和融冰是产汇流内部补给，不能再次加到入湖流量。',
                             '冰川融冰与裸冰升华均消耗固定边界之外未显式维护的冰体质量；外部冰体供水单独列账。',

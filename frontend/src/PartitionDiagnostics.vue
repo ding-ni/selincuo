@@ -1,0 +1,30 @@
+<script setup>
+import {computed,ref} from 'vue'
+import Chart from './Chart.vue'
+import {partitionSummary} from './diagnostics.mjs'
+const props=defineProps({diagnostics:Object,year:String})
+const active=ref('duja')
+const rows=computed(()=>partitionSummary(props.diagnostics?.partitions,props.year))
+const selected=computed(()=>rows.value.find(r=>r.id===active.value)||rows.value[0])
+const chartRows=computed(()=>(selected.value?.months||[]).map(m=>({...m,date:m.month+'-01'})))
+const timing=computed(()=>(props.diagnostics?.flowTiming?.monthly||[]).filter(m=>m.month.startsWith(props.year)))
+const n=(v,d=1)=>v==null||!Number.isFinite(v)?'—':v.toLocaleString('zh-CN',{maximumFractionDigits:d})
+</script>
+<template>
+ <section v-if="rows.length" class="partition-audit" aria-label="分区水量诊断">
+  <div class="partition-heading"><div><span class="audit-kicker">BASIN WATER AUDIT / {{year}}</span><h4>先找产水差异，再调全湖水位</h4></div><span>六个互斥控制区<br>杜加不重复计入扎加</span></div>
+  <div class="partition-picker" role="group" aria-label="选择诊断分区"><button v-for="r in rows" :key="r.id" :class="{active:selected?.id===r.id}" :aria-pressed="selected?.id===r.id" @click="active=r.id"><b>{{r.name}}</b><span>{{n(r.areaKm2,0)}} km² <i>{{r.id==='duja'?'有流量约束':'移用参数'}}</i></span><div class="share-track"><i :style="{width:(r.share??0)*100+'%'}"></i></div><small>入湖来水份额 {{r.share==null?'—':n(r.share*100)}}%</small></button></div>
+  <template v-if="selected"><div class="partition-statement"><b>{{selected.name}}</b><span>{{selected.observationConstraint}} · {{selected.completeMonths}}个完整月 / {{n(selected.hours,0)}}小时</span></div>
+   <div class="partition-ledger"><article><span>格网降水</span><b>{{n(selected.precipitationMm)}}<small>mm</small></b></article><article><span>实际蒸散</span><b>{{n(selected.actualEtMm)}}<small>mm</small></b></article><article><span>出区径流</span><b>{{n(selected.routedRunoffMm)}}<small>mm</small></b></article><article><span>单元＋汇流蓄水变化</span><b>{{n(selected.unitStorageChangeMm+selected.routingStorageChangeMm)}}<small>mm</small></b></article></div>
+   <p class="note">该区冰体外部供水 {{n(selected.iceExternalMm)}} mm；蒸发能力基准 {{n(selected.evaporationBaselineMm)}} mm。产水 {{n(selected.generatedRunoffMm)}} mm 经汇流后出区，二者差额保存在汇流蓄水中。面积 {{n(selected.areaKm2)}} km²（含冰川 {{n(selected.glacierAreaKm2,2)}} km²）。</p>
+   <Chart :rows="chartRows" :series="[{key:'precipitationMm',label:'降水',type:'bar'},{key:'actualEtMm',label:'实际蒸散'},{key:'routedRunoffMm',label:'出区径流'},{key:'iceExternalMm',label:'冰体外部供水'}]" unit="mm/月"/>
+  </template>
+  <div class="table-wrap"><table><thead><tr><th>{{year}}分区 / mm</th><th>降水</th><th>实际蒸散</th><th>产水</th><th>出区径流</th><th>冰体供水</th><th>单元蓄水Δ</th><th>汇流蓄水Δ</th><th>逐时最大闭合误差 m³</th></tr></thead><tbody><tr v-for="r in rows" :key="r.id" :class="{picked:selected?.id===r.id}"><td>{{r.name}}</td><td>{{n(r.precipitationMm)}}</td><td>{{n(r.actualEtMm)}}</td><td>{{n(r.generatedRunoffMm)}}</td><td>{{n(r.routedRunoffMm)}}</td><td>{{n(r.iceExternalMm)}}</td><td>{{n(r.unitStorageChangeMm)}}</td><td>{{n(r.routingStorageChangeMm)}}</td><td>{{n(r.balanceMaxErrorM3,7)}}</td></tr></tbody></table></div>
+  <p class="note">各区使用自己的面积折算水深，跨区请比较体积或来水份额，不能直接相加水深。杜加控制区＋扎加下游补充区＝扎加藏布；其余分区缺少流量观测，水量闭合不代表模型已经得到验证。逐时最大误差覆盖本次完整计算时段。</p>
+ </section>
+ <section v-if="timing.length" class="flow-timing"><h4>杜加逐月匹配：定位春季供水与退水偏差</h4><div class="table-wrap"><table><thead><tr><th>月份</th><th>匹配日 / 全月</th><th>实测均值 m³/s</th><th>模拟均值 m³/s</th><th>偏差 m³/s</th><th>水量偏差 %</th></tr></thead><tbody><tr v-for="m in timing" :key="m.month"><td>{{m.month}}</td><td>{{m.matchedDays}} / {{m.calendarDays}}</td><td>{{n(m.observedMean)}}</td><td>{{n(m.simulatedMean)}}</td><td>{{n(m.biasM3s)}}</td><td>{{n(m.pbias)}}</td></tr></tbody></table></div><p class="note">{{diagnostics.flowTiming.definition}} 春季低流量不足可能涉及前期蓄水、冰雪时序和驱动偏差；汇流只重新分配时间，不能补造水量。</p></section>
+</template>
+<style scoped>
+.partition-audit{margin:22px 0;border:1px solid #d5e4e3;background:#fbfdfc}.partition-heading{padding:20px 22px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #e1ebea}.audit-kicker{font-size:10px;letter-spacing:1.7px;color:#31817e;font-weight:700}.partition-heading h4{margin:7px 0 0;font-size:18px;font-weight:600;letter-spacing:.4px}.partition-heading>span{font-size:11px;color:#6e8588;line-height:1.8;text-align:right}.partition-picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:#dde8e7;border-bottom:1px solid #dde8e7}.partition-picker button{display:grid;gap:8px;border:0;border-radius:0;background:#f8fbfa;text-align:left;padding:15px 18px;color:#526c70;min-width:0}.partition-picker button.active{background:#e8f4f0;box-shadow:inset 0 3px #277e73}.partition-picker b{font-size:12px;color:#254c50}.partition-picker span,.partition-picker small{font-size:10px}.partition-picker i{font-style:normal;margin-left:5px;color:#668a80}.share-track{height:3px;background:#e0e9e6}.share-track i{display:block;height:3px;background:#388d7c;margin:0;min-width:0}.partition-statement{padding:20px 22px 12px;display:flex;justify-content:space-between;gap:12px}.partition-statement span{font-size:11px;color:#71868a}.partition-ledger{padding:0 22px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}.partition-ledger article{border-bottom:2px solid #ccded9;padding:7px 0 12px}.partition-ledger span{font-size:11px;color:#647c7d}.partition-ledger b{font:500 27px 'Bahnschrift','DIN Alternate',sans-serif;display:block;margin-top:12px;color:#1f5b59}.partition-ledger small{font:11px sans-serif;margin-left:7px;color:#71908a}.partition-audit>.note{margin:15px 22px;line-height:1.85}.partition-audit>.table-wrap{margin:0 22px}.partition-audit .chart{height:270px}.picked{background:#ecf5f0}.flow-timing h4{margin-top:26px}.partition-audit td,.flow-timing td{white-space:nowrap;font-size:11px;font-variant-numeric:tabular-nums}
+@media(max-width:1000px){.partition-picker{grid-template-columns:repeat(2,minmax(0,1fr))}.partition-ledger{grid-template-columns:repeat(2,minmax(0,1fr))}.partition-statement{flex-direction:column}.partition-heading>span{display:none}}
+</style>

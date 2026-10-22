@@ -38,12 +38,12 @@ class Jobs:
                 raise ValueError('请先登记真实ERA5-Land输入，当前不能开展历史计算')
             payload['_observations'] = observation_snapshot(self.db)
             payload['_modelIdentity'] = model_identity()
-        if kind == 'calibration' and payload.get('stage') == 'lake':
+        if kind == 'calibration' and payload.get('stage') in ('lake', 'routing'):
             if not payload.get('baseTaskId'):
-                raise ValueError('湖泊自动率定须选择已完成的产汇流成果，以冻结其流域参数')
+                raise ValueError('汇流或湖泊自动率定须选择成功基准成果，以冻结其余参数')
             base = self.db.task(payload['baseTaskId'])
             if base['status'] != 'succeeded' or not base['result'] or base['request'].get('inputId') != payload.get('inputId'):
-                raise ValueError('湖泊率定基准须为同一输入版本的成功成果')
+                raise ValueError('率定基准须为同一输入版本的成功成果')
             current_spatial = read_json(ROOT / 'data/derived/spatial/manifest.json')['version']
             if base['result']['identity']['modelImplementation'] != model_identity() or base['result']['spatialVersion'] != current_spatial:
                 raise ValueError('基准成果的模型或空间版本已变化，请重新计算基准')

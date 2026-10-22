@@ -197,7 +197,8 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
     if np.max(np.abs(diagnostics[:, :, 7])) > 1e-6:
         raise ValueError('产流内核水量平衡未通过，成果不登记')
     areas = np.array([u['areaKm2'] for u in units])
-    initial_routing_volume = sum(float(v.get('channel', {}).get('storage', 0))+sum(v.get('channel', {}).get('queue', []))+sum(v.get('sources', {}).values()) for v in (parent or {}).get('routing', {}).values())
+    initial_partition_routing = {key: float(v.get('channel', {}).get('storage', 0))+sum(v.get('channel', {}).get('queue', []))+sum(v.get('sources', {}).values()) for key, v in (parent or {}).get('routing', {}).items()}
+    initial_routing_volume = sum(initial_partition_routing.values())
     source_volumes = diagnostics[:, :, :4] * areas[None, :, None] * 1000
     routed, routing_final, routing_history, routing_errors, source_routing_history = {}, {}, {}, {}, {}
     for partition in PARTITIONS:
@@ -281,7 +282,7 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
                                               '未率定初值为通用模型初值，不代表已通过业务验证']},
               'checkpoint': checkpoint}
     from .model_diagnostics import diagnose
-    result['modelDiagnostics'] = diagnose(times, source, select, diagnostics, history, initial_unit_states, q, routing_history, lake_flux, levels, volumes, windows, p, spatial, routing_mode, observation, initial_routing_volume) if not request.get('_skipDiagnostics') else {}
+    result['modelDiagnostics'] = diagnose(times, source, select, diagnostics, history, initial_unit_states, q, routing_history, lake_flux, levels, volumes, windows, p, spatial, routing_mode, observation, initial_routing_volume, initial_partition_routing) if not request.get('_skipDiagnostics') else {}
     if folder:
         folder = Path(folder)
         folder.mkdir(parents=True, exist_ok=True)

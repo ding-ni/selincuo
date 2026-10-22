@@ -11,8 +11,9 @@ export function runIssue(run, inputs, mode, active = false) {
   if (mode === 'calibration' || mode === 'sensitivity') {
     if (run.start.slice(0,16) > '2023-01-01T00:00' || run.end.slice(0,16) < '2025-01-01T00:00') return '自动率定需要完整2023年预热和2024年评价驱动，当前条件尚未满足。'
     if (mode === 'calibration' && (!Number.isInteger(run.maxEvaluations) || run.maxEvaluations < 10 || run.maxEvaluations > 2000)) return '评价预算须为10—2000之间的整数。'
-    if (mode === 'calibration' && run.stage === 'lake' && !run.baseTaskId) return '请选择同输入版本的成功成果，以冻结流域参数。'
+    if (mode === 'calibration' && ['lake','routing'].includes(run.stage) && !run.baseTaskId) return '请选择同输入版本的成功成果，以冻结其余参数。'
   }
+  if(mode==='calibration'&&run.stage==='routing'&&run.routingMode!=='source-separated')return '汇流率定须选择分水源调蓄结构。'
   return ''
 }
 export function parameterIssue(params, definitions) {

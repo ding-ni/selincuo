@@ -1,0 +1,29 @@
+{
+  "version": "0.6.0",
+  "service": "http://127.0.0.1:8879/",
+  "actualInstalledExecutableChecked": true,
+  "dailyLightAndPresentationDarkChecked": true,
+  "mapPartitionSelectionShowsAreaWeightedAnnualBudget": true,
+  "partitionYearSwitch2024And2025Checked": true,
+  "sixMutuallyExclusivePartitionsVisible": true,
+  "flowAndLakeComparisonWithConditionAndParameterDifferencesChecked": true,
+  "routingStageRestoresBaselineAndLocksOtherParameters": true,
+  "initialStorageAndAnnualStorageWarningsVisible": true,
+  "viewportChecks": [
+    {"innerWidth": 1280, "clientWidth": 1265, "scrollWidth": 1265},
+    {"innerWidth": 760, "clientWidth": 745, "scrollWidth": 745}
+  ],
+  "temporaryViewportReset": true,
+  "consoleErrorsOrWarnings": [],
+  "screenshots": [
+    "dashboard-light-v0.6.0.png",
+    "dashboard-dark-v0.6.0.png",
+    "partition-diagnostics-v0.6.0.png",
+    "comparison-v0.6.0.png",
+    "diagnostics-narrow-v0.6.0.png"
+  ],
+  "limitations": [
+    "The new routing search was executed through the actual service API and checked in the UI; browser verification did not create a duplicate search.",
+    "The 760px check and comparison screenshot used the same source build at development port 8886; final installed port 8879 was separately checked for light/dark dashboard and partition diagnostics."
+  ]
+}

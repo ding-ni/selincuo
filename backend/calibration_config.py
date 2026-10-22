@@ -1,5 +1,6 @@
 """Public search definitions shared by the service, diagnostics and UI."""
 RUNOFF_KEYS = ['KC', 'WM', 'B', 'SM', 'KI', 'KG', 'tauHours']
+ROUTING_KEYS = ['tauHours', 'interflowTauHours', 'baseflowTauHours']
 PROFILES = {
     'balanced': {'label': '洪峰、低流量与水量平衡', 'weights': {'nse': .5, 'logNse': .25, 'volume': .25}},
     'peaks': {'label': '原方案：洪峰优先', 'weights': {'nse': 1., 'logNse': 0., 'volume': .1}},
@@ -20,7 +21,7 @@ def flow_objective(metric, profile='balanced'):
 
 
 def public_config():
-    return {'runoffKeys': RUNOFF_KEYS, 'lakeKeys': ['lakeCoefficient'], 'profiles': PROFILES,
+    return {'runoffKeys': RUNOFF_KEYS, 'routingKeys': ROUTING_KEYS, 'lakeKeys': ['lakeCoefficient'], 'profiles': PROFILES,
             'defaultProfile': 'balanced', 'calibrationYear': 2024, 'warmupYear': 2023,
             'excludedYears': [2025, 2026], 'sensitivity': {'fraction': .2, 'method': 'one-at-a-time',
             'keys': ['KC', 'snowDdf', 'iceDdf', 'tauHours', 'interflowTauHours', 'baseflowTauHours', 'lakeCoefficient']}}

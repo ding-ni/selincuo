@@ -4,7 +4,7 @@ import math
 
 import numpy as np
 import pandas as pd
-from .calibration_config import RUNOFF_KEYS, PROFILES, flow_objective
+from .calibration_config import RUNOFF_KEYS, ROUTING_KEYS, PROFILES, flow_objective
 
 from .common import write_json
 from .model_core import PARAMETER_DEFINITIONS, parameters
@@ -13,15 +13,18 @@ from .simulation import prepare, run_simulation
 
 def calibrate(db, request, folder, progress=None, cancelled=None):
     stage = request.get('stage', 'runoff')
-    if stage not in ('runoff', 'lake') or int(request.get('calibrationYear', 2024)) != 2024:
+    if stage not in ('runoff', 'routing', 'lake') or int(request.get('calibrationYear', 2024)) != 2024:
         raise ValueError('自动搜索仅使用2024年率定期，验证和延伸检验不能参与搜索')
     if request.get('_parentState'):
         raise ValueError('自动率定各候选须从统一起点预热，不能继承固定参数形成的父状态')
     base = parameters(request.get('parameters'))
-    keys = RUNOFF_KEYS if stage == 'runoff' else ['lakeCoefficient']
+    if stage == 'routing' and request.get('routingMode', 'source-separated') != 'source-separated':
+        raise ValueError('分水源汇流率定须采用分水源调蓄结构')
+    keys = {'runoff': RUNOFF_KEYS, 'routing': ROUTING_KEYS, 'lake': ['lakeCoefficient']}[stage]
+    flow_stage = stage != 'lake'
     definitions = {d['key']: d for d in PARAMETER_DEFINITIONS}
     bounds = np.array([[definitions[k]['min'], definitions[k]['max']] for k in keys])
-    maximum = min(2000, max(10, int(request.get('maxEvaluations', 120 if stage == 'runoff' else 30))))
+    maximum = min(2000, max(10, int(request.get('maxEvaluations', 120 if flow_stage else 30))))
     seed = int(request.get('seed', 42))
     rng = np.random.default_rng(seed)
     source = prepare(db, request['inputId'])
@@ -43,10 +46,10 @@ def calibrate(db, request, folder, progress=None, cancelled=None):
             raise InterruptedError('用户停止率定')
         candidate = {**base, **dict(zip(keys, map(float, vector)))}
         result = run_simulation(db, {**request, 'parameters': candidate, '_skipDiagnostics': True}, prepared=source, cancelled=cancelled)
-        metric = result['metrics'].get('2024', {}).get('flow' if stage == 'runoff' else 'lake', {})
+        metric = result['metrics'].get('2024', {}).get('flow' if flow_stage else 'lake', {})
         if metric.get('count', 0) < 30:
             raise ValueError('2024年可靠观测匹配不足30日，不能自动率定')
-        if stage == 'runoff':
+        if flow_stage:
             if metric.get('nse') is None:
                 raise ValueError('率定期实测流量无有效方差')
             objective, components = flow_objective(metric, profile)
@@ -61,7 +64,8 @@ def calibrate(db, request, folder, progress=None, cancelled=None):
                       'parameters': {k: candidate[k] for k in keys}, 'metrics': metric, 'components': components})
         write_json(folder / 'search-progress.json', {'stage': stage, 'evaluations': trace, 'bestParameters': best_params})
         if progress:
-            progress(len(trace) / maximum * 90, f'{"产汇流" if stage == "runoff" else "湖泊"}率定 {len(trace)}/{maximum}，目标值 {best:.5g}')
+            label = {'runoff': '产汇流', 'routing': '分水源汇流', 'lake': '湖泊'}[stage]
+            progress(len(trace) / maximum * 90, f'{label}率定 {len(trace)}/{maximum}，目标值 {best:.5g}')
         return float(objective)
 
     baseline_vector = np.array([base[k] for k in keys])
@@ -69,10 +73,22 @@ def calibrate(db, request, folder, progress=None, cancelled=None):
     population_size = min(maximum - 1, max(6, len(keys) * 2))
     population = bounds[:, 0] + rng.random((population_size, len(keys))) * (bounds[:, 1] - bounds[:, 0])
     population[0] = baseline_vector
+    def feasible(vector):
+        # Keep the declared box bounds while enforcing the physical ordering.
+        # Reject impossible points with a penalty; never clip one searched key
+        # into another, which would alter the meaning of the recorded candidate.
+        candidate = {**base, **dict(zip(keys, map(float, vector)))}
+        return candidate['baseflowTauHours'] >= candidate['interflowTauHours']
+    def score_candidate(vector):
+        return evaluate(vector) if feasible(vector) else math.inf
+    # The intersection is large for these bounds; resample invalid initial points.
+    for i in range(1, len(population)):
+        while not feasible(population[i]):
+            population[i] = bounds[:, 0] + rng.random(len(keys)) * (bounds[:, 1] - bounds[:, 0])
     scores = np.array([evaluate(v) for v in population if len(trace) < maximum])
     population = population[:len(scores)]
-    converged = False
-    while len(trace) < maximum:
+    converged, proposals, invalid_proposals = False, 0, 0
+    while len(trace) < maximum and proposals < maximum * 20:
         for i in range(len(population)):
             choices = [j for j in range(len(population)) if j != i]
             a, b, c = rng.choice(choices, 3, replace=False)
@@ -80,7 +96,9 @@ def calibrate(db, request, folder, progress=None, cancelled=None):
             cross = rng.random(len(keys)) < .8
             cross[rng.integers(len(keys))] = True
             trial = np.where(cross, mutant, population[i])
-            score = evaluate(trial)
+            proposals += 1
+            invalid_proposals += int(not feasible(trial))
+            score = score_candidate(trial)
             if score < scores[i]:
                 population[i], scores[i] = trial, score
             if len(trace) >= maximum:
@@ -90,10 +108,11 @@ def calibrate(db, request, folder, progress=None, cancelled=None):
             break
     final = run_simulation(db, {**request, 'parameters': best_params}, folder=folder, cancelled=cancelled)
     final['calibration'] = {'stage': stage, 'algorithm': 'differential-evolution', 'seed': seed,
-                            'searchParameters': keys, 'objectiveProfile': profile if stage == 'runoff' else 'lake-rmse',
-                            'objectiveWeights': PROFILES[profile]['weights'] if stage == 'runoff' else {'lakeRmse': 1.}, 'calibrationYear': 2024, 'evaluations': len(trace),
+                            'searchParameters': keys, 'objectiveProfile': profile if flow_stage else 'lake-rmse',
+                            'objectiveWeights': PROFILES[profile]['weights'] if flow_stage else {'lakeRmse': 1.}, 'calibrationYear': 2024, 'evaluations': len(trace),
                             'maxEvaluations': maximum, 'converged': converged,
-                            'termination': 'converged' if converged else 'budget-exhausted',
+                            'termination': 'converged' if converged else ('budget-exhausted' if len(trace) >= maximum else 'proposal-limit'),
+                            'invalidProposalsSkipped': invalid_proposals,
                             'baselineMetrics': baseline_metrics, 'bestObjective': best, 'trace': trace,
                             'frozenParameters': [k for k in base if k not in keys],
                             'validationYearsExcludedFromSearch': [2025, 2026],
