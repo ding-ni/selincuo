@@ -64,7 +64,7 @@ def calibrate(db, request, folder, progress=None, cancelled=None):
                       'parameters': {k: candidate[k] for k in keys}, 'metrics': metric, 'components': components})
         write_json(folder / 'search-progress.json', {'stage': stage, 'evaluations': trace, 'bestParameters': best_params})
         if progress:
-            label = {'runoff': '产汇流', 'routing': '分水源汇流', 'lake': '湖泊'}[stage]
+            label = {'runoff': '陆面产流', 'routing': '分水源汇流', 'lake': '湖泊'}[stage]
             progress(len(trace) / maximum * 90, f'{label}率定 {len(trace)}/{maximum}，目标值 {best:.5g}')
         return float(objective)
 

@@ -56,6 +56,16 @@ class NumericalTests(unittest.TestCase):
         self.assertAlmostEqual(d[5], .875)
         self.assertLess(abs(d[7]), 1e-12)
 
+    def test_glacier_sublimation_controls_are_explicit_and_hourly_bounded(self):
+        p = parameters({'iceSublimationFraction': 1.0, 'iceSublimationMaxMmHour': .01})
+        vector = np.array([p[k] for k in PARAMETER_NAMES])
+        diagnostic = unit_step(0., -5., 1., np.zeros(8), True, vector)
+        self.assertAlmostEqual(diagnostic[8], .01)
+        self.assertLess(abs(diagnostic[7]), 1e-12)
+        p = parameters({'iceSublimationFraction': 0.0})
+        vector = np.array([p[k] for k in PARAMETER_NAMES])
+        self.assertEqual(unit_step(0., -5., 1., np.zeros(8), True, vector)[8], 0.)
+
     def test_routing_conservation_and_resume(self):
         inflow = np.random.default_rng(9).random(200) * 1e6
         q, h, storage, queue = route_series(inflow, 17., np.zeros(6), 28., 4.3)

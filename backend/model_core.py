@@ -24,10 +24,11 @@ except ImportError:
 PARAMETER_NAMES = ['KC', 'WM', 'B', 'C', 'SM', 'EX', 'KI', 'KG', 'IM',
                    'snowDdf', 'iceDdf', 'snowTemperature', 'rainTemperature',
                    'liquidCapacity', 'refreezeFactor', 'snowSublimation',
-                   'glacierRecessionDay', 'tauHours', 'lagHours', 'lakeCoefficient', 'lapseRate', 'interflowTauHours', 'baseflowTauHours']
+                   'glacierRecessionDay', 'tauHours', 'lagHours', 'lakeCoefficient', 'lapseRate', 'interflowTauHours',
+                   'baseflowTauHours', 'iceSublimationFraction', 'iceSublimationMaxMmHour']
 DEFAULT_PARAMETERS = dict(zip(PARAMETER_NAMES, [
     .8, 150., .3, .15, 30., 1.2, .018, .012, .01,
-    4., 7., -1., 2., .05, 1., .35, .5, 24., 0., .8, -.0065, 48., 720.]))
+    4., 7., -1., 2., .05, 1., .35, .5, 24., 0., .8, -.0065, 48., 720., .25, .08]))
 PARAMETER_DEFINITIONS = [
     {'key': 'KC', 'label': '陆面蒸发系数', 'min': .2, 'max': 1.5, 'step': .01, 'unit': '', 'group': 'land'},
     {'key': 'WM', 'label': '张力水容量', 'min': 40, 'max': 300, 'step': 1, 'unit': 'mm', 'group': 'land'},
@@ -45,6 +46,8 @@ PARAMETER_DEFINITIONS = [
     {'key': 'liquidCapacity', 'label': '雪层持水比例', 'min': .01, 'max': .15, 'step': .01, 'unit': '', 'group': 'snow'},
     {'key': 'refreezeFactor', 'label': '雪内再冻结因子', 'min': 0, 'max': 3, 'step': .1, 'unit': 'mm/℃/d', 'group': 'snow'},
     {'key': 'snowSublimation', 'label': '升华分配比例', 'min': 0, 'max': 1, 'step': .05, 'unit': '', 'group': 'snow'},
+    {'key': 'iceSublimationFraction', 'label': '裸冰升华潜在蒸发比例', 'min': 0, 'max': 1, 'step': .05, 'unit': '', 'group': 'snow'},
+    {'key': 'iceSublimationMaxMmHour', 'label': '裸冰升华小时上限', 'min': 0, 'max': .4, 'step': .01, 'unit': 'mm/h', 'group': 'snow'},
     {'key': 'glacierRecessionDay', 'label': '冰川日调蓄常数', 'min': .05, 'max': 3, 'step': .05, 'unit': 'd⁻¹', 'group': 'snow'},
     {'key': 'tauHours', 'label': '子流域调蓄时间', 'min': 1, 'max': 168, 'step': 1, 'unit': 'h', 'group': 'routing'},
     {'key': 'lagHours', 'label': '传播滞时', 'min': 0, 'max': 72, 'step': 1, 'unit': 'h', 'group': 'routing'},
@@ -55,6 +58,21 @@ PARAMETER_DEFINITIONS += [
     {'key': 'interflowTauHours', 'label': '壤中调蓄时间', 'min': 6, 'max': 240, 'step': 1, 'unit': 'h', 'group': 'routing'},
     {'key': 'baseflowTauHours', 'label': '地下退水时间', 'min': 168, 'max': 2160, 'step': 24, 'unit': 'h', 'group': 'routing'},
 ]
+CALIBRATION_ROLE = {key: stage for stage, keys in (
+    ('land-runoff', ['KC', 'WM', 'B', 'SM', 'KI', 'KG']),
+    ('routing', ['tauHours', 'interflowTauHours', 'baseflowTauHours']),
+    ('lake', ['lakeCoefficient']),
+) for key in keys}
+for definition in PARAMETER_DEFINITIONS:
+    definition['calibrationRole'] = CALIBRATION_ROLE.get(definition['key'], 'fixed-prior')
+    if definition['calibrationRole'] == 'fixed-prior':
+        definition['parameterBasis'] = '沿用原平台/通用概念初值；色林错缺少对应过程实测，尚未独立验证'
+    elif definition['calibrationRole'] == 'land-runoff':
+        definition['parameterBasis'] = '候选率定参数；只受杜加单站日流量约束，不能代表未测分区'
+    elif definition['calibrationRole'] == 'routing':
+        definition['parameterBasis'] = '候选路由参数；冻结产流过程后由杜加日流量约束，需检验边界与初始状态影响'
+    else:
+        definition['parameterBasis'] = '候选湖面转换参数；仅由条件湖位窗口约束，缺湖面蒸发实测'
 STATE_NAMES = ['swe', 'snow_liquid', 'WU', 'WL', 'WD', 'S', 'FR', 'glacier_storage']
 DIAGNOSTIC_NAMES = ['RS', 'RI', 'RG', 'glacier_runoff', 'snowmelt', 'icemelt', 'et_actual', 'water_balance_error', 'ice_sublimation']
 
@@ -125,7 +143,7 @@ def unit_step(precip, temp, e0, state, glacier, p):
     if glacier:
         if swe <= 1e-10:
             imelt = p[10] * max(temp, 0.) / 24. * bare
-            ice_sub = min(pet * .25, .08) * bare
+            ice_sub = min(pet * p[23], p[24]) * bare
         state[7] += drainage + rain - rain_snow + imelt
         gr = state[7] * (1. - math.exp(-p[16] / 24.))
         state[7] -= gr
