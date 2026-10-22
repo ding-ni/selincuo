@@ -73,7 +73,7 @@ class IntegrationTests(unittest.TestCase):
             tail = run_simulation(db, {**request, 'start': '2023-01-04T18:00:00', '_parentState': part['checkpoint']}, Path(temp) / 'tail')
             self.assertEqual(full['checkpoint'], tail['checkpoint'])
             with np.load(Path(temp) / 'full/hourly.npz') as f, np.load(Path(temp) / 'part/hourly.npz') as p, np.load(Path(temp) / 'tail/hourly.npz') as t:
-                for key in ('flow', 'unitStates', 'unitDiagnostics', 'routingStorage'):
+                for key in ('flow', 'unitStates', 'unitDiagnostics', 'routingStorage', 'sourceRoutingStorage', 'continuousLakeVolumeChange'):
                     np.testing.assert_allclose(f[key], np.concatenate([p[key], t[key]]), atol=1e-9, rtol=1e-12)
             self.assertEqual(full['resultSource'], 'model-backend')
             midnight = run_simulation(db, {**request, 'start': '2023-01-02T00:00:00', 'end': '2023-01-04T00:00:00'})
@@ -81,6 +81,7 @@ class IntegrationTests(unittest.TestCase):
             self.assertTrue(all(r['forcingHours'] == 24 for r in midnight['daily']))
             self.assertEqual(set(midnight['metrics']), {'2023'})
             self.assertLess(full['diagnostics']['landGlacierMaxBalanceErrorMm'], 1e-9)
+            self.assertLess(full['modelDiagnostics']['catchmentBalanceMaxErrorM3'], .001)
             with self.assertRaises(ValueError):
                 run_simulation(db, {**request, 'projectId': 'foreign'})
             with self.assertRaises(ValueError):

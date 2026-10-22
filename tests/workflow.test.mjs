@@ -5,11 +5,15 @@ const inputs=[{id:'real',compatible:true,manifest:{start:'2023-01-01T00:00:00',e
 const run={inputId:'real',start:'2023-01-01T00:00',end:'2025-01-01T00:00',stage:'runoff',maxEvaluations:120}
 test('partial forcing cannot be used for annual calibration or out-of-coverage simulation',()=>{
   assert.equal(runIssue(run,inputs,'calibration'),'')
+  assert.equal(runIssue({...run,start:'2023-01-01T00:00:00',end:'2025-01-01T00:00:00'},inputs,'sensitivity'),'')
   assert.match(runIssue({...run,end:'2024-12-31T23:00'},inputs,'calibration'),/2024/)
   assert.match(runIssue({...run,end:'2023-04-30T23:00'},inputs,'calibration'),/2024/)
   assert.match(runIssue({...run,end:'2025-01-01T01:00'},inputs,'simulation'),/覆盖/)
   assert.match(runIssue({...run,start:'2023-01-01T00:15'},inputs,'simulation'),/整小时/)
   assert.match(runIssue({...run,stage:'lake'},inputs,'calibration'),/冻结/)
+  assert.equal(runIssue({...run,stage:'lake',baseTaskId:'',maxEvaluations:null},inputs,'sensitivity'),'')
+  assert.match(runIssue({...run,maxEvaluations:null},inputs,'calibration'),/预算/)
+  assert.match(runIssue({...run,start:'2023-07-01T00:00'},inputs,'sensitivity'),/预热/)
   assert.match(runIssue(run,[{...inputs[0],compatible:false}],'simulation'),/空间/)
 })
 test('comparison does not silently overlay unrelated spaces or dates',()=>{

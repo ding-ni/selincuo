@@ -23,7 +23,7 @@ class Jobs:
         return self.db.rows("SELECT id,kind,status,progress,message FROM tasks WHERE status IN ('queued','running','stopping')")
 
     def submit(self, kind, payload):
-        if kind not in ('simulation', 'trial', 'continuation', 'calibration', 'import-observations', 'build-spatial', 'register-inputs', 'download-forcing'):
+        if kind not in ('simulation', 'trial', 'continuation', 'calibration', 'sensitivity', 'import-observations', 'build-spatial', 'register-inputs', 'download-forcing'):
             raise ValueError('未知任务类型')
         payload = {k: v for k, v in dict(payload).items() if not k.startswith('_')}
         if payload.get('projectId', 'selinco') != 'selinco' or payload.get('contextKey', CONTEXT_KEY) != CONTEXT_KEY:
@@ -31,7 +31,7 @@ class Jobs:
         payload['projectId'], payload['contextKey'] = 'selinco', CONTEXT_KEY
         identifier = 'JOB-' + uuid.uuid4().hex[:20]
         folder = self.db.workspace / 'tasks' / identifier
-        if kind in ('simulation', 'trial', 'continuation', 'calibration'):
+        if kind in ('simulation', 'trial', 'continuation', 'calibration', 'sensitivity'):
             payload['parameters'] = parameters(payload.get('parameters'))
             products = self.db.rows('SELECT id FROM input_products WHERE id=?', (payload.get('inputId'),))
             if not products:
@@ -48,8 +48,13 @@ class Jobs:
             if base['result']['identity']['modelImplementation'] != model_identity() or base['result']['spatialVersion'] != current_spatial:
                 raise ValueError('基准成果的模型或空间版本已变化，请重新计算基准')
             payload['parameters'] = dict(base['result']['parameters'])
+            payload['routingMode'] = base['result'].get('routingMode', base['request'].get('routingMode', 'source-separated'))
             payload['start'], payload['end'] = base['request']['start'], base['request']['end']
             payload['_observations'] = base['request']['_observations']
+        if kind == 'sensitivity':
+            import pandas as pd
+            if pd.Timestamp(payload.get('start') or '2100') > pd.Timestamp('2023-01-01') or pd.Timestamp(payload.get('end') or '1900') < pd.Timestamp('2025-01-01'):
+                raise ValueError('敏感性实验需要完整2023预热和2024评价时段')
         if kind == 'continuation':
             states = self.db.rows('SELECT * FROM states WHERE id=?', (payload.get('stateId'),))
             if not states:
@@ -133,6 +138,9 @@ class Jobs:
                     if any(p not in allowed for p in paths):
                         raise ValueError('只能登记工作区下载或上传目录中的NetCDF')
                 result = register_era5(paths, self.db, name=request.get('name', 'ERA5-Land历史输入'), progress=progress)
+            elif kind == 'sensitivity':
+                from .sensitivity import analyze
+                result = analyze(self.db, request, folder, progress, is_cancelled)
             elif kind == 'calibration':
                 from .calibration import calibrate
                 result = calibrate(self.db, request, folder, progress, is_cancelled)

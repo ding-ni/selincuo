@@ -20,7 +20,7 @@ class ProtocolTests(unittest.TestCase):
                 # Controlled objective surface, with deliberately unrelated
                 # validation performance. Test orchestration, not model skill.
                 loss = ((p['WM'] - 130) / 100) ** 2 + ((p['KC'] - 1.1) / 2) ** 2
-                return {'parameters': p, 'metrics': {'2024': {'flow': {'count': 100, 'nse': 1 - loss, 'pbias': 0}, 'lake': {'count': 80, 'rmse': abs(p['lakeCoefficient'] - .6)}},
+                return {'parameters': p, 'metrics': {'2024': {'flow': {'count': 100, 'nse': 1 - loss, 'logNse': 1-loss, 'pbias': 0}, 'lake': {'count': 80, 'rmse': abs(p['lakeCoefficient'] - .6)}},
                                                     '2025': {'flow': {'rmse': future_error}}}}
             with tempfile.TemporaryDirectory() as temp, patch('backend.calibration.prepare', return_value=prepared), patch('backend.calibration.run_simulation', side_effect=simulation):
                 return calibrate(None, {'inputId': 'test-only', 'start': '2023-01-01', 'maxEvaluations': 30, 'seed': 7}, Path(temp))

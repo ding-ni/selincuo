@@ -121,12 +121,14 @@ class Handler(SimpleHTTPRequestHandler):
             inputs = self.db.items('input_products')
             for item in inputs:
                 item['compatible'] = bool(spatial and item['manifest']['spatialVersion'] == spatial['version'])
+            from .calibration_config import public_config
             annual_ready = any(i['compatible'] and i['manifest']['start'] <= '2023-01-01T00:00:00' and i['manifest']['end'] >= '2026-01-01T00:00:00' for i in inputs)
             return self.send_json({'projectId': 'selinco', 'name': '色林错预警预报平台', 'version': VERSION,
                                    'contextKey': CONTEXT_KEY, 'spatial': summary, 'database': self.db.summary(),
                                    'stations': self.db.rows('SELECT * FROM stations ORDER BY id'),
                                    'inputs': inputs, 'parameters': self.db.items('parameter_versions'),
                                    'schemes': self.db.items('schemes'),
+                                   'calibrationConfig': public_config(), 'routingModes': [{'id':'source-separated','label':'分水源调蓄 + 河道汇流'},{'id':'lumped','label':'原方案：合并径流单库汇流'}],
                                    'parameterDefinitions': PARAMETER_DEFINITIONS, 'defaultParameters': DEFAULT_PARAMETERS,
                                    'forecast': {'enabled': False, 'reason': '本版完成历史计算，7—15天滚动预报在下一阶段接入'},
                                    'ready': bool(spatial and inputs), 'missingInputs': [] if inputs else ['ERA5-Land真实逐小时降水、气温与蒸发能力输入'],

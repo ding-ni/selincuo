@@ -1,0 +1,34 @@
+{
+  "createdAt": "2026-10-22T09:48:49+00:00",
+  "tasks": {
+    "part": "JOB-e3e6966b9acf408e9c7b",
+    "tail": "JOB-02c3603679ce4400ba01",
+    "oldStateRejected": "JOB-bc1f69bc2185495e8492"
+  },
+  "version": "0.5.0",
+  "completedAt": "2026-10-22T09:49:04+00:00",
+  "fullTaskId": "JOB-33b5536a599b42e298f9",
+  "hours": 26305,
+  "days": 1096,
+  "continuationMaxDifference": {
+    "time": 0.0,
+    "flow": 0.0,
+    "lakeLevel": 0.0,
+    "volumeChange": 0.0,
+    "unitStates": 0.0,
+    "unitDiagnostics": 0.0,
+    "routingStorage": 0.0,
+    "sourceRoutingStorage": 0.0,
+    "continuousLakeVolumeChange": 0.0,
+    "lakeFlux": 0.0
+  },
+  "finalCheckpointIdentical": true,
+  "oldStateRejected": true,
+  "lakeDailyBalanceMaxErrorM3": 1.12e-08,
+  "catchmentMaxBalanceErrorM3": 0.00021067261695861816,
+  "landMaxBalanceErrorM3": 0.0002106809988617897,
+  "completeMonths": 36,
+  "mapCells": 535,
+  "missingFutureDayRemainsEmpty": true,
+  "status": "verified"
+}

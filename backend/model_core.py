@@ -24,10 +24,10 @@ except ImportError:
 PARAMETER_NAMES = ['KC', 'WM', 'B', 'C', 'SM', 'EX', 'KI', 'KG', 'IM',
                    'snowDdf', 'iceDdf', 'snowTemperature', 'rainTemperature',
                    'liquidCapacity', 'refreezeFactor', 'snowSublimation',
-                   'glacierRecessionDay', 'tauHours', 'lagHours', 'lakeCoefficient', 'lapseRate']
+                   'glacierRecessionDay', 'tauHours', 'lagHours', 'lakeCoefficient', 'lapseRate', 'interflowTauHours', 'baseflowTauHours']
 DEFAULT_PARAMETERS = dict(zip(PARAMETER_NAMES, [
     .8, 150., .3, .15, 30., 1.2, .018, .012, .01,
-    4., 7., -1., 2., .05, 1., .35, .5, 24., 0., .8, -.0065]))
+    4., 7., -1., 2., .05, 1., .35, .5, 24., 0., .8, -.0065, 48., 720.]))
 PARAMETER_DEFINITIONS = [
     {'key': 'KC', 'label': '陆面蒸发系数', 'min': .2, 'max': 1.5, 'step': .01, 'unit': '', 'group': 'land'},
     {'key': 'WM', 'label': '张力水容量', 'min': 40, 'max': 300, 'step': 1, 'unit': 'mm', 'group': 'land'},
@@ -51,8 +51,12 @@ PARAMETER_DEFINITIONS = [
     {'key': 'lakeCoefficient', 'label': '湖面蒸发转换系数', 'min': .2, 'max': 1.5, 'step': .01, 'unit': '', 'group': 'lake'},
     {'key': 'lapseRate', 'label': '气温高程递减率', 'min': -.01, 'max': -.002, 'step': .0001, 'unit': '℃/m', 'group': 'snow'},
 ]
+PARAMETER_DEFINITIONS += [
+    {'key': 'interflowTauHours', 'label': '壤中调蓄时间', 'min': 6, 'max': 240, 'step': 1, 'unit': 'h', 'group': 'routing'},
+    {'key': 'baseflowTauHours', 'label': '地下退水时间', 'min': 168, 'max': 2160, 'step': 24, 'unit': 'h', 'group': 'routing'},
+]
 STATE_NAMES = ['swe', 'snow_liquid', 'WU', 'WL', 'WD', 'S', 'FR', 'glacier_storage']
-DIAGNOSTIC_NAMES = ['RS', 'RI', 'RG', 'glacier_runoff', 'snowmelt', 'icemelt', 'et_actual', 'water_balance_error']
+DIAGNOSTIC_NAMES = ['RS', 'RI', 'RG', 'glacier_runoff', 'snowmelt', 'icemelt', 'et_actual', 'water_balance_error', 'ice_sublimation']
 
 
 def parameters(values=None):
@@ -69,6 +73,8 @@ def parameters(values=None):
         raise ValueError('小时KI与KG之和必须小于1')
     if result['snowTemperature'] >= result['rainTemperature']:
         raise ValueError('全雪温度必须低于全雨温度')
+    if result['baseflowTauHours'] < result['interflowTauHours']:
+        raise ValueError('地下退水时间应不短于壤中调蓄时间')
     return result
 
 
@@ -115,8 +121,8 @@ def unit_step(precip, temp, e0, state, glacier, p):
     swe, liquid, melt, sublimation, drainage, pet, bare = snow_step(state[0], state[1], snowfall, rain_snow, temp, pet, p)
     state[0], state[1] = swe, liquid
     rs, ri, rg, gr, imelt, et = 0., 0., 0., 0., 0., sublimation
+    ice_sub = 0.
     if glacier:
-        ice_sub = 0.
         if swe <= 1e-10:
             imelt = p[10] * max(temp, 0.) / 24. * bare
             ice_sub = min(pet * .25, .08) * bare
@@ -182,19 +188,20 @@ def unit_step(precip, temp, e0, state, glacier, p):
         state[5], state[6] = s, fr
         updated = swe + liquid + state[2] + state[3] + state[4] + s * fr
         balance = precip - rs - ri - rg - et - (updated - old)
-    return rs, ri, rg, gr, melt, imelt, et, balance
+    return rs, ri, rg, gr, melt, imelt, et, balance, ice_sub
 
 
 @njit
 def run_kernel(precipitation, temperature, evaporation, glaciers, state, p):
     hours, count = precipitation.shape
-    diagnostics = np.empty((hours, count, 8), dtype=np.float64)
+    diagnostics = np.empty((hours, count, 9), dtype=np.float64)
     history = np.empty((hours, count, 8), dtype=np.float64)
     for t in range(hours):
         for u in range(count):
             values = unit_step(precipitation[t, u], temperature[t, u], evaporation[t, u], state[u], glaciers[u], p)
-            for k in range(8):
+            for k in range(9):
                 diagnostics[t, u, k] = values[k]
+            for k in range(8):
                 history[t, u, k] = state[u, k]
     return diagnostics, history, state
 

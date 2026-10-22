@@ -1,0 +1,46 @@
+{
+  "at": "2026-10-22T10:24:31+00:00",
+  "version": "0.5.0",
+  "health": {
+    "instanceId": "442b86ee55c240968e62761f27fde3d8",
+    "projectId": "selinco",
+    "version": "0.5.0",
+    "workspace": "F:\\色林错预警预报平台\\运行程序\\workspace"
+  },
+  "existingTaskIdsPreserved": true,
+  "originalObservationAndInputCountsPreserved": true,
+  "currentCounts": {
+    "input_products": 6,
+    "observations": 59119,
+    "parameter_versions": 4,
+    "sources": 33,
+    "states": 19,
+    "stations": 8,
+    "tasks": 22
+  },
+  "noActiveTasks": true,
+  "gridMonthsComplete": 37,
+  "sourceRuntimeBundleBackendMatch": true,
+  "installedExecutableMatchesFinalBundle": true,
+  "installedFrontendAndConfigMatchFinalBundle": true,
+  "seedCounts": {
+    "tasks": 0,
+    "states": 0,
+    "parameter_versions": 0,
+    "observations": 59119,
+    "sources": 33,
+    "stations": 8,
+    "input_products": 6
+  },
+  "seedContainsCredentials": false,
+  "seedMeteorologyMonths": 37,
+  "installer": {
+    "filename": "色林错预警预报平台-v0.5.0-Setup.exe",
+    "bytes": 702150886,
+    "sha256": "39047bf5e796e598a08c5f800009d79f948c01a141020b4d3f0aabf263720b51"
+  },
+  "numericVerification": "packaged-historical-verification-v0.5.0.json",
+  "browserVerification": "browser-verification-v0.5.0.json",
+  "initialUpgradeReceipt": "upgrade-verification-v0.5.0.json",
+  "note": "Initial upgrade receipt records the earlier same-version installer before final frontend/report refresh. Final source, runtime and bundle matching is checked here."
+}

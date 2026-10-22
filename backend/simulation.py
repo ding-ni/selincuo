@@ -12,6 +12,7 @@ from .forcing import load_input
 from .model_core import (DEFAULT_PARAMETERS, DIAGNOSTIC_NAMES, PARAMETER_NAMES, STATE_NAMES,
                          initial_states, parameters, route_series, run_kernel)
 from .observations import daily_series
+from .routing import route_partition, MODES
 
 PARTITIONS = ['duja', 'zajia_rest', 'zagen', 'boqu', 'ali', 'fringe']
 RIVERS = ['duja', 'zajia', 'zagen', 'boqu', 'ali', 'fringe', 'total']
@@ -36,7 +37,7 @@ def snapshot_series(snapshot, key):
 def metrics(observed, simulated):
     pair = pd.concat([observed.rename('obs'), simulated.rename('sim')], axis=1).dropna()
     if not len(pair):
-        return {'count': 0, 'nse': None, 'kge': None, 'rmse': None, 'mae': None, 'bias': None, 'pbias': None}
+        return {'count': 0, 'nse': None, 'kge': None, 'rmse': None, 'mae': None, 'bias': None, 'pbias': None, 'logNse': None}
     o, s = pair.obs.values, pair.sim.values
     error = s - o
     variance = np.sum((o - o.mean()) ** 2)
@@ -45,7 +46,10 @@ def metrics(observed, simulated):
     if len(o) > 1 and np.std(o) > 1e-10 and np.std(s) > 1e-10 and abs(o.mean()) > 1e-10:
         r = np.corrcoef(o, s)[0, 1]
         kge = 1 - math.sqrt((r - 1) ** 2 + (np.std(s) / np.std(o) - 1) ** 2 + (s.mean() / o.mean() - 1) ** 2)
-    return {'count': len(pair), 'nse': float(nse) if nse is not None else None,
+    log_o, log_s = np.log1p(np.maximum(o, 0)), np.log1p(np.maximum(s, 0))
+    log_variance = np.sum((log_o-log_o.mean())**2)
+    log_nse = 1-np.sum((log_s-log_o)**2)/log_variance if log_variance > 1e-12 else None
+    return {'logNse': float(log_nse) if log_nse is not None else None, 'count': len(pair), 'nse': float(nse) if nse is not None else None,
             'kge': float(kge) if kge is not None else None, 'rmse': float(np.sqrt(np.mean(error ** 2))),
             'mae': float(np.mean(np.abs(error))), 'bias': float(error.mean()),
             'pbias': float(100 * error.sum() / o.sum()) if abs(o.sum()) > 1e-10 else None,
@@ -139,6 +143,9 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
     if request.get('contextKey', CONTEXT_KEY) != CONTEXT_KEY or request.get('projectId', 'selinco') != 'selinco':
         raise ValueError('计算上下文必须属于色林错独立项目')
     p = parameters(request.get('parameters'))
+    routing_mode = request.get('routingMode', 'source-separated')
+    if routing_mode not in MODES:
+        raise ValueError('汇流结构仅支持source-separated或lumped')
     source = prepared or prepare(db, request['inputId'])
     observation = request.get('_observations') or observation_snapshot(db)
     windows = [{**w, 'start': pd.Timestamp(w['start']), 'end': pd.Timestamp(w['end'])} for w in observation['windows']]
@@ -158,7 +165,7 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
     identity = {'projectId': 'selinco', 'contextKey': CONTEXT_KEY, 'spatialVersion': spatial['version'],
                 'inputId': input_manifest['id'], 'inputSHA256': input_manifest['dataSHA256'],
                 'parameterSHA256': digest(p), 'observationSHA256': digest(observation),
-                'modelImplementation': request.get('_modelIdentity') or model_identity()}
+                'modelImplementation': request.get('_modelIdentity') or model_identity(), 'routingMode': routing_mode}
     parent = request.get('_parentState')
     if parent:
         if parent['identity'] != identity:
@@ -172,6 +179,7 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
         state = initial_states(units, p)
     glaciers = np.array([u['kind'] == 'glacier' for u in units])
     vector = np.array([p[k] for k in PARAMETER_NAMES], dtype=float)
+    initial_unit_states = state.copy()
     diagnostics, history = [], []
     for offset in range(0, len(select), 744):
         if cancelled and cancelled():
@@ -189,25 +197,17 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
     if np.max(np.abs(diagnostics[:, :, 7])) > 1e-6:
         raise ValueError('产流内核水量平衡未通过，成果不登记')
     areas = np.array([u['areaKm2'] for u in units])
-    runoff = diagnostics[:, :, :4].sum(axis=2) * areas[None, :] * 1000
-    routed, routing_final, routing_history, routing_errors = {}, {}, {}, {}
+    initial_routing_volume = sum(float(v.get('channel', {}).get('storage', 0))+sum(v.get('channel', {}).get('queue', []))+sum(v.get('sources', {}).values()) for v in (parent or {}).get('routing', {}).values())
+    source_volumes = diagnostics[:, :, :4] * areas[None, :, None] * 1000
+    routed, routing_final, routing_history, routing_errors, source_routing_history = {}, {}, {}, {}, {}
     for partition in PARTITIONS:
         indexes = [i for i, u in enumerate(units) if u['partition'] == partition]
-        inflow = runoff[:, indexes].sum(axis=1)
+        inputs = source_volumes[:, indexes, :].sum(axis=1)
         old = (parent or {}).get('routing', {}).get(partition, {})
-        storage = float(old.get('storage', 0.))
-        queue = np.array(old.get('queue', [0.] * (int(p['lagHours']) + 2)), dtype=float)
-        if len(queue) != int(p['lagHours']) + 2:
-            raise ValueError('传播状态长度与滞时参数不一致')
-        old_total = storage + queue.sum()
-        out, stored, final_storage, queue = route_series(inflow, storage, queue, p['tauHours'], p['lagHours'])
-        error = float(inflow.sum() - out.sum() - (stored[-1] - old_total))
-        if abs(error) > max(1e-4, inflow.sum() * 1e-10):
-            raise ValueError(f'{partition}汇流水量不闭合')
-        routed[partition] = out / 3600
-        routing_history[partition] = stored
-        routing_errors[partition] = error
-        routing_final[partition] = {'storage': float(final_storage), 'queue': queue.tolist()}
+        out, stored, final, source_stored, errors = route_partition(inputs, old, p, routing_mode)
+        routed[partition], routing_history[partition] = out, stored
+        routing_final[partition], routing_errors[partition] = final, errors
+        source_routing_history[partition] = source_stored
     q = {'duja': routed['duja'], 'zajia': routed['duja'] + routed['zajia_rest'],
          **{k: routed[k] for k in ('zagen', 'boqu', 'ali', 'fringe')}}
     q['total'] = sum(q[k] for k in ('zajia', 'zagen', 'boqu', 'ali', 'fringe'))
@@ -258,12 +258,17 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
         flow_metrics['simulatedVolumeM3OnObservedDays'] = float(daily.duja[paired].sum() * 86400) if paired.any() else None
         yearly[str(year)] = {'purpose': {2023: '预热', 2024: '率定', 2025: '独立验证', 2026: '延伸检验'}.get(year, '历史回算'),
                              'flow': flow_metrics, 'lake': metrics(daily.observedLevel[mask], scored_lake[mask])}
-    checkpoint = {'schemaVersion': 1, 'identity': identity, 'validAt': times[-1].isoformat(), 'parameters': p,
+    continuous_volume = np.empty(len(times))
+    running_volume = float((parent or {}).get('continuousLakeVolume', 0.))
+    for i, value in enumerate(lake_flux):
+        running_volume += float(value)
+        continuous_volume[i] = running_volume
+    checkpoint = {'continuousLakeVolume': running_volume, 'schemaVersion': 2, 'identity': identity, 'validAt': times[-1].isoformat(), 'parameters': p,
                   'unitStates': state.tolist(), 'routing': routing_final, 'lake': lake_state}
     result = {'projectId': 'selinco', 'resultSource': 'model-backend', 'identity': identity,
               'start': times[0].isoformat(), 'end': times[-1].isoformat(), 'hours': len(times),
               'parameters': p, 'inputId': input_manifest['id'], 'spatialVersion': spatial['version'],
-              'units': units, 'rivers': RIVERS, 'metrics': yearly,
+              'units': units, 'rivers': RIVERS, 'metrics': yearly, 'routingMode': routing_mode,
               'daily': json.loads(daily.reset_index(names='date').to_json(orient='records', date_format='iso')),
               'diagnostics': {'landGlacierMaxBalanceErrorMm': float(np.max(np.abs(diagnostics[:, :, 7]))),
                               'routingBalanceErrorM3': routing_errors,
@@ -272,9 +277,11 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
                                                'observationTime': w.get('observationTime'), 'firstHourFraction': w.get('firstHourFraction', 0)} for w in windows],
                               'unvalidatedRivers': ['zagen', 'boqu', 'ali', 'fringe'],
                               'assumptions': ['定面积湖泊，仅保存相对蓄水变化', '地下水净交换和外流暂按零处理',
-                                              '冰川面积固定；长年冰体消融为显式外部水源', '无冰期起点使用实测湖位，其后独立演算',
+                                              '冰川面积固定；长年冰体消融为显式外部水源', '可靠观测窗口起点使用实测湖位，其后独立演算；窗口未独立核验冰情',
                                               '未率定初值为通用模型初值，不代表已通过业务验证']},
               'checkpoint': checkpoint}
+    from .model_diagnostics import diagnose
+    result['modelDiagnostics'] = diagnose(times, source, select, diagnostics, history, initial_unit_states, q, routing_history, lake_flux, levels, volumes, windows, p, spatial, routing_mode, observation, initial_routing_volume) if not request.get('_skipDiagnostics') else {}
     if folder:
         folder = Path(folder)
         folder.mkdir(parents=True, exist_ok=True)
@@ -282,10 +289,13 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
                             flow=np.stack([q[k] for k in RIVERS], axis=1), lakeLevel=levels, volumeChange=volumes,
                             unitStates=history, unitDiagnostics=diagnostics,
                             routingStorage=np.stack([routing_history[k] for k in PARTITIONS], axis=1),
+                            sourceRoutingStorage=np.stack([source_routing_history[k] for k in PARTITIONS], axis=1),
+                            continuousLakeVolumeChange=continuous_volume,
                             lakeFlux=lake_flux)
         daily.to_csv(folder / 'daily.csv', encoding='utf-8-sig', index_label='date')
         write_json(folder / 'checkpoint.json', checkpoint)
         write_json(folder / 'result.json', result)
+    result['modelDiagnostics'].pop('_continuousLakeVolume', None)
     if progress:
         progress(100, '历史计算完成，已保存逐时状态和日评价')
     return result
