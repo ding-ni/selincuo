@@ -4,3 +4,5 @@ import './style.css'
 createApp(App).mount('#app')
 
 import './workbench.css'
+
+import './dashboard.css'

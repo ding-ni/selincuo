@@ -5,7 +5,7 @@ Set-Location -LiteralPath $projectRoot
 & $Python scripts/prepare_windows_text.py
 & $Python -m unittest discover -s tests -v
 if ($LASTEXITCODE -ne 0) { throw 'Tests failed' }
-node --test tests/workflow.test.mjs
+node --test tests/workflow.test.mjs tests/dashboard.test.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Frontend workflow tests failed' }
 Push-Location frontend
 npm ci --offline

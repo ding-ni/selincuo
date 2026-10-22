@@ -1,0 +1,31 @@
+{
+  "at": "2026-10-22T02:08:00+00:00",
+  "health": {
+    "instanceId": "bbc15e5bb3f34f34ae9be21d71625b82",
+    "projectId": "selinco",
+    "version": "0.3.0",
+    "workspace": "F:\\色林错预警预报平台\\运行程序\\workspace"
+  },
+  "counts": {
+    "input_products": 5,
+    "observations": 59119,
+    "parameter_versions": 0,
+    "sources": 33,
+    "states": 1,
+    "stations": 8,
+    "tasks": 1
+  },
+  "previousTaskIds": [
+    "JOB-506abf288c7146468531"
+  ],
+  "existingTaskIdsPreserved": true,
+  "existingCountsPreserved": true,
+  "backup": {
+    "bytes": 116313495,
+    "filename": "backup-2026-10-22T020600-0000-a16d17.zip",
+    "files": 70,
+    "sha256": "8725bddd86ddfdc9d5c7de4e0170ff51d83f7c58a667d87ba3395580d4cf1743"
+  },
+  "installerSHA256": "a72ae637c91a74e08bb09ba158a2644a2efb21f0785a1ece27beb532c345c6a2",
+  "oldStatesUseStrictVersionCheck": true
+}

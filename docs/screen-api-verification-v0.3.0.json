@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-22T02:05:08+00:00",
+  "version": "0.3.0",
+  "stations": 8,
+  "locatedStations": 4,
+  "missingShoreCoordinatesNotInvented": true,
+  "liveAndWarningStateExplicit": true,
+  "frame": {
+    "day": "2023-04-30",
+    "hours": 24,
+    "complete": true,
+    "domainMean": 1.9658782039554081,
+    "lakeMean": 1.0299104023295933,
+    "unit": "mm/d"
+  },
+  "gridCells": 535,
+  "missingDayDoesNotFillZero": true,
+  "snowUnits": 30,
+  "snowAreaWeightedMeanMm": 4.320177638253005,
+  "supportGuideAvailable": true,
+  "taskId": "JOB-f8dfc78cc8534c269b07"
+}

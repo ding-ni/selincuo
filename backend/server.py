@@ -133,6 +133,17 @@ class Handler(SimpleHTTPRequestHandler):
                                    'annualValidation': {'ready': annual_ready, 'message': '年度历史驱动完整' if annual_ready else '完整2023—2025年真实驱动尚未齐备，年度率定验证待开展'},
                                    'periodDefaults': {'start': '2023-01-01T00:00', 'end': '2025-12-31T23:00'},
                                    'latestObservation': self.db.rows('SELECT MAX(time) time FROM observations WHERE value IS NOT NULL')[0]['time']})
+        if path == 'cds-help':
+            return self.file(ROOT/'docs/CDS账户恢复与继续下载.md',download=True)
+        if path == 'dashboard':
+            from .dashboard import monitoring
+            return self.send_json(monitoring(self.db))
+        if path == 'map-frame':
+            from .dashboard import map_frame
+            return self.send_json(map_frame(self.db,query['inputId'],query['day'],query.get('variable','precipitation')))
+        if path == 'snow-frame':
+            from .dashboard import snow_frame
+            return self.send_json(snow_frame(self.db,query['taskId'],query['day']))
         if path == 'observations':
             return self.send_json({'rows': self.db.observations(query.get('station', 'SLC'), query.get('variable', 'level'),
                                                                query.get('step'), query.get('start'), query.get('end'), query.get('limit', 2000))})
