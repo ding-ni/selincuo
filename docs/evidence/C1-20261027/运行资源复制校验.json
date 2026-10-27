@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "files": [
+    {
+      "source": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace\\inputs\\products\\INPUT-3faa73605321b03d4a9f6bf7\\manifest.json",
+      "target": "F:\\色林错预警预报平台\\build\\连续参考实证-ba6dcf19d0c7\\workspace\\inputs\\products\\INPUT-3faa73605321b03d4a9f6bf7\\manifest.json",
+      "bytes": 17996,
+      "sha256": "c730b287c2420268c64ca49943650caec7804656242719bb5eb8cd37e3185a83"
+    },
+    {
+      "source": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace\\inputs\\products\\INPUT-3faa73605321b03d4a9f6bf7\\forcing.npz",
+      "target": "F:\\色林错预警预报平台\\build\\连续参考实证-ba6dcf19d0c7\\workspace\\inputs\\products\\INPUT-3faa73605321b03d4a9f6bf7\\forcing.npz",
+      "bytes": 116068380,
+      "sha256": "c7b8672e0300244010a9b8ea4f072b5117d2274e4b792164b44369fd69d5dc14"
+    }
+  ]
+}

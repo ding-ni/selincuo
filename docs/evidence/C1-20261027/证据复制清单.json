@@ -1,0 +1,101 @@
+{
+  "projectId": "selinco",
+  "files": [
+    {
+      "source": "F:\\色林错预警预报平台\\build\\连续参考实证-ba6dcf19d0c7\\HTTP验收.json",
+      "target": "F:\\色林错预警预报平台\\docs\\evidence\\C1-20261027\\HTTP验收.json",
+      "bytes": 4031,
+      "sha256": "6fa563ae8e80ac0e0f98ca2081daf4d6595eb100f8bfd3831fe73163e46c0800"
+    },
+    {
+      "source": "F:\\色林错预警预报平台\\build\\连续参考实证-ba6dcf19d0c7\\独立逐时向量核对.json",
+      "target": "F:\\色林错预警预报平台\\docs\\evidence\\C1-20261027\\独立逐时向量核对.json",
+      "bytes": 2141,
+      "sha256": "3a582f5b456c32476dff955bde3c78721a617f156e8f497f240412ce5f78f79e"
+    },
+    {
+      "source": "F:\\色林错预警预报平台\\build\\连续参考实证-ba6dcf19d0c7\\连续参考核验记录.json",
+      "target": "F:\\色林错预警预报平台\\docs\\evidence\\C1-20261027\\归档记录.json",
+      "bytes": 492366,
+      "sha256": "8f8c269a500a918e298b0b8d03ba8ea860ec6f3ed072618d4b0f0c5207b79994"
+    },
+    {
+      "source": "F:\\色林错预警预报平台\\build\\连续参考实证-ba6dcf19d0c7\\复制计划与摘要.json",
+      "target": "F:\\色林错预警预报平台\\docs\\evidence\\C1-20261027\\运行资源复制计划.json",
+      "bytes": 932,
+      "sha256": "17edc669549c33cf31c8eda7246464f55db8288f5ce774c457c5b7c28d932a1f"
+    },
+    {
+      "source": "F:\\色林错预警预报平台\\build\\连续参考实证-ba6dcf19d0c7\\复制校验.json",
+      "target": "F:\\色林错预警预报平台\\docs\\evidence\\C1-20261027\\运行资源复制校验.json",
+      "bytes": 924,
+      "sha256": "756a7e0c5bf67a40934fb68423e018ff59e0cf969923583b4acb0d27e64e9a77"
+    },
+    {
+      "source": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\回归结果.json",
+      "target": "F:\\色林错预警预报平台\\docs\\evidence\\C1-20261027\\旧回归结果.json",
+      "bytes": 18523,
+      "sha256": "b2cd6a65dda1ad8a7ceae741e2230d7d14d98a1301f4e98ca457f8ca9a50d515"
+    },
+    {
+      "source": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\回归日志.log",
+      "target": "F:\\色林错预警预报平台\\docs\\evidence\\C1-20261027\\旧回归日志.log",
+      "bytes": 4407,
+      "sha256": "2298f65d21cf67601e5e97928cfbcb3d353d103f6f06450ac96f4281cef47108"
+    },
+    {
+      "source": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\最终源码核验.json",
+      "target": "F:\\色林错预警预报平台\\docs\\evidence\\C1-20261027\\旧回归源码核验.json",
+      "bytes": 256,
+      "sha256": "69895d83ab0777f6208f647bdda7a5c21faa4b81533eff1fc1389c13e35c00ad"
+    },
+    {
+      "source": "F:\\色林错预警预报平台\\build\\连续参考测试执行-453cb4af67f445aca5d9ced88abddaee\\测试输出.log",
+      "target": "F:\\色林错预警预报平台\\docs\\evidence\\C1-20261027\\C1测试输出.log",
+      "bytes": 2307,
+      "sha256": "6ee9bdc5f3da7d100a9fd82b0009bdb4662052aa15b001542245109a5cfae4cc"
+    },
+    {
+      "source": "F:\\色林错预警预报平台\\build\\连续参考实证-ba6dcf19d0c7\\workspace\\tasks\\JOB-0bbeb108e6844e11899b\\日过程.csv",
+      "target": "F:\\色林错预警预报平台\\docs\\evidence\\C1-20261027\\产物\\日过程.csv",
+      "bytes": 101997,
+      "sha256": "9fdb12d222a94764139c83b4e61f13d5a32b0585af3946ebfe3425d09cceb865"
+    },
+    {
+      "source": "F:\\色林错预警预报平台\\build\\连续参考实证-ba6dcf19d0c7\\workspace\\tasks\\JOB-0bbeb108e6844e11899b\\月净水量账.csv",
+      "target": "F:\\色林错预警预报平台\\docs\\evidence\\C1-20261027\\产物\\月净水量账.csv",
+      "bytes": 7117,
+      "sha256": "96ae7d0cf5502d5eefb63a1baece6815b1e070ed2b4bf3d9122475acffc599a6"
+    },
+    {
+      "source": "F:\\色林错预警预报平台\\build\\连续参考实证-ba6dcf19d0c7\\workspace\\tasks\\JOB-0bbeb108e6844e11899b\\杜加流量配对.csv",
+      "target": "F:\\色林错预警预报平台\\docs\\evidence\\C1-20261027\\产物\\杜加流量配对.csv",
+      "bytes": 15647,
+      "sha256": "0ec538d1a6200761a975f92995b4bcf4903d9e76451dd7d7e563856cb4ef54d4"
+    },
+    {
+      "source": "F:\\色林错预警预报平台\\build\\连续参考实证-ba6dcf19d0c7\\workspace\\tasks\\JOB-0bbeb108e6844e11899b\\来源摘要.json",
+      "target": "F:\\色林错预警预报平台\\docs\\evidence\\C1-20261027\\产物\\来源摘要.json",
+      "bytes": 30455,
+      "sha256": "8e1afa5ad94664eaa6e33f3a6f00fa608518f463850b734ee4aa949373c48af1"
+    },
+    {
+      "source": "F:\\色林错预警预报平台\\build\\连续参考实证-ba6dcf19d0c7\\workspace\\tasks\\JOB-0bbeb108e6844e11899b\\湖位配对.csv",
+      "target": "F:\\色林错预警预报平台\\docs\\evidence\\C1-20261027\\产物\\湖位配对.csv",
+      "bytes": 18505,
+      "sha256": "663fa7580a3393e701c554474f1cb745cbc08cba76824e1a41118d0c6e6ed1ea"
+    },
+    {
+      "source": "F:\\色林错预警预报平台\\build\\连续参考实证-ba6dcf19d0c7\\workspace\\tasks\\JOB-0bbeb108e6844e11899b\\连续参考.json",
+      "target": "F:\\色林错预警预报平台\\docs\\evidence\\C1-20261027\\产物\\连续参考.json",
+      "bytes": 491151,
+      "sha256": "670af40b567955d371af941ec8d3ed6f051814eda88ad58f4024adddf94a8eed"
+    },
+    {
+      "source": "F:\\色林错预警预报平台\\build\\连续参考实证-ba6dcf19d0c7\\workspace\\tasks\\JOB-0bbeb108e6844e11899b\\逐时连续参考.npz",
+      "target": "F:\\色林错预警预报平台\\docs\\evidence\\C1-20261027\\产物\\逐时连续参考.npz",
+      "bytes": 1931503,
+      "sha256": "d800fab66b26fdeb10c2b50d7f3c866cd1098cd11a5a53a07f168a5a87d2b3cd"
+    }
+  ]
+}

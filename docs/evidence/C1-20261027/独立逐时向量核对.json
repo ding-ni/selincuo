@@ -1,0 +1,64 @@
+{
+  "method": "independent-direct-NPZ-pandas-right-closed-full-day-means",
+  "parentLakeAreaM2": 2422199821.8977847,
+  "maximumDailyLevelDifferenceM": 9.094947017729282e-13,
+  "maximumCumulativeDifferenceM3": 0.0,
+  "years": {
+    "2024": {
+      "lake": {
+        "count": 232,
+        "rmse": 0.07914374399655602,
+        "mae": 0.05859198868875112,
+        "bias": 0.040993743480604625
+      },
+      "flow": {
+        "count": 229,
+        "rmse": 59.35456623118263,
+        "mae": 36.59800351024682,
+        "bias": -4.241404761192045
+      }
+    },
+    "2025": {
+      "lake": {
+        "count": 255,
+        "rmse": 0.10367024531859062,
+        "mae": 0.0969707340678831,
+        "bias": 0.0969707340678831
+      },
+      "flow": {
+        "count": 211,
+        "rmse": 19.884410448473748,
+        "mae": 14.194542680140964,
+        "bias": -1.419407925195139
+      }
+    }
+  },
+  "historicalE1Comparison": {
+    "reportSHA256": "ed282a419b3ac26716494e5e709f19b5ea2b3139e8e0f29b931094dddf6fd02f",
+    "csvSHA256": "5d78a37b35d51b4df4ab74a8df629afa1d4471c6c117a94fdd1a7de858471493",
+    "historicalCandidateLakeAreaM2": 2422199823.361506,
+    "parentMinusHistoricalAreaM2": -1.4637212753295898,
+    "sameFrozenQualitySnapshotSHA256": "a9a49990a15603b9aed1fdb0cc1830b4a2caa55d4e92ecf3967e1c5c9ec18032",
+    "explanation": "C1 uses the protected parent area; E1 used the grid candidate area. Dates and frozen quality observations agree.",
+    "years": {
+      "2024": {
+        "sameDates": true,
+        "sameObservations": true,
+        "count": 232,
+        "historicalE1RmseM": 0.07914374379678367,
+        "reproducedWithHistoricalAreaRmseM": 0.07914374379678367,
+        "parentAreaReferenceRmseM": 0.07914374399655602,
+        "differenceFromE1RmseM": 1.99772351439087e-10
+      },
+      "2025": {
+        "sameDates": true,
+        "sameObservations": true,
+        "count": 255,
+        "historicalE1RmseM": 0.10367024517407446,
+        "reproducedWithHistoricalAreaRmseM": 0.10367024517407446,
+        "parentAreaReferenceRmseM": 0.10367024531859062,
+        "differenceFromE1RmseM": 1.4451616292543434e-10
+      }
+    }
+  }
+}

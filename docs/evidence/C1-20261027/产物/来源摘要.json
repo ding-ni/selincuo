@@ -1,0 +1,968 @@
+{
+  "lineage": {
+    "release": {
+      "id": "RELEASE-protected-rev2",
+      "sequence": 1,
+      "resultId": "BUILTIN-historical-rev2-39192cc713c5",
+      "schemeRevisionId": "REV-da44d8bc7fc9e4d39c396333",
+      "evaluationId": null,
+      "previousReleaseId": null,
+      "publishedAt": "2026-10-27T09:00:00+00:00",
+      "status": "protected-legacy",
+      "admissionPassed": false
+    },
+    "schemeRevisionSHA256": "da44d8bc7fc9e4d39c396333a1dab2e69ecb6c2c8a5d756dc2ada0bd3818466b",
+    "parentResultId": "BUILTIN-historical-rev2-39192cc713c5",
+    "parentIdentity": {
+      "projectId": "selinco",
+      "contextKey": "selinco:semidistributed-cold-lake:0p1deg",
+      "spatialVersion": "SPATIAL-1e6a229e51f0da4f1ffd",
+      "inputId": "INPUT-3faa73605321b03d4a9f6bf7",
+      "inputSHA256": "c7b8672e0300244010a9b8ea4f072b5117d2274e4b792164b44369fd69d5dc14",
+      "parameterSHA256": "d4c46990d931f2a8e321ea3a14a516e72df4f66bf73325ba22c236211958a90b",
+      "observationSHA256": "6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e",
+      "modelImplementation": "39192cc713c5a592ca0e2a2b865233d047c4ec5762f49cc3ecf28bf44cb7300b",
+      "routingMode": "source-separated",
+      "partitionParameterSHA256": "6d1a7cd7402073c79eb9f5ba7a213bb3d46205b111def511d34ad67c5868d666"
+    },
+    "parentIdentitySHA256": "cb1588764394631961e15931cc7b1d813ef9540318e310655e4f6b007e6d1c25",
+    "parentRequestSHA256": "2d44205b48b4779a461f8644bc4057e21d6c2577e865c6f1dddbbe463aa09fd9",
+    "parentResultPayloadSHA256": "8387ee2cf92ce22945f71498934243acfc36943bbb50979595bcdb814bb6e041",
+    "parentScheme": {
+      "id": "selinco-historical-standard-v1",
+      "name": "色林错标准历史方案",
+      "revision": 2,
+      "configurationSHA256": "57c812fd3e9b47276cf04a961bcb795a263647cb8871e9ccb71da23547f3abd1",
+      "initialization": {
+        "strategy": "continuous-origin",
+        "origin": "2023-01-01T00:00:00",
+        "warmupYear": 2023,
+        "soilWaterFraction": 0.5,
+        "snowWaterEquivalentMm": 0,
+        "routingStorageM3": 0,
+        "lakeLevel": "first-reliable-value-per-observation-window"
+      },
+      "spatialVersion": "SPATIAL-1e6a229e51f0da4f1ffd"
+    },
+    "parentParameterSHA256": "d4c46990d931f2a8e321ea3a14a516e72df4f66bf73325ba22c236211958a90b",
+    "parentPartitionParameterSHA256": "6d1a7cd7402073c79eb9f5ba7a213bb3d46205b111def511d34ad67c5868d666",
+    "parentModelImplementation": "39192cc713c5a592ca0e2a2b865233d047c4ec5762f49cc3ecf28bf44cb7300b",
+    "parentCatalogEntrySHA256": "695aea026ca611c7dfcf0320ea2c739deee208792cd1000334478bebdeaccca4",
+    "parentCatalogFile": {
+      "path": "data/final-results/catalog.json",
+      "bytes": 1325,
+      "sha256": "2d48799fd8bd55618d8abc6ede468b5dea435dd534849cc67d2e2e50ccbc2d32"
+    },
+    "parentFiles": [
+      {
+        "path": "data/final-results/historical-rev2-39192cc713c5/daily-snow.npz",
+        "bytes": 83909,
+        "sha256": "5c1809912f746c51f6e24fdde1d69fb041d914cb7b1e9f30534acc8adf1aaca9"
+      },
+      {
+        "path": "data/final-results/historical-rev2-39192cc713c5/daily.csv",
+        "bytes": 296823,
+        "sha256": "8048590723f4c59a80c16d33fac3edf61cc19e0bb841278c39d0680752c3e533"
+      },
+      {
+        "path": "data/final-results/historical-rev2-39192cc713c5/final-state.json",
+        "bytes": 8457,
+        "sha256": "8b41a4727a312733cb4d8e2dc72fc5bab2336dd6176bd96ece371741539c29dd"
+      },
+      {
+        "path": "data/final-results/historical-rev2-39192cc713c5/hourly.npz",
+        "bytes": 41111078,
+        "sha256": "975159f08e00d5c4a07af559dfca42739bfabe4672400f3b6819381f33a5f62c"
+      },
+      {
+        "path": "data/final-results/historical-rev2-39192cc713c5/result.json",
+        "bytes": 1003592,
+        "sha256": "163bcc045820fe70cd1c49a37301162048f17b373543a13f6072a05fb64ac37d"
+      },
+      {
+        "path": "data/final-results/historical-rev2-39192cc713c5/summary.json",
+        "bytes": 4746,
+        "sha256": "4524cf1fa6d4187f64c450d1dbdb498f081a34f50bc3a288e87506e47695ae3f"
+      }
+    ],
+    "parentSpatial": {
+      "version": "SPATIAL-1e6a229e51f0da4f1ffd",
+      "path": "data/derived/spatial/versions/SPATIAL-1e6a229e51f0da4f1ffd/manifest.json",
+      "bytes": 287711,
+      "sha256": "98d4575c32031063e63fb0d44ca3819b315517988a114dd0a05f14126add13dd",
+      "contentSHA256": "4261f31f53fb51b097e30e46dd4d6420b597ff1f9a75dba637ecc974158e920a",
+      "lakeAreaKm2": 2422.1998218977847,
+      "areaCrs": "EPSG:6933",
+      "unitsSHA256": "42326f742d1f24b98ac023bdb24326f3131a4e6f1cf5f824cd2355b8241259a3",
+      "sourceFiles": {
+        "full_basin_shp/basin1.shp": "2a6a197264a93f73348759674a55e8c7ef3d9269e437056b90c05d6dd3899ff8",
+        "lake_shp/湖泊边界.shp": "c3726517a0ad6f9a93d535f5dc32f40cd08f8832665ebbb9fd25005e4509c5f5",
+        "subbasin_shp/扎加藏布边界.shp": "157d7394cdc3b7f295255e0bffbc95eceb866fb20dfcca0282e7518ddb498554",
+        "subbasin_shp/扎根藏布边界.shp": "a74b44362750afb717dea4e964bc8f40880a58c2edfabd9b4a0f3a922d3b2067",
+        "subbasin_shp/波曲藏布边界.shp": "b4d3b5f1cfe62973d2f9ec42ea020da22badddb89a7db7d0fadde6d1b2c27b7d",
+        "subbasin_shp/阿里藏布边界.shp": "ae051c3f14d65aea7bc4bd6500542074cc40f1ce1c6fb3c7c1cf5b27caeabfd7",
+        "glacier/zjzb/glacier_zjzb.shp": "677562ed180069d32e006bb5a92a047d4c22b268c3dcb5f9c754e350e61b24e7",
+        "glacier/zgzb/glacier_zgzb.shp": "46dd28636be10f55e32cc7e7c481ad5dbbac7f01ad500a6e8370c38bbc7d63ee",
+        "glacier/alzb/glacier_alzb.shp": "05b1c398d84b5e9bb3657b68e0a9a613c5a396bdf0b44e00ccde52e5ca62bf71"
+      }
+    },
+    "parentConfiguration": {
+      "path": "config/operational/historical-standard-v1.json",
+      "bytes": 5609,
+      "sha256": "c4d3d1cc65c0443f624cf1d78e3438b508dca3232e41257ef18716bfdc923d25",
+      "configurationSHA256": "57c812fd3e9b47276cf04a961bcb795a263647cb8871e9ccb71da23547f3abd1"
+    },
+    "parentInput": {
+      "id": "INPUT-3faa73605321b03d4a9f6bf7",
+      "manifestSHA256": "9e250d6ed9067ee62c9f0a424fbf45555fc157777493db1aa7922724e6cfaa2c",
+      "manifestFile": {
+        "bytes": 17996,
+        "sha256": "c730b287c2420268c64ca49943650caec7804656242719bb5eb8cd37e3185a83"
+      },
+      "dataSHA256": "c7b8672e0300244010a9b8ea4f072b5117d2274e4b792164b44369fd69d5dc14",
+      "dataBytes": 116068380,
+      "conversionVersion": "era5land-utc01-reset-mm-celsius-local-end-hour-v1",
+      "transformationSHA256": "a28542996c03152f4bc7fcdbec1510a7cabbb4843c3fa51e928b49b5f135d458",
+      "lakePrecipitationCorrection": {
+        "method": "station-point-annual-ratio-v1",
+        "scope": "lake-only",
+        "factor": 0.5336700706945834,
+        "station": "SLC",
+        "gridId": "89.4,31.8",
+        "developmentYear": 2024,
+        "pairedDays": 366,
+        "gaugeMm": 226.5,
+        "gridMm": 424.41952891456936,
+        "gaugeSeriesSHA256": "e0abfd77539b3aaf758a6a8ca85c601ecf1716f069683357d34107bc53e59832",
+        "limitations": [
+          "One shore gauge represents the lake only as a provisional spatial transfer.",
+          "Source daily labels used; station reporting day boundary not independently verified.",
+          "Gauge catch bias and snowfall undercatch not corrected."
+        ]
+      },
+      "sourceDigests": [
+        {
+          "sha256": "031ddc90eed9bed9ed2bf18a1cba86c8ff99373e4ea8267e8c37cc706d27a2e9",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8601085
+        },
+        {
+          "sha256": "105438b6d1c1ee3d66070906221c1ef31a8479d75ce343662152d2a727087fc8",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7011489
+        },
+        {
+          "sha256": "13067315f6b22dc6f6d04de54aaafbc80405aab3f705c3e2868425631bc4a927",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 9085955
+        },
+        {
+          "sha256": "14c62e4cfc7401ff9554a4f2af9f150dfab21be04e2a46c8d5651b92b2a994db",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8580184
+        },
+        {
+          "sha256": "18f2080f861385aee9a2801444732e140e404f3b2595819e96d06fc46e9ea8e2",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8587673
+        },
+        {
+          "sha256": "1a1fb279c56513699a2d62c72a80b7c9cca4ff044cdbaa41fe8ae01b552dabc0",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7402498
+        },
+        {
+          "sha256": "22860c23f39470f6c2d5c106233513784037062d2b0e170b9cdd2569d4a52b6c",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7605873
+        },
+        {
+          "sha256": "247d1465421a937505fe98480d05999c848f77dbed247983c44ff830117437f1",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8592547
+        },
+        {
+          "sha256": "298134f9b1b996345fd70c865c20a25e735dd3fb74627d711b5ae7b973791210",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8286767
+        },
+        {
+          "sha256": "2c38bf9d1394655f821e7a54b9baae9e58ff45cef436c17549bdc62012078d3f",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8386624
+        },
+        {
+          "sha256": "3300a118897b1f232520ff3c4653577b2c35165711f02a4849b3fe8a2b46fe08",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7741343
+        },
+        {
+          "sha256": "39ec89081f61331f4b747ae3410dcd54f9c2065baf6740bf2096f5df93207d5e",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7110922
+        },
+        {
+          "sha256": "4b4aa7f9fea12e1f9e0645b180b574274138a6a50e800a673b16e86535c5eef7",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8391819
+        },
+        {
+          "sha256": "5c95296ee0f904883e356d55fe63181d934e54a5aa4ce3d62ea203369502ad21",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 6999661
+        },
+        {
+          "sha256": "5ea5f2d317c5506e8226c05eb51604b332f58a43eae24f47084c8a7e9e064bf5",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8889730
+        },
+        {
+          "sha256": "63f1e488454534364a72217810049504734fc26083f3c57a4217d76925d4ec35",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7704040
+        },
+        {
+          "sha256": "72408c53c4c6f2e4f0bbd3320673320edec81175deffb18d829ba544d2a85c59",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8791784
+        },
+        {
+          "sha256": "73e15a5f95af70237bdc86e2441916c11fe2482d3520a7eb471c8cc4f32d6aff",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 6802790
+        },
+        {
+          "sha256": "7b6ba2c30620c75f6c9d15406fbc20fca9d445253051504f0630a0dca71b34a2",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7685034
+        },
+        {
+          "sha256": "83ce24e23bd91f94a00631be64fe87152800aa7a62e93a4bbaa3b792e34384b4",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7713232
+        },
+        {
+          "sha256": "8acbe9ab09322f7cd4ac21fa89aa4b6493b44e3f4d37314e1c82ad0f81f4fbee",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 9299638
+        },
+        {
+          "sha256": "8ba0792ab7ace47416e59ff9568d835e9b26b2b3de9e1b5094ab13938adfbfb9",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8157017
+        },
+        {
+          "sha256": "93d823a27c35a50b16b9e750c8fea539d990a7c94ffc6201b56fe9efa51746b2",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8744041
+        },
+        {
+          "sha256": "9598f3d625afae53bd36a6698d5160f18a55836c69d93603cbc6c5aec7e43f1f",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7017585
+        },
+        {
+          "sha256": "976a37e10bb1ebdefc307db34f841ea8734e982486b187b6249a0578093054cb",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8923106
+        },
+        {
+          "sha256": "9d911cdb9ffd75cb11403990871cc1b81aac5e0143e53733974f0c57d47d5040",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7894321
+        },
+        {
+          "sha256": "a7d8d5b55ca7f5309c962590171650f050002f0a1a2f3d26d89ef7f625cfa67e",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 6954225
+        },
+        {
+          "sha256": "b185e7fa4a0b1ad3be9af0699c0ff2f67f515831cd22615654f4a05e2bb00cb9",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 9293663
+        },
+        {
+          "sha256": "b1ce3f8b7674cad7599aa5a4148884270c88895130306bd3d05f68863cc4d957",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 6794804
+        },
+        {
+          "sha256": "b5d60ee5591e0481771240aafc3a9cb5c3db96c0c32763950c08ec1b4fb1b80f",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8120684
+        },
+        {
+          "sha256": "c91181e88a1a40de0854443db36805fb11b99f2e23e8f35c9d6a31c216c54f3d",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8315962
+        },
+        {
+          "sha256": "dd15f15b9fc8062687b9c2b8eb666f8e8a2c6cebd66841491ffcce19d15b41ef",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7921691
+        },
+        {
+          "sha256": "e548106cc3ba61689bf4f834db9f0911a22969adb6e47e0f490b3cf9127f3e59",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8748528
+        },
+        {
+          "sha256": "e99304830b48af44123f09ea3dfca46d059641ed150ec4ca3f14f63d40322a8e",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8317027
+        },
+        {
+          "sha256": "ec022282d9fbf5eee0a1eaa927bc469745c33136344dfef706c45c5e4e9b4628",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8537687
+        },
+        {
+          "sha256": "f00776dcc302f93d148c623cda0712714c0fde55fd8a4e9cbcef942c09d07526",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 6937432
+        },
+        {
+          "sha256": "ff3bc9a51538fd64e1dd515de7d8f79fc2fb956d98f05e23c86de917fff30b4a",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7676031
+        }
+      ],
+      "sources": [
+        {
+          "name": "era5-land-202212.nc",
+          "sha256": "73e15a5f95af70237bdc86e2441916c11fe2482d3520a7eb471c8cc4f32d6aff",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 6802790
+        },
+        {
+          "name": "era5-land-202301.nc",
+          "sha256": "9598f3d625afae53bd36a6698d5160f18a55836c69d93603cbc6c5aec7e43f1f",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7017585
+        },
+        {
+          "name": "era5-land-202302.nc",
+          "sha256": "f00776dcc302f93d148c623cda0712714c0fde55fd8a4e9cbcef942c09d07526",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 6937432
+        },
+        {
+          "name": "era5-land-202303.nc",
+          "sha256": "14c62e4cfc7401ff9554a4f2af9f150dfab21be04e2a46c8d5651b92b2a994db",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8580184
+        },
+        {
+          "name": "era5-land-202304.nc",
+          "sha256": "4b4aa7f9fea12e1f9e0645b180b574274138a6a50e800a673b16e86535c5eef7",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8391819
+        },
+        {
+          "name": "era5-land-202305.nc",
+          "sha256": "e548106cc3ba61689bf4f834db9f0911a22969adb6e47e0f490b3cf9127f3e59",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8748528
+        },
+        {
+          "name": "era5-land-202306.nc",
+          "sha256": "ec022282d9fbf5eee0a1eaa927bc469745c33136344dfef706c45c5e4e9b4628",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8537687
+        },
+        {
+          "name": "era5-land-202307.nc",
+          "sha256": "b185e7fa4a0b1ad3be9af0699c0ff2f67f515831cd22615654f4a05e2bb00cb9",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 9293663
+        },
+        {
+          "name": "era5-land-202308.nc",
+          "sha256": "8acbe9ab09322f7cd4ac21fa89aa4b6493b44e3f4d37314e1c82ad0f81f4fbee",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 9299638
+        },
+        {
+          "name": "era5-land-202309.nc",
+          "sha256": "8ba0792ab7ace47416e59ff9568d835e9b26b2b3de9e1b5094ab13938adfbfb9",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8157017
+        },
+        {
+          "name": "era5-land-202310.nc",
+          "sha256": "72408c53c4c6f2e4f0bbd3320673320edec81175deffb18d829ba544d2a85c59",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8791784
+        },
+        {
+          "name": "era5-land-202311.nc",
+          "sha256": "b5d60ee5591e0481771240aafc3a9cb5c3db96c0c32763950c08ec1b4fb1b80f",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8120684
+        },
+        {
+          "name": "era5-land-202312.nc",
+          "sha256": "22860c23f39470f6c2d5c106233513784037062d2b0e170b9cdd2569d4a52b6c",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7605873
+        },
+        {
+          "name": "era5-land-202401.nc",
+          "sha256": "3300a118897b1f232520ff3c4653577b2c35165711f02a4849b3fe8a2b46fe08",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7741343
+        },
+        {
+          "name": "era5-land-202402.nc",
+          "sha256": "1a1fb279c56513699a2d62c72a80b7c9cca4ff044cdbaa41fe8ae01b552dabc0",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7402498
+        },
+        {
+          "name": "era5-land-202403.nc",
+          "sha256": "9d911cdb9ffd75cb11403990871cc1b81aac5e0143e53733974f0c57d47d5040",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7894321
+        },
+        {
+          "name": "era5-land-202404.nc",
+          "sha256": "c91181e88a1a40de0854443db36805fb11b99f2e23e8f35c9d6a31c216c54f3d",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8315962
+        },
+        {
+          "name": "era5-land-202405.nc",
+          "sha256": "031ddc90eed9bed9ed2bf18a1cba86c8ff99373e4ea8267e8c37cc706d27a2e9",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8601085
+        },
+        {
+          "name": "era5-land-202406.nc",
+          "sha256": "247d1465421a937505fe98480d05999c848f77dbed247983c44ff830117437f1",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8592547
+        },
+        {
+          "name": "era5-land-202407.nc",
+          "sha256": "13067315f6b22dc6f6d04de54aaafbc80405aab3f705c3e2868425631bc4a927",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 9085955
+        },
+        {
+          "name": "era5-land-202408.nc",
+          "sha256": "2c38bf9d1394655f821e7a54b9baae9e58ff45cef436c17549bdc62012078d3f",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8386624
+        },
+        {
+          "name": "era5-land-202409.nc",
+          "sha256": "18f2080f861385aee9a2801444732e140e404f3b2595819e96d06fc46e9ea8e2",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8587673
+        },
+        {
+          "name": "era5-land-202410.nc",
+          "sha256": "ff3bc9a51538fd64e1dd515de7d8f79fc2fb956d98f05e23c86de917fff30b4a",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7676031
+        },
+        {
+          "name": "era5-land-202411.nc",
+          "sha256": "39ec89081f61331f4b747ae3410dcd54f9c2065baf6740bf2096f5df93207d5e",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7110922
+        },
+        {
+          "name": "era5-land-202412.nc",
+          "sha256": "a7d8d5b55ca7f5309c962590171650f050002f0a1a2f3d26d89ef7f625cfa67e",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 6954225
+        },
+        {
+          "name": "era5-land-202501.nc",
+          "sha256": "b1ce3f8b7674cad7599aa5a4148884270c88895130306bd3d05f68863cc4d957",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 6794804
+        },
+        {
+          "name": "era5-land-202502.nc",
+          "sha256": "105438b6d1c1ee3d66070906221c1ef31a8479d75ce343662152d2a727087fc8",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7011489
+        },
+        {
+          "name": "era5-land-202503.nc",
+          "sha256": "63f1e488454534364a72217810049504734fc26083f3c57a4217d76925d4ec35",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7704040
+        },
+        {
+          "name": "era5-land-202504.nc",
+          "sha256": "7b6ba2c30620c75f6c9d15406fbc20fca9d445253051504f0630a0dca71b34a2",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7685034
+        },
+        {
+          "name": "era5-land-202505.nc",
+          "sha256": "93d823a27c35a50b16b9e750c8fea539d990a7c94ffc6201b56fe9efa51746b2",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8744041
+        },
+        {
+          "name": "era5-land-202506.nc",
+          "sha256": "298134f9b1b996345fd70c865c20a25e735dd3fb74627d711b5ae7b973791210",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8286767
+        },
+        {
+          "name": "era5-land-202507.nc",
+          "sha256": "5ea5f2d317c5506e8226c05eb51604b332f58a43eae24f47084c8a7e9e064bf5",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8889730
+        },
+        {
+          "name": "era5-land-202508.nc",
+          "sha256": "976a37e10bb1ebdefc307db34f841ea8734e982486b187b6249a0578093054cb",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8923106
+        },
+        {
+          "name": "era5-land-202509.nc",
+          "sha256": "e99304830b48af44123f09ea3dfca46d059641ed150ec4ca3f14f63d40322a8e",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 8317027
+        },
+        {
+          "name": "era5-land-202510.nc",
+          "sha256": "dd15f15b9fc8062687b9c2b8eb666f8e8a2c6cebd66841491ffcce19d15b41ef",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7921691
+        },
+        {
+          "name": "era5-land-202511.nc",
+          "sha256": "83ce24e23bd91f94a00631be64fe87152800aa7a62e93a4bbaa3b792e34384b4",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 7713232
+        },
+        {
+          "name": "era5-land-202512.nc",
+          "sha256": "5c95296ee0f904883e356d55fe63181d934e54a5aa4ce3d62ea203369502ad21",
+          "variables": [
+            "tp",
+            "t2m",
+            "pev"
+          ],
+          "bytes": 6999661
+        }
+      ]
+    },
+    "parentObservation": {
+      "snapshotSHA256": "6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e",
+      "path": "config/operational/published-observation-snapshots/observations-6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e.json",
+      "bytes": 53987,
+      "sha256": "e5ecc5901b00d90ed80370347bd71808bea0e6b3cba5a977673a364e5ec2f559",
+      "indexFile": {
+        "bytes": 450,
+        "sha256": "63568eb4b86696a3c45e98becbf731b98ea15291b71c0261cfa31fa4b47340ae"
+      }
+    },
+    "commonQuality": {
+      "configuration": {
+        "file": "config/scientific/冻结共同质量观测-20261027.json",
+        "fileSHA256": "599e9efc142d5d69914a4e4cd20c603d2fdbd5a9ba0b780263e583229922a50d",
+        "observationSnapshotSHA256": "a9a49990a15603b9aed1fdb0cc1830b4a2caa55d4e92ecf3967e1c5c9ec18032",
+        "qualityProfile": "time-weighted-level-v2-gap6h-cover18h",
+        "sourceTaskId": "JOB-f5ccc18ad51e4bdf9480",
+        "rule": {
+          "maximumSubdailyGapHours": 6,
+          "minimumDailyCoverageHours": 18,
+          "sourceDailyAccepted": true,
+          "modelDailyRequiredHours": 24,
+          "modelDay": "end-hour; right-closed; left-labelled",
+          "missingInterpolation": false,
+          "excludeOnlyFixedAnchorDay": true
+        }
+      },
+      "configurationSHA256": "8989195975d3230f789ccb9a3c05d6ec2906833e3076e80a1799406f6ffe98ba",
+      "resource": {
+        "path": "config/scientific/冻结共同质量观测-20261027.json",
+        "bytes": 67334,
+        "sha256": "599e9efc142d5d69914a4e4cd20c603d2fdbd5a9ba0b780263e583229922a50d"
+      },
+      "sourceRequestSHA256": "48a380f18431d55b33589b93a500703db5d808984ee1d23edd85c0b58e4095b9",
+      "sourceResultSHA256": "9da007249914261312c88c1e184af6679ae02f7a72c07394808bff2099451092",
+      "sourceResultIdentity": {
+        "forcingGridSHA256": "e0ea22478c85fc3c8c87fe868c15de68516a220632e6d0b11ac943941f63ca3e",
+        "forcingTransformationSHA256": "a28542996c03152f4bc7fcdbec1510a7cabbb4843c3fa51e928b49b5f135d458",
+        "initializationSHA256": "74702dae073719bac50a569eb4264511825cb2026841f2c464432da1200e505a",
+        "modelFamily": "grid-continuous-v1",
+        "modelImplementation": "143543a9a196ca12364ae9640ed86bf294fcc042683ca41294cf041e10ab7139",
+        "observationProfile": "time-weighted-level-v2-gap6h-cover18h",
+        "observationSnapshotSHA256": "a9a49990a15603b9aed1fdb0cc1830b4a2caa55d4e92ecf3967e1c5c9ec18032",
+        "parameterSHA256": "d4c46990d931f2a8e321ea3a14a516e72df4f66bf73325ba22c236211958a90b",
+        "partitionParameterSHA256": "6d1a7cd7402073c79eb9f5ba7a213bb3d46205b111def511d34ad67c5868d666",
+        "projectId": "selinco",
+        "routingMode": "source-separated",
+        "spatialVersion": "GRID-SPATIAL-ddbb782dd4bdd3f00fa5"
+      }
+    },
+    "protocol": {
+      "id": "selinco-admission-v1",
+      "years": [
+        "2024",
+        "2025"
+      ],
+      "lakeRmseImprovement": 0.1,
+      "flowNseImprovement": 0.03,
+      "tolerance": 1e-10,
+      "quality": "common-frozen-days",
+      "lakeMode": "continuous",
+      "lakeStabilityMaximumM": 0.01,
+      "flowStabilityRmseFraction": 0.01
+    },
+    "protocolSHA256": "4cc35a326213cf4228c92386736bda5db9ed2b37e09f947337d2e72df71591e3",
+    "anchorConfig": {
+      "id": "selinco-fixed-anchor-20230420-v1",
+      "time": "2023-04-20T12:00:00",
+      "level": 4544.03,
+      "reference": "SLC-working-datum",
+      "timeZone": "Asia/Shanghai",
+      "method": "first-quality-daily-level-at-noon",
+      "source": "time-weighted-level-v2-gap6h-cover18h"
+    },
+    "anchorConfigSHA256": "b1bd779ee5f0519916d78905d0c9b4a85c0e3d392d13536e29008035fe1d8724",
+    "coverage": {
+      "start": "2023-01-01T00:00:00",
+      "end": "2026-01-01T00:00:00",
+      "hours": 26305
+    },
+    "parentFinalContinuousVolumeM3": -138463159.35680664
+  },
+  "sourceArrays": {
+    "time": {
+      "shape": [
+        26305
+      ],
+      "dtype": "<i8",
+      "bytes": 210440,
+      "sha256": "4bcfa8c96e3e26947b8005b0af96d5b014da65386b3293731f73200e7d72764c"
+    },
+    "flow": {
+      "shape": [
+        26305,
+        7
+      ],
+      "dtype": "<f8",
+      "bytes": 1473080,
+      "sha256": "3cb1ea866366e24c4616e54369388d9049475759a874acfebaadb68c4dac564a"
+    },
+    "continuousLakeVolumeChange": {
+      "shape": [
+        26305
+      ],
+      "dtype": "<f8",
+      "bytes": 210440,
+      "sha256": "16c74d58c56cf56ca71d88139c407a4daf2733f9f3fec868202fab0b0dd271b5"
+    },
+    "lakeFlux": {
+      "shape": [
+        26305
+      ],
+      "dtype": "<f8",
+      "bytes": 210440,
+      "sha256": "155b4b04f876db4b43fc807af7b1baaa84cfa995685ff69ce81d329c519ed816"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+test_end_hour_full_24h_daily_mean_and_partial_day_missing (__main__.HourlyDerivationTests) ... ok
+test_independent_signed_volume_anchor_and_no_preanchor_backfill (__main__.HourlyDerivationTests) ... ok
+test_missing_anchor_gap_duplicate_and_nonfinite_vectors_are_rejected (__main__.HourlyDerivationTests) ... ok
+test_month_uses_complete_hourly_net_and_total_flow_once (__main__.HourlyDerivationTests) ... ok
+test_nonpositive_or_nonfinite_parent_area_is_rejected (__main__.HourlyDerivationTests) ... ok
+test_only_fixed_anchor_calendar_day_is_excluded_not_later_window_starts (__main__.HourlyDerivationTests) ... ok
+test_seven_river_total_includes_duja_only_inside_zajia (__main__.HourlyDerivationTests) ... ok
+test_window_activity_flux_cannot_replace_complete_continuous_net_flux (__main__.HourlyDerivationTests) ... ok
+test_changed_parent_source_file_is_rejected_by_declared_six_file_sha (__main__.ReferenceLineageTests) ... ok
+test_client_cannot_choose_anchor_scores_path_or_parent_result (__main__.ReferenceLineageTests) ... ok
+test_early_cancellation_never_commits_record (__main__.ReferenceLineageTests) ... ok
+test_idempotent_repeat_verifies_existing_artifacts_and_rejects_tampering (__main__.ReferenceLineageTests) ... ok
+test_late_cancel_preserves_files_but_never_commits_complete_record (__main__.ReferenceLineageTests) ... ok
+test_output_changed_after_hashing_is_rejected_before_commit (__main__.ReferenceLineageTests) ... ok
+test_parent_area_content_change_without_new_spatial_identity_is_rejected (__main__.ReferenceLineageTests) ... ok
+test_published_parameter_revision_cannot_be_changed_to_match_new_claim (__main__.ReferenceLineageTests) ... ok
+test_reader_rejects_source_lineage_and_area_drift_after_archive (__main__.ReferenceLineageTests) ... ok
+test_real_protected_parent_original_metrics_identity_and_six_files_unchanged (__main__.ReferenceLineageTests) ... ok
+test_release_changed_while_deriving_never_commits_reference (__main__.ReferenceLineageTests) ... ok
+test_source_changed_during_derivation_never_commits_reference (__main__.ReferenceLineageTests) ... ok
+test_unknown_protocol_anchor_and_stale_release_are_rejected (__main__.ReferenceLineageTests) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 91.440s
+
+OK

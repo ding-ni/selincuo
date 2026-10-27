@@ -69,3 +69,5 @@ Thumbs.db
 
 # Small, reviewed test evidence is part of the versioned handoff.
 !/docs/evidence/v0.10.0/*.log
+!/docs/evidence/C1-20261027/C1测试输出.log
+!/docs/evidence/C1-20261027/旧回归日志.log

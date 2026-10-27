@@ -1,0 +1,461 @@
+{
+  "batch": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26",
+  "finishedAt": "2026-10-27T08:57:27.033095+00:00",
+  "modules": [
+    "test_evaluation_archive",
+    "test_evaluation_api",
+    "test_release_runtime",
+    "test_release_runtime_jobs",
+    "test_business_registry"
+  ],
+  "testsRun": 36,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "expectedFailures": 0,
+  "unexpectedSuccesses": 0,
+  "seconds": 140.0,
+  "testSuiteSuccessful": true,
+  "passed": true,
+  "retainedWorkspaces": [
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-6g2prtme",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-08la9ebm",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-ingjgoz2",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-lt4sp7l7",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-18_whhjd",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-h9fht5t9",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-tdvyjcaf",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-7_jekcsw",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-sk0jwkiu",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-fdu3un1n",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-5me_asc5",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-uulkw5d1",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-j4m_kfti",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-w6dkshbz",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-9rx2edkl",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-ldbgmjq6",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-80h4l6he",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-8597qxxe",
+      "requestedDirectory": null,
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-mx08s5il",
+      "requestedDirectory": null,
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-o605zti8",
+      "requestedDirectory": null,
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-7j_59re8",
+      "requestedDirectory": null,
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-wjwkmrab",
+      "requestedDirectory": null,
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-112tlzkw",
+      "requestedDirectory": null,
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-uzammrt0",
+      "requestedDirectory": null,
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-xsbeefo4",
+      "requestedDirectory": null,
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-gyvrpj5b",
+      "requestedDirectory": null,
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-eh0066c7",
+      "requestedDirectory": null,
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-ifp7yzuu",
+      "requestedDirectory": null,
+      "requestedPrefix": null,
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-degvgim2",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": "registry-contract-",
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-ooic17xr",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": "registry-contract-",
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-za6xddri",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": "registry-contract-",
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-oujnjz8f",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": "registry-contract-",
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-m5f4e2vi",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": "registry-contract-",
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-351y_ld9",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": "registry-contract-",
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-g1674vzu",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": "registry-contract-",
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    },
+    {
+      "path": "F:\\色林错预警预报平台\\build\\无删除回归-20261027-165501-36e4d5cc26\\保留临时工作区\\保留工作区-iejow9v0",
+      "requestedDirectory": "F:\\色林错预警预报平台",
+      "requestedPrefix": "registry-contract-",
+      "requestedSuffix": null,
+      "cleanupCalls": 1
+    }
+  ],
+  "blockedOperations": [],
+  "outcomes": [
+    {
+      "test": "test_evaluation_archive.EvaluationArchiveTests.test_client_scores_unknown_protocol_cancel_and_mutation_checks",
+      "status": "passed",
+      "seconds": 11.39
+    },
+    {
+      "test": "test_evaluation_archive.EvaluationArchiveTests.test_complete_candidate_freezes_revision_in_same_archive_transaction",
+      "status": "passed",
+      "seconds": 8.282
+    },
+    {
+      "test": "test_evaluation_archive.EvaluationArchiveTests.test_conflicting_result_and_request_window_dates_are_not_silently_pooled",
+      "status": "passed",
+      "seconds": 6.75
+    },
+    {
+      "test": "test_evaluation_archive.EvaluationArchiveTests.test_continuation_does_not_remove_days_other_than_frozen_actual_anchor",
+      "status": "passed",
+      "seconds": 4.39
+    },
+    {
+      "test": "test_evaluation_archive.EvaluationArchiveTests.test_empty_and_constant_observations_keep_undefined_scores",
+      "status": "passed",
+      "seconds": 2.282
+    },
+    {
+      "test": "test_evaluation_archive.EvaluationArchiveTests.test_frozen_identity_hashes_installed_source_and_missing_source_rejects",
+      "status": "passed",
+      "seconds": 2.156
+    },
+    {
+      "test": "test_evaluation_archive.EvaluationArchiveTests.test_independent_expected_scores_and_archive_does_not_publish",
+      "status": "passed",
+      "seconds": 5.844
+    },
+    {
+      "test": "test_evaluation_archive.EvaluationArchiveTests.test_late_cancel_and_changed_release_commit_nothing",
+      "status": "passed",
+      "seconds": 3.796
+    },
+    {
+      "test": "test_evaluation_archive.EvaluationArchiveTests.test_missing_data_not_interpolated_observation_conflict_not_comparable",
+      "status": "passed",
+      "seconds": 4.844
+    },
+    {
+      "test": "test_evaluation_archive.EvaluationArchiveTests.test_missing_window_metadata_has_no_qualified_lake_samples",
+      "status": "passed",
+      "seconds": 2.485
+    },
+    {
+      "test": "test_evaluation_archive.EvaluationArchiveTests.test_real_published_window_pairs_match_independent_frozen_2025_score",
+      "status": "passed",
+      "seconds": 5.234
+    },
+    {
+      "test": "test_evaluation_archive.EvaluationArchiveTests.test_result_mutation_before_commit_is_not_archived",
+      "status": "passed",
+      "seconds": 2.937
+    },
+    {
+      "test": "test_evaluation_archive.EvaluationArchiveTests.test_tiny_grid_prefix_binding_and_historical_change_refused",
+      "status": "passed",
+      "seconds": 2.407
+    },
+    {
+      "test": "test_evaluation_archive.EvaluationArchiveTests.test_window_anchor_union_is_excluded_instead_of_counting_fitted_values",
+      "status": "passed",
+      "seconds": 4.234
+    },
+    {
+      "test": "test_evaluation_archive.EvaluationArchiveTests.test_window_continuous_and_duplicate_days_rejected",
+      "status": "passed",
+      "seconds": 5.563
+    },
+    {
+      "test": "test_evaluation_api.EvaluationApiTests.test_forged_scores_checks_rejected_and_bad_input_never_archived",
+      "status": "passed",
+      "seconds": 7.484
+    },
+    {
+      "test": "test_evaluation_api.EvaluationApiTests.test_real_queue_archive_download_compact_list_and_reuse",
+      "status": "passed",
+      "seconds": 17.594
+    },
+    {
+      "test": "test_release_runtime.ReleaseRuntimeTests.test_actual_protected_snapshot_without_top_level_routing_uses_consistent_result_identity",
+      "status": "passed",
+      "seconds": 0.375
+    },
+    {
+      "test": "test_release_runtime.ReleaseRuntimeTests.test_exact_extension_passes_changed_historical_values_or_transformation_fail",
+      "status": "passed",
+      "seconds": 0.984
+    },
+    {
+      "test": "test_release_runtime.ReleaseRuntimeTests.test_existing_packaged_snapshot_tampering_and_path_escape_never_fall_back",
+      "status": "passed",
+      "seconds": 1.203
+    },
+    {
+      "test": "test_release_runtime.ReleaseRuntimeTests.test_grid_request_keeps_actual_frozen_parameters_anchor_and_observations",
+      "status": "passed",
+      "seconds": 0.453
+    },
+    {
+      "test": "test_release_runtime.ReleaseRuntimeTests.test_legacy_existing_prepare_reconstructs_matching_observations_without_spoofing_hash",
+      "status": "passed",
+      "seconds": 0.203
+    },
+    {
+      "test": "test_release_runtime.ReleaseRuntimeTests.test_missing_packaged_snapshot_keeps_strict_current_fallback",
+      "status": "passed",
+      "seconds": 0.391
+    },
+    {
+      "test": "test_release_runtime.ReleaseRuntimeTests.test_missing_runtime_evidence_or_changed_model_blocks_grid_compute",
+      "status": "passed",
+      "seconds": 0.516
+    },
+    {
+      "test": "test_release_runtime.ReleaseRuntimeTests.test_packaged_real_snapshot_preserves_unreferenced_source_without_using_current_seed",
+      "status": "passed",
+      "seconds": 0.281
+    },
+    {
+      "test": "test_release_runtime.ReleaseRuntimeTests.test_reuse_locked_release_does_not_need_new_runtime_evidence",
+      "status": "passed",
+      "seconds": 0.187
+    },
+    {
+      "test": "test_release_runtime_jobs.ReleaseRuntimeJobTests.test_grid_release_adapter_dispatches_without_mutable_template_or_observation_recapture",
+      "status": "passed",
+      "seconds": 5.954
+    },
+    {
+      "test": "test_release_runtime_jobs.ReleaseRuntimeJobTests.test_legacy_release_adapter_keeps_frozen_request_and_uses_legacy_runner",
+      "status": "passed",
+      "seconds": 4.625
+    },
+    {
+      "test": "test_business_registry.RegistryTests.test_actual_grid_candidate_summary_read_only",
+      "status": "passed",
+      "seconds": 2.25
+    },
+    {
+      "test": "test_business_registry.RegistryTests.test_admission_conflicts_missing_samples_and_initialization",
+      "status": "passed",
+      "seconds": 1.078
+    },
+    {
+      "test": "test_business_registry.RegistryTests.test_client_scores_cannot_authorize_publication",
+      "status": "passed",
+      "seconds": 2.797
+    },
+    {
+      "test": "test_business_registry.RegistryTests.test_http_startup_summary_and_release_rejection",
+      "status": "passed",
+      "seconds": 4.812
+    },
+    {
+      "test": "test_business_registry.RegistryTests.test_identity_tampering_rejected_without_pointer_change",
+      "status": "passed",
+      "seconds": 2.641
+    },
+    {
+      "test": "test_business_registry.RegistryTests.test_migration_preserves_and_backs_up_database",
+      "status": "passed",
+      "seconds": 1.968
+    },
+    {
+      "test": "test_business_registry.RegistryTests.test_publish_optimistic_lock_runtime_guard_and_atomic_rollback",
+      "status": "passed",
+      "seconds": 4.641
+    },
+    {
+      "test": "test_business_registry.RegistryTests.test_real_packaged_summary_and_exclusive_date_plan",
+      "status": "passed",
+      "seconds": 2.766
+    }
+  ],
+  "limitations": [
+    "这是旧接口与工程回归，不认证水文精度、科学准入或安装发行。",
+    "文件删除审计针对 Python 文件操作；SQLite 内部日志生命周期维持原实现。"
+  ]
+}

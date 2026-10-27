@@ -70,6 +70,8 @@ class Platform(ThreadingHTTPServer):
                 raise ValueError('此色林错工作区已被另一个服务使用，请打开已有实例')
         from .release_registry import migrate
         migrate(self.db)
+        from .continuous_reference import migrate as migrate_references
+        migrate_references(self.db)
         self.jobs = Jobs(self.db)
         self.instance_id = uuid.uuid4().hex
         super().__init__(address, Handler)
@@ -292,6 +294,19 @@ class Handler(SimpleHTTPRequestHandler):
                 return self.send_json(series(self.db,query.get('station','SLC'),query.get('variable','level'),query.get('start'),query.get('end'),query['profile']))
             from .observation_query import series
             return self.send_json(series(self.db, query.get('station', 'SLC'), query.get('variable', 'level'), query.get('start'), query.get('end')))
+        if path == 'continuous-reference-config':
+            from .continuous_reference import ANCHOR_CONFIG
+            from .release_registry import PROTOCOL,current
+            return self.send_json({'anchor':ANCHOR_CONFIG,'protocolId':PROTOCOL['id'],
+                                   'baselineReleaseId':current(self.db)['id']})
+        if path == 'continuous-references':
+            rows=self.db.rows('SELECT payload FROM continuous_reference_records ORDER BY rowid DESC LIMIT 200')
+            return self.send_json({'references':[{k:value.get(k) for k in
+                ('id','createdAt','baselineReleaseId','parentResultId','method','archiveComplete')}
+                for value in (json.loads(row['payload']) for row in rows)]})
+        if path == 'continuous-reference':
+            from .continuous_reference import read_verified_reference
+            return self.send_json(read_verified_reference(self.db,query.get('id')))
         if path == 'evaluations':
             rows=self.db.rows('SELECT id,payload FROM evaluation_records ORDER BY rowid DESC LIMIT 200')
             values=[]
@@ -311,6 +326,9 @@ class Handler(SimpleHTTPRequestHandler):
                             'modelFamily',json_extract(request,'$.modelFamily'),
                             'inputId',json_extract(request,'$.inputId'),
                             'schemeId',json_extract(request,'$.schemeId'),
+                            'baselineReleaseId',json_extract(request,'$.baselineReleaseId'),
+                            'protocolId',json_extract(request,'$.protocolId'),
+                            'anchorConfigId',json_extract(request,'$.anchorConfigId'),
                             'schemeRevision',json_extract(request,'$.schemeRevision')) AS compact_request,
                 CASE WHEN kind='restore-workspace' AND status='succeeded' THEN
                      json_object('workspace',json_extract(result,'$.workspace'),
@@ -324,6 +342,10 @@ class Handler(SimpleHTTPRequestHandler):
                      json_object('evaluationId',json_extract(result,'$.evaluationId'),
                                  'comparisonStatus',json_extract(result,'$.comparisonStatus'),
                                  'admission',json_extract(result,'$.admission'),
+                                 'artifacts',json_extract(result,'$.artifacts'))
+                WHEN kind='continuous-reference' AND status='succeeded' THEN
+                     json_object('referenceId',json_extract(result,'$.referenceId'),
+                                 'method',json_extract(result,'$.method'),
                                  'artifacts',json_extract(result,'$.artifacts'))
                 WHEN kind IN ('export-result','backup') AND status='succeeded' THEN
                      json_object('artifacts',json_extract(result,'$.artifacts')) ELSE NULL END AS compact_result

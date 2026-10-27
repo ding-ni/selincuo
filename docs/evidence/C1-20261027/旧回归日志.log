@@ -1,0 +1,42 @@
+test_client_scores_unknown_protocol_cancel_and_mutation_checks (test_evaluation_archive.EvaluationArchiveTests) ... ok
+test_complete_candidate_freezes_revision_in_same_archive_transaction (test_evaluation_archive.EvaluationArchiveTests) ... ok
+test_conflicting_result_and_request_window_dates_are_not_silently_pooled (test_evaluation_archive.EvaluationArchiveTests) ... ok
+test_continuation_does_not_remove_days_other_than_frozen_actual_anchor (test_evaluation_archive.EvaluationArchiveTests) ... ok
+test_empty_and_constant_observations_keep_undefined_scores (test_evaluation_archive.EvaluationArchiveTests) ... ok
+test_frozen_identity_hashes_installed_source_and_missing_source_rejects (test_evaluation_archive.EvaluationArchiveTests) ... ok
+test_independent_expected_scores_and_archive_does_not_publish (test_evaluation_archive.EvaluationArchiveTests) ... ok
+test_late_cancel_and_changed_release_commit_nothing (test_evaluation_archive.EvaluationArchiveTests) ... ok
+test_missing_data_not_interpolated_observation_conflict_not_comparable (test_evaluation_archive.EvaluationArchiveTests) ... ok
+test_missing_window_metadata_has_no_qualified_lake_samples (test_evaluation_archive.EvaluationArchiveTests) ... ok
+test_real_published_window_pairs_match_independent_frozen_2025_score (test_evaluation_archive.EvaluationArchiveTests) ... ok
+test_result_mutation_before_commit_is_not_archived (test_evaluation_archive.EvaluationArchiveTests) ... ok
+test_tiny_grid_prefix_binding_and_historical_change_refused (test_evaluation_archive.EvaluationArchiveTests) ... ok
+test_window_anchor_union_is_excluded_instead_of_counting_fitted_values (test_evaluation_archive.EvaluationArchiveTests) ... ok
+test_window_continuous_and_duplicate_days_rejected (test_evaluation_archive.EvaluationArchiveTests) ... ok
+test_forged_scores_checks_rejected_and_bad_input_never_archived (test_evaluation_api.EvaluationApiTests) ... ok
+test_real_queue_archive_download_compact_list_and_reuse (test_evaluation_api.EvaluationApiTests) ... ok
+test_actual_protected_snapshot_without_top_level_routing_uses_consistent_result_identity (test_release_runtime.ReleaseRuntimeTests) ... ok
+test_exact_extension_passes_changed_historical_values_or_transformation_fail (test_release_runtime.ReleaseRuntimeTests) ... ok
+test_existing_packaged_snapshot_tampering_and_path_escape_never_fall_back (test_release_runtime.ReleaseRuntimeTests) ... ok
+test_grid_request_keeps_actual_frozen_parameters_anchor_and_observations (test_release_runtime.ReleaseRuntimeTests) ... ok
+test_legacy_existing_prepare_reconstructs_matching_observations_without_spoofing_hash (test_release_runtime.ReleaseRuntimeTests) ... ok
+test_missing_packaged_snapshot_keeps_strict_current_fallback (test_release_runtime.ReleaseRuntimeTests) ... ok
+test_missing_runtime_evidence_or_changed_model_blocks_grid_compute (test_release_runtime.ReleaseRuntimeTests) ... ok
+test_packaged_real_snapshot_preserves_unreferenced_source_without_using_current_seed (test_release_runtime.ReleaseRuntimeTests) ... ok
+test_reuse_locked_release_does_not_need_new_runtime_evidence (test_release_runtime.ReleaseRuntimeTests) ... ok
+test_grid_release_adapter_dispatches_without_mutable_template_or_observation_recapture (test_release_runtime_jobs.ReleaseRuntimeJobTests) ... ok
+test_legacy_release_adapter_keeps_frozen_request_and_uses_legacy_runner (test_release_runtime_jobs.ReleaseRuntimeJobTests) ... ok
+test_actual_grid_candidate_summary_read_only (test_business_registry.RegistryTests) ... ok
+test_admission_conflicts_missing_samples_and_initialization (test_business_registry.RegistryTests) ... ok
+test_client_scores_cannot_authorize_publication (test_business_registry.RegistryTests) ... ok
+test_http_startup_summary_and_release_rejection (test_business_registry.RegistryTests) ... ok
+test_identity_tampering_rejected_without_pointer_change (test_business_registry.RegistryTests) ... ok
+test_migration_preserves_and_backs_up_database (test_business_registry.RegistryTests) ... ok
+test_publish_optimistic_lock_runtime_guard_and_atomic_rollback (test_business_registry.RegistryTests) ... ok
+test_real_packaged_summary_and_exclusive_date_plan (test_business_registry.RegistryTests) ... ok
+
+----------------------------------------------------------------------
+Ran 36 tests in 135.791s
+
+OK
+结果记录：F:\色林错预警预报平台\build\无删除回归-20261027-165501-36e4d5cc26\回归结果.json

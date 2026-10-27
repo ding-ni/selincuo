@@ -45,7 +45,7 @@ class Jobs:
     def _submit(self, kind, payload, submission=None):
         if self.restore_pending or self.restart_required:
             raise ValueError('恢复已排队或完成，暂停接收新任务；请等待恢复结束并重启后继续')
-        if kind not in ('simulation', 'trial', 'continuation', 'calibration', 'calibration-workflow', 'sensitivity', 'import-observations', 'build-spatial', 'build-grid-spatial', 'register-inputs', 'download-forcing', 'update-forcing', 'export-result', 'backup', 'restore-workspace', 'evaluation'):
+        if kind not in ('simulation', 'trial', 'continuation', 'calibration', 'calibration-workflow', 'sensitivity', 'import-observations', 'build-spatial', 'build-grid-spatial', 'register-inputs', 'download-forcing', 'update-forcing', 'export-result', 'backup', 'restore-workspace', 'evaluation', 'continuous-reference'):
             raise ValueError('未知任务类型')
         payload = {k: v for k, v in dict(payload).items() if not k.startswith('_')}
         if payload.get('projectId', 'selinco') != 'selinco' or payload.get('contextKey', CONTEXT_KEY) != CONTEXT_KEY:
@@ -63,9 +63,14 @@ class Jobs:
             allowed={'projectId','contextKey','name','clientRequestId','protocolId','baselineReleaseId','baselineResultId','candidateResultId'}
             if set(payload)-allowed:
                 raise ValueError('评价任务只接受协议、成果身份和任务名称；禁止提交分数、checks或诊断结论')
-        if kind in ('export-result','backup','restore-workspace','evaluation'):
+        if kind=='continuous-reference':
+            from .continuous_reference import REQUEST_KEYS
+            allowed={'projectId','contextKey','name','clientRequestId'} | REQUEST_KEYS
+            if set(payload)-allowed:
+                raise ValueError('连续参考任务只接受已登记发布、协议与锚点配置ID；禁止自由路径、锚点数值或checks')
+        if kind in ('export-result','backup','restore-workspace','evaluation','continuous-reference'):
             # These tasks never enter numerical request preparation.
-            payload={k:v for k,v in payload.items() if k in ('projectId','contextKey','name','clientRequestId','taskId','format','filename','backupTaskId','token','protocolId','baselineReleaseId','baselineResultId','candidateResultId')}
+            payload={k:v for k,v in payload.items() if k in ('projectId','contextKey','name','clientRequestId','taskId','format','filename','backupTaskId','token','protocolId','baselineReleaseId','baselineResultId','candidateResultId','anchorConfigId')}
         if kind=='restore-workspace':
             from .maintenance import restore_request_preview
             preview=restore_request_preview(self.db,payload)
@@ -270,12 +275,17 @@ class Jobs:
             if kind=='export-result':
                 from .maintenance import export_result
                 result=export_result(self.db,request,folder,progress,is_cancelled)
-            elif kind=='evaluation':
-                from .evaluation_archive import archive,REQUEST_KEYS
+            elif kind in ('evaluation','continuous-reference'):
+                if kind=='evaluation':
+                    from .evaluation_archive import archive,REQUEST_KEYS
+                    table,key='evaluation_records','evaluationId'
+                else:
+                    from .continuous_reference import generate as archive,REQUEST_KEYS
+                    table,key='continuous_reference_records','referenceId'
                 from .common import within,sha_file
                 from urllib.parse import urlencode
                 result=archive(self.db,{k:request[k] for k in REQUEST_KEYS if k in request},folder,progress,is_cancelled)
-                record=json.loads(self.db.rows('SELECT payload FROM evaluation_records WHERE id=?',(result['evaluationId'],))[0]['payload'])
+                record=json.loads(self.db.rows('SELECT payload FROM '+table+' WHERE id=?',(result[key],))[0]['payload'])
                 directory=within(self.db.workspace,record['archiveDirectory'])
                 relative=directory.relative_to(self.db.workspace)
                 if len(relative.parts)!=2 or relative.parts[0]!='tasks':raise ValueError('评价产物目录不是任务归档')

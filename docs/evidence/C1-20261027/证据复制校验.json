@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "files": 16,
+  "bytes": 3122262,
+  "sourceRecordSHA256": "8f8c269a500a918e298b0b8d03ba8ea860ec6f3ed072618d4b0f0c5207b79994",
+  "implementationSHA256": "210cfbb0f0ae59a14e9a3d937378b8defa3bff8dcd6c13b9ee2df936dd0ff2cc",
+  "testSHA256": "fe3033b777f025ffeeb7fdc80c0f277f8769b05ab70490045fef6e0df27b6ec9",
+  "scriptSHA256": "5ff9b22b80c092db57fd0eba99751bf90b72afff9faa917f1ed2ce28d1c1da68",
+  "newTestsPassed": 21,
+  "relatedRegressionPassed": 36,
+  "scientificUpgradePassed": false,
+  "installerBuilt": false
+}
