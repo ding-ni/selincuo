@@ -29,7 +29,7 @@ class ProtocolTests(unittest.TestCase):
         prepared = {'times': pd.DatetimeIndex(['2023-01-01', '2025-12-31'])}
         def run(future_error):
             def simulation(db, request, folder=None, **kwargs):
-                p = request['parameters']
+                p = {**request['parameters'], **request.get('partitionParameters', {}).get('duja', {})}
                 # Controlled objective surface, with deliberately unrelated
                 # validation performance. Test orchestration, not model skill.
                 loss = ((p['WM'] - 130) / 100) ** 2 + ((p['KC'] - 1.1) / 2) ** 2
@@ -40,6 +40,7 @@ class ProtocolTests(unittest.TestCase):
         a, b = run(0), run(1e8)
         self.assertEqual(a['parameters'], b['parameters'])
         self.assertEqual(a['calibration']['trace'], b['calibration']['trace'])
+        self.assertGreater(len({r['parameters']['KC'] for r in a['calibration']['trace']}), 1)
         self.assertEqual(a['calibration']['evaluations'], 30)
         self.assertEqual(a['calibration']['termination'], 'budget-exhausted')
         for key in ('snowDdf', 'iceDdf', 'lapseRate', 'lakeCoefficient'):

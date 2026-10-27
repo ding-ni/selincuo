@@ -6,6 +6,7 @@ import json
 import mimetypes
 import os
 import re
+import shutil
 import threading
 import uuid
 import webbrowser
@@ -17,6 +18,35 @@ from .common import ROOT, VERSION, WORKSPACE, CONTEXT_KEY, canonical, digest, no
 from .database import Database
 from .jobs import Jobs
 from .model_core import DEFAULT_PARAMETERS, PARAMETER_DEFINITIONS
+
+
+def upload_size_limit(extension):
+    return (50 if extension=='.zip' else 4)*1024**3
+
+
+def guard_restore_writes(jobs, path, uploading=False):
+    if not (getattr(jobs,'restore_pending',False) or getattr(jobs,'restart_required',False)):
+        return
+    allowed=path in ('tasks','restore-preview','shutdown') or bool(re.fullmatch(r'tasks/[^/]+/stop',path))
+    if uploading or not allowed:
+        raise ValueError('恢复已排队或完成，旧工作区暂停写入；请等待恢复结束并重启后继续')
+
+
+def receive_upload(source, destination, length, extension):
+    """Bounded streaming; incomplete files never become restorable uploads."""
+    if not 0 < length <= upload_size_limit(extension):
+        raise ValueError('ZIP大小须为1字节至50GiB；其他文件须为1字节至4GiB')
+    destination.parent.mkdir(parents=True,exist_ok=True)
+    if shutil.disk_usage(destination.parent).free < length+16*1024*1024:
+        raise ValueError('上传磁盘可用空间不足：需要至少 '+str(length+16*1024*1024)+' 字节')
+    partial=destination.with_name(destination.name+'.partial')
+    with partial.open('xb') as stream:
+        remaining=length
+        while remaining:
+            chunk=source.read(min(1024*1024,remaining))
+            if not chunk:raise ValueError('文件上传未完成，半成品保留但不可恢复')
+            stream.write(chunk);remaining-=len(chunk)
+    partial.replace(destination)
 
 
 class Platform(ThreadingHTTPServer):
@@ -38,6 +68,8 @@ class Platform(ThreadingHTTPServer):
             except OSError:
                 self.lock_stream.close()
                 raise ValueError('此色林错工作区已被另一个服务使用，请打开已有实例')
+        from .release_registry import migrate
+        migrate(self.db)
         self.jobs = Jobs(self.db)
         self.instance_id = uuid.uuid4().hex
         super().__init__(address, Handler)
@@ -115,19 +147,38 @@ class Handler(SimpleHTTPRequestHandler):
             if not (ROOT / 'frontend/dist/index.html').is_file():
                 return self.send_json({'error': '网页尚未构建，请执行安装平台脚本'}, 503)
             return super().do_GET()
+        if path == 'business-context':
+            from .business_context import business_context
+            return self.send_json(business_context(self.db, query.get('resultId')))
+        if path == 'result-summary':
+            from .business_context import result_summary
+            return self.send_json(result_summary(self.db, query['resultId']))
+        if path == 'simulation-plan':
+            from .business_context import simulation_plan
+            return self.send_json(simulation_plan(self.db, query))
         if path == 'bootstrap':
             spatial = read_json(ROOT / 'data/derived/spatial/manifest.json')
             summary = {k: v for k, v in (spatial or {}).items() if k not in ('weights', 'lakeWeights', 'grids', 'sourceFiles')}
             inputs = self.db.items('input_products')
             for item in inputs:
                 item['compatible'] = bool(spatial and item['manifest']['spatialVersion'] == spatial['version'])
+                from .forcing_latest import provenance_summary
+                item['provenanceSummary']=provenance_summary(self.db,item['manifest'])
             from .calibration_config import public_config
+            from .operational_scheme import catalog
+            from .published_results import catalog as published_catalog
+            from .release_registry import current as current_release
             annual_ready = any(i['compatible'] and i['manifest']['start'] <= '2023-01-01T00:00:00' and i['manifest']['end'] >= '2026-01-01T00:00:00' for i in inputs)
-            return self.send_json({'projectId': 'selinco', 'name': '色林错预警预报平台', 'version': VERSION,
+            from .grid_spatial import current as grid_current
+            grid=grid_current()
+            grid_summary={k:v for k,v in (grid or {}).items() if k not in ('grids','units','lakeWeights')}
+            return self.send_json({'projectId': 'selinco', 'name': '色林错预警预报平台', 'version': VERSION, 'gridSpatial':grid_summary,
                                    'contextKey': CONTEXT_KEY, 'spatial': summary, 'database': self.db.summary(),
                                    'stations': self.db.rows('SELECT * FROM stations ORDER BY id'),
                                    'inputs': inputs, 'parameters': self.db.items('parameter_versions'),
                                    'schemes': self.db.items('schemes'),
+                                   'operationalSchemes': catalog(self.db),
+                                   'publishedResults': published_catalog(), 'standardResultId': current_release(self.db)['resultId'],
                                    'calibrationConfig': public_config(), 'routingModes': [{'id':'source-separated','label':'分水源调蓄 + 河道汇流'},{'id':'lumped','label':'原方案：合并径流单库汇流'}],
                                    'parameterDefinitions': PARAMETER_DEFINITIONS, 'defaultParameters': DEFAULT_PARAMETERS,
                                    'forecast': {'enabled': False, 'reason': '本版完成历史计算，7—15天滚动预报在下一阶段接入'},
@@ -143,13 +194,76 @@ class Handler(SimpleHTTPRequestHandler):
             return self.send_json(monitoring(self.db))
         if path == 'map-frame':
             from .dashboard import map_frame
-            return self.send_json(map_frame(self.db,query['inputId'],query['day'],query.get('variable','precipitation')))
+            return self.send_json(map_frame(self.db,query['inputId'],query['day'],query.get('variable','precipitation'),query.get('spatialVersion')))
+        if path == 'map-range':
+            from .map_ranges import range_for
+            return self.send_json(range_for(self.db,query))
         if path == 'snow-frame':
             from .dashboard import snow_frame
             return self.send_json(snow_frame(self.db,query['taskId'],query['day']))
+        if path == 'observation-catalog':
+            from .observation_query import catalog
+            return self.send_json(catalog(self.db))
+        if path == 'observation-page':
+            from .observation_query import page
+            return self.send_json(page(self.db, query))
+        if path == 'datum-candidates':
+            from .observation_profiles import datum_candidates
+            candidate=datum_candidates(self.db)
+            target=self.db.workspace/'reports/observation-candidates'/(candidate['id']+'.json')
+            if not target.exists():
+                write_json(target,candidate);self.db.log('analysis.datum-candidate',{'id':candidate['id'],'sources':candidate['observationSourcesSHA256']})
+            elif digest(read_json(target))!=digest(candidate):raise ValueError('已归档零点候选与当前摘要不一致')
+            return self.send_json(candidate)
+        if path == 'research-template':
+            from .research_schemes import template
+            return self.send_json(template(self.db))
+        if path == 'spatial-version':
+            from .grid_spatial import load
+            return self.send_json(load(query['version']))
+        if path == 'forcing-coverage':
+            from .forcing_latest import availability
+            folder=self.db.workspace/'downloads/era5-land'
+            meta=availability() if query.get('check')=='true' else read_json(folder/'latest-catalog.json')
+            if query.get('check')=='true':write_json(folder/'latest-catalog.json',meta)
+            return self.send_json({'catalog':meta,'update':read_json(folder/'latest-status.json'),'inputs':self.db.items('input_products')})
+        if path == 'search-progress':
+            self.db.task(query['taskId'])
+            value=read_json(within(self.db.workspace/'tasks',query['taskId'])/'search-progress.json',{'trace':[]})
+            trace=value.get('trace',[]);after=max(0,int(query.get('after',0)))
+            return self.send_json({**value,'trace':trace[after:],'count':len(trace)})
+        if path in ('result-capabilities', 'result-series', 'result-frame', 'result-checkpoint'):
+            from .result_query import metadata, read, final
+            if path == 'result-capabilities': return self.send_json(metadata(self.db, query['resultId']))
+            if path == 'result-checkpoint': return self.send_json(final(self.db, query['resultId']))
+            return self.send_json(read(self.db, query, frame=path == 'result-frame'))
         if path == 'observations':
             return self.send_json({'rows': self.db.observations(query.get('station', 'SLC'), query.get('variable', 'level'),
                                                                query.get('step'), query.get('start'), query.get('end'), query.get('limit', 2000))})
+        if path == 'data-contract':
+            from .data_exchange import contract
+            return self.send_json(contract())
+        if path == 'published-result':
+            from .published_results import detail, result_file
+            if query.get('file'):
+                return self.file(result_file(query['id'], query['file']), download=True)
+            return self.send_json(detail(query['id']))
+        if path == 'data-template':
+            from io import BytesIO
+            from openpyxl import Workbook
+            from .data_exchange import contract
+            book = Workbook()
+            book.active.title = 'data'
+            book.active.append(contract()['requiredColumns'] + contract()['optionalColumns'])
+            stream = BytesIO()
+            book.save(stream)
+            content = stream.getvalue()
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            self.send_header('Content-Disposition', 'attachment; filename="selinco-observations.xlsx"')
+            self.send_header('Content-Length', str(len(content)))
+            self.end_headers()
+            return self.wfile.write(content)
         if path == 'import-preview':
             from .observations import scan
             return self.send_json({'files': scan(ROOT / 'data/raw/observations/slc')})
@@ -173,19 +287,65 @@ class Handler(SimpleHTTPRequestHandler):
             return self.send_json({'rows': json.loads(frame.reset_index(names='date').to_json(orient='records', date_format='iso')),
                                    'note': '降水与蒸发为湖面面积加权基准；气温为计算单元均值，尚未高程修正'})
         if path == 'observation-series':
-            from .observations import daily_series
-            series = daily_series(self.db, query.get('station', 'SLC'), query.get('variable', 'level'), query.get('start'), query.get('end'))
-            return self.send_json({'rows': [{'time': time.isoformat(), 'value': float(value)} for time, value in series.dropna().items()]})
+            if query.get('profile') in ('quality-v2','raw','candidate'):
+                from .observation_profiles import series
+                return self.send_json(series(self.db,query.get('station','SLC'),query.get('variable','level'),query.get('start'),query.get('end'),query['profile']))
+            from .observation_query import series
+            return self.send_json(series(self.db, query.get('station', 'SLC'), query.get('variable', 'level'), query.get('start'), query.get('end')))
+        if path == 'evaluations':
+            rows=self.db.rows('SELECT id,payload FROM evaluation_records ORDER BY rowid DESC LIMIT 200')
+            values=[]
+            for row in rows:
+                record=json.loads(row['payload'])
+                values.append({k:record.get(k) for k in ('id','createdAt','baselineReleaseId','baselineResultId',
+                    'candidateResultId','comparisonStatus','comparisonReasons','admission','archiveComplete')})
+            return self.send_json({'evaluations':values})
+        if path == 'evaluation':
+            rows=self.db.rows('SELECT payload FROM evaluation_records WHERE id=?',(query.get('id'),))
+            if not rows:raise FileNotFoundError('评价归档不存在')
+            return self.send_json(json.loads(rows[0]['payload']))
         if path == 'tasks':
-            rows = self.db.rows('SELECT id,kind,status,created_at,updated_at,progress,message,trashed,favorite,name,notes,collection FROM tasks ORDER BY created_at DESC LIMIT 500')
+            rows = self.db.rows('''SELECT id,kind,status,created_at,updated_at,progress,message,trashed,favorite,name,notes,collection,
+                json_object('researchSchemeId',json_extract(request,'$.researchSchemeId'),
+                            'researchSchemeRevision',json_extract(request,'$.researchSchemeRevision'),
+                            'modelFamily',json_extract(request,'$.modelFamily'),
+                            'inputId',json_extract(request,'$.inputId'),
+                            'schemeId',json_extract(request,'$.schemeId'),
+                            'schemeRevision',json_extract(request,'$.schemeRevision')) AS compact_request,
+                CASE WHEN kind='restore-workspace' AND status='succeeded' THEN
+                     json_object('workspace',json_extract(result,'$.workspace'),
+                                 'restartRequired',json_extract(result,'$.restartRequired'),
+                                 'sourceWorkspace',json_extract(result,'$.sourceWorkspace'),
+                                 'message',json_extract(result,'$.message'),
+                                 'files',json_extract(result,'$.files'),
+                                 'bytes',json_extract(result,'$.bytes'),
+                                 'databaseIntegrity',json_extract(result,'$.databaseIntegrity'))
+                WHEN kind='evaluation' AND status='succeeded' THEN
+                     json_object('evaluationId',json_extract(result,'$.evaluationId'),
+                                 'comparisonStatus',json_extract(result,'$.comparisonStatus'),
+                                 'admission',json_extract(result,'$.admission'),
+                                 'artifacts',json_extract(result,'$.artifacts'))
+                WHEN kind IN ('export-result','backup') AND status='succeeded' THEN
+                     json_object('artifacts',json_extract(result,'$.artifacts')) ELSE NULL END AS compact_result
+                FROM tasks ORDER BY created_at DESC LIMIT 500''')
+            for row in rows:
+                row['request']={k:v for k,v in json.loads(row.pop('compact_request')).items() if v is not None}
+                compact=row.pop('compact_result')
+                row['result']=json.loads(compact) if compact else None
+                row['heartbeatAt']=row['updated_at']
+                row['phase']=row['message'].split(' · ')[0]
+                row['termination']=({'cancelled':'user-stopped','interrupted':'service-restarted',
+                                     'failed':'failed','succeeded':'completed'}).get(row['status'])
             return self.send_json({'tasks': rows})
         if path.startswith('tasks/'):
             return self.send_json(self.server.jobs.public(self.db.task(path.split('/')[1])))
         if path == 'states':
             states = self.db.items('states')
+            from .result_query import compatible
             for row in states:
                 payload = row['payload']
                 row['identity'] = payload['identity']
+                row['canContinue'] = compatible(payload)
                 row['summary'] = {'sweMean': sum(s[0] for s in payload['unitStates']) / len(payload['unitStates']), 'lake': payload['lake']}
                 row.pop('payload')
             return self.send_json({'states': states})
@@ -193,7 +353,10 @@ class Handler(SimpleHTTPRequestHandler):
             rows = self.db.rows('SELECT * FROM states WHERE id=?', (path.split('/')[1],))
             if not rows:
                 raise FileNotFoundError('状态不存在')
-            return self.send_json({'state': json.loads(rows[0]['payload'])})
+            from .result_query import checkpoint_detail
+            tasks = self.db.rows('SELECT result FROM tasks WHERE id=?', (rows[0]['task_id'],))
+            result = json.loads(tasks[0]['result'] or '{}') if tasks else {}
+            return self.send_json(checkpoint_detail(json.loads(rows[0]['payload']), result))
         if path == 'process':
             return self.process(query)
         if path == 'export':
@@ -201,8 +364,16 @@ class Handler(SimpleHTTPRequestHandler):
             filename = query.get('format', 'daily.csv')
             if filename not in ('daily.csv', 'checkpoint.json', 'result.json', 'hourly.npz', 'request.json'):
                 raise ValueError('不支持的导出类型')
+            if filename=='hourly.npz' and task.get('result',{}).get('storageFormat')=='zarr-v2':
+                from .grid_storage import export_npz
+                return self.file(export_npz(within(self.db.workspace/'tasks',task['id'])),download=True)
             return self.file(within(self.db.workspace / 'tasks', task['id']) / filename, download=True)
+        if path=='task-artifact':
+            from .maintenance import artifact_file
+            return self.file(artifact_file(self.db,self.db.task(query['taskId']),query['name']),download=True)
         if path == 'download':
+            if query['filename'].endswith(('.partial','.sqlite3','.complete.json')):
+                raise ValueError('中间文件不可下载')
             return self.file(within(self.db.workspace / 'exports', query['filename']), download=True)
         if path == 'system':
             import h5py
@@ -250,7 +421,16 @@ class Handler(SimpleHTTPRequestHandler):
 
     def post(self):
         path = urlsplit(self.path).path.removeprefix('/api/model/')
+        guard_restore_writes(self.server.jobs,path)
         value = self.document()
+        if path == 'operational-release':
+            from .release_registry import publish
+            return self.send_json(publish(self.db, value))
+        if path in ('data-import', 'data-import-file'):
+            if self.server.jobs.active():
+                raise ValueError('请等待计算结束后更新资料')
+            from .data_exchange import import_records, import_file
+            return self.send_json((import_records if path == 'data-import' else import_file)(self.db, value))
         if path == 'coverage':
             from .observations import confirm_coverage
             return self.send_json(confirm_coverage(self.db, value))
@@ -280,14 +460,20 @@ class Handler(SimpleHTTPRequestHandler):
                 from .maintenance import cleanup_execute
                 return self.send_json(cleanup_execute(self.db, identifier, value['token']))
         if path in ('parameters', 'schemes'):
+            if path=='schemes' and value.get('payload',{}).get('schemaVersion')==2:
+                from .research_schemes import save
+                return self.send_json(save(self.db,value['payload'],value.get('parentId')))
             table = 'parameter_versions' if path == 'parameters' else 'schemes'
             item = dict(value['payload'])
             if path == 'parameters':
                 from .model_core import parameters
+                from .parameter_regions import resolve_regions
                 item['parameters'] = parameters(item.get('parameters'))
+                units = read_json(ROOT / 'data/derived/spatial/manifest.json')['units']
+                item['partitionParameters'], _ = resolve_regions(units, item['parameters'], item.get('partitionParameters'))
                 if item.get('sourceTaskId'):
                     task = self.db.task(item['sourceTaskId'])
-                    if task['status'] != 'succeeded' or task['result']['parameters'] != item['parameters']:
+                    if task['status'] != 'succeeded' or task['result']['parameters'] != item['parameters'] or task['result'].get('partitionParameters', {}) != item['partitionParameters']:
                         raise ValueError('命名参数必须与已完成成果参数一致')
             identifier = ('PARAM-' if path == 'parameters' else 'SCHEME-') + uuid.uuid4().hex[:16]
             self.db.save_item(table, identifier, value['name'], item)
@@ -305,17 +491,10 @@ class Handler(SimpleHTTPRequestHandler):
             from .maintenance import backup_workspace
             return self.send_json(backup_workspace(self.db))
         if path in ('restore-preview', 'restore'):
-            from .maintenance import restore_preview, restore_workspace
-            archive = within(self.db.workspace / 'incoming', value['filename'])
-            manifest = restore_preview(archive)
+            from .maintenance import restore_request_preview
             if path == 'restore-preview':
-                return self.send_json({'files': len(manifest['files']), 'bytes': sum(r['bytes'] for r in manifest['files']), 'token': digest(manifest)})
-            if self.server.jobs.active() or value.get('token') != digest(manifest):
-                raise ValueError('请先结束任务并重新核对备份预览')
-            destination = ROOT / 'restored-workspaces' / ('restored-' + uuid.uuid4().hex[:12])
-            result = restore_workspace(archive, destination)
-            write_json(ROOT / 'config/active-workspace.json', {'workspace': destination.relative_to(ROOT).as_posix()})
-            return self.send_json({**result, 'message': '恢复到独立目录完成；退出后重新启动将使用恢复工作区'})
+                return self.send_json(restore_request_preview(self.db,value))
+            return self.send_json(self.server.jobs.submit('restore-workspace',value),202)
         if path == 'shutdown':
             self.server.jobs.close()
             self.send_json({'status': 'stopping'})
@@ -331,33 +510,27 @@ class Handler(SimpleHTTPRequestHandler):
         url = urlsplit(self.path)
         if url.path != '/api/model/upload':
             raise FileNotFoundError('上传入口不存在')
+        guard_restore_writes(self.server.jobs,'upload',uploading=True)
         query = {k: v[-1] for k, v in parse_qs(url.query).items()}
         name = query.get('filename', '')
         if not name or '/' in name or '\\' in name or ':' in name or name.startswith('.'):
             raise ValueError('文件名不合法')
         extension = Path(name).suffix.lower()
-        if extension not in ('.xls', '.xlsx', '.nc', '.zip'):
+        exchange = query.get('format') == 'exchange'
+        if extension not in ('.xls', '.xlsx', '.csv', '.nc', '.zip') or (extension == '.csv' and not exchange):
             raise ValueError('支持Excel、NetCDF和工作区备份ZIP')
         length = int(self.headers.get('Content-Length', 0))
-        if not 0 < length <= 4 * 1024 ** 3:
-            raise ValueError('文件大小须为1字节至4GB')
-        if extension in ('.xls', '.xlsx'):
+        if not 0 < length <= upload_size_limit(extension):
+            raise ValueError('ZIP大小须为1字节至50GiB；其他文件须为1字节至4GiB')
+        if extension in ('.xls', '.xlsx') and not exchange:
             station = query.get('station')
             mapping = {'BLQ': 'blq', '115DB': '115daoban', 'DUJA': 'dj', 'SLC': 'slc'}
             if station not in mapping:
                 raise ValueError('上传Excel前请选择对应站点')
-            destination = ROOT / 'data/raw/observations/slc' / mapping[station] / 'imports' / uuid.uuid4().hex[:12] / name
+            destination = self.db.workspace / 'observation-incoming' / mapping[station] / 'imports' / uuid.uuid4().hex[:12] / name
         else:
             destination = self.db.workspace / 'incoming' / (uuid.uuid4().hex[:12] + '-' + name)
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        with destination.open('xb') as stream:
-            remaining = length
-            while remaining:
-                chunk = self.rfile.read(min(1024 * 1024, remaining))
-                if not chunk:
-                    raise ValueError('文件上传未完成')
-                stream.write(chunk)
-                remaining -= len(chunk)
+        receive_upload(self.rfile,destination,length,extension)
         return self.send_json({'filename': destination.name, 'bytes': length})
 
 

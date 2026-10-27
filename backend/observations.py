@@ -164,6 +164,9 @@ def import_observations(database=None, root=None, progress=None):
         for station, name, kind, lon, lat in STATIONS:
             conn.execute('INSERT OR IGNORE INTO stations VALUES(?,?,?,?,?,?)',
                          (station, name, kind, lon, lat, canonical({'datumVerified': False, 'projectId': 'selinco'})))
+    from .stations import sync_locations, sync_datums
+    sync_locations(db)
+    sync_datums(db)
     report = {'createdAt': now(), 'files': [], 'rainfallPolicy': 'interval-increment; absent=zero ONLY within registered observation coverage',
               'dailyStatisticalBoundary': 'source-labelled day; precipitation day-boundary must be checked before correction'}
     for index, info in enumerate(files):
@@ -215,14 +218,23 @@ def daily_series(db, station, variable, start=None, end=None):
     """Prefer source daily means; aggregate subdaily levels by elapsed-time coverage."""
     import numpy as np
     import pandas as pd
-    rows = db.observations(station, variable, start=start, end=end, limit=100000)
+    rows = db.observations(station, variable, start=start, end=end, limit=None)
     if not rows:
         return pd.Series(dtype=float)
     frame = pd.DataFrame(rows)
     frame['date'] = pd.to_datetime(frame.time).dt.floor('D')
     daily = frame[(frame.step == 'day') & (frame.quality.isin(['valid', 'qualified']))].dropna(subset=['value'])
     result = daily.groupby('date').value.last()
-    sub = frame[(frame.step != 'day') & frame.quality.eq('valid')].dropna(subset=['value']).copy()
+    # Standard exchange hourly records mark the END of their interval. Midnight
+    # belongs to the preceding day, and partial days cannot imply daily totals.
+    hourly_rows = frame[(frame.step == 'hour') & frame.quality.eq('valid')].copy()
+    if len(hourly_rows):
+        hourly_rows.index = pd.to_datetime(hourly_rows.time)
+        hourly_values = hourly_rows.value.sort_index().resample('D', closed='right', label='left')
+        hourly_daily = (hourly_values.sum(min_count=24) if variable in ('precipitation', 'evaporation')
+                        else hourly_values.mean().where(hourly_values.count() == 24))
+        result = result.combine_first(hourly_daily)
+    sub = frame[(~frame.step.isin(['day', 'hour'])) & frame.quality.eq('valid')].dropna(subset=['value']).copy()
     if len(sub):
         sub.index = pd.to_datetime(sub.time)
         sub = sub.sort_index()

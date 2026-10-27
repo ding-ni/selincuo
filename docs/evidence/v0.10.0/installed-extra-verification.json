@@ -1,0 +1,401 @@
+{
+  "at": "2026-10-27T03:44:38.269244+00:00",
+  "version": "0.10.0",
+  "appRoot": "F:\\色林错预警预报平台\\build\\installed-v0100-final2-remediation-verification-20261027\\application",
+  "workspace": "F:\\色林错预警预报平台\\build\\installed-v0100-final2-remediation-verification-20261027\\application\\restored-workspaces\\restored-6a5970d72b21",
+  "url": "http://127.0.0.1:8885",
+  "candidateTaskId": "JOB-e22bb794c6e0466f8027",
+  "executableSHA256": "355993549a01387a5748073c12aa3343eac432687682c671108a2982214508e2",
+  "sourceManifestSHA256": "c020ca45831abf79f262a9e57ad7ae27b78e3571a4fdfc7cf33f2880f7370a29",
+  "releaseManifestSHA256": "b9565d6e16b886ad4e2ed887dadc194450d80554582b9fa8dba27e66af2338a7",
+  "implementationSHA256": "a1e9db102c70c423b5dee31e22c5fc9eaa87087a27ac2337e9d0568d7b65d4d0",
+  "publishedObservationResource": {
+    "path": "F:\\色林错预警预报平台\\build\\installed-v0100-final2-remediation-verification-20261027\\application\\config\\operational\\published-observation-snapshots\\observations-6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e.json",
+    "fileSHA256": "e5ecc5901b00d90ed80370347bd71808bea0e6b3cba5a977673a364e5ec2f559",
+    "observationSHA256": "6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e",
+    "sourceCount": 33
+  },
+  "defaultReleaseBefore": {
+    "admissionPassed": false,
+    "evaluationId": null,
+    "id": "RELEASE-protected-rev2",
+    "previousReleaseId": null,
+    "publishedAt": "2026-10-26T13:10:37+00:00",
+    "resultId": "BUILTIN-historical-rev2-39192cc713c5",
+    "schemeRevisionId": "REV-da44d8bc7fc9e4d39c396333",
+    "sequence": 1,
+    "status": "protected-legacy"
+  },
+  "defaultReleaseAfter": {
+    "admissionPassed": false,
+    "evaluationId": null,
+    "id": "RELEASE-protected-rev2",
+    "previousReleaseId": null,
+    "publishedAt": "2026-10-26T13:10:37+00:00",
+    "resultId": "BUILTIN-historical-rev2-39192cc713c5",
+    "schemeRevisionId": "REV-da44d8bc7fc9e4d39c396333",
+    "sequence": 1,
+    "status": "protected-legacy"
+  },
+  "expectedReleasePlan": {
+    "action": "reuse",
+    "createsTask": false,
+    "inputId": "INPUT-3faa73605321b03d4a9f6bf7",
+    "reasons": [
+      "同一冻结发布成果已覆盖所选日期"
+    ],
+    "releaseId": "RELEASE-protected-rev2",
+    "requestedCoverage": {
+      "endExclusive": "2026-01-01T00:00:00",
+      "start": "2025-01-01T00:00:00"
+    },
+    "resultId": "BUILTIN-historical-rev2-39192cc713c5"
+  },
+  "runtimeCompute": {
+    "taskId": "JOB-c5e5c8892e7b441ca274",
+    "maxDailyDifference": {
+      "lakeLevel": 0.0,
+      "duja": 0.0,
+      "total": 0.0
+    },
+    "realImplementationSHA256": "4db59ef0c407328bf67479bf416a60795a55f4219906112432effbc3aa648c2c",
+    "observationSHA256": "6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e",
+    "frozenObservationResourceMatched": true,
+    "samples": [
+      {
+        "status": "running",
+        "progress": 0.0,
+        "message": "",
+        "heartbeatAt": "2026-10-27T03:44:21+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 0.0,
+        "message": "",
+        "heartbeatAt": "2026-10-27T03:44:21+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 0.0,
+        "message": "",
+        "heartbeatAt": "2026-10-27T03:44:21+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 0.0,
+        "message": "",
+        "heartbeatAt": "2026-10-27T03:44:21+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 0.0,
+        "message": "",
+        "heartbeatAt": "2026-10-27T03:44:21+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 0.0,
+        "message": "",
+        "heartbeatAt": "2026-10-27T03:44:21+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 0.0,
+        "message": "",
+        "heartbeatAt": "2026-10-27T03:44:23+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 0.0,
+        "message": "",
+        "heartbeatAt": "2026-10-27T03:44:23+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 0.0,
+        "message": "",
+        "heartbeatAt": "2026-10-27T03:44:23+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 0.0,
+        "message": "",
+        "heartbeatAt": "2026-10-27T03:44:23+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 0.0,
+        "message": "",
+        "heartbeatAt": "2026-10-27T03:44:23+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 0.0,
+        "message": "",
+        "heartbeatAt": "2026-10-27T03:44:25+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 0.0,
+        "message": "",
+        "heartbeatAt": "2026-10-27T03:44:25+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 0.0,
+        "message": "",
+        "heartbeatAt": "2026-10-27T03:44:25+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 6.838433757840715,
+        "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+        "heartbeatAt": "2026-10-27T03:44:26+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 6.838433757840715,
+        "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+        "heartbeatAt": "2026-10-27T03:44:26+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 6.838433757840715,
+        "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+        "heartbeatAt": "2026-10-27T03:44:26+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 6.838433757840715,
+        "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+        "heartbeatAt": "2026-10-27T03:44:27+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 6.838433757840715,
+        "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+        "heartbeatAt": "2026-10-27T03:44:27+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 6.838433757840715,
+        "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+        "heartbeatAt": "2026-10-27T03:44:27+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 6.838433757840715,
+        "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+        "heartbeatAt": "2026-10-27T03:44:27+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 6.838433757840715,
+        "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+        "heartbeatAt": "2026-10-27T03:44:27+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 6.838433757840715,
+        "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+        "heartbeatAt": "2026-10-27T03:44:29+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 6.838433757840715,
+        "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+        "heartbeatAt": "2026-10-27T03:44:29+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 6.838433757840715,
+        "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+        "heartbeatAt": "2026-10-27T03:44:29+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 6.838433757840715,
+        "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+        "heartbeatAt": "2026-10-27T03:44:29+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 6.838433757840715,
+        "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+        "heartbeatAt": "2026-10-27T03:44:29+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 6.838433757840715,
+        "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+        "heartbeatAt": "2026-10-27T03:44:29+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 6.838433757840715,
+        "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+        "heartbeatAt": "2026-10-27T03:44:31+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 6.838433757840715,
+        "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+        "heartbeatAt": "2026-10-27T03:44:31+00:00"
+      },
+      {
+        "status": "running",
+        "progress": 6.838433757840715,
+        "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+        "heartbeatAt": "2026-10-27T03:44:31+00:00"
+      },
+      {
+        "status": "succeeded",
+        "progress": 100.0,
+        "message": "完成",
+        "heartbeatAt": "2026-10-27T03:44:32+00:00"
+      }
+    ]
+  },
+  "evaluationTaskId": "JOB-396b7f59f07b41bf85b1",
+  "evaluationId": "EVAL-1f6acb5849b635e96d1b2cc6",
+  "samples": [
+    {
+      "status": "queued",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T03:44:33+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 5.0,
+      "message": "核验冻结成果与评价身份",
+      "heartbeatAt": "2026-10-27T03:44:33+00:00"
+    },
+    {
+      "status": "succeeded",
+      "progress": 100.0,
+      "message": "完成",
+      "heartbeatAt": "2026-10-27T03:44:33+00:00"
+    }
+  ],
+  "comparisonStatus": "not-comparable",
+  "admission": {
+    "failures": [
+      "必须采用冻结的共同日期连续评价协议",
+      "2024 lake.rmse 缺少合格共同样本或数值",
+      "2024 lake.bias 缺少合格共同样本或数值",
+      "2024 flow.nse 缺少合格共同样本或数值",
+      "2024 flow.pbias 缺少合格共同样本或数值",
+      "未达到湖位RMSE下降10%或杜加NSE提高0.03的实质改善",
+      "尚未通过：initialStateStable",
+      "尚未通过：waterBalanceValid",
+      "尚未通过：parameterBoundsValid",
+      "尚未通过：inputProvenanceValid",
+      "尚未通过：fullArtifactsVerified",
+      "尚未通过：strictContinuationVerified",
+      "尚未通过：commonDatesVerified",
+      "初态稳定性缺少数值证据"
+    ],
+    "passed": false,
+    "protocolId": "selinco-admission-v1"
+  },
+  "schemeRevisionId": "REV-d09e4ff27223748d5b5b3c8b",
+  "schemeRevisionFreeze": {
+    "inputBinding": {
+      "inputSHA256": "c7b8672e0300244010a9b8ea4f072b5117d2274e4b792164b44369fd69d5dc14",
+      "method": "legacy-input-sha"
+    },
+    "reasons": [],
+    "status": "frozen"
+  },
+  "initializationExclusions": {
+    "excludedCommonDates": [
+      "2025-04-09"
+    ],
+    "excludedCommonDatesSHA256": "97be0852f048b3860aa89b810f3812a09aad841abaeea856ed11cd54a14af4dc",
+    "lakeSamplesMetadataVerified": true,
+    "perResult": [
+      {
+        "dates": [
+          "2021-04-23",
+          "2022-03-15",
+          "2023-04-20",
+          "2023-11-28",
+          "2024-04-22",
+          "2025-04-09",
+          "2026-08-24"
+        ],
+        "datesSHA256": "67dab5f6af8e3e13ad39e7c808ef6940bc4a6b1bd09e0bcdcd49acfc39e1220b",
+        "lakeMode": "window",
+        "metadataVerified": true,
+        "reasons": [],
+        "resultId": "BUILTIN-historical-rev2-39192cc713c5",
+        "sources": [
+          "packaged-verified-observation.windows"
+        ]
+      },
+      {
+        "dates": [
+          "2021-04-23",
+          "2022-03-15",
+          "2023-04-20",
+          "2023-11-28",
+          "2024-04-22",
+          "2025-04-09",
+          "2026-08-24"
+        ],
+        "datesSHA256": "67dab5f6af8e3e13ad39e7c808ef6940bc4a6b1bd09e0bcdcd49acfc39e1220b",
+        "lakeMode": "window",
+        "metadataVerified": true,
+        "reasons": [],
+        "resultId": "JOB-e22bb794c6e0466f8027",
+        "sources": [
+          "result.diagnostics.lakeWindows",
+          "request._observations.windows"
+        ]
+      }
+    ],
+    "rule": "exclude-union-of-frozen-lake-initialization-calendar-days-v1"
+  },
+  "artifacts": [
+    {
+      "name": "comparison-report.json",
+      "bytes": 14706,
+      "sha256": "9adf4197dca4aedc78808c60d583f18d078f1db793aa673cc1230911d4a04df8"
+    },
+    {
+      "name": "flow-common-pairs.csv",
+      "bytes": 9485,
+      "sha256": "06786d2824ecfc8b5b9fd7840dc399f43811a9f44c4b00cc0fc5a481cdd725ee"
+    },
+    {
+      "name": "lake-common-pairs.csv",
+      "bytes": 13239,
+      "sha256": "c01c4006b49ca1fc605951b1f248e4638a5a3cd8da95ab77b5626f64ad1d5ea1"
+    }
+  ],
+  "forgedRequest": {
+    "status": 400,
+    "body": {
+      "error": "评价任务只接受协议、成果身份和任务名称；禁止提交分数、checks或诊断结论"
+    }
+  },
+  "evaluationCountBefore": 0,
+  "evaluationCountAfter": 1,
+  "checks": [
+    "actual-installed-exe-version",
+    "manifest-source-identity",
+    "frozen-evaluation-source-path",
+    "server-side-evaluation",
+    "idempotency-and-archive-reuse",
+    "not-comparable-and-unknown-explicit",
+    "artifact-download-sha",
+    "compact-task-identity",
+    "expected-release-plan-reuse",
+    "forged-scores-rejected",
+    "default-unchanged"
+  ],
+  "scope": "Installed software verification using a genuine successful base simulation; no synthetic candidate, scientific publication, or default upgrade.",
+  "scientificAdmissionPassed": false,
+  "passed": true
+}

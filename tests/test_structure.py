@@ -72,7 +72,8 @@ class StructureTests(unittest.TestCase):
 
     def test_month_end_hour_and_daily_mean_window_residual(self):
         times=pd.date_range('2024-01-31T01:00',periods=48,freq='h')
-        source={'precipitation':np.ones((48,1)),'lakeRain':np.full(48,1.),'lakeEvaporation':np.full(48,.2)}
+        source={'precipitation':np.ones((48,1)),'lakeRain':np.full(48,1.),'lakeEvaporation':np.full(48,.2),
+                'temperature':np.full((48,1),10.),'evaporation':np.zeros((48,1)),'deltaElevation':np.zeros(1)}
         diag=np.zeros((48,1,9));diag[:,:,0]=1
         states=np.zeros((48,1,8));initial=np.zeros((1,8))
         q={'total':np.full(48,1000/3600)}
@@ -80,7 +81,7 @@ class StructureTests(unittest.TestCase):
         # One day of net inflow 1000 + lake P 1000 - E 200 = 1800 m3/h.
         levels=np.r_[np.full(24,100.),np.full(24,100.0432)]
         window={'id':'w','start':times[0],'end':times[-1],'method':'unit-test'}
-        out=diagnose(times,source,np.arange(48),diag,states,initial,q,{'p':np.zeros(48)},np.full(48,1800),levels,np.arange(48)*1800,[window],{'lakeCoefficient':1},spatial,'source-separated',{'level':{'2024-01-31':100.,'2024-02-01':100.0432}})
+        out=diagnose(times,source,np.arange(48),diag,states,initial,q,{'p':np.zeros(48)},np.full(48,1800),levels,np.arange(48)*1800,[window],parameters({'lakeCoefficient':1}),spatial,'source-separated',{'level':{'2024-01-31':100.,'2024-02-01':100.0432}})
         self.assertEqual([(m['month'],m['hours']) for m in out['monthly']],[('2024-01',24),('2024-02',24)])
         self.assertLess(out['catchmentBalanceMaxErrorM3'],1e-10)
         self.assertAlmostEqual(out['lakeWindows'][0]['residual']['unexplainedNetInputM3'],0.,places=6)

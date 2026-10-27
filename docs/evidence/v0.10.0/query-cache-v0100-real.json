@@ -1,0 +1,411 @@
+{
+  "scope": "read-only real 1597-unit result queries, no numerical model execution",
+  "conditions": [
+    "Fresh Python process for this script; next cache was explicitly empty before first metadata.",
+    "Operating-system cache not cleared or measured; next sequence runs before legacy sequence, so timings are not a controlled cold comparison.",
+    "The first series follows metadata/frame and shares their source/time cache; it is not a cold service first query.",
+    "RSS samples every 50ms; sampled maximum is not a continuous peak or proof of per-query memory bound."
+  ],
+  "sqliteMode": "ro; PRAGMA query_only=ON",
+  "zarrMode": "r",
+  "identifier": "JOB-23ce217f8f464765b150",
+  "query": {
+    "resultId": "JOB-23ce217f8f464765b150",
+    "variable": "swe",
+    "unit": "0",
+    "start": "2024-01-01T00:00:00",
+    "end": "2026-01-01T00:00:00",
+    "step": "day"
+  },
+  "frameQuery": {
+    "resultId": "JOB-23ce217f8f464765b150",
+    "variable": "swe",
+    "time": "2025-12-31T00:00:00",
+    "step": "day"
+  },
+  "sourceSHA256": {
+    "v0100": "3dd608863ea3083a49a9982be1d94adc28a96f154f99f5ccf8ae9b9ee5348461",
+    "v090": "4abc1d5eb3cc6d1b31170aa8dbcfba2d8fd750bec01ddaf058bcde5ae4476ecc"
+  },
+  "records": [
+    {
+      "module": "v0100-cached",
+      "cycle": 1,
+      "step": "metadata",
+      "seconds": 6.910974900000001,
+      "rssBytesAfter": 106246144,
+      "applicationCache": "miss"
+    },
+    {
+      "module": "v0100-cached",
+      "cycle": 1,
+      "step": "frame",
+      "seconds": 1.1254716999999985,
+      "rssBytesAfter": 109748224,
+      "applicationCache": "shared-source-hit"
+    },
+    {
+      "module": "v0100-cached",
+      "cycle": 1,
+      "step": "series",
+      "seconds": 5.463516600000002,
+      "rssBytesAfter": 111804416,
+      "applicationCache": "shared-source-hit"
+    },
+    {
+      "module": "v0100-cached",
+      "cycle": 2,
+      "step": "metadata",
+      "seconds": 0.37615279999999984,
+      "rssBytesAfter": 113815552,
+      "applicationCache": "shared-source-hit"
+    },
+    {
+      "module": "v0100-cached",
+      "cycle": 2,
+      "step": "frame",
+      "seconds": 0.36316249999999783,
+      "rssBytesAfter": 112599040,
+      "applicationCache": "shared-source-hit"
+    },
+    {
+      "module": "v0100-cached",
+      "cycle": 2,
+      "step": "series",
+      "seconds": 0.5431714000000021,
+      "rssBytesAfter": 112873472,
+      "applicationCache": "shared-source-hit"
+    },
+    {
+      "module": "v0100-cached",
+      "cycle": 3,
+      "step": "metadata",
+      "seconds": 0.33714469999999963,
+      "rssBytesAfter": 114544640,
+      "applicationCache": "shared-source-hit"
+    },
+    {
+      "module": "v0100-cached",
+      "cycle": 3,
+      "step": "frame",
+      "seconds": 0.3787742999999999,
+      "rssBytesAfter": 113319936,
+      "applicationCache": "shared-source-hit"
+    },
+    {
+      "module": "v0100-cached",
+      "cycle": 3,
+      "step": "series",
+      "seconds": 0.5517986000000015,
+      "rssBytesAfter": 113078272,
+      "applicationCache": "shared-source-hit"
+    },
+    {
+      "module": "v0100-cached",
+      "cycle": 4,
+      "step": "metadata",
+      "seconds": 0.3438562999999988,
+      "rssBytesAfter": 115785728,
+      "applicationCache": "shared-source-hit"
+    },
+    {
+      "module": "v0100-cached",
+      "cycle": 4,
+      "step": "frame",
+      "seconds": 0.3416866000000027,
+      "rssBytesAfter": 113840128,
+      "applicationCache": "shared-source-hit"
+    },
+    {
+      "module": "v0100-cached",
+      "cycle": 4,
+      "step": "series",
+      "seconds": 0.5310260000000007,
+      "rssBytesAfter": 114036736,
+      "applicationCache": "shared-source-hit"
+    },
+    {
+      "module": "v0100-cached",
+      "cycle": 5,
+      "step": "metadata",
+      "seconds": 0.3475004999999989,
+      "rssBytesAfter": 115212288,
+      "applicationCache": "shared-source-hit"
+    },
+    {
+      "module": "v0100-cached",
+      "cycle": 5,
+      "step": "frame",
+      "seconds": 0.32129440000000287,
+      "rssBytesAfter": 114155520,
+      "applicationCache": "shared-source-hit"
+    },
+    {
+      "module": "v0100-cached",
+      "cycle": 5,
+      "step": "series",
+      "seconds": 0.4891904999999994,
+      "rssBytesAfter": 114192384,
+      "applicationCache": "shared-source-hit"
+    },
+    {
+      "module": "v0100-cached",
+      "cycle": 6,
+      "step": "metadata",
+      "seconds": 0.28002229999999884,
+      "rssBytesAfter": 116117504,
+      "applicationCache": "shared-source-hit"
+    },
+    {
+      "module": "v0100-cached",
+      "cycle": 6,
+      "step": "frame",
+      "seconds": 0.3304216999999987,
+      "rssBytesAfter": 114327552,
+      "applicationCache": "shared-source-hit"
+    },
+    {
+      "module": "v0100-cached",
+      "cycle": 6,
+      "step": "series",
+      "seconds": 0.5358455999999983,
+      "rssBytesAfter": 114180096,
+      "applicationCache": "shared-source-hit"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 1,
+      "step": "metadata",
+      "seconds": 15.740977099999999,
+      "rssBytesAfter": 118321152,
+      "applicationCache": "no-shared-source-time-cache"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 1,
+      "step": "frame",
+      "seconds": 0.38964539999999914,
+      "rssBytesAfter": 119222272,
+      "applicationCache": "no-shared-source-time-cache"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 1,
+      "step": "series",
+      "seconds": 0.5851796999999976,
+      "rssBytesAfter": 121569280,
+      "applicationCache": "no-shared-source-time-cache"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 2,
+      "step": "metadata",
+      "seconds": 0.5807021000000034,
+      "rssBytesAfter": 123813888,
+      "applicationCache": "no-shared-source-time-cache"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 2,
+      "step": "frame",
+      "seconds": 0.3993284000000017,
+      "rssBytesAfter": 124571648,
+      "applicationCache": "no-shared-source-time-cache"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 2,
+      "step": "series",
+      "seconds": 0.6413803999999956,
+      "rssBytesAfter": 123748352,
+      "applicationCache": "no-shared-source-time-cache"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 3,
+      "step": "metadata",
+      "seconds": 0.6647092999999984,
+      "rssBytesAfter": 124772352,
+      "applicationCache": "no-shared-source-time-cache"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 3,
+      "step": "frame",
+      "seconds": 0.3999026999999984,
+      "rssBytesAfter": 125116416,
+      "applicationCache": "no-shared-source-time-cache"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 3,
+      "step": "series",
+      "seconds": 0.49939580000000205,
+      "rssBytesAfter": 124227584,
+      "applicationCache": "no-shared-source-time-cache"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 4,
+      "step": "metadata",
+      "seconds": 0.5245796999999968,
+      "rssBytesAfter": 125583360,
+      "applicationCache": "no-shared-source-time-cache"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 4,
+      "step": "frame",
+      "seconds": 0.409928800000003,
+      "rssBytesAfter": 125849600,
+      "applicationCache": "no-shared-source-time-cache"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 4,
+      "step": "series",
+      "seconds": 0.5969724999999997,
+      "rssBytesAfter": 124809216,
+      "applicationCache": "no-shared-source-time-cache"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 5,
+      "step": "metadata",
+      "seconds": 0.5972596999999951,
+      "rssBytesAfter": 125358080,
+      "applicationCache": "no-shared-source-time-cache"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 5,
+      "step": "frame",
+      "seconds": 0.3690737000000013,
+      "rssBytesAfter": 125964288,
+      "applicationCache": "no-shared-source-time-cache"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 5,
+      "step": "series",
+      "seconds": 0.5421288000000004,
+      "rssBytesAfter": 125059072,
+      "applicationCache": "no-shared-source-time-cache"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 6,
+      "step": "metadata",
+      "seconds": 0.5277861000000001,
+      "rssBytesAfter": 126111744,
+      "applicationCache": "no-shared-source-time-cache"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 6,
+      "step": "frame",
+      "seconds": 0.3731619000000066,
+      "rssBytesAfter": 126177280,
+      "applicationCache": "no-shared-source-time-cache"
+    },
+    {
+      "module": "v090-reference",
+      "cycle": 6,
+      "step": "series",
+      "seconds": 0.6403965000000014,
+      "rssBytesAfter": 124583936,
+      "applicationCache": "no-shared-source-time-cache"
+    }
+  ],
+  "summary": {
+    "v0100-cached": {
+      "metadata": {
+        "firstSeconds": 6.910974900000001,
+        "subsequentCount": 5,
+        "subsequentMedianSeconds": 0.3438562999999988,
+        "subsequentP95NearestRankSeconds": 0.37615279999999984,
+        "maximumSeconds": 6.910974900000001
+      },
+      "frame": {
+        "firstSeconds": 1.1254716999999985,
+        "subsequentCount": 5,
+        "subsequentMedianSeconds": 0.3416866000000027,
+        "subsequentP95NearestRankSeconds": 0.3787742999999999,
+        "maximumSeconds": 1.1254716999999985
+      },
+      "series": {
+        "firstSeconds": 5.463516600000002,
+        "subsequentCount": 5,
+        "subsequentMedianSeconds": 0.5358455999999983,
+        "subsequentP95NearestRankSeconds": 0.5517986000000015,
+        "maximumSeconds": 5.463516600000002
+      }
+    },
+    "v090-reference": {
+      "metadata": {
+        "firstSeconds": 15.740977099999999,
+        "subsequentCount": 5,
+        "subsequentMedianSeconds": 0.5807021000000034,
+        "subsequentP95NearestRankSeconds": 0.6647092999999984,
+        "maximumSeconds": 15.740977099999999
+      },
+      "frame": {
+        "firstSeconds": 0.38964539999999914,
+        "subsequentCount": 5,
+        "subsequentMedianSeconds": 0.3993284000000017,
+        "subsequentP95NearestRankSeconds": 0.409928800000003,
+        "maximumSeconds": 0.409928800000003
+      },
+      "series": {
+        "firstSeconds": 0.5851796999999976,
+        "subsequentCount": 5,
+        "subsequentMedianSeconds": 0.5969724999999997,
+        "subsequentP95NearestRankSeconds": 0.6413803999999956,
+        "maximumSeconds": 0.6413803999999956
+      }
+    }
+  },
+  "exactEquality": {
+    "metadata": true,
+    "frame": true,
+    "series": true
+  },
+  "seriesRows": 731,
+  "frameValues": 1597,
+  "cacheInfo": {
+    "entries": 1,
+    "capacity": 8,
+    "timeAxisBytes": 266696,
+    "zarrHandles": 1,
+    "legacyArrayEntries": 0,
+    "legacyArrayBytes": 0
+  },
+  "rssSampleCount": 698,
+  "rssSampledMaximumBytes": 161755136,
+  "frozenFilesUnchanged": true,
+  "frozenFiles": {
+    "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace\\tasks\\JOB-23ce217f8f464765b150\\request.json": {
+      "bytes": 78405,
+      "mtimeNs": 1792996384406735800,
+      "sha256": "8702651b490fb4a20bdbc37b9166ab798e851f0ee8c9b920b544e92efa33c8cf"
+    },
+    "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace\\tasks\\JOB-23ce217f8f464765b150\\result.json": {
+      "bytes": 3427471,
+      "mtimeNs": 1792997201052515500,
+      "sha256": "0371778063a3bf99b713d7b0c28c5429b41983e9afcde9b5762f7a68fdab5169"
+    },
+    "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace\\tasks\\JOB-23ce217f8f464765b150\\checkpoint.json": {
+      "bytes": 390747,
+      "mtimeNs": 1792997199499176900,
+      "sha256": "1b0c6810488b723231513ebebe90b53beb72b8e22aca501438defd8a80205d81"
+    },
+    "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace\\tasks\\JOB-23ce217f8f464765b150\\hourly-manifest.json": {
+      "bytes": 1127999,
+      "mtimeNs": 1792997198883048300,
+      "sha256": "1768c6a60ba7ea0bee5fb1ab4677f0e9aaafe11145d2fc4cf749ee9c004d96b2"
+    }
+  },
+  "passedValueEquality": true,
+  "coldStartTargetCertified": false,
+  "queryMemoryLimitCertified": false
+}

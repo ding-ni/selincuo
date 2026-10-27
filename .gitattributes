@@ -1,0 +1,3 @@
+# Model identities and frozen manifests bind exact file bytes.
+# Keep original LF/CRLF bytes on every platform; Git still detects text diffs.
+* -text

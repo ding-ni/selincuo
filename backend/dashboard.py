@@ -11,7 +11,7 @@ import pandas as pd
 
 from .common import ROOT, read_json
 from .observations import daily_series
-from .forcing import load_input
+from .forcing import load_input, lake_precipitation_factor
 
 _lock = threading.RLock()
 _observations = {}
@@ -31,13 +31,15 @@ def monitoring(db):
             station['metadata'] = json.loads(station['metadata'])
             variable = {'lake':'level','river':'flow','rain':'precipitation'}.get(station['kind'])
             station['variable'] = variable
-            series = daily_series(db, station['id'], variable).dropna() if variable else pd.Series(dtype=float)
-            station['daily'] = [{'date':t.strftime('%Y-%m-%d'),'value':float(v)} for t,v in series.items()]
-            station['latest'] = station['daily'][-1] if len(series) else None
+            from .observation_profiles import series as query_series
+            rows = query_series(db, station['id'], variable,profile='quality-v2')['rows'] if variable else []
+            station['daily'] = [{'date':r['time'][:10],'value':r['value']} for r in rows]
+            valid = [r for r in station['daily'] if r['value'] is not None]
+            station['latest'] = valid[-1] if valid else None
             station['located'] = station['lon'] is not None and station['lat'] is not None
         result = {'stations':stations,'source':'SQLite原始观测整编日值','timeZone':'Asia/Shanghai',
                   'liveConnected':False,'forecastConnected':False,'warningThresholdConfigured':False,
-                  'note':'主站与四岸分别管理；四岸基准未统一，未登记坐标的岸站仅列表展示。'}
+                  'note':'主站为工作基准；原统一零点确认已撤回，四岸零点待核。坐标为GCJ-02近似转换，日值采用覆盖质量规则。'}
         _observations.clear()
         _observations[key] = result
         return result
@@ -64,17 +66,20 @@ def aggregate_frame(times, array, day, operation='sum'):
     return (values.mean(axis=0) if operation=='mean' else values.sum(axis=0)),24
 
 
-def map_frame(db, input_id, day, variable='precipitation'):
+def map_frame(db, input_id, day, variable='precipitation',spatial_version=None):
     if variable not in ('precipitation','temperature','evaporation'):
         raise ValueError('地图变量须为降水、气温或蒸发能力')
     parse_day(day)
-    spatial = read_json(ROOT/'data/derived/spatial/manifest.json')
+    from .grid_spatial import load
+    native=read_json(db.workspace/'inputs/products'/input_id/'manifest.json')
+    source_spatial=load(native['spatialVersion'])
+    spatial=load(spatial_version) if spatial_version else source_spatial
     if not spatial:
         raise ValueError('空间资料未建立')
     key=(str(db.workspace),input_id,spatial['version'])
     with _lock:
         if key not in _forcing:
-            manifest,arrays=load_input(db,input_id,spatial)
+            manifest,arrays=load_input(db,input_id,source_spatial)
             _forcing.clear()
             _forcing[key]=(manifest,arrays)
         manifest,arrays=_forcing[key]
@@ -84,31 +89,53 @@ def map_frame(db, input_id, day, variable='precipitation'):
           'unit':'℃' if variable=='temperature' else 'mm/d','complete':values is not None,
           'note':'气温为格网基准，未作模型单元高程修正；蒸发为公开蒸发能力，非实测湖面蒸发。'}
     if values is None:
-        return {**base,'cells':[],'domainMean':None,'lakeMean':None,'message':'该日缺少完整24小时，地图不填零、不沿用其他日期。'}
+        return {**base,'cells':[],'domainMean':None,'lakeMean':None,'message':'暂无资料','reasonCode':'INCOMPLETE_DAY'}
     areas=np.array([u['areaKm2'] for u in spatial['units']])
-    weights=np.array(spatial['weights'])
+    if spatial.get('schemaVersion')==2:
+        weights=np.zeros((len(areas),len(spatial['grids'])))
+        weights[np.arange(len(areas)),[u['gridIndex'] for u in spatial['units']]]=1.
+    else:weights=np.array(spatial['weights'])
     lake_weights=np.array(spatial['lakeWeights'])
     domain_weights=(areas@weights+spatial['lakeAreaKm2']*lake_weights)/(areas.sum()+spatial['lakeAreaKm2'])
+    lake_raw=float(lake_weights@values)
+    lake_factor=lake_precipitation_factor(manifest) if variable=='precipitation' else 1.
+    lake_used=lake_raw*lake_factor
+    domain_used=float(domain_weights@values)+(lake_used-lake_raw)*spatial['lakeAreaKm2']/(areas.sum()+spatial['lakeAreaKm2'])
     return {**base,'cells':[{**g,'value':float(v)} for g,v in zip(spatial['grids'],values)],
-            'domainMean':float(domain_weights@values),'lakeMean':float(lake_weights@values),'message':''}
+            'domainMean':domain_used,'lakeMean':lake_used,'lakeRawMean':lake_raw,
+            'lakePrecipitationFactor':lake_factor,'cellsRepresentRawGrid':True,'message':''}
 
 
 def snow_frame(db, task_id, day):
     start=parse_day(day)
-    task=db.task(task_id)
+    published=task_id.startswith('BUILTIN-')
+    if published:
+        from .published_results import detail, result_file
+        task=detail(task_id)
+    else:
+        task=db.task(task_id)
     if task['status']!='succeeded' or not task.get('result',{}).get('units') or task.get('trashed'):
         raise ValueError('请选择有效的历史计算成果')
     result=task['result']
+    if result.get('storageFormat')=='zarr-v2':
+        from .result_query import read
+        target=start+pd.Timedelta(days=1)
+        if target>pd.Timestamp(result['end']):return {'day':day,'complete':False,'units':[],'sweMean':None,'message':'暂无日末状态'}
+        frame=read(db,{'resultId':task_id,'variable':'swe','time':target.isoformat()},frame=True)
+        units=[{**u,'value':v['value']} for u,v in zip(result['units'],frame['values'])]
+        areas=np.array([u['areaKm2'] for u in units]);values=np.array([u['value'] for u in units])
+        return {'day':day,'complete':True,'units':units,'sweMean':float(areas@values/areas.sum()),'validAt':target.isoformat(),'unit':'mm','spatialVersion':result['spatialVersion']}
     spatial=read_json(ROOT/'data/derived/spatial/manifest.json')
     if result['spatialVersion']!=spatial['version']:
         raise ValueError('成果空间版本不同，不能叠加当前地图')
-    with np.load(db.workspace/'tasks'/task_id/'hourly.npz',allow_pickle=False) as arrays:
+    data_path=result_file(task_id,'daily-snow.npz') if published else db.workspace/'tasks'/task_id/'hourly.npz'
+    with np.load(data_path,allow_pickle=False) as arrays:
         times=pd.to_datetime(arrays['time'])
         target=start+pd.Timedelta(days=1)
         ids=np.flatnonzero(times==target)
         if not len(ids):
             return {'day':day,'complete':False,'units':[],'sweMean':None,'message':'该成果缺少日末状态，不沿用其他时刻。'}
-        values=arrays['unitStates'][ids[0],:,0]
+        values=arrays['swe'][ids[0]] if published else arrays['unitStates'][ids[0],:,0]
     units=[{**u,'value':float(v)} for u,v in zip(result['units'],values)]
     areas=np.array([u['areaKm2'] for u in units])
     return {'day':day,'complete':True,'units':units,'sweMean':float(areas@values/areas.sum()),

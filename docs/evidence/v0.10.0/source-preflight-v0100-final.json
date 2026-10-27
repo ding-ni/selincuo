@@ -1,0 +1,335 @@
+{
+  "at": "2026-10-27T02:38:47+00:00",
+  "version": "0.10.0",
+  "scope": "Genuine source-code preflight in a fresh seed copy; not installed-EXE acceptance.",
+  "seed": "F:\\色林错预警预报平台\\seed\\remediation-v0100-final-20261027",
+  "workspace": "F:\\新安江水文模型\\build\\selinco-remediation-20261026\\new-source-runtime-preflight",
+  "taskId": "JOB-2c4e0749e2d2497a8eda",
+  "url": "http://127.0.0.1:58015",
+  "sourceCount": 33,
+  "observationSHA256": "6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e",
+  "modelImplementation": "aa8c59326881fd76d34f484f6bbd70b95a3b608c881bcc47d7343076cf4c20f4",
+  "dailyRows": 365,
+  "maxDailyDifference": {
+    "lakeLevel": 0.0,
+    "duja": 0.0,
+    "total": 0.0
+  },
+  "defaultReleaseBefore": {
+    "admissionPassed": false,
+    "evaluationId": null,
+    "id": "RELEASE-protected-rev2",
+    "previousReleaseId": null,
+    "publishedAt": "2026-10-26T13:10:37+00:00",
+    "resultId": "BUILTIN-historical-rev2-39192cc713c5",
+    "schemeRevisionId": "REV-da44d8bc7fc9e4d39c396333",
+    "sequence": 1,
+    "status": "protected-legacy"
+  },
+  "defaultReleaseAfter": {
+    "admissionPassed": false,
+    "evaluationId": null,
+    "id": "RELEASE-protected-rev2",
+    "previousReleaseId": null,
+    "publishedAt": "2026-10-26T13:10:37+00:00",
+    "resultId": "BUILTIN-historical-rev2-39192cc713c5",
+    "schemeRevisionId": "REV-da44d8bc7fc9e4d39c396333",
+    "sequence": 1,
+    "status": "protected-legacy"
+  },
+  "runtimeSourceSHA256": "474d851b4548b30d235ea56aa0b8860b9609ca4b41587875792b3fa970effa9e",
+  "plan": {
+    "action": "reuse",
+    "createsTask": false,
+    "inputId": "INPUT-3faa73605321b03d4a9f6bf7",
+    "reasons": [
+      "同一冻结发布成果已覆盖所选日期"
+    ],
+    "releaseId": "RELEASE-protected-rev2",
+    "requestedCoverage": {
+      "endExclusive": "2026-01-01T00:00:00",
+      "start": "2025-01-01T00:00:00"
+    },
+    "resultId": "BUILTIN-historical-rev2-39192cc713c5"
+  },
+  "samples": [
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:36+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:36+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:36+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:36+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:36+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:36+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:36+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:36+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:36+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:38+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:38+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:38+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:38+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:38+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:38+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:38+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:38+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:38+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "heartbeatAt": "2026-10-27T02:38:40+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:41+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:41+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:41+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:41+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:41+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:41+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:42+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:42+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:42+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:42+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:42+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:42+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:42+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:42+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:42+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:44+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:44+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:44+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:44+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:44+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:44+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:44+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:44+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:44+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:46+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 6.838433757840715,
+      "message": "逐小时冰雪产汇流 2023-01-31 23:00:00",
+      "heartbeatAt": "2026-10-27T02:38:46+00:00"
+    },
+    {
+      "status": "succeeded",
+      "progress": 100.0,
+      "message": "完成",
+      "heartbeatAt": "2026-10-27T02:38:47+00:00"
+    }
+  ],
+  "scientificUpgradePassed": false,
+  "passed": true
+}

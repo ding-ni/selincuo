@@ -1,0 +1,173 @@
+{
+  "version": "0.10.0",
+  "passed": true,
+  "defaultBefore": {
+    "admissionPassed": false,
+    "evaluationId": null,
+    "id": "RELEASE-protected-rev2",
+    "previousReleaseId": null,
+    "publishedAt": "2026-10-26T13:10:37+00:00",
+    "resultId": "BUILTIN-historical-rev2-39192cc713c5",
+    "schemeRevisionId": "REV-da44d8bc7fc9e4d39c396333",
+    "sequence": 1,
+    "status": "protected-legacy"
+  },
+  "defaultAfter": {
+    "admissionPassed": false,
+    "evaluationId": null,
+    "id": "RELEASE-protected-rev2",
+    "previousReleaseId": null,
+    "publishedAt": "2026-10-26T13:10:37+00:00",
+    "resultId": "BUILTIN-historical-rev2-39192cc713c5",
+    "schemeRevisionId": "REV-da44d8bc7fc9e4d39c396333",
+    "sequence": 1,
+    "status": "protected-legacy"
+  },
+  "taskId": "JOB-379d5fa89c1a49998dda",
+  "evaluationId": "EVAL-2a6d4761513d939a4e330b50",
+  "comparisonStatus": "not-comparable",
+  "comparisonReasons": [
+    "缺少两套已核验固定锚点连续成果；窗口初始化与连续评价不可直接排序",
+    "观测质量规则缺失或不一致",
+    "冻结观测值在共同日期存在冲突，不具备公平比较条件"
+  ],
+  "schemeRevisionId": "REV-372a1bd23a0eace06032ad20",
+  "inputBinding": {
+    "checkpointSHA256": "31e913cc5617e5646a433aae300869514e08c33a335824d660cc0d714067bf95",
+    "doesNotCertifyStrictContinuation": true,
+    "forcingPrefixSHA256": "66a52522c36b7a8a78c524cf4bf84c66c15b330ef33bf669c514ab4d598a1b73",
+    "inputSHA256": "d04dd72988a33e869fe0b950465d6469b2cc6a2386762b6ff591ce1ce66c82c1",
+    "method": "grid-checkpoint-input-prefix",
+    "verifiedThrough": "2026-10-21T00:00:00"
+  },
+  "admission": {
+    "failures": [
+      "必须采用冻结的共同日期连续评价协议",
+      "2024 lake.rmse 退步",
+      "2024 lake.bias 退步",
+      "2024 flow.nse 退步",
+      "2024 flow.pbias 退步",
+      "2025 lake.rmse 退步",
+      "2025 lake.bias 退步",
+      "2025 flow.nse 退步",
+      "2025 flow.pbias 退步",
+      "未达到湖位RMSE下降10%或杜加NSE提高0.03的实质改善",
+      "尚未通过：initialStateStable",
+      "尚未通过：waterBalanceValid",
+      "尚未通过：parameterBoundsValid",
+      "尚未通过：inputProvenanceValid",
+      "尚未通过：fullArtifactsVerified",
+      "尚未通过：strictContinuationVerified",
+      "尚未通过：commonDatesVerified",
+      "初态稳定性缺少数值证据"
+    ],
+    "passed": false,
+    "protocolId": "selinco-admission-v1"
+  },
+  "initializationExclusions": {
+    "excludedCommonDates": [
+      "2024-04-22",
+      "2025-04-09"
+    ],
+    "excludedCommonDatesSHA256": "fd8c157bad7d2e44fd7e42effac19ad7065626483e5cf9c4e972667a0cdf3cc3",
+    "lakeSamplesMetadataVerified": true,
+    "perResult": [
+      {
+        "dates": [
+          "2021-04-23",
+          "2022-03-15",
+          "2023-04-20",
+          "2023-11-28",
+          "2024-04-22",
+          "2025-04-09",
+          "2026-08-24"
+        ],
+        "datesSHA256": "67dab5f6af8e3e13ad39e7c808ef6940bc4a6b1bd09e0bcdcd49acfc39e1220b",
+        "lakeMode": "window",
+        "metadataVerified": true,
+        "reasons": [],
+        "resultId": "BUILTIN-historical-rev2-39192cc713c5",
+        "sources": [
+          "packaged-verified-observation.windows"
+        ]
+      },
+      {
+        "dates": [
+          "2023-04-20"
+        ],
+        "datesSHA256": "f0f50c287fc90c1394b424989749c6b6ea2dc822d1610297a4e188173f859e2d",
+        "lakeMode": "continuous",
+        "metadataVerified": true,
+        "reasons": [],
+        "resultId": "JOB-23ce217f8f464765b150",
+        "sources": [
+          "continuous-initialization.time"
+        ]
+      }
+    ],
+    "rule": "exclude-union-of-frozen-lake-initialization-calendar-days-v1"
+  },
+  "samples": [
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "updated_at": "2026-10-27T03:28:14+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "updated_at": "2026-10-27T03:28:14+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "updated_at": "2026-10-27T03:28:16+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "updated_at": "2026-10-27T03:28:16+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 0.0,
+      "message": "",
+      "updated_at": "2026-10-27T03:28:18+00:00"
+    },
+    {
+      "status": "running",
+      "progress": 5.0,
+      "message": "核验冻结成果与评价身份",
+      "updated_at": "2026-10-27T03:28:20+00:00"
+    },
+    {
+      "status": "succeeded",
+      "progress": 100.0,
+      "message": "完成",
+      "updated_at": "2026-10-27T03:28:20+00:00"
+    }
+  ],
+  "downloads": [
+    {
+      "name": "comparison-report.json",
+      "bytes": 22410,
+      "sha256": "a8e709d2ee6839eba1967fd65ffabeec5b2949740e81b880dd7fdb198d193194"
+    },
+    {
+      "name": "flow-common-pairs.csv",
+      "bytes": 19968,
+      "sha256": "a769e59988cb78dc272f51580af3bd47b99b2e55fcf5d254a3a93d4774ee9d9f"
+    },
+    {
+      "name": "lake-common-pairs.csv",
+      "bytes": 25108,
+      "sha256": "60400f3f846760967f5116d4fb1a02952831043d664136902df92e7a8eac0d37"
+    }
+  ],
+  "seconds": 11.5,
+  "scope": "Actual business workspace evaluation task; archived unfavourable/mixed-mode evidence, no model run or publication."
+}

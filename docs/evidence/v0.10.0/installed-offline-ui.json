@@ -1,0 +1,34 @@
+{
+  "version": "0.10.0",
+  "scope": "Installed executable with developer Python removed from PATH; browser allows localhost only. Local-machine acceptance.",
+  "errors": [],
+  "externalRequestsBlocked": [],
+  "httpErrors": [],
+  "pages": [
+    "监测资料",
+    "历史模拟",
+    "成果中心",
+    "资料与更新",
+    "运行与维护",
+    "模型方案与率定",
+    "状态与空间诊断"
+  ],
+  "health": {
+    "instanceId": "568c0daeeb3b4ccab215819c7eb96ab0",
+    "projectId": "selinco",
+    "version": "0.10.0",
+    "workspace": "F:\\色林错预警预报平台\\build\\installed-v0100-final2-remediation-verification-20261027\\application\\restored-workspaces\\restored-6a5970d72b21"
+  },
+  "defaultRelease": {
+    "admissionPassed": false,
+    "evaluationId": null,
+    "id": "RELEASE-protected-rev2",
+    "previousReleaseId": null,
+    "publishedAt": "2026-10-26T13:10:37+00:00",
+    "resultId": "BUILTIN-historical-rev2-39192cc713c5",
+    "schemeRevisionId": "REV-da44d8bc7fc9e4d39c396333",
+    "sequence": 1,
+    "status": "protected-legacy"
+  },
+  "passed": true
+}

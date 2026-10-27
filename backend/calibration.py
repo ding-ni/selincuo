@@ -8,7 +8,22 @@ from .calibration_config import RUNOFF_KEYS, ROUTING_KEYS, PROFILES, flow_object
 
 from .common import write_json
 from .model_core import PARAMETER_DEFINITIONS, parameters
-from .simulation import prepare, run_simulation
+from .simulation import prepare, run_simulation, observation_snapshot
+
+
+def search_conditions(request, source):
+    """Withheld years are not even simulated/scored during candidate search."""
+    selection = {**request, 'start': request.get('start') or source['times'][0].isoformat(),
+                 'end': '2025-01-01T00:00:00'}
+    snapshot = request.get('_observations')
+    if snapshot is not None:
+        selection['_observations'] = {
+            **snapshot,
+            'flow': {k: v for k, v in snapshot.get('flow', {}).items() if k[:4] == '2024'},
+            'level': {k: v for k, v in snapshot.get('level', {}).items() if k[:4] == '2024'},
+            'windows': [dict(w) for w in snapshot.get('windows', []) if str(w['start'])[:4] == '2024'],
+        }
+    return selection
 
 
 def calibrate(db, request, folder, progress=None, cancelled=None):
@@ -17,7 +32,16 @@ def calibrate(db, request, folder, progress=None, cancelled=None):
         raise ValueError('自动搜索仅使用2024年率定期，验证和延伸检验不能参与搜索')
     if request.get('_parentState'):
         raise ValueError('自动率定各候选须从统一起点预热，不能继承固定参数形成的父状态')
-    base = parameters(request.get('parameters'))
+    basin_base = parameters(request.get('parameters'))
+    region_overrides = dict(request.get('partitionParameters') or {})
+    target = request.get('calibrationPartition', 'duja' if stage != 'lake' else None)
+    if target == 'uniform':  # Explicit research comparison; never the business default.
+        target = None
+    if target not in (None, 'duja'):
+        raise ValueError('有流量观测约束的率定分区仅支持杜加控制区')
+    if stage == 'lake' and target:
+        raise ValueError('湖泊蒸发系数属于全湖配置')
+    base = parameters({**basin_base, **region_overrides.get(target, {})}) if target else basin_base
     if stage == 'routing' and request.get('routingMode', 'source-separated') != 'source-separated':
         raise ValueError('分水源汇流率定须采用分水源调蓄结构')
     keys = {'runoff': RUNOFF_KEYS, 'routing': ROUTING_KEYS, 'lake': ['lakeCoefficient']}[stage]
@@ -37,15 +61,24 @@ def calibrate(db, request, folder, progress=None, cancelled=None):
     profile = request.get('objectiveProfile', 'balanced')
     if profile not in PROFILES:
         raise ValueError('未知率定目标')
+    if db is not None and not request.get('_observations'):
+        request = {**request, '_observations': observation_snapshot(db)}
+    selection_request = search_conditions(request, source)
     trace, best, best_params = [], math.inf, base.copy()
     baseline_metrics = None
+
+    def candidate_request(candidate, template):
+        if not target:
+            return {**template, 'parameters': candidate}
+        overrides = {**region_overrides, target: {k: v for k, v in candidate.items() if k != 'lakeCoefficient'}}
+        return {**template, 'parameters': basin_base, 'partitionParameters': overrides}
 
     def evaluate(vector):
         nonlocal best, best_params, baseline_metrics
         if cancelled and cancelled():
             raise InterruptedError('用户停止率定')
         candidate = {**base, **dict(zip(keys, map(float, vector)))}
-        result = run_simulation(db, {**request, 'parameters': candidate, '_skipDiagnostics': True}, prepared=source, cancelled=cancelled)
+        result = run_simulation(db, {**candidate_request(candidate, selection_request), '_skipDiagnostics': True}, prepared=source, cancelled=cancelled)
         metric = result['metrics'].get('2024', {}).get('flow' if flow_stage else 'lake', {})
         if metric.get('count', 0) < 30:
             raise ValueError('2024年可靠观测匹配不足30日，不能自动率定')
@@ -106,16 +139,33 @@ def calibrate(db, request, folder, progress=None, cancelled=None):
         if len(trace) >= population_size * 3 and np.std(scores) < 1e-6:
             converged = True
             break
-    final = run_simulation(db, {**request, 'parameters': best_params}, folder=folder, cancelled=cancelled)
+    final = run_simulation(db, candidate_request(best_params, request), folder=folder, cancelled=cancelled)
+    boundary_parameters = [k for k in keys if min(abs(best_params[k]-definitions[k]['min']),abs(best_params[k]-definitions[k]['max'])) < 1e-8]
+    review_flags = []
+    if boundary_parameters:
+        review_flags.append('search-boundary')
+    if not converged:
+        review_flags.append('search-not-converged')
+    flow_validation_count = int(final['metrics'].get('2025', {}).get('flow', {}).get('count', 0))
+    lake_validation_count = int(final['metrics'].get('2025', {}).get('lake', {}).get('count', 0))
+    if flow_stage and flow_validation_count < 30:
+        review_flags.append('insufficient-2025-flow-validation')
+    if stage == 'lake' and lake_validation_count < 30:
+        review_flags.append('insufficient-2025-lake-validation')
     final['calibration'] = {'stage': stage, 'algorithm': 'differential-evolution', 'seed': seed,
+                            'calibrationPartition': target, 'parameterApplication': 'duja-only' if target else 'uniform-with-fixed-overrides',
                             'searchParameters': keys, 'objectiveProfile': profile if flow_stage else 'lake-rmse',
                             'objectiveWeights': PROFILES[profile]['weights'] if flow_stage else {'lakeRmse': 1.}, 'calibrationYear': 2024, 'evaluations': len(trace),
                             'maxEvaluations': maximum, 'converged': converged,
+                            'decision': 'candidate-only', 'businessReady': False, 'reviewFlags': review_flags,
+                            'validationCounts': {'2025FlowDays': flow_validation_count, '2025LakeDays': lake_validation_count},
+                            'searchPeriodEnd': selection_request['end'],
+                            'searchObservationYears': [2024],
                             'termination': 'converged' if converged else ('budget-exhausted' if len(trace) >= maximum else 'proposal-limit'),
                             'invalidProposalsSkipped': invalid_proposals,
                             'baselineMetrics': baseline_metrics, 'bestObjective': best, 'trace': trace,
                             'frozenParameters': [k for k in base if k not in keys],
                             'validationYearsExcludedFromSearch': [2025, 2026],
-                            'boundaryParameters': [k for k in keys if min(abs(best_params[k]-definitions[k]['min']),abs(best_params[k]-definitions[k]['max'])) < 1e-8]}
+                            'boundaryParameters': boundary_parameters}
     write_json(folder / 'result.json', final)
     return final

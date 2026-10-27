@@ -9,6 +9,7 @@ from .common import write_json
 def analyze(db, request, folder, progress=None, cancelled=None):
     source = prepare(db, request['inputId'])
     base = parameters(request.get('parameters'))
+    regions = request.get('partitionParameters') or {}
     definitions = {d['key']: d for d in PARAMETER_DEFINITIONS}
     keys = public_config()['sensitivity']['keys']
     profile = request.get('objectiveProfile', 'balanced')
@@ -20,24 +21,28 @@ def analyze(db, request, folder, progress=None, cancelled=None):
     rows, skipped = [], []
     for index, key in enumerate(keys):
         d = definitions[key]
-        delta = max(abs(base[key])*.2, (d['max']-d['min'])*.01)
+        target = 'duja' if regions and key != 'lakeCoefficient' else None
+        local = parameters({**base, **regions.get(target, {})}) if target else base
+        delta = max(abs(local[key])*.2, (d['max']-d['min'])*.01)
         for direction in (-1, 1):
             if cancelled and cancelled():
                 raise InterruptedError('用户停止敏感性实验')
-            value = min(d['max'], max(d['min'], base[key]+direction*delta))
-            if abs(value-base[key]) < 1e-10:
+            value = min(d['max'], max(d['min'], local[key]+direction*delta))
+            if abs(value-local[key]) < 1e-10:
                 continue
-            candidate = {**base, key: value}
+            candidate = {**local, key: value}
             try:
                 parameters(candidate)
             except ValueError as exc:
                 skipped.append({'parameter': key, 'value': value, 'reason': str(exc)})
                 continue
-            result = run_simulation(db, {**request, 'parameters': candidate, '_skipDiagnostics': True}, prepared=source, cancelled=cancelled)
+            changes = {'parameters': base, 'partitionParameters': {**regions, target: {**regions.get(target, {}), key: value}}} if target else {'parameters': candidate}
+            result = run_simulation(db, {**request, **changes, '_skipDiagnostics': True}, prepared=source, cancelled=cancelled)
             m = result['metrics']['2024']
             score, _ = flow_objective(m['flow'], profile)
-            rows.append({'parameter': key, 'label': d['label'], 'baselineValue': base[key], 'value': value,
-                         'relativeChange': (value-base[key])/abs(base[key]) if base[key] else None,
+            rows.append({'parameter': key, 'label': d['label'], 'baselineValue': local[key], 'value': value,
+                         'parameterScope': target or 'basin',
+                         'relativeChange': (value-local[key])/abs(local[key]) if local[key] else None,
                          'flowObjectiveChange': score-objective, 'flowNseChange': m['flow']['nse']-metric['flow']['nse'],
                          'flowBiasChange': m['flow']['pbias']-metric['flow']['pbias'],
                          'lakeRmseChangeM': m['lake']['rmse']-metric['lake']['rmse'], 'metrics2024': m})

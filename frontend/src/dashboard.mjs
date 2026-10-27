@@ -8,11 +8,12 @@ export function colorFor(value,layer){if(value==null||!Number.isFinite(value))re
 export function exactValue(station,day){return station?.daily?.find(r=>r.date===day)?.value??null}
 export function timelineDates(mode,monitor,result){
  if(mode==='model')return (result?.daily||[]).map(r=>r.date.slice(0,10))
- const main=monitor?.stations?.find(s=>s.id==='SLC')?.daily||[]
- if(!main.length)return []
- const start=Date.parse(main[0].date+'T00:00:00Z'),end=Date.parse(main.at(-1).date+'T00:00:00Z'),dates=[]
+ const all=(monitor?.stations||[]).flatMap(s=>s.daily||[]).map(r=>r.date).sort()
+ if(!all.length)return []
+ const start=Date.parse(all[0]+'T00:00:00Z'),end=Date.parse(all.at(-1)+'T00:00:00Z'),dates=[]
  for(let t=start;t<=end;t+=86400000)dates.push(new Date(t).toISOString().slice(0,10))
  return dates
 }
 export function balanceTerms(row){return [{key:'lakeInflowM3',label:'入湖来水',sign:1},{key:'lakePrecipitationM3',label:'湖面降水',sign:1},{key:'lakeEvaporationM3',label:'湖面蒸发',sign:-1},{key:'lakeDeltaVolumeM3',label:'蓄水变化',sign:1}].map(t=>({...t,value:row?.[t.key]==null?null:row[t.key]/1e6}))}
-export function defaultReplayDay(dates,result){const latest=(result?.daily||[]).filter(r=>r.lakeLevel!=null&&r.observedLevel!=null).at(-1);return latest?.date.slice(0,10)||dates.at(-1)||''}
+export function defaultReplayDay(dates,result){const latest=(result?.daily||[]).filter(r=>r.lakeLevel!=null).at(-1);return latest?.date.slice(0,10)||dates.at(-1)||''}
+export function screenResults(published=[],tasks=[]){return [...published.map(r=>({...r,builtin:true,collection:'历史模拟'})),...tasks.filter(t=>t.status==='succeeded'&&!t.trashed&&t.kind==='simulation'&&t.collection==='历史模拟')]}

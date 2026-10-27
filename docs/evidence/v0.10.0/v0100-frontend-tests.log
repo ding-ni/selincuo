@@ -1,0 +1,39 @@
+✔ new business session selects frozen release input and exclusive full-day end (12.3685ms)
+✔ date windows survive refresh without replacing frozen identity (0.1976ms)
+✔ offline report uses complete frozen annual metrics and escapes untrusted text (2.2903ms)
+✔ daily result list includes business simulations while research stays in maintenance (1.8286ms)
+✔ monitoring copy uses readable status and step labels (0.476ms)
+✔ monitoring replay includes missing days but never borrows the latest observation (0.3197ms)
+✔ replay reaches latest simulated lake date despite missing observation and preserves missing budget (0.3461ms)
+✔ dashboard defaults to the final publication and excludes research tasks (0.226ms)
+✔ partition shares use exclusive volumes and preserve partial coverage (0.4195ms)
+✔ comparison distinguishes missing evidence, observation snapshots and years (0.4098ms)
+✔ routing calibration requires frozen baseline and source-separated mode (0.5282ms)
+✔ daily run works from packaged defaults and never adopts calibration values (0.3716ms)
+✔ inclusive dates handle year boundaries and leap days without local timezone conversion (0.1718ms)
+✔ missing inputs and out of coverage stop before submitting a task (1.0976ms)
+✔ a revised scheme replaces a stored uncorrected input and rejects submitting it (0.2221ms)
+✔ replay range remains fixed across frames and zero is distinct from missing (0.5639ms)
+✔ signed and physical ratio variables keep interpretable scales (0.1742ms)
+✔ explicit custom bounds are honored (0.1219ms)
+✔ whole drainage domain fits desktop, portrait and report canvases without distortion or clipping (0.5992ms)
+✔ nearby basin label boxes avoid overlap and keep true geographic anchors (0.3541ms)
+✔ complete real historical input takes precedence over earlier fragments with complete end-hour days (0.2307ms)
+✔ same-day diagnostics preserve original offsets and missing days (1.3078ms)
+✔ relative lake change uses one common date, never different dates by station (0.4446ms)
+✔ model missing lake windows stay missing and do not acquire a relative anchor (0.3843ms)
+✔ station provenance accepts API JSON metadata without discarding raw coordinates (0.1931ms)
+✔ absolute model evaluation keeps offsets and offers equal-date samples without filling gaps (0.2459ms)
+✔ absolute evaluation needs datum and zero confirmation for all five stations (0.2125ms)
+✔ initialization days remain visible but cannot score their own anchor (0.2521ms)
+✔ partial forcing cannot be used for annual calibration or out-of-coverage simulation (0.3541ms)
+✔ comparison does not silently overlay unrelated spaces or dates (0.1945ms)
+✔ invalid parameters and corrupt remembered drafts fail clearly (0.2508ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 545.3849

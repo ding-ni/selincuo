@@ -14,3 +14,7 @@ Pillow==11.3.0
 numba==0.60.0
 cdsapi==0.7.7
 pyinstaller==6.18.0
+zarr==2.18.2
+numcodecs==0.12.1
+asciitree==0.3.3
+fasteners==0.20

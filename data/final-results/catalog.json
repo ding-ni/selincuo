@@ -1,0 +1,38 @@
+{
+  "currentResultId": "BUILTIN-historical-rev2-39192cc713c5",
+  "results": [
+    {
+      "id": "BUILTIN-historical-rev2-39192cc713c5",
+      "name": "色林错标准历史成果",
+      "period": "2024—2025",
+      "directory": "historical-rev2-39192cc713c5",
+      "files": {
+        "daily-snow.npz": {
+          "sha256": "5c1809912f746c51f6e24fdde1d69fb041d914cb7b1e9f30534acc8adf1aaca9",
+          "bytes": 83909
+        },
+        "daily.csv": {
+          "sha256": "8048590723f4c59a80c16d33fac3edf61cc19e0bb841278c39d0680752c3e533",
+          "bytes": 296823
+        },
+        "final-state.json": {
+          "sha256": "8b41a4727a312733cb4d8e2dc72fc5bab2336dd6176bd96ece371741539c29dd",
+          "bytes": 8457
+        },
+        "result.json": {
+          "sha256": "163bcc045820fe70cd1c49a37301162048f17b373543a13f6072a05fb64ac37d",
+          "bytes": 1003592
+        },
+        "summary.json": {
+          "sha256": "4524cf1fa6d4187f64c450d1dbdb498f081a34f50bc3a288e87506e47695ae3f",
+          "bytes": 4746
+        },
+        "hourly.npz": {
+          "sha256": "975159f08e00d5c4a07af559dfca42739bfabe4672400f3b6819381f33a5f62c",
+          "bytes": 41111078
+        }
+      },
+      "displayName": "色林错湖位与入湖径流模拟成果（2024—2025）"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "revision": "shore-locations-20261025",
+  "source": "用户于2026-10-25提供的四岸站点GCJ-02坐标及K码",
+  "coordinateSystem": "GCJ-02",
+  "stations": [
+    {"id": "SLC-N", "lon": 89.06496134, "lat": 32.13347763, "kCode": "7eqfhjzuq", "originalText": "g89.06496134, 32.13347763"},
+    {"id": "SLC-E", "lon": 89.36463443, "lat": 31.77594690, "kCode": "7q1rh0vhq", "originalText": "g89.36463443, 31.77594690"},
+    {"id": "SLC-S", "lon": 89.09865124, "lat": 31.52174260, "kCode": "73sghux9q", "originalText": "g89.09865124, 31.52174260"},
+    {"id": "SLC-W", "lon": 88.52901122, "lat": 31.83216644, "kCode": "7y0zghkjq", "originalText": "g88.52901122, 31.83216644"}
+  ]
+}

@@ -1,0 +1,50 @@
+/* Shared business surfaces. Dashboard layout rules live in dashboard.css. */
+:root{--accent:#147f96;--ink:#254553;--muted:#617986;--line:#d8e3e9}
+.content{max-width:1900px;padding:20px 24px}
+.sidebar{padding:24px 12px 16px}
+.sidebar .brand{padding-bottom:20px}
+.sidebar nav[aria-label="业务导航"] button{padding:10px 12px;gap:8px}
+.sidebar nav[aria-label="业务导航"] b{font-size:14px}
+.support-navigation{display:grid;gap:8px;padding:22px 5px 0}
+.support-navigation button{justify-content:flex-start;padding:7px 9px}
+.mode-switch{font-size:12px;color:var(--muted);padding:0 8px 8px}
+.mode-switch select{min-height:36px;padding:5px 8px;font-size:13px}
+.nav-collapsed .mode-switch{font-size:0;padding:0}
+.nav-collapsed .mode-switch select{font-size:11px;padding:5px 0}
+.nav-collapsed .support-navigation button{padding:7px 2px}
+.business-context{display:flex;gap:20px;align-items:center;padding:8px 14px;margin-bottom:14px;background:#fff;border:1px solid var(--line);border-left:3px solid var(--accent);font-size:12px;min-width:0;line-height:1.45}
+.business-context>div{display:grid;gap:3px;min-width:0}
+.business-context>div:first-child{flex:1;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:10px}
+.business-context>div:first-child>small{grid-column:2;color:var(--muted);font-size:12px}
+.business-context>div:first-child>b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;font-weight:500}
+.business-context>div>span:not(.context-role){color:var(--muted)}
+.business-context b{font-weight:500;font-variant-numeric:tabular-nums}
+.business-context>button{min-height:34px;padding:5px 9px;font-size:12px}
+.context-role{padding:3px 7px;border:1px solid #c4e0e5;color:#17788c;background:#edf6f7;white-space:nowrap}
+.candidate-context{border-left-color:#c18a3d}
+.candidate-context .context-role{color:#99651e;border-color:#e5d6bc;background:#fcf5e9}
+.task-shade{position:fixed;inset:0;background:#1a36474d;z-index:1100;display:flex;justify-content:flex-end}
+.task-drawer{width:min(480px,100vw);height:100dvh;overflow:auto;padding:24px;background:#f5f8f9;box-shadow:-8px 0 30px #0e344326}
+.task-drawer h2{margin:0}.task-drawer .panel-title{margin-bottom:14px}
+.task-item{background:#fff;border:1px solid var(--line);padding:16px;margin:14px 0;display:grid;gap:8px;font-size:13px}
+.task-item>b{font-size:15px}.task-item>span,.task-item small{color:var(--muted)}.task-item p{margin:0}.task-item button{justify-self:start;min-height:32px;font-size:12px}
+.simulation-plan{border-left:3px solid #238299;background:#eff7f8;padding:12px 16px;margin-top:20px;font-size:14px}.simulation-plan p{margin:5px 0;color:#536f7b}
+.simulation-form .query-grid{gap:14px}.simulation-form details{margin-bottom:0}
+.simulation-input-status{display:flex;gap:8px 20px;align-items:center;flex-wrap:wrap;font-size:13px;margin:10px 0 16px}.simulation-input-status button{font-size:13px;min-height:28px}.simulation-input-status b{font-weight:500}
+.result-evidence{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:10px 0 18px;padding:14px 0}
+.evidence-heading{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:12px;font-size:13px}.evidence-heading>b{font-size:15px}.evidence-heading>span{color:var(--muted)}.evidence-heading .badge{margin-left:auto}
+.result-evidence th,.result-evidence td{padding:9px 12px;font-size:13px;font-variant-numeric:tabular-nums}
+.result-evidence .table-wrap{max-height:220px}.result-evidence .note{font-size:13px;margin:10px 0}.result-evidence details{margin:8px 0 0;font-size:13px}
+.result-evidence details p{margin:6px 0;color:var(--muted)}
+.result-view>.panel-title{margin-bottom:14px}.result-view .result-toolbar{margin:12px 0;gap:10px}.result-view .result-toolbar label{gap:4px;font-size:13px;flex-basis:175px}.result-view .result-toolbar input,.result-view .result-toolbar button,.result-view .result-toolbar a{min-height:36px;padding:6px 10px;font-size:13px}.result-view .workspace-tabs{margin-bottom:12px}.result-view .workspace-tabs button{padding:8px 12px;min-height:38px;font-size:14px}
+.result-group-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 16px}.result-group-controls button{min-height:36px;font-size:13px}
+.result-compare{margin:16px 0;padding:16px;border:1px solid var(--line);background:#f5f9fa}.result-compare p{font-size:13px;margin:8px 0}
+.monitoring-query{gap:12px}.monitoring-query>label{flex-basis:140px}.monitoring-query>label.grow{flex-basis:190px}
+.monitoring-coverage{display:flex;flex-wrap:wrap;gap:8px 22px;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:18px 0;font-size:13px}.monitoring-coverage b{font-weight:500;color:var(--ink)}
+.readiness-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px}.readiness-grid article{padding:22px 0;border-top:1px solid var(--line)}.readiness-grid article p{font-size:14px;color:var(--muted);margin:10px 0 16px}.readiness-grid article button{font-size:13px;min-height:34px;padding:6px 11px;margin-right:8px}
+.scheme-overview{padding:16px 20px;background:#eff6f8;border-left:3px solid var(--accent);margin-bottom:20px}.scheme-overview p{margin:8px 0;font-size:13px}
+.state-filter{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:16px 0}.state-filter label{flex:1 1 150px}.state-filter label.grow{flex:2 1 230px}.state-filter>span{font-size:13px;color:var(--muted)}
+.health-summary{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:12px 0}.health-summary>span{font-size:13px}.state-spatial .table-wrap{max-height:510px}
+@media(min-width:1280px){.app-shell:not(.nav-collapsed){--nav-width:208px}}
+@media(max-width:1100px){.business-context{flex-wrap:wrap;gap:8px 18px}.business-context>div:first-child{flex-basis:100%}.content{padding:16px}.readiness-grid{gap:0 20px}}
+@media(max-width:767px){.business-context>div:first-child{display:flex;flex-wrap:wrap}.business-context>div:first-child>b{flex:1}.business-context>div:first-child>small{flex-basis:100%}.business-context>div{font-size:11px}.business-context>div:nth-child(3){display:none}.readiness-grid{grid-template-columns:1fr}.content{padding:12px}.panel{padding:16px}.evidence-heading{gap:8px}.evidence-heading .badge{margin-left:0}.result-evidence th,.result-evidence td{font-size:12px;padding:8px}.state-filter{gap:10px}.mode-switch{padding:0}}

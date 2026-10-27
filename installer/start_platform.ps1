@@ -8,15 +8,16 @@ if (Test-Path -LiteralPath $activeConfiguration) {
     if ($activeWorkspace) { $workspacePath = [IO.Path]::GetFullPath((Join-Path $applicationRoot $activeWorkspace)) }
 }
 $platformUrl = 'http://127.0.0.1:8879'
+$expectedVersion = (Get-Content -LiteralPath (Join-Path $applicationRoot 'config/platform.json') -Raw -Encoding UTF8 | ConvertFrom-Json).version
 function Test-SelincoService {
     try {
         $health = Invoke-RestMethod -Uri "$platformUrl/api/health" -TimeoutSec 2
-        return ($health.projectId -eq 'selinco' -and $health.workspace -eq $workspacePath)
+        return ($health.projectId -eq 'selinco' -and $health.workspace -eq $workspacePath -and $health.version -eq $expectedVersion)
     } catch { return $false }
 }
 try {
     if (-not (Test-SelincoService)) {
-        $logFolder = Join-Path $workspacePath 'logs'
+        $logFolder = Join-Path $applicationRoot 'logs'
         New-Item -ItemType Directory -Path $logFolder -Force | Out-Null
         $stdoutPath = Join-Path $logFolder 'service.stdout.log'
         $stderrPath = Join-Path $logFolder 'service.stderr.log'
@@ -27,7 +28,7 @@ try {
             if ($process.HasExited) { break }
             Start-Sleep -Milliseconds 300
         }
-        if (-not $serviceReady) { throw "平台未能启动。请检查8879端口，并查看 $stderrPath" }
+        if (-not $serviceReady) { $failureDetail = Get-Content -LiteralPath $stderrPath -Tail 1 -Encoding UTF8 -ErrorAction SilentlyContinue; throw "平台未能启动。$failureDetail 请检查8879端口，详细记录：$stderrPath" }
     }
     if (-not $NoBrowser) { Start-Process $platformUrl }
 } catch {

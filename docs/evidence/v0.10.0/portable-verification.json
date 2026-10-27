@@ -1,0 +1,166 @@
+{
+  "at": "2026-10-27T03:39:32+00:00",
+  "projectId": "selinco",
+  "version": "0.10.0",
+  "workspace": "F:\\色林错预警预报平台\\build\\portable-v0100-final2-remediation-verification-20261027\\workspace",
+  "freshCounts": {
+    "input_products": 1,
+    "observations": 59119,
+    "parameter_versions": 0,
+    "sources": 33,
+    "states": 0,
+    "stations": 8,
+    "tasks": 0
+  },
+  "scheme": {
+    "configurationSHA256": "57c812fd3e9b47276cf04a961bcb795a263647cb8871e9ccb71da23547f3abd1",
+    "id": "selinco-historical-standard-v1",
+    "initialization": {
+      "lakeLevel": "first-reliable-value-per-observation-window",
+      "origin": "2023-01-01T00:00:00",
+      "routingStorageM3": 0,
+      "snowWaterEquivalentMm": 0,
+      "soilWaterFraction": 0.5,
+      "strategy": "continuous-origin",
+      "warmupYear": 2023
+    },
+    "name": "色林错标准历史方案",
+    "revision": 2,
+    "spatialVersion": "SPATIAL-1e6a229e51f0da4f1ffd"
+  },
+  "taskId": "JOB-e282cd2877044bcba6f6",
+  "continuationTaskId": "JOB-180ac0a898de4db296fe",
+  "dailyRows": 365,
+  "metrics": {
+    "2025": {
+      "flow": {
+        "bias": -1.419407925195139,
+        "count": 211,
+        "kge": 0.8518164431323226,
+        "logNse": 0.43170774847515414,
+        "mae": 14.194542680140964,
+        "nse": 0.7253683446535392,
+        "observedMean": 49.027630331753564,
+        "observedVolumeM3": 893793312.0000001,
+        "pbias": -2.8951183558954012,
+        "rmse": 19.884410448473748,
+        "simulatedMean": 47.60822240655842,
+        "simulatedVolumeM3OnObservedDays": 867916937.7605226
+      },
+      "lake": {
+        "bias": -0.053936518929068,
+        "count": 255,
+        "kge": 0.7226157831696851,
+        "logNse": 0.4468803970355393,
+        "mae": 0.05550225296826516,
+        "nse": 0.4468771192497324,
+        "observedMean": 4544.200602076125,
+        "pbias": -0.0011869308521376858,
+        "rmse": 0.06523442125833821,
+        "simulatedMean": 4544.146665557196
+      },
+      "purpose": "冻结条件留出评价"
+    }
+  },
+  "evaluationMode": "window",
+  "defaultRelease": {
+    "admissionPassed": false,
+    "evaluationId": null,
+    "id": "RELEASE-protected-rev2",
+    "previousReleaseId": null,
+    "publishedAt": "2026-10-26T13:10:37+00:00",
+    "resultId": "BUILTIN-historical-rev2-39192cc713c5",
+    "schemeRevisionId": "REV-da44d8bc7fc9e4d39c396333",
+    "sequence": 1,
+    "status": "protected-legacy"
+  },
+  "defaultInputId": "INPUT-3faa73605321b03d4a9f6bf7",
+  "readOnlySimulationPlan": {
+    "action": "reuse",
+    "calculationStart": "2023-01-01T00:00:00",
+    "createsTask": false,
+    "inputId": "INPUT-3faa73605321b03d4a9f6bf7",
+    "reasons": [
+      "所选日期已包含在同一冻结方案、输入与初始化的发布成果中，可直接查看。"
+    ],
+    "releaseId": "RELEASE-protected-rev2",
+    "requestedCoverage": {
+      "endExclusive": "2026-01-01T00:00:00",
+      "start": "2025-01-01T00:00:00"
+    },
+    "resultId": "BUILTIN-historical-rev2-39192cc713c5",
+    "schemeRevision": 2
+  },
+  "exportRows": 365,
+  "exportTaskId": "JOB-d97b4ed363004a5ebb33",
+  "exportReusedTaskId": "JOB-d97b4ed363004a5ebb33",
+  "backupTaskId": "JOB-13864b2c57984c9b98a4",
+  "backup": {
+    "bytes": 161499822,
+    "complete": true,
+    "downloadUrl": "/api/model/task-artifact?taskId=JOB-13864b2c57984c9b98a4&name=backup-2026-10-27T033913-0000-f5625f.zip",
+    "filename": "backup-2026-10-27T033913-0000-f5625f.zip",
+    "files": 51,
+    "mtimeNs": 1793072364368399900,
+    "name": "backup-2026-10-27T033913-0000-f5625f.zip",
+    "ownerTaskId": "JOB-13864b2c57984c9b98a4",
+    "sha256": "b316195efec96b3d16fb211ba9ad3580e8505b4bb3c13d3c2b841a0886caff05",
+    "storage": "exports"
+  },
+  "restore": {
+    "bytes": 185196226,
+    "counts": {
+      "input_products": 1,
+      "observations": 59119,
+      "sources": 33,
+      "states": 2,
+      "tasks": 4
+    },
+    "databaseIntegrity": "ok",
+    "files": 51,
+    "message": "恢复与全部校验完成；退出后重新启动使用恢复工作区，原工作区保留。",
+    "restartRequired": true,
+    "sourceWorkspace": "F:\\色林错预警预报平台\\build\\portable-v0100-final2-remediation-verification-20261027\\workspace",
+    "taskId": "JOB-5893e7a828904ac6a728",
+    "validatedSHA256Files": 51,
+    "workspace": "F:\\色林错预警预报平台\\build\\release-v0100-final2-remediation-20261027\\SelincoPlatform\\restored-workspaces\\restored-dae46fa292b9"
+  },
+  "restoreTaskId": "JOB-5893e7a828904ac6a728",
+  "modelIdentity": {
+    "contextKey": "selinco:semidistributed-cold-lake:0p1deg",
+    "inputId": "INPUT-3faa73605321b03d4a9f6bf7",
+    "inputSHA256": "c7b8672e0300244010a9b8ea4f072b5117d2274e4b792164b44369fd69d5dc14",
+    "modelImplementation": "4db59ef0c407328bf67479bf416a60795a55f4219906112432effbc3aa648c2c",
+    "observationSHA256": "6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e",
+    "parameterSHA256": "d4c46990d931f2a8e321ea3a14a516e72df4f66bf73325ba22c236211958a90b",
+    "partitionParameterSHA256": "6d1a7cd7402073c79eb9f5ba7a213bb3d46205b111def511d34ad67c5868d666",
+    "projectId": "selinco",
+    "routingMode": "source-separated",
+    "spatialVersion": "SPATIAL-1e6a229e51f0da4f1ffd"
+  },
+  "catchmentBalanceMaxErrorM3": 0.0001240503042936325,
+  "checks": [
+    "clean-seed",
+    "published-default-context-and-frozen-input",
+    "window-evaluation-explicit",
+    "builtin-result-viewable",
+    "read-only-covered-window-reuse",
+    "builtin-scheme-available",
+    "fixed-parameters-server-owned",
+    "2023-land-warmup-with-original-window-lake-initialization",
+    "duplicate-request-idempotency",
+    "2025-full-year-result",
+    "background-CSV-export-and-artifact-reuse",
+    "saved-state-continuation",
+    "background-backup-artifact-download",
+    "background-independent-directory-restore",
+    "default-release-unchanged",
+    "frozen-reference-metrics-match",
+    "frozen-reference-daily-values-match",
+    "water-balance"
+  ],
+  "acceptanceScope": "packaged-software-workflow",
+  "scientificAdmission": "not-assessed-by-this-script",
+  "candidateUpgradePassed": false,
+  "passed": true
+}

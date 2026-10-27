@@ -15,3 +15,5 @@ Pillow>=10
 numba>=0.58
 cdsapi>=0.7
 pyinstaller>=6
+zarr>=2.16,<3
+numcodecs<0.16

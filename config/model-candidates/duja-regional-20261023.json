@@ -1,0 +1,195 @@
+{
+  "id": "selinco-duja-regional-20261023",
+  "name": "杜加分区研究候选20261023",
+  "decision": "research-candidate",
+  "businessReady": false,
+  "activated": false,
+  "createdAt": "2026-10-23T05:30:16+00:00",
+  "request": {
+    "inputId": "INPUT-967613234ca58f1c6cfb44e2",
+    "start": "2023-01-01T00:00:00",
+    "end": "2026-01-01T00:00:00",
+    "routingMode": "source-separated",
+    "parameters": {
+      "KC": 0.7294530893648382,
+      "WM": 226.55679731833598,
+      "B": 0.08475148517233684,
+      "C": 0.15,
+      "SM": 5.0,
+      "EX": 1.2,
+      "KI": 0.0922935896415091,
+      "KG": 0.0001,
+      "IM": 0.01,
+      "snowDdf": 4.0,
+      "iceDdf": 7.0,
+      "snowTemperature": -1.0,
+      "rainTemperature": 2.0,
+      "liquidCapacity": 0.05,
+      "refreezeFactor": 1.0,
+      "snowSublimation": 0.35,
+      "glacierRecessionDay": 0.5,
+      "tauHours": 168.0,
+      "lagHours": 0.0,
+      "lakeCoefficient": 1.5,
+      "lapseRate": -0.0065,
+      "interflowTauHours": 48.0,
+      "baseflowTauHours": 720.0,
+      "iceSublimationFraction": 0.25,
+      "iceSublimationMaxMmHour": 0.08
+    },
+    "partitionParameters": {
+      "duja": {
+        "KC": 0.7714797672529675,
+        "WM": 300.0,
+        "B": 0.8,
+        "C": 0.15,
+        "SM": 100.0,
+        "EX": 1.2,
+        "KI": 0.12447649497308605,
+        "KG": 0.1,
+        "IM": 0.01,
+        "snowDdf": 4.0,
+        "iceDdf": 7.0,
+        "snowTemperature": -1.0,
+        "rainTemperature": 2.0,
+        "liquidCapacity": 0.05,
+        "refreezeFactor": 1.0,
+        "snowSublimation": 0.35,
+        "glacierRecessionDay": 0.5,
+        "tauHours": 71.40081518816966,
+        "lagHours": 0.0,
+        "lapseRate": -0.0065,
+        "interflowTauHours": 123.4066595475932,
+        "baseflowTauHours": 2160.0,
+        "iceSublimationFraction": 0.25,
+        "iceSublimationMaxMmHour": 0.08
+      }
+    }
+  },
+  "identity": {
+    "projectId": "selinco",
+    "contextKey": "selinco:semidistributed-cold-lake:0p1deg",
+    "spatialVersion": "SPATIAL-1e6a229e51f0da4f1ffd",
+    "inputId": "INPUT-967613234ca58f1c6cfb44e2",
+    "inputSHA256": "c7b8672e0300244010a9b8ea4f072b5117d2274e4b792164b44369fd69d5dc14",
+    "parameterSHA256": "d4c46990d931f2a8e321ea3a14a516e72df4f66bf73325ba22c236211958a90b",
+    "observationSHA256": "6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e",
+    "modelImplementation": "30302df0cc770314e4994fb7625209c1893d7a620f427b7693d6159f0d3409c6",
+    "routingMode": "source-separated",
+    "partitionParameterSHA256": "6d1a7cd7402073c79eb9f5ba7a213bb3d46205b111def511d34ad67c5868d666"
+  },
+  "scope": {
+    "duja": "2024 flow-constrained regional candidate",
+    "otherPartitions": "Unvalidated reference parameters frozen",
+    "lake": "Reference evaporation coefficient frozen"
+  },
+  "unresolved": [
+    "Initial soil-water sensitivity",
+    "Multiple boundary parameters and nonconverged searches",
+    "No independent snow/glacier observations",
+    "Lake evaporation and ungauged inflow uncertainty"
+  ],
+  "metrics": {
+    "2023": {
+      "purpose": "预热",
+      "flow": {
+        "count": 0,
+        "nse": null,
+        "kge": null,
+        "rmse": null,
+        "mae": null,
+        "bias": null,
+        "pbias": null,
+        "logNse": null,
+        "observedVolumeM3": null,
+        "simulatedVolumeM3OnObservedDays": null
+      },
+      "lake": {
+        "logNse": 0.5555274468719495,
+        "count": 220,
+        "nse": 0.5554416921615184,
+        "kge": 0.5442829582106729,
+        "rmse": 0.17738870275100477,
+        "mae": 0.11771218069887833,
+        "bias": 0.10770808124390317,
+        "pbias": 0.0023702011028518977,
+        "observedMean": 4544.259181818183,
+        "simulatedMean": 4544.366889899425
+      }
+    },
+    "2024": {
+      "purpose": "率定",
+      "flow": {
+        "logNse": 0.007379952612085017,
+        "count": 229,
+        "nse": 0.529286693146543,
+        "kge": 0.5638304525639701,
+        "rmse": 59.35456623118263,
+        "mae": 36.59800351024682,
+        "bias": -4.241404761192045,
+        "pbias": -5.242944537599408,
+        "observedMean": 80.89737991266375,
+        "simulatedMean": 76.65597515147171,
+        "observedVolumeM3": 1600603200.0,
+        "simulatedVolumeM3OnObservedDays": 1516684461.9569585
+      },
+      "lake": {
+        "logNse": -0.8372609731657499,
+        "count": 231,
+        "nse": -0.8373904882919829,
+        "kge": 0.23227677518450984,
+        "rmse": 0.17563429011635062,
+        "mae": 0.12868444366728055,
+        "bias": 0.1060552794208286,
+        "pbias": 0.002333695466081291,
+        "observedMean": 4544.520952380953,
+        "simulatedMean": 4544.627007660373
+      }
+    },
+    "2025": {
+      "purpose": "独立验证",
+      "flow": {
+        "logNse": 0.43170774847515414,
+        "count": 211,
+        "nse": 0.7253683446535392,
+        "kge": 0.8518164431323226,
+        "rmse": 19.884410448473748,
+        "mae": 14.194542680140964,
+        "bias": -1.419407925195139,
+        "pbias": -2.8951183558954012,
+        "observedMean": 49.027630331753564,
+        "simulatedMean": 47.60822240655842,
+        "observedVolumeM3": 893793312.0000001,
+        "simulatedVolumeM3OnObservedDays": 867916937.7605226
+      },
+      "lake": {
+        "logNse": -0.7706323706380267,
+        "count": 255,
+        "nse": -0.7706675773889764,
+        "kge": 0.509685338265077,
+        "rmse": 0.11671710830508607,
+        "mae": 0.08704455698886401,
+        "bias": 0.08001852092938326,
+        "pbias": 0.0017608932337367527,
+        "observedMean": 4544.200602076125,
+        "simulatedMean": 4544.280620597055
+      }
+    }
+  },
+  "verification": {
+    "resumeMaxErrors": {
+      "flow": 0.0,
+      "unitStates": 0.0,
+      "unitDiagnostics": 0.0,
+      "routingStorage": 0.0,
+      "sourceRoutingStorage": 0.0,
+      "continuousLakeVolumeChange": 0.0,
+      "lakeLevel": 0.0,
+      "volumeChange": 0.0
+    },
+    "compositionMaxFlowErrorM3s": 2.2737367544323206e-13,
+    "catchmentBalanceMaxErrorM3": 0.0001240503042936325,
+    "snowTransferMaxErrorMm": 1.963984530561902e-13
+  },
+  "report": "docs/模型方案收敛与分区参数复核-20261023.md"
+}

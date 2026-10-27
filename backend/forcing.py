@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -12,6 +13,56 @@ from .database import Database
 VARIABLES = {'precipitation': ('tp', 'total_precipitation'),
              'temperature': ('t2m', '2t', '2m_temperature'),
              'evaporation': ('pev', 'potential_evaporation')}
+
+
+def lake_precipitation_factor(manifest):
+    """Explicit input-version correction; never alter catchment precipitation."""
+    correction = manifest.get('lakePrecipitationCorrection')
+    if correction is None:
+        return 1.
+    if correction.get('method') != 'station-point-annual-ratio-v1' or correction.get('scope') != 'lake-only':
+        raise ValueError('不支持的湖面降水订正定义')
+    factor = correction.get('factor')
+    if isinstance(factor, bool) or not isinstance(factor, (int, float)) or not np.isfinite(factor) or not 0 < factor <= 2:
+        raise ValueError('湖面降水订正比例无效')
+    return float(factor)
+
+
+def register_lake_correction(db, baseline_id, correction):
+    """Create an immutable derived input; original downloaded arrays are kept."""
+    parent, _ = load_input(db, baseline_id)
+    if parent.get('lakePrecipitationCorrection'):
+        raise ValueError('不得对已经订正的输入叠加同类订正')
+    lake_precipitation_factor({'lakePrecipitationCorrection': correction})
+    identity = {'parentInput': baseline_id, 'parentDataSHA256': parent['dataSHA256'],
+                'lakePrecipitationCorrection': correction}
+    identifier = 'INPUT-' + digest(identity)[:24]
+    folder = db.workspace / 'inputs/products' / identifier
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / 'forcing.npz'
+    if not path.exists():
+        shutil.copy2(db.workspace / 'inputs/products' / baseline_id / parent['data'], path)
+    if sha_file(path) != parent['dataSHA256']:
+        raise ValueError('派生输入数据与原始驱动摘要不一致')
+    manifest = {**parent, 'id': identifier, 'name': '标准历史驱动 · 湖面降水校正',
+                'createdAt': now(), 'parentInputId': baseline_id,
+                'lakePrecipitationCorrection': correction,
+                'transformationSHA256': digest(correction), 'data': 'forcing.npz',
+                'assumptions': parent.get('assumptions', []) + [
+                    '仅湖面降水乘已冻结的主站/同点格网年总量比；流域降水与温度蒸发原值保留',
+                    '单站代表湖面的空间转移假设；不视为实测湖面平均降水']}
+    with db.connect() as connection:
+        prior = connection.execute('SELECT manifest FROM input_products WHERE id=?', (identifier,)).fetchone()
+        if prior:
+            previous = json.loads(prior['manifest'])
+            if previous.get('transformationSHA256') != manifest['transformationSHA256']:
+                raise ValueError('已有派生输入定义不一致')
+            return previous
+        write_json(folder/'manifest.json', manifest)
+        connection.execute('INSERT INTO input_products VALUES(?,?,?,?)',
+                           (identifier, manifest['name'], manifest['createdAt'], canonical(manifest)))
+    db.log('inputs.lake-correction', {'id': identifier, **identity})
+    return manifest
 
 
 def deaccumulate(values, times):
@@ -189,6 +240,8 @@ def load_input(db, identifier, spatial=None):
     spatial = spatial or read_json(ROOT / 'data/derived/spatial/manifest.json')
     if manifest['spatialVersion'] != spatial['version']:
         raise ValueError('输入产品与当前空间单元不一致，请重新登记')
+    if manifest.get('lakePrecipitationCorrection') and digest(manifest['lakePrecipitationCorrection']) != manifest.get('transformationSHA256'):
+        raise ValueError('湖面降水转换定义摘要不一致')
     path = folder / manifest['data']
     if sha_file(path) != manifest['dataSHA256']:
         raise ValueError('输入文件摘要发生变化，拒绝使用')

@@ -1,0 +1,69 @@
+{
+  "scope": "Actual installed writer failure evidence; no pass or default upgrade.",
+  "bug": "windowanchorincludedbug",
+  "health": {
+    "version": "0.10.0",
+    "workspace": "F:\\色林错预警预报平台\\build\\installed-v0100-final-remediation-verification-20261027\\application\\restored-workspaces\\restored-030b02250edd",
+    "evidenceRead": "read-only SQLite after verification service shutdown"
+  },
+  "evaluationId": "EVAL-2b03b64c6d31c07bf065658e",
+  "candidateTaskId": "JOB-d66e0e475563435488bb",
+  "actualArchivedLake2025": {
+    "baseline": {
+      "bias": -0.05370507164452576,
+      "count": 256,
+      "mae": 0.05530620504921657,
+      "nse": 0.446911269855212,
+      "pbias": -0.001181837593459417,
+      "rmse": 0.06510773272350845
+    },
+    "candidate": {
+      "bias": -0.05370507164452576,
+      "count": 256,
+      "mae": 0.05530620504921657,
+      "nse": 0.446911269855212,
+      "pbias": -0.001181837593459417,
+      "rmse": 0.06510773272350845
+    },
+    "commonCount": 256
+  },
+  "windowInitializationDays": [
+    "2021-04-23",
+    "2022-03-15",
+    "2023-04-20",
+    "2023-11-28",
+    "2024-04-22",
+    "2025-04-09",
+    "2026-08-24"
+  ],
+  "independentFinitePairs": 256,
+  "excludedInitializationPairs": [
+    {
+      "date": "2025-04-09",
+      "observed": 4544.21375,
+      "baseline": 4544.2190639857,
+      "candidate": 4544.2190639857
+    }
+  ],
+  "correctedPairCount": 255,
+  "correctedBaselineRmse": 0.06523442125849374,
+  "correctedCandidateRmse": 0.06523442125849374,
+  "frozenOriginalYear": {
+    "logNse": 0.4468803970355393,
+    "count": 255,
+    "nse": 0.4468771192497324,
+    "kge": 0.7226157831696851,
+    "rmse": 0.06523442125833821,
+    "mae": 0.05550225296826516,
+    "bias": -0.053936518929068,
+    "pbias": -0.0011869308521376858,
+    "observedMean": 4544.200602076125,
+    "simulatedMean": 4544.146665557196
+  },
+  "defaultUnchanged": {
+    "id": "RELEASE-protected-rev2",
+    "resultId": "BUILTIN-historical-rev2-39192cc713c5"
+  },
+  "cause": "Writer excludes continuous initialization day only, whereas legacy annual scoring also excludes each frozen lake-window start day.",
+  "passed": false
+}

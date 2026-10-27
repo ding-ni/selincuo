@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS stations(id TEXT PRIMARY KEY,name TEXT NOT NULL,kind 
 CREATE TABLE IF NOT EXISTS sources(id TEXT PRIMARY KEY,path TEXT NOT NULL,sha256 TEXT NOT NULL,bytes INTEGER NOT NULL,imported_at TEXT NOT NULL,metadata TEXT NOT NULL, UNIQUE(path,sha256));
 CREATE TABLE IF NOT EXISTS observations(id INTEGER PRIMARY KEY,source_id TEXT NOT NULL REFERENCES sources(id),station_id TEXT NOT NULL REFERENCES stations(id),variable TEXT NOT NULL,time TEXT NOT NULL,period_start TEXT,period_end TEXT,step TEXT NOT NULL,unit TEXT NOT NULL,value REAL,raw_text TEXT NOT NULL,quality TEXT NOT NULL,sheet TEXT NOT NULL,cell TEXT NOT NULL, UNIQUE(source_id,sheet,cell,variable));
 CREATE INDEX IF NOT EXISTS obs_lookup ON observations(station_id,variable,step,time);
+CREATE INDEX IF NOT EXISTS obs_time_lookup ON observations(station_id,variable,time);
+CREATE INDEX IF NOT EXISTS obs_revision_cover ON observations(station_id,variable,step,time,source_id,id,value,quality);
 CREATE TABLE IF NOT EXISTS coverage(source_id TEXT NOT NULL,station_id TEXT NOT NULL,variable TEXT NOT NULL,step TEXT NOT NULL,start TEXT,end TEXT,valid INTEGER NOT NULL,total INTEGER NOT NULL,metadata TEXT NOT NULL,PRIMARY KEY(source_id,station_id,variable,step));
 CREATE TABLE IF NOT EXISTS input_products(id TEXT PRIMARY KEY,name TEXT NOT NULL,created_at TEXT NOT NULL,manifest TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS parameter_versions(id TEXT PRIMARY KEY,name TEXT NOT NULL,created_at TEXT NOT NULL,payload TEXT NOT NULL);
@@ -41,6 +43,9 @@ class Database:
             db.execute('PRAGMA journal_mode=WAL')
             db.executescript(SCHEMA)
             db.execute('INSERT OR IGNORE INTO schema_version VALUES(1,?)', (now(),))
+        from .stations import sync_locations, sync_datums
+        sync_locations(self)
+        sync_datums(self)
 
     @contextmanager
     def connect(self):
@@ -92,7 +97,10 @@ class Database:
         where = ' AND '.join(clauses)
         # New revisions replace the selected view only, never the original source rows.
         sql = f'''SELECT * FROM (SELECT o.*,ROW_NUMBER() OVER(PARTITION BY station_id,variable,step,time ORDER BY s.imported_at DESC,o.id DESC) rn FROM observations o JOIN sources s ON s.id=o.source_id WHERE {where} AND s.rowid IN (SELECT MAX(rowid) FROM sources GROUP BY path)) WHERE rn=1 ORDER BY time LIMIT ?'''
-        args.append(min(100000, max(1, int(limit))))
+        if limit is None:
+            sql = sql.removesuffix(' LIMIT ?')
+        else:
+            args.append(min(100000, max(1, int(limit))))
         return self.rows(sql, args)
 
     def items(self, table):

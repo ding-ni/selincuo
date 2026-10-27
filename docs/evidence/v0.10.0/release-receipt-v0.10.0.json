@@ -1,0 +1,70 @@
+{
+  "at": "2026-10-27T03:57:02.774288+00:00",
+  "projectId": "selinco",
+  "version": "0.10.0",
+  "setup": {
+    "path": "F:\\色林错预警预报平台\\releases\\色林错预警预报平台-v0.10.0-Setup.exe",
+    "bytes": 421208444,
+    "sha256": "429270498b463fd9e2df45c05117081fb68b268a8060956625dcc21b6a94299c"
+  },
+  "runtimeSHA256": "355993549a01387a5748073c12aa3343eac432687682c671108a2982214508e2",
+  "defaultReleaseId": "RELEASE-protected-rev2",
+  "defaultResultId": "BUILTIN-historical-rev2-39192cc713c5",
+  "candidateUpgradePassed": false,
+  "scientificStatus": "Protected legacy reference retained. E3 controlled diagnosis completed; no candidate passed scientific admission.",
+  "scope": "Local isolated installed EXE, 18 base workflows plus evaluation archive and expected-release compute; developer-Python-free PATH and localhost-only browser. Not independent-machine certification.",
+  "pythonTests": 167,
+  "pythonSkipped": 0,
+  "javascriptTests": 31,
+  "publishedObservationResource": {
+    "path": "F:\\色林错预警预报平台\\build\\installed-v0100-final2-remediation-verification-20261027\\application\\config\\operational\\published-observation-snapshots\\observations-6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e.json",
+    "fileSHA256": "e5ecc5901b00d90ed80370347bd71808bea0e6b3cba5a977673a364e5ec2f559",
+    "observationSHA256": "6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e",
+    "sourceCount": 33
+  },
+  "installedSoftwareChecks": [
+    "clean-seed",
+    "published-default-context-and-frozen-input",
+    "window-evaluation-explicit",
+    "builtin-result-viewable",
+    "read-only-covered-window-reuse",
+    "builtin-scheme-available",
+    "fixed-parameters-server-owned",
+    "2023-land-warmup-with-original-window-lake-initialization",
+    "duplicate-request-idempotency",
+    "2025-full-year-result",
+    "background-CSV-export-and-artifact-reuse",
+    "saved-state-continuation",
+    "background-backup-artifact-download",
+    "background-independent-directory-restore",
+    "default-release-unchanged",
+    "frozen-reference-metrics-match",
+    "frozen-reference-daily-values-match",
+    "water-balance"
+  ],
+  "additionalChecks": [
+    "actual-installed-exe-version",
+    "manifest-source-identity",
+    "frozen-evaluation-source-path",
+    "server-side-evaluation",
+    "idempotency-and-archive-reuse",
+    "not-comparable-and-unknown-explicit",
+    "artifact-download-sha",
+    "compact-task-identity",
+    "expected-release-plan-reuse",
+    "forged-scores-rejected",
+    "default-unchanged"
+  ],
+  "remaining": [
+    "continuous-reference lineage and diagnostic artifact readers",
+    "scientific publication/runtime admission",
+    "real long forcing and initialization stability",
+    "formal multi-seed search",
+    "first-query target and independent-machine installation"
+  ],
+  "evidenceDirectory": "F:\\色林错预警预报平台\\build\\remediation-20261026\\evidence\\v0100",
+  "installationProofSHA256": "412e1088eb70e895a4bd8c77a031c33a31df9c7c9a35eb9444d3798ec9b18ccb",
+  "extraProofSHA256": "b632b5f24db50c498a2006ccdfcfd592d2a8937e88b9064f886ed583860bccc4",
+  "offlineProofSHA256": "e1ca968a0607a2faf01dbc20e0513979c74271604700da57d33b2b8a7bf9d14a",
+  "finalAssetBindingSHA256": "db86666d1be8c1339a82e0d0f3c5b86d58f9081562e23659c9686855bed651ce"
+}

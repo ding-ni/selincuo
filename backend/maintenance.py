@@ -3,9 +3,13 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import shutil
 import stat
 import uuid
 import zipfile
+import hashlib
+from urllib.parse import urlencode
+from functools import lru_cache
 from pathlib import Path
 
 from .common import ROOT, canonical, digest, now, read_json, sha_file, within, write_json
@@ -114,32 +118,129 @@ def cleanup_execute(db, task_id, token):
     return {'status': 'recycled', 'taskId': task_id}
 
 
-def backup_workspace(db):
+def _hash_progress(path, progress=None, cancelled=None, start=90, end=99):
+    path=Path(path);total=path.stat().st_size;done=0;value=hashlib.sha256()
+    with path.open('rb') as stream:
+        while True:
+            if cancelled and cancelled():raise InterruptedError('用户停止完整性校验')
+            block=stream.read(1024*1024)
+            if not block:break
+            value.update(block);done+=len(block)
+            if progress:progress(start+(end-start)*done/max(1,total),f'校验文件摘要 · {done}/{total} 字节')
+    return value.hexdigest()
+
+
+@lru_cache(maxsize=128)
+def _restored_artifact_valid(path, size, modified_ns, expected_sha256):
+    # Restore creates new filesystem timestamps. Revalidate bytes once for that
+    # exact stat signature rather than rejecting an otherwise intact archive.
+    return sha_file(Path(path))==expected_sha256
+
+
+def artifact_file(db, task, name):
+    if task.get('status')!='succeeded':raise ValueError('任务尚未成功，产物不可下载')
+    artifact=next((a for a in (task.get('result') or {}).get('artifacts',[]) if a.get('name')==name),None)
+    if not artifact or not artifact.get('complete'):raise FileNotFoundError('完整任务产物不存在')
+    if artifact.get('storage')=='published':
+        from .published_results import result_file
+        path=result_file(artifact['ownerTaskId'],artifact['filename'])
+    elif artifact.get('storage')=='exports':path=within(db.workspace/'exports',artifact['filename'])
+    else:path=within(within(db.workspace/'tasks',artifact['ownerTaskId']),artifact['filename'])
+    if not path.is_file() or path.stat().st_size!=artifact['bytes']:
+        raise ValueError('产物文件已变化，请重新导出并校验')
+    signature=path.stat()
+    if (signature.st_mtime_ns!=artifact['mtimeNs'] and not _restored_artifact_valid(
+            str(path.resolve()),signature.st_size,signature.st_mtime_ns,artifact['sha256'])):
+        raise ValueError('产物文件已变化，请重新导出并校验')
+    return path
+
+
+def export_result(db, request, folder, progress=None, cancelled=None):
+    from .business_context import result_task
+    from .published_results import catalog, result_file
+    task=result_task(db,request['taskId'])
+    if task.get('status')!='succeeded' or not task.get('result') or task.get('trashed'):
+        raise ValueError('只能导出完整成功成果')
+    filename=request.get('format','hourly.npz')
+    if filename not in ('daily.csv','checkpoint.json','result.json','hourly.npz','request.json'):
+        raise ValueError('不支持的导出类型')
+    published=any(r['id']==task['id'] for r in catalog())
+    owner=task['id'];storage='published' if published else 'task'
+    source_filename='final-state.json' if published and filename=='checkpoint.json' else filename
+    if published:path=result_file(task['id'],source_filename)
+    else:
+        source=within(db.workspace/'tasks',task['id'])
+        path=source/filename
+        if filename=='hourly.npz' and not path.is_file() and task['result'].get('storageFormat')=='zarr-v2':
+            from .grid_storage import export_npz
+            path=export_npz(source,folder,progress,cancelled)
+            owner=folder.name
+    if not path.is_file():raise FileNotFoundError('成果中没有该导出文件')
+    before=path.stat()
+    fingerprint=_hash_progress(path,progress,cancelled)
+    after=path.stat()
+    if before.st_size!=after.st_size or before.st_mtime_ns!=after.st_mtime_ns:
+        raise ValueError('导出过程中源文件发生变化，请重试')
+    artifact={'name':filename,'filename':source_filename,'storage':storage,'ownerTaskId':owner,
+              'bytes':path.stat().st_size,'sha256':fingerprint,'mtimeNs':path.stat().st_mtime_ns,'complete':True,
+              'downloadUrl':'/api/model/task-artifact?'+urlencode({'taskId':folder.name,'name':filename})}
+    return {'artifacts':[artifact],'sourceTaskId':task['id'],'sourceIdentitySHA256':digest(task['result'].get('identity',{})),
+            'termination':'completed'}
+
+
+def backup_workspace(db, progress=None, cancelled=None):
     identifier = 'backup-' + now().replace(':', '').replace('+', '-') + '-' + uuid.uuid4().hex[:6]
     output = db.workspace / 'exports' / (identifier + '.zip')
+    partial=output.with_suffix('.zip.partial')
     output.parent.mkdir(parents=True, exist_ok=True)
     snapshot = db.workspace / 'exports' / (identifier + '.sqlite3')
     with db.connect() as source:
         target = sqlite3.connect(snapshot)
         try:
-            source.backup(target)
+            def snapshot_progress(status, remaining, total):
+                if cancelled and cancelled():raise InterruptedError('用户停止备份')
+                if progress:progress(5*(total-remaining)/max(1,total),'建立一致数据库快照')
+            source.backup(target,pages=256,progress=snapshot_progress)
         finally:
             target.close()
     spatial = read_json(ROOT / 'data/derived/spatial/manifest.json')
     manifest = {'schemaVersion': 1, 'projectId': 'selinco', 'createdAt': now(), 'files': [],
                 'spatialVersion': (spatial or {}).get('version')}
+    from .grid_spatial import load
+    versions={(spatial or {}).get('version')}
+    for row in db.items('schemes'):versions.add(row.get('payload',{}).get('spatialVersion'))
+    for row in db.rows("SELECT result FROM tasks WHERE status='succeeded' AND result IS NOT NULL"):
+        versions.add(json.loads(row['result']).get('spatialVersion'))
+    manifest['requiredSpatialVersions']={v:digest(load(v)) for v in sorted(v for v in versions if v)}
     files = [p for p in db.workspace.rglob('*') if p.is_file() and not p.is_symlink()
              and p.relative_to(db.workspace).parts[0] not in ('exports', 'numeric-cache')
              and (p.relative_to(db.workspace).parts[0] != 'incoming' or p.suffix == '.nc')
-             and not any(part.endswith('.chunks') for part in p.relative_to(db.workspace).parts)
+             and not any(part.endswith('.chunks') or part=='.latest-parts' for part in p.relative_to(db.workspace).parts)
              and not p.name.endswith(('-wal', '-shm', '.partial')) and p.name != 'instance.lock' and p != db.path]
-    with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=1) as archive:
+    total=sum(p.stat().st_size for p in files+[snapshot]);done=0
+    with zipfile.ZipFile(partial, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=1,allowZip64=True) as archive:
         for path in files + [snapshot]:
+            if cancelled and cancelled():raise InterruptedError('用户停止备份')
             relative = 'database/hydrology.sqlite3' if path == snapshot else path.relative_to(db.workspace).as_posix()
-            archive.write(path, relative)
-            manifest['files'].append({'path': relative, 'bytes': path.stat().st_size, 'sha256': sha_file(path)})
+            before=path.stat();hashed=hashlib.sha256();size=0
+            with path.open('rb') as source,archive.open(relative,'w',force_zip64=True) as target:
+                while True:
+                    if cancelled and cancelled():raise InterruptedError('用户停止备份')
+                    chunk=source.read(1024*1024)
+                    if not chunk:break
+                    target.write(chunk);hashed.update(chunk);size+=len(chunk);done+=len(chunk)
+                    if progress:progress(5+85*done/max(1,total),f'备份 {relative} · {done}/{total} 字节')
+            after=path.stat()
+            if before.st_size!=after.st_size or before.st_mtime_ns!=after.st_mtime_ns:
+                raise ValueError('备份过程中源文件发生变化，请重试：'+relative)
+            manifest['files'].append({'path': relative, 'bytes': size, 'sha256': hashed.hexdigest()})
         archive.writestr('backup-manifest.json', canonical(manifest))
-    return {'filename': output.name, 'bytes': output.stat().st_size, 'sha256': sha_file(output), 'files': len(files) + 1}
+    fingerprint=_hash_progress(partial,progress,cancelled)
+    partial.replace(output)
+    result={'filename': output.name, 'bytes': output.stat().st_size, 'sha256':fingerprint, 'files': len(files) + 1,
+            'mtimeNs':output.stat().st_mtime_ns,'complete':True}
+    write_json(output.with_suffix('.complete.json'),result)
+    return result
 
 
 def restore_preview(archive_path):
@@ -150,6 +251,9 @@ def restore_preview(archive_path):
         current = read_json(ROOT / 'data/derived/spatial/manifest.json') or {}
         if manifest.get('spatialVersion') != current.get('version'):
             raise ValueError('备份空间版本与当前安装不一致，请同时迁移对应源码及空间资料包')
+        from .grid_spatial import load
+        for version,expected in manifest.get('requiredSpatialVersions',{}).items():
+            if digest(load(version))!=expected:raise ValueError('备份依赖的空间版本缺失或摘要不同：'+version)
         names = [info.filename for info in archive.infolist()]
         if len(names) != len(set(names)):
             raise ValueError('备份含重复文件名')
@@ -168,22 +272,82 @@ def restore_preview(archive_path):
     return manifest
 
 
-def restore_workspace(archive_path, destination):
+def restore_archive(db, request):
+    """Resolve only an uploaded basename or this workspace's verified backup."""
+    filename, task_id = request.get('filename'), request.get('backupTaskId')
+    if bool(filename) == bool(task_id):
+        raise ValueError('请仅选择上传备份文件或本工作区备份任务之一')
+    if task_id:
+        task = db.task(task_id)
+        if task.get('kind') != 'backup' or task.get('status') != 'succeeded':
+            raise ValueError('只能恢复本工作区成功的完整备份任务')
+        artifacts = (task.get('result') or {}).get('artifacts', [])
+        if len(artifacts) != 1 or not artifacts[0].get('name', '').lower().endswith('.zip'):
+            raise ValueError('备份任务没有唯一完整ZIP产物')
+        return artifact_file(db, task, artifacts[0]['name'])
+    if not isinstance(filename, str) or not filename or any(c in filename for c in ('/', '\\', ':')) or filename.startswith('.') or not filename.lower().endswith('.zip'):
+        raise ValueError('备份文件名须为上传目录内的ZIP名称')
+    archive = within(db.workspace/'incoming', filename)
+    if not archive.is_file() or archive.is_symlink():
+        raise ValueError('已上传备份不存在')
+    return archive
+
+
+def restore_request_preview(db, request):
+    manifest = restore_preview(restore_archive(db, request))
+    return {'files':len(manifest['files']), 'bytes':sum(row['bytes'] for row in manifest['files']),
+            'token':digest(manifest), **({'backupTaskId':request['backupTaskId']} if request.get('backupTaskId') else {'filename':request['filename']}),
+            'restartRequired':True, 'message':'恢复到独立目录并逐文件校验；成功后切换下次启动工作区，原工作区保留。恢复排队后暂停接受新任务。'}
+
+
+def restore_workspace(archive_path, destination, progress=None, cancelled=None):
     manifest = restore_preview(archive_path)
     destination = Path(destination).resolve()
     if destination.exists() and any(destination.iterdir()):
         raise ValueError('恢复目标须为空目录，不覆盖既有工作区')
     destination.mkdir(parents=True, exist_ok=True)
+    total = sum(row['bytes'] for row in manifest['files'])
+    if shutil.disk_usage(destination).free < total + 16*1024*1024:
+        raise ValueError('恢复磁盘可用空间不足：需要至少 '+str(total+16*1024*1024)+' 字节')
+    done = 0
     with zipfile.ZipFile(archive_path) as archive:
-        for row in manifest['files']:
+        for index, row in enumerate(manifest['files']):
+            if cancelled and cancelled():raise InterruptedError('用户停止恢复；原工作区未切换')
             output = within(destination, row['path'])
             output.parent.mkdir(parents=True, exist_ok=True)
+            hashed = hashlib.sha256()
             with archive.open(row['path']) as source, output.open('xb') as target:
                 while chunk := source.read(1024 * 1024):
+                    if cancelled and cancelled():raise InterruptedError('用户停止恢复；原工作区未切换')
                     target.write(chunk)
-            if sha_file(output) != row['sha256']:
+                    hashed.update(chunk);done += len(chunk)
+                    if progress:progress(2+92*done/max(1,total),f'恢复 {index+1}/{len(manifest["files"])} 文件 · {done}/{total} 字节 · {row["path"]}')
+            if hashed.hexdigest() != row['sha256']:
                 raise ValueError('备份摘要校验失败，恢复目录保留供检查，未切换活动工作区')
     identity = read_json(destination / 'workspace-identity.json')
     if not identity or identity.get('projectId') != 'selinco':
         raise ValueError('恢复工作区身份不正确')
-    return {'workspace': str(destination), 'files': len(manifest['files'])}
+    if cancelled and cancelled():raise InterruptedError('用户停止恢复；原工作区未切换')
+    if progress:progress(96,'检查恢复数据库完整性与外键')
+    database = destination/'database/hydrology.sqlite3'
+    from contextlib import closing
+    with closing(sqlite3.connect(database.as_uri()+'?mode=ro',uri=True)) as connection:
+        if connection.execute('PRAGMA integrity_check').fetchone()[0] != 'ok' or connection.execute('PRAGMA foreign_key_check').fetchone():
+            raise ValueError('恢复数据库完整性或外键检查失败；未切换工作区')
+        tables={row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        if not {'stations','observations','input_products','tasks','states','schema_version'} <= tables:
+            raise ValueError('恢复数据库缺少色林错必要数据表；未切换工作区')
+        counts={name:connection.execute('SELECT COUNT(*) FROM '+name).fetchone()[0] for name in ('observations','input_products','tasks','states','sources')}
+        verified={row['path']:row['sha256'] for row in manifest['files']}
+        for identifier,payload in connection.execute('SELECT id,manifest FROM input_products'):
+            product=json.loads(payload)
+            relative=(Path('inputs/products')/identifier/product['data']).as_posix()
+            if verified.get(relative)!=product.get('dataSHA256'):
+                raise ValueError('恢复输入登记与已校验文件不一致：'+identifier)
+        for identifier,expected,payload in connection.execute('SELECT id,sha256,metadata FROM sources'):
+            archived=json.loads(payload).get('archivedPath')
+            if archived and verified.get(archived)!=expected:
+                raise ValueError('恢复观测来源与已校验文件不一致：'+identifier)
+    if cancelled and cancelled():raise InterruptedError('用户停止恢复；原工作区未切换')
+    return {'workspace':str(destination),'files':len(manifest['files']),'bytes':total,'validatedSHA256Files':len(manifest['files']),
+            'databaseIntegrity':'ok','counts':counts,'restartRequired':True}

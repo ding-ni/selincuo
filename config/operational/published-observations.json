@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "projectId": "selinco",
+  "snapshots": {
+    "BUILTIN-historical-rev2-39192cc713c5": {
+      "file": "published-observation-snapshots/observations-6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e.json",
+      "observationSHA256": "6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e",
+      "fileSHA256": "e5ecc5901b00d90ed80370347bd71808bea0e6b3cba5a977673a364e5ec2f559"
+    }
+  }
+}

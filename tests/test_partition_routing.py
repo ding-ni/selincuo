@@ -6,7 +6,7 @@ from unittest.mock import patch
 import numpy as np
 import pandas as pd
 from backend.model_diagnostics import partition_budgets, flow_timing_report
-from backend.calibration import calibrate
+from backend.calibration import calibrate, search_conditions
 from backend.calibration_config import ROUTING_KEYS
 from backend.model_core import parameters
 
@@ -41,19 +41,37 @@ class PartitionRoutingTests(unittest.TestCase):
         base=parameters({'KC':.73,'KI':.1,'WM':220})
         def run(future):
             def simulation(db,request,**kwargs):
+                if request.get('_skipDiagnostics'):
+                    self.assertEqual(request['end'], '2025-01-01T00:00:00')
                 p=parameters(request['parameters'])
                 self.assertEqual({k:v for k,v in p.items() if k not in ROUTING_KEYS}, {k:v for k,v in base.items() if k not in ROUTING_KEYS})
                 loss=(p['baseflowTauHours']-1500)**2/1e7+(p['interflowTauHours']-100)**2/1e5
                 return {'parameters':p,'metrics':{'2024':{'flow':{'count':100,'nse':1-loss,'logNse':1-loss,'pbias':0}}, '2025':{'flow':{'nse':future}}}}
             with tempfile.TemporaryDirectory() as tmp, patch('backend.calibration.prepare',return_value=source),patch('backend.calibration.run_simulation',side_effect=simulation):
-                return calibrate(None,{'stage':'routing','inputId':'test','parameters':base,'maxEvaluations':40},Path(tmp))
+                return calibrate(None,{'stage':'routing','inputId':'test','parameters':base,'maxEvaluations':40,'calibrationPartition':'uniform'},Path(tmp))
         a,b=run(-10),run(10)
         self.assertEqual(a['calibration']['trace'],b['calibration']['trace'])
         self.assertEqual(a['parameters'],b['parameters'])
         self.assertEqual(a['calibration']['searchParameters'],ROUTING_KEYS)
         self.assertEqual(a['calibration']['evaluations'],40)
+        self.assertEqual(a['calibration']['decision'],'candidate-only')
+        self.assertFalse(a['calibration']['businessReady'])
+        self.assertIn('insufficient-2025-flow-validation',a['calibration']['reviewFlags'])
         with tempfile.TemporaryDirectory() as tmp, self.assertRaises(ValueError):
             calibrate(None,{'stage':'routing','routingMode':'lumped'},Path(tmp))
+
+    def test_search_excludes_withheld_observations_without_mutating_frozen_snapshot(self):
+        snapshot = {'flow': {'2024-06-01': 3, '2025-06-01': 1000},
+                    'level': {'2023-06-01': 2, '2024-06-01': 3, '2025-06-01': 4},
+                    'windows': [{'start': '2024-06-01'}, {'start': '2025-06-01'}]}
+        request = {'start': '2023-01-01', 'end': '2026-01-01', '_observations': snapshot}
+        result = search_conditions(request, {})
+        self.assertEqual(result['end'], '2025-01-01T00:00:00')
+        self.assertEqual(result['_observations']['flow'], {'2024-06-01': 3})
+        self.assertEqual(result['_observations']['level'], {'2024-06-01': 3})
+        self.assertEqual(len(result['_observations']['windows']), 1)
+        self.assertEqual(request['end'], '2026-01-01')
+        self.assertEqual(len(snapshot['flow']), 2)
 
     def test_invalid_sensitivity_candidate_is_skipped_without_losing_other_experiments(self):
         from backend.sensitivity import analyze

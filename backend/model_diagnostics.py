@@ -76,7 +76,7 @@ def flow_timing_report(times, flows, observation):
     return {'monthly': monthly, 'definition': '仅匹配完整日，月表总量是观测匹配日累计，不外推缺测日。'}
 
 def diagnose(times, source, select, diagnostic, states, initial, flows, routing, flux,
-             levels, volumes, windows, parameters, spatial, mode, observation, initial_routing_volume=0., initial_partition_routing=None):
+             levels, volumes, windows, parameters, spatial, mode, observation, initial_routing_volume=0., initial_partition_routing=None, regions=None):
     areas = np.array([u['areaKm2'] for u in spatial['units']])
     scale = areas * 1000
     ice = np.array([u['kind'] == 'glacier' for u in spatial['units']])
@@ -148,7 +148,14 @@ def diagnose(times, source, select, diagnostic, states, initial, flows, routing,
                                'windowVolumeChangeM3': float(volumes[ids[-1]]), 'residual': residual})
     partitions = partition_budgets(times, source, select, diagnostic, states, initial, flows, routing, spatial,
                                    parameters, initial_partition_routing)
+    from .cryosphere_audit import cryosphere_report
+    cryosphere = cryosphere_report(
+        times, source['precipitation'][select],
+        source['temperature'][select]+source['deltaElevation'][None, :]*np.array([
+            (regions or {}).get(u.get('partition'), parameters)['lapseRate'] for u in spatial['units']])[None, :],
+        source['evaporation'][select], diagnostic, states, initial, spatial['units'], parameters, regions)
     return {'schemaVersion': 2, 'routingMode': mode, 'monthly': monthly, 'lakeWindows': windows_report,
+            'cryosphere': cryosphere,
             'partitions': partitions, 'flowTiming': flow_timing_report(times, flows, observation) if 'duja' in flows else {},
             'partitionDefinition': '六个互斥产汇流分区；杜加与扎加下游补充区合为扎加藏布，求和时不重复加入整条扎加。',
             'catchmentBalanceMaxErrorM3': float(np.max(np.abs(frame.catchmentBalanceErrorM3))), 'landBalanceMaxErrorM3': float(np.max(np.abs(frame.landBalanceErrorM3))),

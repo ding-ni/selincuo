@@ -76,6 +76,10 @@ class IntegrationTests(unittest.TestCase):
                 for key in ('flow', 'unitStates', 'unitDiagnostics', 'routingStorage', 'sourceRoutingStorage', 'continuousLakeVolumeChange'):
                     np.testing.assert_allclose(f[key], np.concatenate([p[key], t[key]]), atol=1e-9, rtol=1e-12)
             self.assertEqual(full['resultSource'], 'model-backend')
+            focused = run_simulation(db, {**request, 'evaluationStart': '2023-01-04T00:00:00', 'evaluationEnd': '2023-01-08T00:00:00'})
+            self.assertEqual(focused['checkpoint'], full['checkpoint'])
+            self.assertEqual([r['date'][:10] for r in focused['daily']], ['2023-01-04', '2023-01-05', '2023-01-06', '2023-01-07'])
+            self.assertEqual(focused['daily'], [r for r in full['daily'] if '2023-01-04' <= r['date'][:10] < '2023-01-08'])
             midnight = run_simulation(db, {**request, 'start': '2023-01-02T00:00:00', 'end': '2023-01-04T00:00:00'})
             self.assertEqual([r['date'][:10] for r in midnight['daily']], ['2023-01-02', '2023-01-03'])
             self.assertTrue(all(r['forcingHours'] == 24 for r in midnight['daily']))
@@ -86,6 +90,17 @@ class IntegrationTests(unittest.TestCase):
                 run_simulation(db, {**request, 'projectId': 'foreign'})
             with self.assertRaises(ValueError):
                 run_simulation(db, {**request, 'start': '2023-01-04T19:00:00', '_parentState': part['checkpoint']})
+            zonal = {**request, 'partitionParameters': {'duja': {'KC': .63, 'WM': 240, 'lapseRate': -.007}}}
+            whole = run_simulation(db, zonal, Path(temp) / 'zonal-full')
+            head = run_simulation(db, {**zonal, 'end': split}, Path(temp) / 'zonal-part')
+            tail = run_simulation(db, {**zonal, 'start': '2023-01-04T18:00:00', '_parentState': head['checkpoint']}, Path(temp) / 'zonal-tail')
+            self.assertEqual(whole['checkpoint'], tail['checkpoint'])
+            with np.load(Path(temp) / 'zonal-full/hourly.npz') as f, np.load(Path(temp) / 'zonal-part/hourly.npz') as p, np.load(Path(temp) / 'zonal-tail/hourly.npz') as t:
+                for key in ('flow', 'unitStates', 'unitDiagnostics', 'routingStorage', 'continuousLakeVolumeChange'):
+                    np.testing.assert_allclose(f[key], np.concatenate([p[key], t[key]]), atol=1e-9, rtol=1e-12)
+            with self.assertRaises(ValueError):
+                run_simulation(db, {**zonal, 'partitionParameters': {'duja': {'KC': .64}},
+                                    'start': '2023-01-04T18:00:00', '_parentState': head['checkpoint']})
 
     def test_api_project_and_origin_isolation(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -104,11 +119,34 @@ class IntegrationTests(unittest.TestCase):
                 self.assertEqual(call('/api/health')['projectId'], 'selinco')
                 boot = call('/api/model/bootstrap')
                 self.assertFalse(boot['forecast']['enabled'])
+                self.assertEqual(call('/api/model/data-contract')['schemaVersion'],1)
+                with urllib.request.urlopen(base+'/api/model/data-template') as response:
+                    from io import BytesIO
+                    from openpyxl import load_workbook
+                    book=load_workbook(BytesIO(response.read()))
+                    self.assertEqual(book.active.title,'data')
+                    self.assertEqual(book.active['A1'].value,'station')
+                with server.db.connect() as conn:
+                    conn.execute('INSERT INTO stations VALUES(?,?,?,?,?,?)',('SLC','主站','lake',89.,32.,'{}'))
+                imported=call('/api/model/data-import',{'schemaVersion':1,'projectId':'selinco','sourceKey':'http-test',
+                    'records':[{'station':'SLC','variable':'level','time':'2024-06-01','value':4544.,'unit':'m','step':'day'}]})
+                self.assertEqual(imported['records'],1)
+                self.assertEqual(call('/api/model/observation-series?station=SLC&variable=level')['rows'][0]['value'],4544.)
+                for published in boot['publishedResults']:
+                    self.assertTrue(call('/api/model/published-result?id='+published['id'])['builtin'])
                 with self.assertRaises(urllib.error.HTTPError):
                     call('/api/model/tasks', {'kind': 'simulation', 'projectId': 'foreign'})
                 with self.assertRaises(urllib.error.HTTPError):
                     call('/api/model/backup', {}, 'http://foreign.example')
                 self.assertEqual(boot['database']['counts']['tasks'], 0)
+                named = call('/api/model/parameters', {'name': '分区参数保存测试', 'payload': {
+                    'parameters': {'WM': 200}, 'partitionParameters': {'duja': {'WM': 240}}}})
+                versions = call('/api/model/bootstrap')['parameters']
+                saved = next(r for r in versions if r['id'] == named['id'])
+                self.assertEqual(saved['payload']['partitionParameters'], {'duja': {'WM': 240}})
+                self.assertEqual(saved['payload']['parameters']['WM'], 200)
+                with self.assertRaises(urllib.error.HTTPError):
+                    call('/api/model/parameters', {'name': '非法分区', 'payload': {'partitionParameters': {'foreign': {'WM': 200}}}})
             finally:
                 server.shutdown()
                 server.jobs.close()

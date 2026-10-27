@@ -19,3 +19,53 @@ restored-workspaces/
 config/active-workspace.json
 frontend/package-lock.upstream.json
 *.log
+
+# Preserve exclusions from the original Selincuo repository.
+# Local source material and generated research products remain on disk.
+/任务书最终盖章签字版本.pdf
+/数据/原始资料/
+/数据/外部衍生成果/
+/数据/标准数据/*
+!/数据/标准数据/接入说明.md
+/成果/
+/文档/核查记录/
+/参考资料/旧项目参考/*
+!/参考资料/旧项目参考/使用限制.md
+
+# Dependencies, local environments and build output.
+node_modules/
+/前端/依赖/
+dist/
+build/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+playwright-report/
+test-results/
+*.log
+
+# Credentials and machine-local settings.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.sqlite
+*.sqlite3
+.DS_Store
+Thumbs.db
+
+# Intentionally local: superseded, unreferenced result copies and one-time UI patchers.
+/data/final-results/historical-rev2/
+/data/final-results/historical-rev2-180b29c90ee5/
+/scripts/polish_business_details.py
+/scripts/polish_business_ui.py
+
+# Small, reviewed test evidence is part of the versioned handoff.
+!/docs/evidence/v0.10.0/*.log

@@ -1,17 +1,27 @@
-﻿#define AppName "色林错预警预报平台"
-#define AppVersion "0.6.0"
+#define AppName "色林错预警预报平台"
+#ifndef AppVersion
+  #define AppVersion "0.10.0"
+#endif
 #ifndef AppSource
   #define AppSource "..\build\verified-dist\SelincoPlatform"
 #endif
 [Setup]
+#ifdef VerificationInstall
+AppId={{2B4C2395-4945-4697-8215-1B448A30FBA2}
+#else
 AppId={{8CCB9CE5-4353-48F0-8AD3-2F5687B792D0}
+#endif
 AppName={#AppName}
 AppVersion={#AppVersion}
 DefaultDirName={localappdata}\Programs\SelincoPlatform
 DefaultGroupName={#AppName}
 PrivilegesRequired=lowest
 OutputDir=..\releases
-OutputBaseFilename=色林错预警预报平台-v0.6.0-Setup
+#ifdef VerificationInstall
+OutputBaseFilename=色林错预警预报平台-v{#AppVersion}-Verification-Setup
+#else
+OutputBaseFilename=色林错预警预报平台-v{#AppVersion}-Setup
+#endif
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 Compression=lzma/fast
@@ -24,10 +34,14 @@ CloseApplications=yes
 Source: "{#AppSource}\*"; DestDir: "{app}"; Excludes: "\workspace\*,\restored-workspaces\*,\config\active-workspace.json"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "start_platform.ps1"; DestDir: "{app}\installer"; Flags: ignoreversion
 [Tasks]
+#ifndef VerificationInstall
 Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "快捷方式："
+#endif
 [Icons]
+#ifndef VerificationInstall
 Name: "{userprograms}\{#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\installer\start_platform.ps1"""; WorkingDir: "{app}"
 Name: "{userdesktop}\{#AppName}"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\installer\start_platform.ps1"""; WorkingDir: "{app}"; Tasks: desktopicon
+#endif
 [Code]
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin

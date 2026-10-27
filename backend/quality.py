@@ -10,7 +10,9 @@ def forcing_report(db, identifier, times, precipitation, spatial):
     grid_daily = pd.DataFrame(precipitation, index=times).resample('D', closed='right', label='left').sum()
     counts = pd.Series(1, index=times).resample('D', closed='right', label='left').sum()
     grid_daily.loc[counts < 24] = np.nan
-    for station in db.rows("SELECT * FROM stations WHERE kind='rain' AND lon IS NOT NULL AND lat IS NOT NULL"):
+    # River/lake stations may also measure rainfall. Station kind is not a
+    # variable filter: excluding SLC hides the gauge closest to the lake.
+    for station in db.rows("SELECT * FROM stations WHERE lon IS NOT NULL AND lat IS NOT NULL AND id IN (SELECT DISTINCT station_id FROM observations WHERE variable='precipitation')"):
         distances = [(g['lon'] - station['lon']) ** 2 * np.cos(np.radians(station['lat'])) ** 2 + (g['lat'] - station['lat']) ** 2 for g in spatial['grids']]
         index = int(np.argmin(distances))
         observed = daily_series(db, station['id'], 'precipitation')

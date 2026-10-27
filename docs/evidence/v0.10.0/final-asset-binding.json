@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-27T03:55:05.128269+00:00",
+  "version": "0.10.0",
+  "passed": true,
+  "appRoot": "F:\\色林错预警预报平台\\build\\release-v0100-final2-remediation-20261027\\SelincoPlatform",
+  "verifiedAppRoot": "F:\\色林错预警预报平台\\build\\installed-v0100-final2-remediation-verification-20261027\\application",
+  "unchangedAssetCount": 2821,
+  "postVerificationChanges": [
+    "README.md",
+    "docs/整改执行台账-现行.md",
+    "docs/现场使用手册-现行.md",
+    "docs/软件验收-v0.10.0.json",
+    "release-info.json",
+    "source-manifest.json"
+  ],
+  "scope": "Release manifests bind the same tested executable, runtime, frontend, configuration and seed. Only listed documentation and acceptance metadata differ.",
+  "installedProofSHA256": "b632b5f24db50c498a2006ccdfcfd592d2a8937e88b9064f886ed583860bccc4",
+  "installedManifestSHA256": "b9565d6e16b886ad4e2ed887dadc194450d80554582b9fa8dba27e66af2338a7",
+  "finalManifestSHA256": "6a5a51b84dcd93fa6739ba434127c33146d4d6ffc28d5df76dc70ff0ca1b28df",
+  "executableSHA256": "355993549a01387a5748073c12aa3343eac432687682c671108a2982214508e2"
+}

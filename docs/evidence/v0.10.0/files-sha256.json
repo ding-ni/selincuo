@@ -1,0 +1,132 @@
+[
+  {
+    "file": "docs/E3同新域聚合顺序受控诊断-20261027.md",
+    "bytes": 7756,
+    "sha256": "25b190d7f740a84ceb3306f8bc4a6c89b86a8b4ac745086cc8191c744c8e6b7f"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/final-asset-binding.json",
+    "bytes": 1152,
+    "sha256": "db86666d1be8c1339a82e0d0f3c5b86d58f9081562e23659c9686855bed651ce"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/installed-extra-verification.json",
+    "bytes": 13421,
+    "sha256": "b632b5f24db50c498a2006ccdfcfd592d2a8937e88b9064f886ed583860bccc4"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/installed-offline-ui.json",
+    "bytes": 1120,
+    "sha256": "e1ca968a0607a2faf01dbc20e0513979c74271604700da57d33b2b8a7bf9d14a"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/installed-v0100-observation-mismatch.json",
+    "bytes": 13412,
+    "sha256": "f9499746cad1476e36e8c843fa7bea52a79aa5d097bef194f669a20e3dc79651"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/installed-v0100-prefinal-window-initialization-mismatch.json",
+    "bytes": 2221,
+    "sha256": "5a0c3cb49e9e9d749d9a0367de8be5fcdaa57ea1adfa42b66c249716c02ed2bc"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/installed-verification.json",
+    "bytes": 6173,
+    "sha256": "412e1088eb70e895a4bd8c77a031c33a31df9c7c9a35eb9444d3798ec9b18ccb"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/live-v0100-evaluation.json",
+    "bytes": 5553,
+    "sha256": "d23ff89463c69c9b2641aa07ad5cc0fd394390488ed2519a3db4100d03f2383d"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/portable-verification.json",
+    "bytes": 6140,
+    "sha256": "7ae425d3392d86cb76aaf60f88c0a9e047cef52369db5636af6fd5e7ed1ce945"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/published-observation-resource-recovery.json",
+    "bytes": 11334,
+    "sha256": "bc18c055cd19ec9fefbee4e2e0f9e14be2fdcfcd8d2dcc72b913299168d19dda"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/query-cache-v0100-real.json",
+    "bytes": 12515,
+    "sha256": "fb6745700a5952df64cda951c0a703cc90e31fcca75b05a421320c19732756bb"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/query-cache-v0100-real.md",
+    "bytes": 2186,
+    "sha256": "c51ee2bb37098d6a09140805a9390b9c5611dedc4c00f22f991949e7c529ca54"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/README.md",
+    "bytes": 1773,
+    "sha256": "add1f50ee1690043ce5cc119631d9946c89c8af020d1c76f3f6e85fa3bfccbb1"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/release-audit-v0100.md",
+    "bytes": 6207,
+    "sha256": "e54add7e5616c8f8b5fdada290e21b428ace513c53b49e0e7cbbbf1fd48c35a9"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/release-receipt-v0.10.0.json",
+    "bytes": 3414,
+    "sha256": "a6092e434f10943577b824a587aa96485d941203fdee034643e23fb3da1f2940"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/SHA256-v0.10.0.txt",
+    "bytes": 113,
+    "sha256": "f1601437384204d5f1a5faeaa03ff4867fd08404b8045bd2978cccb5e4dc0677"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/source-preflight-v0100-final.json",
+    "bytes": 10019,
+    "sha256": "b488aaceac834edc3173fca2d4716ef8278ee2ff8b3ae52fa78c6e440524fa5c"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/v0100-assembly-receipt.json",
+    "bytes": 310,
+    "sha256": "c93f8202e05bdc0ae19ad0f30aa3b7c2a0158cd4d112a6bad3a40c3ca557c14f"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/v0100-final-tests.log",
+    "bytes": 18717,
+    "sha256": "b8e841baa5ee0572877b2bec336ceead1d68e811df37fbc1e0d52f055312bcf1"
+  },
+  {
+    "file": "docs/evidence/v0.10.0/v0100-frontend-tests.log",
+    "bytes": 2927,
+    "sha256": "83611bd04d9929aa832f88b9a0b1e447d484f0fa3c1235bced2930ea9249eb3e"
+  },
+  {
+    "file": "docs/images/e3-continuous-lake-comparison.png",
+    "bytes": 198711,
+    "sha256": "afa9ca3cf1f9ef494bf6f489e3c8d1ba877cffb75a72722cc915653d96d31398"
+  },
+  {
+    "file": "docs/images/e3-monthly-routed-difference.png",
+    "bytes": 81119,
+    "sha256": "1af0fa3a978552d6381e569333c819abfca77f3efd9af55f027e118fbb3af331"
+  },
+  {
+    "file": "docs/整改执行台账-现行.md",
+    "bytes": 14721,
+    "sha256": "80add1c836df5d68cc2ea6a3eb61c1a69bf4afc796fdab54cf77236da8b95514"
+  },
+  {
+    "file": "docs/现场使用手册-现行.md",
+    "bytes": 8086,
+    "sha256": "01c5f27ade6e700c220de43147a3b8572365fb1b5cb205df6c4be1ebc12c1619"
+  },
+  {
+    "file": "docs/连续基准血缘与诊断读取-下一实施单-20261027.md",
+    "bytes": 12483,
+    "sha256": "6eb92c8dcf57ff287c994971d3aaaa956f3e5cd8fe57c4f45479a60838188a03"
+  },
+  {
+    "file": "README.md",
+    "bytes": 10814,
+    "sha256": "dee4f98d73bd8de1da787a139326f1248c024c04a8075cc4941692ac70beee96"
+  }
+]

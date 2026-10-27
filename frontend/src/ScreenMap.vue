@@ -1,11 +1,12 @@
 <script setup>
-import {ref,computed,onMounted,onBeforeUnmount} from 'vue'
+import {ref,computed,onMounted,onBeforeUnmount,watch} from 'vue'
 import {colorFor,layers,rivers} from './dashboard.mjs'
 import {projector,fitViewport,placeLabels} from './map-view.mjs'
-const props=defineProps({stations:Array,selected:String,focus:String,frame:Object,snow:Object,variable:String,showIce:Boolean,showRivers:Boolean,showTerrain:Boolean,showStations:Boolean,showControl:Boolean,showNames:Boolean})
-const emit=defineEmits(['select','feature','failure'])
-const features=ref([]),riverFeatures=ref([]),unitFeatures=ref([]),context=ref(null),zoom=ref(1),pan=ref([0,0]),drag=ref(null),moved=ref(false),root=ref(),size=ref({width:800,height:500}),target=ref('domain')
-let observer
+const props=defineProps({stations:Array,selected:String,focus:String,frame:Object,snow:Object,variable:String,showIce:Boolean,showRivers:Boolean,showTerrain:Boolean,showStations:Boolean,showControl:Boolean,showNames:Boolean,stateLayer:Object,lakeState:Object,selectedUnit:String,spatialBase:{default:'/spatial/'},showGrid:Boolean,showUnits:Boolean,rangeLayer:Object,reducedMotion:Boolean})
+const emit=defineEmits(['select','feature','failure','unit'])
+const features=ref([]),riverFeatures=ref([]),unitFeatures=ref([]),gridFeatures=ref([]),context=ref(null),zoom=ref(1),pan=ref([0,0]),drag=ref(null),moved=ref(false),root=ref(),size=ref({width:800,height:500}),target=ref('domain')
+let observer,loadTicket=0
+const geometryPaths=new WeakMap()
 const fallback=[87.39456665,30.05430052,92.23041647,33.33041666]
 const bounds=computed(()=>context.value?.domainBounds||fallback),project=computed(()=>projector(bounds.value))
 const xy=p=>project.value(p)
@@ -14,14 +15,20 @@ const fit=computed(()=>fitViewport(target.value==='lake'?lakeBounds.value:bounds
 // fitViewport's origin is its own bounds; translate lake focus into the shared world coordinates.
 const camera=computed(()=>{const k=fit.value.scale*zoom.value;let offset=[0,0];if(target.value==='lake')offset=xy([lakeBounds.value[0],lakeBounds.value[3]]);return{k,x:fit.value.x-offset[0]*k+pan.value[0],y:fit.value.y-offset[1]*k+pan.value[1]}})
 const screen=p=>{const a=xy(p),c=camera.value;return[a[0]*c.k+c.x,a[1]*c.k+c.y]}
-function path(g){if(!g)return '';if(g.type==='LineString')return g.coordinates.map((c,i)=>`${i?'L':'M'}${xy(c).map(v=>v.toFixed(3)).join(',')}`).join(' ');if(g.type==='MultiLineString')return g.coordinates.map(c=>path({type:'LineString',coordinates:c})).join(' ');const ps=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[];return ps.map(p=>p.map(r=>path({type:'LineString',coordinates:r})+'Z').join(' ')).join(' ')}
+function path(g){if(!g)return '';const old=geometryPaths.get(g);if(old?.projection===project.value)return old.value;let value;if(g.type==='LineString')value=g.coordinates.map((c,i)=>`${i?'L':'M'}${xy(c).map(v=>v.toFixed(3)).join(',')}`).join(' ');else if(g.type==='MultiLineString')value=g.coordinates.map(c=>path({type:'LineString',coordinates:c})).join(' ');else{const ps=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[];value=ps.map(p=>p.map(r=>path({type:'LineString',coordinates:r})+'Z').join(' ')).join(' ')}geometryPaths.set(g,{projection:project.value,value});return value}
 const basins=computed(()=>features.value.filter(f=>f.properties.kind==='basin'))
 const lake=computed(()=>features.value.filter(f=>f.properties.kind==='lake'))
-const currentLayer=computed(()=>layers.find(l=>l.id===props.variable)||layers[0])
+const currentLayer=computed(()=>props.rangeLayer||props.stateLayer||layers.find(l=>l.id===props.variable)||layers[0])
 const snowIndex=computed(()=>new Map((props.snow?.units||[]).map(u=>[u.id,u.value])))
 const positioned=computed(()=>(props.stations||[]).filter(s=>s.located))
-const stationObstacles=computed(()=>props.showStations?positioned.value.map(s=>{const [x,y]=screen([s.lon,s.lat]);return{x:x-8,y:y-11,w:75,h:22}}):[])
-const labels=computed(()=>placeLabels((context.value?.labels||[]).filter(l=>l.id!=='fringe').map(l=>{const [x,y]=screen(l.anchor);return{...l,x,y,width:l.kind==='lake'?78:118,height:l.kind==='lake'||!(props.focus===l.id||zoom.value>1.8)?24:36}}).filter(l=>l.x>=0&&l.y>=0&&l.x<=size.value.width&&l.y<=size.value.height),size.value,stationObstacles.value))
+const stationLabels=computed(()=>{
+ const points=positioned.value.map(s=>{const [x,y]=screen([s.lon,s.lat]);return{...s,x,y,name:s.name.replace('色林错','')}}).filter(s=>s.x>=0&&s.y>=0&&s.x<=size.value.width&&s.y<=size.value.height)
+ const obstacles=points.map(s=>({x:s.x-8,y:s.y-8,w:16,h:16}))
+ return placeLabels(points.map(s=>({...s,x:s.x+34,y:s.y-17,width:Math.max(42,s.name.length*12+8),height:20})),size.value,obstacles).map(s=>({...s,anchor:screen([s.lon,s.lat])}))
+})
+const stationLabel=id=>stationLabels.value.find(s=>s.id===id)
+const stationObstacles=computed(()=>props.showStations?stationLabels.value.map(s=>s.box):[])
+const labels=computed(()=>placeLabels((context.value?.labels||[]).map(l=>{const [x,y]=screen(l.anchor);return{...l,x,y,width:l.kind==='lake'?78:Math.max(118,l.name.length*12),height:l.kind==='lake'||!(props.focus===l.id||zoom.value>1.8)?24:36}}).filter(l=>l.x>=0&&l.y>=0&&l.x<=size.value.width&&l.y<=size.value.height),size.value,stationObstacles.value))
 const terrainBox=computed(()=>{const b=context.value?.bounds||[87.1,29.8,92.5,33.6],p=xy([b[0],b[3]]),q=xy([b[2],b[1]]);return{x:p[0],y:p[1],width:q[0]-p[0],height:q[1]-p[1]}})
 const scaleKm=computed(()=>{const max=95/camera.value.k;return [1,2,5,10,20,50,100,200].filter(k=>k<=max).at(-1)||1})
 function focusAt(k,point=[size.value.width/2,size.value.height/2]){const z=Math.min(12,Math.max(1,zoom.value*k)),f=z/zoom.value,c=camera.value;const newX=point[0]-(point[0]-c.x)*f,newY=point[1]-(point[1]-c.y)*f;zoom.value=z;const base=camera.value;pan.value=[newX-base.x+pan.value[0],newY-base.y+pan.value[1]];if(z===1)pan.value=[0,0]}
@@ -32,29 +39,44 @@ function move(e){if(!drag.value)return;const p=point(e),dx=p[0]-drag.value.start
 function up(e){drag.value=null;if(root.value.hasPointerCapture(e.pointerId))root.value.releasePointerCapture(e.pointerId)}
 function selectFeature(f){if(!moved.value)emit('feature',f.properties)}
 function selectBasin(id){const f=basins.value.find(f=>f.properties.id===id);if(f)emit('feature',f.properties)}
-onMounted(async()=>{observer=new ResizeObserver(([e])=>{size.value={width:e.contentRect.width,height:e.contentRect.height};reset(target.value)});observer.observe(root.value);const requests=await Promise.allSettled(['display.geojson','rivers-display.geojson','units-display.geojson','display-context.json'].map(async n=>{const r=await fetch('/spatial/'+n);if(!r.ok)throw Error(n+'加载失败');return await r.json()}));[features,riverFeatures,unitFeatures].forEach((t,i)=>{if(requests[i].status==='fulfilled')t.value=requests[i].value.features;else emit('failure',requests[i].reason.message)});if(requests[3].status==='fulfilled')context.value=requests[3].value;else emit('failure',requests[3].reason.message)})
+const cellValues=computed(()=>{if(props.variable!=='snow'||!props.snow?.complete)return new Map((props.frame?.cells||[]).map(c=>[c.id,c.value]));const groups=new Map();for(const f of unitFeatures.value){const p=f.properties,v=snowIndex.value.get(p.id);if(!p.grid)continue;const a=groups.get(p.grid)||{sum:0,area:0,missing:false};if(v==null)a.missing=true;else{a.sum+=v*p.areaKm2;a.area+=p.areaKm2}groups.set(p.grid,a)}return new Map([...groups].map(([key,a])=>[key,a.missing||!a.area?null:a.sum/a.area]))})
+function gridSelect(f){if(moved.value)return;const p=f.properties;const members=unitFeatures.value.filter(u=>u.properties.grid===p.id).map(f=>f.properties);emit('feature',{...p,name:'气象格网 '+p.id+' · '+(props.variable==='snow'?'陆域雪水当量':props.frame?.variable==='precipitation'?'日降水':currentLayer.value.label),value:cellValues.value.get(p.id),unit:props.variable==='snow'?'mm':props.frame?.unit||currentLayer.value.unit,unitCount:members.length,members})}
+async function loadGeometry(){
+ const n=++loadTicket
+ const requests=await Promise.allSettled(['display.geojson','rivers-display.geojson','units-display.geojson','display-context.json','manifest.json','grid.geojson'].map(async file=>{const r=await fetch(props.spatialBase+file);if(!r.ok)throw Error(file+'加载失败');return r.json()}))
+ if(n!==loadTicket)return
+ ;[features,riverFeatures,unitFeatures].forEach((t,i)=>{if(requests[i].status==='fulfilled')t.value=requests[i].value.features;else emit('failure',requests[i].reason.message)})
+ if(requests[3].status==='fulfilled')context.value=requests[3].value
+ if(requests[5].status==='fulfilled')gridFeatures.value=requests[5].value.features
+ else if(requests[4].status==='fulfilled')gridFeatures.value=requests[4].value.grids.map(g=>({properties:g,geometry:{type:'Polygon',coordinates:[[[g.lon-.05,g.lat-.05],[g.lon+.05,g.lat-.05],[g.lon+.05,g.lat+.05],[g.lon-.05,g.lat+.05],[g.lon-.05,g.lat-.05]]]}}))
+ reset(target.value)
+}
+watch(()=>props.spatialBase,loadGeometry,{immediate:true})
+onMounted(()=>{observer=new ResizeObserver(([e])=>{const old=size.value;size.value={width:e.contentRect.width,height:e.contentRect.height};if(old.width&&old.height)pan.value=[pan.value[0]*size.value.width/old.width,pan.value[1]*size.value.height/old.height]});observer.observe(root.value)})
 onBeforeUnmount(()=>observer?.disconnect())
 </script>
 <template><div class="screen-map" :class="{'basin-view':variable==='basin'}"><svg ref="root" :viewBox="`0 0 ${size.width} ${size.height}`" role="img" aria-label="色林错全流域、四河分区及测站地图" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up" @wheel.prevent="focusAt($event.deltaY<0?1.15:1/1.15,point($event))"><defs><pattern id="screen-graticule" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M50 0H0V50" fill="none" stroke="currentColor" stroke-width=".5"/></pattern><clipPath id="screen-domain"><path v-for="(f,i) in features.filter(f=>f.properties.kind==='domain')" :key="i" :d="path(f.geometry)"/></clipPath><pattern id="fringe-hatch" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 5L5 0" stroke="var(--basin-fringe)" stroke-width=".5" opacity=".55"/></pattern></defs>
  <rect :width="size.width" :height="size.height" fill="url(#screen-graticule)" class="graticule"/>
  <g class="map-world" :transform="`translate(${camera.x},${camera.y}) scale(${camera.k})`">
-  <image v-if="showTerrain" :href="'/spatial/terrain-display.png'" v-bind="terrainBox" class="terrain-image" clip-path="url(#screen-domain)"/>
+  <image v-if="showTerrain" :href="spatialBase+'terrain-display.png'" v-bind="terrainBox" class="terrain-image" clip-path="url(#screen-domain)"/>
   <path v-for="f in basins" :key="f.properties.id" :d="path(f.geometry)" :data-basin="f.properties.id" :class="['screen-geo','basin',f.properties.id,{focused:focus===f.properties.id}]" fill-rule="evenodd" @click="selectFeature(f)"><title>{{f.properties.name}}流域 · {{f.properties.areaKm2.toFixed(1)}} km²</title></path>
   <g v-if="variable!=='basin'&&variable!=='snow'&&frame?.complete" clip-path="url(#screen-domain)"><path v-for="c in frame.cells" :key="c.id" :d="path({type:'Polygon',coordinates:[[[c.lon-.05,c.lat-.05],[c.lon+.05,c.lat-.05],[c.lon+.05,c.lat+.05],[c.lon-.05,c.lat+.05],[c.lon-.05,c.lat-.05]]]})" :fill="colorFor(c.value,currentLayer)" class="grid-cell"><title>{{c.id}}：{{c.value.toFixed(2)}} {{currentLayer.unit}}</title></path></g>
-  <g v-if="variable==='snow'&&snow?.complete"><path v-for="f in unitFeatures" :key="f.properties.id" :d="path(f.geometry)" :fill="colorFor(snowIndex.get(f.properties.id),currentLayer)" class="snow-unit" fill-rule="evenodd"/></g>
-  <g v-if="showRivers" class="screen-rivers"><path v-for="(f,i) in riverFeatures" :key="i" :data-river="f.properties.basinId" :class="{focused:focus===f.properties.basinId}" :d="path(f.geometry)"><title>{{f.properties.name}} · 提供河网</title></path></g>
+  <g v-if="variable==='snow'&&snow?.complete"><path v-for="f in unitFeatures" :key="f.properties.id" :d="path(f.geometry)" :fill="colorFor(snowIndex.get(f.properties.id),currentLayer)" class="snow-unit" :class="{chosen:selectedUnit===f.properties.id}" fill-rule="evenodd" @click.stop="emit('unit',f.properties.id)"/></g>
+  <g v-if="showUnits" class="calculation-unit-edges"><path v-for="f in unitFeatures" :key="f.properties.id" :d="path(f.geometry)" :class="{chosen:selectedUnit===f.properties.id}" fill-rule="evenodd" @click.stop="!moved&&emit('unit',f.properties.id)"><title>{{f.properties.id}} · {{f.properties.areaKm2.toFixed(3)}} km² · {{f.properties.partition}} · {{f.properties.elevationBandMin}}—{{f.properties.elevationBandMax}}m</title></path></g>
+  <g v-if="showGrid" class="meteorological-grid" clip-path="url(#screen-domain)"><path v-for="f in gridFeatures" :key="f.properties.id" :d="path(f.geometry)" @click.stop="gridSelect(f)"><title>{{f.properties.id}} · 0.1° · {{cellValues.get(f.properties.id)??'当前图层无值'}} {{currentLayer.unit}}</title></path></g>
+  <g v-if="showRivers" class="screen-rivers" :class="{'flow-direction-demo':!reducedMotion}"><path v-for="(f,i) in riverFeatures" :key="i" :data-river="f.properties.basinId" :class="{focused:focus===f.properties.basinId}" :d="path(f.geometry)"><title>{{f.properties.name}} · 真实河网；动效仅示意水系，不代表实测流速</title></path></g>
   <path v-for="(f,i) in features.filter(f=>f.properties.kind==='glacier'&&showIce)" :key="'g'+i" :d="path(f.geometry)" class="screen-geo glacier" @click="selectFeature(f)"/>
-  <path v-for="(f,i) in lake" :key="'l'+i" :d="path(f.geometry)" class="screen-geo lake" fill-rule="evenodd" @click="selectFeature(f)"/>
+  <path v-for="(f,i) in lake" :key="'l'+i" :d="path(f.geometry)" class="screen-geo lake" :style="lakeState?{fill:colorFor(lakeState.value,currentLayer)}:undefined" fill-rule="evenodd" @click="selectFeature(f)"/>
   <!-- Draw boundaries after thematic raster so partitions remain visible on every layer. -->
   <path v-for="f in basins" :key="'edge'+f.properties.id" :d="path(f.geometry)" :data-boundary="f.properties.id" :class="['basin-boundary',f.properties.id,{focused:focus===f.properties.id}]" fill-rule="evenodd"/>
   <path v-for="(f,i) in features.filter(f=>f.properties.kind==='domain')" :key="'d'+i" :d="path(f.geometry)" class="screen-geo domain"/>
   <path v-if="showControl" v-for="(f,i) in features.filter(f=>f.properties.kind==='control')" :key="'c'+i" :d="path(f.geometry)" class="screen-geo control" fill-rule="evenodd" @click="selectFeature(f)"><title>杜加内部控制区</title></path>
  </g>
  <g v-if="showNames" class="basin-labels"><g v-for="l in labels" :key="l.id||l.kind" :data-label="l.id||l.kind" :data-anchor="l.anchor.join(',')" :class="['basin-map-label',l.id||l.kind,{focused:focus===l.id}]" role="button" tabindex="0" :aria-label="l.kind==='lake'?'色林错':l.name+'流域'" @click.stop="emit('feature',l)" @keydown.enter="emit('feature',l)"><path v-if="Math.hypot(l.cx-l.x,l.cy-l.y)>12" :d="`M${l.x},${l.y}L${l.cx},${l.cy}`" class="label-leader"/><circle v-if="Math.hypot(l.cx-l.x,l.cy-l.y)>12" :cx="l.x" :cy="l.y" r="2" class="label-anchor"/><text :x="l.cx" :y="l.box.y+(l.kind==='lake'?16:15)" text-anchor="middle">{{l.name}}{{l.kind==='basin'?'流域':''}}</text><text v-if="l.kind==='basin'&&(focus===l.id||zoom>1.8)" :x="l.cx" :y="l.box.y+29" text-anchor="middle" class="label-area">{{Math.round(l.areaKm2).toLocaleString()}} km²</text></g></g>
- <g v-if="showStations" v-for="s in positioned" :key="s.id" :transform="`translate(${screen([s.lon,s.lat]).join(',')})`" :class="['screen-station',s.kind,{chosen:selected===s.id}]" @click.stop="emit('select',s.id)" @keydown.enter="emit('select',s.id)" @keydown.space.prevent="emit('select',s.id)" role="button" tabindex="0" :aria-label="'查看'+s.name"><circle class="station-halo" :r="selected===s.id?11:8"/><path v-if="s.kind==='rain'" d="M0 -5L5 4H-5Z"/><rect v-else-if="s.kind==='river'" x="-4" y="-4" width="8" height="8" transform="rotate(45)"/><circle v-else r="4"/><text x="10" y="4">{{s.name.replace('色林错','')}}</text></g>
+ <g v-if="showStations" v-for="s in positioned" :key="s.id" :data-station="s.id" :transform="`translate(${screen([s.lon,s.lat]).join(',')})`" :class="['screen-station',s.kind,{chosen:selected===s.id}]" @click.stop="emit('select',s.id)" @keydown.enter="emit('select',s.id)" @keydown.space.prevent="emit('select',s.id)" role="button" tabindex="0" :aria-label="'查看'+s.name"><title>{{s.name}} · {{s.id.startsWith('SLC-')?'用户GCJ-02坐标近似转换至WGS84':'已登记站点位置'}}</title><path v-if="stationLabel(s.id)" :d="`M0 0L${stationLabel(s.id).cx-stationLabel(s.id).anchor[0]},${stationLabel(s.id).cy-stationLabel(s.id).anchor[1]}`" class="label-leader"/><circle class="station-halo" :r="selected===s.id?11:8"/><path v-if="s.kind==='rain'" d="M0 -5L5 4H-5Z"/><rect v-else-if="s.kind==='river'" x="-4" y="-4" width="8" height="8" transform="rotate(45)"/><circle v-else r="4"/><text v-if="stationLabel(s.id)" :x="stationLabel(s.id).cx-stationLabel(s.id).anchor[0]" :y="stationLabel(s.id).cy-stationLabel(s.id).anchor[1]+4" text-anchor="middle">{{s.name.replace('色林错','')}}</text></g>
  <text x="18" y="25" class="north-label">↑ N</text><g class="scale-bar" :transform="`translate(18,${size.height-45})`"><path :d="`M0 -5V0H${scaleKm*camera.k}V-5`"/><text x="0" y="15">{{scaleKm}} km</text></g></svg>
  <div class="screen-map-tools"><button aria-label="放大地图" @click="focusAt(1.4)">＋</button><button aria-label="缩小地图" @click="focusAt(1/1.4)">−</button><button :class="{on:target==='domain'&&zoom===1}" @click="reset()">全流域</button><button :class="{on:target==='lake'&&zoom===1}" @click="reset('lake')">湖区</button></div>
  <div class="screen-map-source">WGS84 · {{target==='domain'?'全流域适配':'湖区适配'}} · 滚轮缩放 / 拖动平移</div>
- <div v-if="variable==='basin'" class="basin-map-key"><button v-for="r in rivers" :key="r.id" :class="[r.id,{on:focus===r.id}]" @click="selectBasin(r.id)"><i></i>{{r.name}}{{r.id==='fringe'?'':'流域'}}</button></div>
- <div v-else class="screen-map-legend"><b>{{currentLayer.label}} <small>{{currentLayer.unit}}</small></b><div><span v-for="(c,i) in currentLayer.colors" :key="c" :style="{background:c}" :title="currentLayer.stops[i]+'以上'"></span></div><p><span>{{currentLayer.stops[0]}}</span><span>{{currentLayer.stops.at(-1)}}+</span></p></div>
+ <div v-if="variable==='basin'" class="basin-map-key"><button v-for="f in basins" :key="f.properties.id" :class="[f.properties.id,{on:focus===f.properties.id}]" @click="selectBasin(f.properties.id)"><i></i>{{f.properties.name}}</button></div>
+ <div v-else class="screen-map-legend"><b>{{currentLayer.label}} <small>{{currentLayer.unit}}</small></b><div><span v-for="(c,i) in currentLayer.colors" :key="c" :style="{background:c}" :title="currentLayer.stops[i]+'以上'"></span></div><p><span>{{currentLayer.stops[0]}}</span><span>{{currentLayer.stops.at(-1)}}+</span></p><p>空白：缺测；最浅色：含零值</p></div>
  </div></template>

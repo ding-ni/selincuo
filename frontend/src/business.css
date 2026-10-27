@@ -1,0 +1,5 @@
+/* Keep map summaries readable in the narrow dashboard column. */
+.screen-layer-value{display:grid;gap:7px}
+.screen-layer-value>span{max-width:100%;font-size:9px;line-height:1.6}
+.screen-layer-value>b{font-size:23px;white-space:nowrap}
+.screen-layer-value>b>small{font-size:9px}

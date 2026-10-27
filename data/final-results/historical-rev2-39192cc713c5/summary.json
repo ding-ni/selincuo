@@ -1,0 +1,124 @@
+{
+  "scheme": {
+    "id": "selinco-historical-standard-v1",
+    "name": "色林错标准历史方案",
+    "revision": 2,
+    "configurationSHA256": "57c812fd3e9b47276cf04a961bcb795a263647cb8871e9ccb71da23547f3abd1",
+    "initialization": {
+      "strategy": "continuous-origin",
+      "origin": "2023-01-01T00:00:00",
+      "warmupYear": 2023,
+      "soilWaterFraction": 0.5,
+      "snowWaterEquivalentMm": 0,
+      "routingStorageM3": 0,
+      "lakeLevel": "first-reliable-value-per-observation-window"
+    },
+    "spatialVersion": "SPATIAL-1e6a229e51f0da4f1ffd"
+  },
+  "identity": {
+    "projectId": "selinco",
+    "contextKey": "selinco:semidistributed-cold-lake:0p1deg",
+    "spatialVersion": "SPATIAL-1e6a229e51f0da4f1ffd",
+    "inputId": "INPUT-3faa73605321b03d4a9f6bf7",
+    "inputSHA256": "c7b8672e0300244010a9b8ea4f072b5117d2274e4b792164b44369fd69d5dc14",
+    "parameterSHA256": "d4c46990d931f2a8e321ea3a14a516e72df4f66bf73325ba22c236211958a90b",
+    "observationSHA256": "6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e",
+    "modelImplementation": "39192cc713c5a592ca0e2a2b865233d047c4ec5762f49cc3ecf28bf44cb7300b",
+    "routingMode": "source-separated",
+    "partitionParameterSHA256": "6d1a7cd7402073c79eb9f5ba7a213bb3d46205b111def511d34ad67c5868d666"
+  },
+  "metrics": {
+    "2024": {
+      "purpose": "率定",
+      "flow": {
+        "logNse": 0.007379952612085017,
+        "count": 229,
+        "nse": 0.529286693146543,
+        "kge": 0.5638304525639701,
+        "rmse": 59.35456623118263,
+        "mae": 36.59800351024682,
+        "bias": -4.241404761192045,
+        "pbias": -5.242944537599408,
+        "observedMean": 80.89737991266375,
+        "simulatedMean": 76.65597515147171,
+        "observedVolumeM3": 1600603200.0,
+        "simulatedVolumeM3OnObservedDays": 1516684461.9569585
+      },
+      "lake": {
+        "logNse": 0.7143275861732883,
+        "count": 231,
+        "nse": 0.7143278114269849,
+        "kge": 0.8336755396768483,
+        "rmse": 0.06925363262814409,
+        "mae": 0.06212051758907699,
+        "bias": -0.013913246614720265,
+        "pbias": -0.0003061543067026872,
+        "observedMean": 4544.520952380953,
+        "simulatedMean": 4544.507039134337
+      }
+    },
+    "2025": {
+      "purpose": "冻结条件留出评价",
+      "flow": {
+        "logNse": 0.43170774847515414,
+        "count": 211,
+        "nse": 0.7253683446535392,
+        "kge": 0.8518164431323226,
+        "rmse": 19.884410448473748,
+        "mae": 14.194542680140964,
+        "bias": -1.419407925195139,
+        "pbias": -2.8951183558954012,
+        "observedMean": 49.027630331753564,
+        "simulatedMean": 47.60822240655842,
+        "observedVolumeM3": 893793312.0000001,
+        "simulatedVolumeM3OnObservedDays": 867916937.7605226
+      },
+      "lake": {
+        "logNse": 0.4468803970355393,
+        "count": 255,
+        "nse": 0.4468771192497324,
+        "kge": 0.7226157831696851,
+        "rmse": 0.06523442125833821,
+        "mae": 0.05550225296826516,
+        "bias": -0.053936518929068,
+        "pbias": -0.0011869308521376858,
+        "observedMean": 4544.200602076125,
+        "simulatedMean": 4544.146665557196
+      }
+    }
+  },
+  "selectionYear": 2024,
+  "comparisonSource": {
+    "projectId": "selinco",
+    "contextKey": "selinco:semidistributed-cold-lake:0p1deg",
+    "spatialVersion": "SPATIAL-1e6a229e51f0da4f1ffd",
+    "inputId": "INPUT-967613234ca58f1c6cfb44e2",
+    "inputSHA256": "c7b8672e0300244010a9b8ea4f072b5117d2274e4b792164b44369fd69d5dc14",
+    "parameterSHA256": "d4c46990d931f2a8e321ea3a14a516e72df4f66bf73325ba22c236211958a90b",
+    "observationSHA256": "6909ce0eb71804dca6ca9d317846016f3dae342f87a08de9cb6a771b2b9f088e",
+    "modelImplementation": "a406808007f2f96894c9413ac08c97439a66cf4b0035d83440a5a1df1b55e74d",
+    "routingMode": "source-separated",
+    "partitionParameterSHA256": "6d1a7cd7402073c79eb9f5ba7a213bb3d46205b111def511d34ad67c5868d666"
+  },
+  "lakeRainCorrection": {
+    "method": "station-point-annual-ratio-v1",
+    "scope": "lake-only",
+    "factor": 0.5336700706945834,
+    "station": "SLC",
+    "gridId": "89.4,31.8",
+    "developmentYear": 2024,
+    "pairedDays": 366,
+    "gaugeMm": 226.5,
+    "gridMm": 424.41952891456936,
+    "gaugeSeriesSHA256": "e0abfd77539b3aaf758a6a8ca85c601ecf1716f069683357d34107bc53e59832",
+    "limitations": [
+      "One shore gauge represents the lake only as a provisional spatial transfer.",
+      "Source daily labels used; station reporting day boundary not independently verified.",
+      "Gauge catch bias and snowfall undercatch not corrected."
+    ]
+  },
+  "referenceOnly": true,
+  "waterBalanceMaxErrorM3": 0.0001240503042936325,
+  "independentCryosphereValidation": false,
+  "resumeVerified": true
+}

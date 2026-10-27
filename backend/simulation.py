@@ -8,11 +8,12 @@ import numpy as np
 import pandas as pd
 
 from .common import ROOT, CONTEXT_KEY, digest, model_identity, read_json, write_json
-from .forcing import load_input
+from .forcing import load_input, lake_precipitation_factor
 from .model_core import (DEFAULT_PARAMETERS, DIAGNOSTIC_NAMES, PARAMETER_NAMES, STATE_NAMES,
                          initial_states, parameters, route_series, run_kernel)
 from .observations import daily_series
 from .routing import route_partition, MODES
+from .parameter_regions import resolve_regions, region_initial_states, run_region_kernel
 
 PARTITIONS = ['duja', 'zajia_rest', 'zagen', 'boqu', 'ali', 'fringe']
 RIVERS = ['duja', 'zajia', 'zagen', 'boqu', 'ali', 'fringe', 'total']
@@ -133,7 +134,7 @@ def prepare(db, input_id):
                                     'precipitation': forcing['precipitation'] @ weights.T,
                                     'temperature': unit_temperature,
                                     'evaporation': forcing['evaporation'] @ weights.T,
-                                    'lakeRain': forcing['precipitation'] @ lake_weights,
+                                    'lakeRain': (forcing['precipitation'] @ lake_weights) * lake_precipitation_factor(manifest),
                                     'lakeEvaporation': forcing['evaporation'] @ lake_weights,
                                     'deltaElevation': np.array([u['elevation'] for u in spatial['units']]) - reference_z}
     return _prepared_cache[cache_key]
@@ -157,15 +158,23 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
         raise ValueError('计算时段须为北京时间整小时')
     if start > end or start < all_times[0] or end > all_times[-1]:
         raise ValueError(f'计算时段超出输入覆盖：{all_times[0]} 至 {all_times[-1]}')
+    evaluation_start = pd.Timestamp(request.get('evaluationStart') or start)
+    evaluation_end = pd.Timestamp(request.get('evaluationEnd') or end)
+    if evaluation_start.tzinfo or evaluation_end.tzinfo or not start <= evaluation_start <= evaluation_end <= end or (request.get('evaluationStart') and evaluation_start == evaluation_end):
+        raise ValueError('成果评价时段必须位于实际计算时段内')
     select = np.where((all_times >= start) & (all_times <= end))[0]
     if not len(select) or all_times[select[0]] != start or all_times[select[-1]] != end:
         raise ValueError('输入中没有完整的指定起止时次')
     times = all_times[select]
     units = spatial['units']
+    region_overrides, regions = resolve_regions(units, p, request.get('partitionParameters'))
+    lapse_rates = np.array([regions.get(u['partition'], p)['lapseRate'] for u in units])
     identity = {'projectId': 'selinco', 'contextKey': CONTEXT_KEY, 'spatialVersion': spatial['version'],
                 'inputId': input_manifest['id'], 'inputSHA256': input_manifest['dataSHA256'],
                 'parameterSHA256': digest(p), 'observationSHA256': digest(observation),
                 'modelImplementation': request.get('_modelIdentity') or model_identity(), 'routingMode': routing_mode}
+    if region_overrides:
+        identity['partitionParameterSHA256'] = digest(region_overrides)
     parent = request.get('_parentState')
     if parent:
         if parent['identity'] != identity:
@@ -176,7 +185,7 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
         if state.shape != (len(units), 8) or not np.isfinite(state).all() or np.min(state) < -1e-8:
             raise ValueError('父状态形状或数值无效')
     else:
-        state = initial_states(units, p)
+        state = region_initial_states(units, p, regions) if regions else initial_states(units, p)
     glaciers = np.array([u['kind'] == 'glacier' for u in units])
     vector = np.array([p[k] for k in PARAMETER_NAMES], dtype=float)
     initial_unit_states = state.copy()
@@ -186,9 +195,12 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
             raise InterruptedError('用户停止计算')
         ids = select[offset:offset + 744]
         rain = np.ascontiguousarray(source['precipitation'][ids])
-        temp = np.ascontiguousarray(source['temperature'][ids] + source['deltaElevation'][None, :] * p['lapseRate'])
+        temp = np.ascontiguousarray(source['temperature'][ids] + source['deltaElevation'][None, :] * lapse_rates[None, :])
         evap = np.ascontiguousarray(source['evaporation'][ids])
-        d, h, state = run_kernel(rain, temp, evap, glaciers, state, vector)
+        if regions:
+            d, h, state = run_region_kernel(rain, temp, evap, glaciers, state, units, p, regions)
+        else:
+            d, h, state = run_kernel(rain, temp, evap, glaciers, state, vector)
         diagnostics.append(d)
         history.append(h)
         if progress:
@@ -205,7 +217,7 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
         indexes = [i for i, u in enumerate(units) if u['partition'] == partition]
         inputs = source_volumes[:, indexes, :].sum(axis=1)
         old = (parent or {}).get('routing', {}).get(partition, {})
-        out, stored, final, source_stored, errors = route_partition(inputs, old, p, routing_mode)
+        out, stored, final, source_stored, errors = route_partition(inputs, old, regions.get(partition, p), routing_mode)
         routed[partition], routing_history[partition] = out, stored
         routing_final[partition], routing_errors[partition] = final, errors
         source_routing_history[partition] = source_stored
@@ -242,6 +254,8 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
         daily[k + 'M3'] = pd.Series((diagnostics[:, :, col] * areas[None, :] * 1000).sum(axis=1), index=times).resample('D', closed='right', label='left').sum()
     # A start at midnight has no preceding-day simulation; do not emit a phantom year.
     daily = daily.loc[daily.index >= start.normalize()].copy()
+    if request.get('evaluationStart'):
+        daily = daily.loc[(daily.index >= evaluation_start) & (daily.index < evaluation_end)].copy()
     flow_obs = snapshot_series(observation, 'flow')
     lake_obs = snapshot_series(observation, 'level')
     daily['observedFlow'] = flow_obs.reindex(daily.index)
@@ -257,7 +271,7 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
         paired = mask & daily.observedFlow.notna() & daily.duja.notna()
         flow_metrics['observedVolumeM3'] = float(daily.observedFlow[paired].sum() * 86400) if paired.any() else None
         flow_metrics['simulatedVolumeM3OnObservedDays'] = float(daily.duja[paired].sum() * 86400) if paired.any() else None
-        yearly[str(year)] = {'purpose': {2023: '预热', 2024: '率定', 2025: '独立验证', 2026: '延伸检验'}.get(year, '历史回算'),
+        yearly[str(year)] = {'purpose': {2023: '预热', 2024: '率定', 2025: '冻结条件留出评价', 2026: '延伸检验'}.get(year, '历史回算'),
                              'flow': flow_metrics, 'lake': metrics(daily.observedLevel[mask], scored_lake[mask])}
     continuous_volume = np.empty(len(times))
     running_volume = float((parent or {}).get('continuousLakeVolume', 0.))
@@ -266,6 +280,8 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
         continuous_volume[i] = running_volume
     checkpoint = {'continuousLakeVolume': running_volume, 'schemaVersion': 2, 'identity': identity, 'validAt': times[-1].isoformat(), 'parameters': p,
                   'unitStates': state.tolist(), 'routing': routing_final, 'lake': lake_state}
+    if region_overrides:
+        checkpoint['partitionParameters'] = region_overrides
     result = {'projectId': 'selinco', 'resultSource': 'model-backend', 'identity': identity,
               'start': times[0].isoformat(), 'end': times[-1].isoformat(), 'hours': len(times),
               'parameters': p, 'inputId': input_manifest['id'], 'spatialVersion': spatial['version'],
@@ -281,8 +297,15 @@ def run_simulation(db, request, folder=None, progress=None, cancelled=None, prep
                                               '冰川面积固定；长年冰体消融为显式外部水源', '可靠观测窗口起点使用实测湖位，其后独立演算；窗口未独立核验冰情',
                                               '未率定初值为通用模型初值，不代表已通过业务验证']},
               'checkpoint': checkpoint}
+    if request.get('evaluationStart'):
+        result['evaluationPeriod'] = {'start': evaluation_start.isoformat(), 'end': evaluation_end.isoformat(),
+                                      'calculationStart': start.isoformat(), 'includesAutomaticWarmup': True}
+    if request.get('schemeSnapshot'):
+        result['scheme'] = request['schemeSnapshot']
+    if region_overrides:
+        result['partitionParameters'] = region_overrides
     from .model_diagnostics import diagnose
-    result['modelDiagnostics'] = diagnose(times, source, select, diagnostics, history, initial_unit_states, q, routing_history, lake_flux, levels, volumes, windows, p, spatial, routing_mode, observation, initial_routing_volume, initial_partition_routing) if not request.get('_skipDiagnostics') else {}
+    result['modelDiagnostics'] = diagnose(times, source, select, diagnostics, history, initial_unit_states, q, routing_history, lake_flux, levels, volumes, windows, p, spatial, routing_mode, observation, initial_routing_volume, initial_partition_routing, regions) if not request.get('_skipDiagnostics') else {}
     if folder:
         folder = Path(folder)
         folder.mkdir(parents=True, exist_ok=True)
