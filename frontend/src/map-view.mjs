@@ -14,7 +14,9 @@ export function placeLabels(labels,size,obstacles=[]) {
  for(const label of labels){
   const w=label.width||112,h=label.height||34
   let chosen
-  for(const [dx,dy] of [[0,0],[0,-38],[0,38],[-70,0],[70,0],[-65,-42],[65,42],[0,-76],[0,76]]){
+  const candidates=[[0,0]]
+  for(const radius of [35,65,100,145,205,275])for(let i=0;i<8;i++)candidates.push([Math.cos(i*Math.PI/4)*radius,Math.sin(i*Math.PI/4)*radius])
+  for(const [dx,dy] of candidates){
    const box={x:Math.max(8,Math.min(size.width-w-8,label.x-w/2+dx)),y:Math.max(8,Math.min(size.height-h-8,label.y-h/2+dy)),w,h}
    if(!chosen)chosen=box
    if(!boxes.some(b=>overlaps(box,b))){chosen=box;break}

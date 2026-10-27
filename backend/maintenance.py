@@ -26,6 +26,10 @@ def cleanup_preview(db, task_id):
     states = db.rows('SELECT * FROM states WHERE task_id=?', (task_id,))
     ids = [task_id, *[r['id'] for r in states]]
     protected = []
+    from .research_schemes import builtin
+    standard = builtin(db)
+    if standard and standard['payload'].get('resultId') == task_id:
+        protected.append('内置方案成果')
     for state in states:
         if state['name'].strip() or state['favorite']:
             protected.append('已命名或收藏状态/' + state['id'])

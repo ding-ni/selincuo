@@ -119,6 +119,8 @@ class IntegrationTests(unittest.TestCase):
                 self.assertEqual(call('/api/health')['projectId'], 'selinco')
                 boot = call('/api/model/bootstrap')
                 self.assertFalse(boot['forecast']['enabled'])
+                self.assertFalse(boot['builtinResultAvailable'])
+                self.assertIsNone(boot['homeResultId'])
                 self.assertEqual(call('/api/model/data-contract')['schemaVersion'],1)
                 with urllib.request.urlopen(base+'/api/model/data-template') as response:
                     from io import BytesIO
@@ -139,14 +141,32 @@ class IntegrationTests(unittest.TestCase):
                 with self.assertRaises(urllib.error.HTTPError):
                     call('/api/model/backup', {}, 'http://foreign.example')
                 self.assertEqual(boot['database']['counts']['tasks'], 0)
-                named = call('/api/model/parameters', {'name': '分区参数保存测试', 'payload': {
-                    'parameters': {'WM': 200}, 'partitionParameters': {'duja': {'WM': 240}}}})
+                with self.assertRaises(urllib.error.HTTPError):
+                    call('/api/model/parameters', {'name': '未运行的参数', 'payload': {'parameters': {'WM': 200}}})
+                actual_parameters = {**boot['defaultParameters'], 'WM': 200}
+                fixture_result = {'parameters': actual_parameters, 'partitionParameters': {'duja': {'WM': 240}},
+                                  'modelFamily': 'grid-continuous-v1', 'spatialVersion': boot['spatial']['version'],
+                                  'routingMode': 'source-separated', 'identity': {}}
+                with server.db.connect() as conn:
+                    conn.execute('INSERT INTO tasks(id,kind,status,created_at,updated_at,request,result) VALUES(?,?,?,?,?,?,?)',
+                                 ('JOB-test-result', 'trial', 'succeeded', '2026-01-01', '2026-01-01', '{}', json.dumps(fixture_result)))
+                named = call('/api/model/parameters/from-task', {'taskId': 'JOB-test-result', 'name': '分区参数保存测试'})
                 versions = call('/api/model/bootstrap')['parameters']
                 saved = next(r for r in versions if r['id'] == named['id'])
                 self.assertEqual(saved['payload']['partitionParameters'], {'duja': {'WM': 240}})
                 self.assertEqual(saved['payload']['parameters']['WM'], 200)
                 with self.assertRaises(urllib.error.HTTPError):
-                    call('/api/model/parameters', {'name': '非法分区', 'payload': {'partitionParameters': {'foreign': {'WM': 200}}}})
+                    call('/api/model/parameters', {'name': '篡改参数', 'payload': {'sourceTaskId': 'JOB-test-result',
+                         'parameters': {**actual_parameters, 'WM': 201}}})
+                from unittest.mock import patch
+                with patch('backend.research_schemes.builtin', return_value={'payload': {'resultId': 'JOB-test-result'}}):
+                    with self.assertRaises(urllib.error.HTTPError):
+                        call('/api/model/tasks/JOB-test-result/metadata', {'trashed': True})
+                call('/api/model/tasks/JOB-test-result/metadata', {'trashed': True})
+                preview = call('/api/model/tasks/JOB-test-result/cleanup-preview', {'check': True})
+                self.assertTrue(any(named['id'] in item for item in preview['protected']))
+                call('/api/model/tasks/JOB-test-result/metadata', {'trashed': False})
+                self.assertFalse(call('/api/model/tasks/JOB-test-result')['trashed'])
             finally:
                 server.shutdown()
                 server.jobs.close()

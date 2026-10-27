@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "lake-datum-retracted-20261026",
+  "revision": "lake-working-datum-periods-20261027",
   "source": "用户于2026-10-26撤回此前五站零点统一确认，说明四岸可能存在零点高程误差；选择主站为工作基准",
   "confirmation": "此前确认错误；主站作为工作基准，四岸零点待核",
   "referenceStation": "SLC",
@@ -8,5 +8,12 @@
   "commonDatumConfirmed": false,
   "zeroUnified": false,
   "namedDatum": null,
-  "status": "user-retracted"
+  "status": "user-retracted",
+  "periods": [
+    {"stationId":"SLC","effectiveFrom":null,"effectiveTo":null,"recordType":"water-level-record","unit":"m","zeroElevationM":null,"datumName":"主站工作基准","surveySource":null,"equipmentChange":null,"status":"working-reference"},
+    {"stationId":"SLC-N","effectiveFrom":null,"effectiveTo":null,"recordType":"water-level-record","unit":"m","zeroElevationM":null,"datumName":null,"surveySource":null,"equipmentChange":null,"status":"unverified"},
+    {"stationId":"SLC-E","effectiveFrom":null,"effectiveTo":null,"recordType":"water-level-record","unit":"m","zeroElevationM":null,"datumName":null,"surveySource":null,"equipmentChange":null,"status":"unverified"},
+    {"stationId":"SLC-S","effectiveFrom":null,"effectiveTo":null,"recordType":"water-level-record","unit":"m","zeroElevationM":null,"datumName":null,"surveySource":null,"equipmentChange":null,"status":"unverified"},
+    {"stationId":"SLC-W","effectiveFrom":null,"effectiveTo":null,"recordType":"water-level-record","unit":"m","zeroElevationM":null,"datumName":null,"surveySource":null,"equipmentChange":null,"status":"unverified"}
+  ]
 }

@@ -3,8 +3,10 @@
 No hourly arrays are opened here. Browsing a candidate never changes a release.
 """
 from functools import lru_cache
+import json
+from pathlib import PurePosixPath
 import pandas as pd
-from .common import ROOT, digest
+from .common import ROOT, digest, read_json, within
 
 
 @lru_cache(maxsize=8)
@@ -22,6 +24,52 @@ def result_task(db, identifier):
         # every summary request. The packaged loader verifies file integrity.
         return _packaged(identifier, path.stat().st_mtime_ns)
     return db.task(identifier)
+
+
+def builtin_result_available(db, identifier):
+    """Check that the configured result and its necessary artifacts exist here."""
+    if not identifier:
+        return False
+    from .published_results import catalog
+    item = next((row for row in catalog() if row['id'] == identifier), None)
+    if item:
+        folder = within(ROOT / 'data/final-results', item['directory'])
+        return all((folder / name).is_file() for name in ('result.json', 'hourly.npz', 'final-state.json'))
+    rows = db.rows('SELECT status,trashed,result FROM tasks WHERE id=?', (identifier,))
+    if not rows or rows[0]['status'] != 'succeeded' or rows[0]['trashed'] or not rows[0]['result']:
+        return False
+    folder = within(db.workspace / 'tasks', identifier)
+    if not all((folder / name).is_file() for name in ('result.json', 'checkpoint.json', 'daily.csv')):
+        return False
+    zarr = folder / 'hourly.zarr'
+    if zarr.is_dir():
+        try:
+            attrs = read_json(zarr / '.zattrs', {})
+            manifest = read_json(folder / 'hourly-manifest.json', {})
+            result = json.loads(rows[0]['result'])
+            artifact = result.get('hourlyArtifact')
+            files = manifest.get('files') if isinstance(manifest, dict) else None
+            from .grid_storage import FORMAT
+            if not (isinstance(attrs, dict) and attrs.get('complete') is True and attrs.get('format') == FORMAT
+                    and isinstance(manifest, dict) and manifest.get('complete') is True and manifest.get('format') == FORMAT
+                    and isinstance(artifact, dict) and artifact.get('complete') is True and artifact.get('format') == FORMAT
+                    and isinstance(files, dict) and files
+                    and {'.zattrs', '.zgroup', 'time/.zarray'} <= files.keys()):
+                return False
+            if manifest.get('sha256') != digest(files) or artifact.get('sha256') != manifest['sha256']:
+                return False
+            for name, sha in files.items():
+                if not (isinstance(name, str) and name and '\\' not in name and
+                        PurePosixPath(name).as_posix() == name and not PurePosixPath(name).is_absolute() and
+                        '..' not in PurePosixPath(name).parts and isinstance(sha, str) and len(sha) == 64 and
+                        all(c in '0123456789abcdef' for c in sha)):
+                    return False
+                if not within(zarr, name).is_file():
+                    return False
+            return True
+        except (OSError, ValueError, TypeError, AttributeError, RuntimeError):
+            return False
+    return (folder / 'hourly.npz').is_file()
 
 
 def result_summary(db, identifier):
@@ -115,6 +163,8 @@ def simulation_plan(db, query):
 
     A matching name, parameter set or newer input alone never authorizes reuse.
     """
+    if query.get('researchSchemeId'):
+        return _scheme_simulation_plan(db, query)
     if query.get('expectedReleaseId'):
         from .release_runtime import simulation_plan as released_plan
         return released_plan(db,query)
@@ -157,3 +207,46 @@ def simulation_plan(db, query):
             'requestedCoverage': {'start': start.isoformat(), 'endExclusive': end.isoformat()},
             'calculationStart': request['start'], 'inputId': request['inputId'],
             'schemeRevision': request['schemeRevision'], 'createsTask': action != 'reuse'}
+
+
+def _scheme_simulation_plan(db, query):
+    """Reuse only a complete result with the same actual numerical identity."""
+    from .research_schemes import builtin, prepare_request
+    from .grid_simulation import anchor, model_identity, observations
+    request = prepare_request(db, dict(query), kind='simulation')
+    observed = observations(db)
+    observed['sourceDigests'] = db.rows("SELECT DISTINCT s.id,s.sha256 FROM sources s JOIN observations o ON o.source_id=s.id WHERE s.rowid IN (SELECT MAX(rowid) FROM sources GROUP BY path) AND ((o.station_id='SLC' AND o.variable='level') OR (o.station_id='DUJA' AND o.variable='flow')) ORDER BY s.id")
+    initialization = anchor(request, observed, pd.Timestamp(request['start']), pd.Timestamp(request['end']))
+    expected = {'modelImplementation': model_identity(), 'spatialVersion': request['spatialVersion'],
+                'parameterSHA256': digest(request['parameters']),
+                'partitionParameterSHA256': digest(request['partitionParameters']),
+                'initializationSHA256': digest(initialization), 'observationSnapshotSHA256': digest(observed),
+                'routingMode': request['routingMode']}
+    rows = db.rows("SELECT id FROM tasks WHERE status='succeeded' AND trashed=0 AND kind IN ('simulation','trial','calibration') ORDER BY created_at DESC")
+    standard = builtin(db)
+    builtin_result = (standard or {}).get('payload', {}).get('resultId')
+    identifiers = ([builtin_result] if builtin_result else []) + [r['id'] for r in rows]
+    for identifier in dict.fromkeys(identifiers):
+        try:
+            task = result_task(db, identifier)
+            result = task.get('result') or {}
+            identity = result.get('identity') or {}
+            if (task.get('status') != 'succeeded' or task.get('trashed') or
+                    result.get('inputId') != request['inputId'] or
+                    any(identity.get(key) != value for key, value in expected.items()) or
+                    pd.Timestamp(result['start']) != pd.Timestamp(request['start']) or
+                    pd.Timestamp(result['end']) < pd.Timestamp(request['end'])):
+                continue
+            # Opening the source also checks that the hourly result exists.
+            from .result_query import metadata
+            metadata(db, identifier)
+            return {'action': 'reuse', 'resultId': identifier, 'reasons': ['已保存成果覆盖所选时段且计算条件一致。'],
+                    'requestedCoverage': {'start': request['evaluationStart'], 'endExclusive': request['end']},
+                    'calculationStart': request['start'], 'inputId': request['inputId'], 'createsTask': False,
+                    'earliestCompleteLakeDay': request.get('earliestCompleteLakeDay')}
+        except (ValueError, OSError, KeyError, TypeError):
+            continue
+    return {'action': 'rerun', 'resultId': None, 'reasons': ['将从方案预热起点按所选资料和参数连续计算。'],
+            'requestedCoverage': {'start': request['evaluationStart'], 'endExclusive': request['end']},
+            'calculationStart': request['start'], 'inputId': request['inputId'], 'createsTask': True,
+            'earliestCompleteLakeDay': request.get('earliestCompleteLakeDay')}

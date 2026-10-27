@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 from backend.database import Database
-from backend.data_exchange import import_records, import_file
+from backend.data_exchange import import_records, import_file, preview_file
 from backend.observations import daily_series
 
 
@@ -77,6 +77,43 @@ class DataExchangeTests(unittest.TestCase):
         self.assertEqual(result['records'],1)
         self.assertTrue((Path(self.tmp.name)/'observation-sources'/result['sourceId']/'export.xlsx').is_file())
         with self.assertRaises(ValueError):import_file(self.db,{**request,'filename':'../outside.xlsx'})
+
+    def test_incremental_merge_and_explicit_conflict_policy(self):
+        base = self.document()['records'][0]
+        first = import_records(self.db, self.document([base]))
+        later = {**base, 'time': '2024-06-02', 'value': 4544.4}
+        merged = import_records(self.db, {**self.document([later]), 'mode': 'append'})
+        self.assertNotEqual(first['sourceId'], merged['sourceId'])
+        self.assertEqual([r['value'] for r in self.db.observations('SLC', 'level')], [4544.2, 4544.4])
+        changed = {**base, 'value': 4544.9}
+        with self.assertRaisesRegex(ValueError, '冲突'):
+            import_records(self.db, {**self.document([changed]), 'mode': 'append'})
+        self.assertEqual([r['value'] for r in self.db.observations('SLC', 'level')], [4544.2, 4544.4])
+        kept = import_records(self.db, {**self.document([changed]), 'mode': 'append', 'duplicatePolicy': 'keep'})
+        self.assertEqual(kept['status'], 'unchanged')
+        replaced = import_records(self.db, {**self.document([changed]), 'mode': 'append', 'duplicatePolicy': 'replace'})
+        self.assertEqual((replaced['duplicates'], replaced['conflicts']), (1, 1))
+        self.assertEqual([r['value'] for r in self.db.observations('SLC', 'level')], [4544.9, 4544.4])
+        self.assertEqual(self.db.rows('SELECT COUNT(*) n FROM sources')[0]['n'], 3)
+
+    def test_file_preview_does_not_import_and_reports_conflicts(self):
+        from openpyxl import Workbook
+        import_records(self.db, self.document())
+        path = Path(self.tmp.name) / 'incoming/preview.xlsx'
+        path.parent.mkdir()
+        book = Workbook(); book.active.title = '观测'; book.active.append(['时间', '水位'])
+        book.active.append(['2024-06-01', 4544.4]); book.active.append(['2024-06-01', 4544.5])
+        book.active.append(['2024-06-02', '错误值']); book.save(path)
+        request = {'filename': 'preview.xlsx', 'sourceKey': 'lake-daily',
+                   'mapping': {'time': '时间', 'value': '水位'},
+                   'defaults': {'station': 'SLC', 'variable': 'level', 'unit': 'm', 'step': 'day'}}
+        preview = preview_file(self.db, request)
+        self.assertEqual(preview['sheets'], ['观测'])
+        self.assertEqual(preview['suggestedMapping']['time'], '时间')
+        self.assertEqual((preview['records'], preview['valid'], preview['invalid']), (3, 2, 1))
+        self.assertEqual((preview['duplicates'], preview['existingDuplicates'], preview['conflicts']), (1, 2, 2))
+        self.assertEqual(preview['issues'][0]['row'], 4)
+        self.assertEqual(self.db.rows('SELECT COUNT(*) n FROM sources')[0]['n'], 1)
 
     def test_end_hour_midnight_and_incomplete_days(self):
         import pandas as pd

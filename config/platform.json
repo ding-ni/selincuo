@@ -1,9 +1,9 @@
 {
   "projectId": "selinco",
   "name": "色林错预警预报平台",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "host": "127.0.0.1",
-  "port": 8879,
+  "port": 8882,
   "workspace": "workspace",
   "forcingResolution": "0.1°",
   "timeStepHours": 1,

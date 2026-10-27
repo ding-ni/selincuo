@@ -56,7 +56,51 @@ def inspect(path):
         version=np.asarray(exp).tolist() if exp is not None else ds.attrs.get('expver')
     return {'variables':result,'sha256':sha_file(path),'bytes':Path(path).stat().st_size,'expver':version}
 
-def acquire_latest(db,progress=None,cancelled=lambda:False):
+
+def acquisition_window(first, meta, start_date=None, end_date=None):
+    """Plan whole UTC download days for inclusive Beijing business dates."""
+    from datetime import date
+    def day(value):
+        if value is None or value == '':
+            return None
+        try:
+            parsed = date.fromisoformat(value)
+            if parsed.isoformat() != value:
+                raise ValueError()
+            return pd.Timestamp(parsed)
+        except (TypeError, ValueError):
+            raise ValueError('气象更新日期须为YYYY-MM-DD') from None
+    start_day, end_day = day(start_date), day(end_date)
+    if start_day is not None and end_day is not None and start_day > end_day:
+        raise ValueError('气象更新结束日期不能早于开始日期')
+    base_start, base_end = pd.Timestamp(first['start']), pd.Timestamp(first['end'])
+    catalog_start = pd.Timestamp(meta['availableStartUTC']).tz_localize(None)
+    catalog_end = pd.Timestamp(meta['availableEndUTC']).tz_localize(None)
+    latest = catalog_end.floor('D') + pd.Timedelta(hours=23)
+    if end_day is not None:
+        local_end = end_day + pd.Timedelta(days=1)
+        if local_end - pd.Timedelta(hours=8) > latest:
+            raise ValueError('所选结束日期超过官方气象资料可用范围')
+        if local_end < base_start - pd.Timedelta(hours=1):
+            raise ValueError('所选时段与已有驱动之间有缺口，请将结束日期延伸至现有资料起点')
+        last = (local_end - pd.Timedelta(hours=8)).floor('D') + pd.Timedelta(hours=23)
+    else:
+        last = latest
+    if start_day is not None:
+        if start_day > base_end + pd.Timedelta(hours=1):
+            raise ValueError('所选时段与已有驱动之间有缺口，请从现有资料末尾开始补充')
+        # One UTC day supplies the accumulator/reset boundary; data are never fabricated.
+        start = (start_day - pd.Timedelta(hours=8)).floor('D') - pd.Timedelta(days=1)
+        if start < catalog_start.floor('D'):
+            raise ValueError('所选开始日期及累计量边界早于官方可用范围')
+    else:
+        start = (base_end - pd.Timedelta(hours=8)).floor('D')
+    if (start_date or end_date) and start > last:
+        raise ValueError('所选时段没有需要更新的小时，请调整日期')
+    return start, last
+
+
+def acquire_latest(db,progress=None,cancelled=lambda:False,start_date=None,end_date=None):
     import cdsapi
     folder=db.workspace/'downloads/era5-land';folder.mkdir(parents=True,exist_ok=True)
     meta=availability();write_json(folder/'latest-catalog.json',meta)
@@ -66,13 +110,13 @@ def acquire_latest(db,progress=None,cancelled=lambda:False):
     fixed=definition();eligible=[r for r in products if r['manifest']['start']<=fixed['initialization']['origin'] and r['manifest']['spatialVersion']==fixed['spatialVersion']]
     if not eligible:raise ValueError('缺少覆盖统一预热起点的基础驱动，不能用独立片段替代连续历史')
     first=max(eligible,key=lambda r:(r['manifest']['end'],bool(r['manifest'].get('lakePrecipitationCorrection')),r.get('created_at','')))['manifest']
-    start=(pd.Timestamp(first['end'])-pd.Timedelta(hours=8)).floor('D')
-    last=pd.Timestamp(meta['availableEndUTC']).tz_localize(None).floor('D')+pd.Timedelta(hours=23)
+    start,last=acquisition_window(first,meta,start_date,end_date)
     previous=read_json(folder/'latest-status.json',{})
-    if last<=pd.Timestamp(first['end'])-pd.Timedelta(hours=8) and meta['catalogUpdated']==previous.get('catalog',{}).get('catalogUpdated'):return {'status':'up-to-date','catalog':meta,'inputId':first['id']}
+    if not start_date and not end_date and last<=pd.Timestamp(first['end'])-pd.Timedelta(hours=8) and meta['catalogUpdated']==previous.get('catalog',{}).get('catalogUpdated'):return {'status':'up-to-date','catalog':meta,'inputId':first['id']}
     provisional=[pd.Timestamp(v['startUTC']).floor('D')-pd.Timedelta(days=1) for s in provenance_summary(db,first)['sources'] if '0005' in s['experimentVersions'] for v in s['coverage'].values()]
-    if provisional:start=min(start,min(provisional))
-    status={'status':'running','at':now(),'catalog':meta,'completed':[],'startUTC':start.isoformat(),'requestedEndUTC':last.isoformat()}
+    if provisional and not start_date and not end_date:start=min(start,min(provisional))
+    status={'status':'running','at':now(),'catalog':meta,'completed':[],'startUTC':start.isoformat(),'requestedEndUTC':last.isoformat(),
+            'requestedStartDate':start_date,'requestedEndDate':end_date}
     def record(**kw):status.update(kw,at=now());write_json(folder/'latest-status.json',status)
     def check():
         if cancelled():raise InterruptedError('用户停止更新，已完成文件与请求保留')

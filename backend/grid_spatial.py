@@ -1,6 +1,7 @@
 """Versioned grid/HRU geometry and conservative whole-domain drainage audit."""
 import math
 from pathlib import Path
+import json
 import numpy as np
 from .common import ROOT,read_json,write_json,digest,sha_file,within
 
@@ -16,12 +17,138 @@ def directory(version):
 
 def load(version):
     archived=read_json(directory(version)/'manifest.json')
-    if archived:return archived
+    if archived:
+        if archived.get('version') != version:
+            raise ValueError('空间清单与版本身份不一致')
+        if archived.get('unitStrategy') == 'partition-elevation-surface-area-weighted-v1':
+            body = {k: v for k, v in archived.items() if k != 'version'}
+            if version != 'AGG-SPATIAL-' + digest(body)[:20]:
+                raise ValueError('聚合空间清单摘要不一致')
+            parent = load(archived['parentSpatialVersion'])
+            if digest(parent) != archived['parentManifestSHA256']:
+                raise ValueError('聚合空间的来源单元已改变')
+        return archived
     old=read_json(ROOT/'data/derived/spatial/manifest.json')
     if old and old['version']==version:return old
     value=read_json(directory(version)/'manifest.json')
     if not value:raise FileNotFoundError('该空间版本不存在')
     return value
+
+
+AGGREGATE_STRATEGY = 'partition-elevation-surface-area-weighted-v1'
+_AGGREGATE_SOURCE_FILES = ('units.geojson', 'units-display.geojson', 'display.geojson',
+                           'rivers-display.geojson', 'display-context.json', 'grid.geojson',
+                           'terrain-display.png')
+
+
+def aggregate_manifest(parent, asset_hashes):
+    """Describe the E3-type groups without evolving or copying member states.
+
+    Each fine intersection appears once. P/E and temperature after the member's
+    elevation correction are area-weighted before the shared nonlinear kernel.
+    """
+    if parent.get('unitStrategy') != 'grid-partition-elevation-surface-v2':
+        raise ValueError('聚合单元需要逐气象格网相交的来源空间')
+    if set(asset_hashes) != set(_AGGREGATE_SOURCE_FILES):
+        raise ValueError('聚合空间缺少来源图层摘要')
+    groups = {}
+    for i, unit in enumerate(parent['units']):
+        if not np.isfinite(unit['areaKm2']) or unit['areaKm2'] <= 0:
+            raise ValueError('来源单元面积无效')
+        grid = unit['gridIndex']
+        if not isinstance(grid, int) or not 0 <= grid < len(parent['grids']):
+            raise ValueError('来源单元的气象格网索引无效')
+        groups.setdefault((unit['partition'], unit['elevationBandMin'], unit['kind']), []).append((i, unit))
+    if not groups:
+        raise ValueError('来源空间没有有效单元')
+    units, aggregation, weights = [], [], []
+    for (partition, band, kind), members in sorted(groups.items()):
+        area = sum(u['areaKm2'] for _, u in members)
+        identity = {'parentSpatialVersion': parent['version'], 'partition': partition,
+                    'elevationBandMin': band, 'kind': kind}
+        unit = {'id': 'AGG-' + digest(identity)[:20], 'partition': partition,
+                'basin': 'zajia' if partition in ('duja', 'zajia_rest') else partition,
+                'elevationBandMin': band, 'elevationBandMax': band + 500, 'kind': kind,
+                'areaKm2': area, 'elevation': sum(u['areaKm2'] * u['elevation'] for _, u in members) / area}
+        mapping = [{'unitId': u['id'], 'unitIndex': i, 'gridIndex': u['gridIndex'],
+                    'areaWeight': u['areaKm2'] / area,
+                    'elevationOffsetM': u['elevation'] - parent['grids'][u['gridIndex']]['referenceElevation']}
+                   for i, u in members]
+        if abs(sum(m['areaWeight'] for m in mapping) - 1.) > 1e-12:
+            raise ValueError('聚合单元面积权重不闭合')
+        row = [0.] * len(parent['grids'])
+        for member in mapping:
+            row[member['gridIndex']] += member['areaWeight']
+        units.append(unit); aggregation.append({'unitId': unit['id'], 'members': mapping}); weights.append(row)
+    result = {k: parent[k] for k in ('projectId', 'forcingResolution', 'elevationBandMeters', 'areaCrs',
+              'forcingGridVersion', 'domainAreaKm2', 'lakeAreaKm2', 'grids', 'lakeWeights', 'bounds',
+              'basins', 'drainage', 'temperatureElevationReference') if k in parent}
+    result.update({'schemaVersion': 3, 'unitStrategy': AGGREGATE_STRATEGY,
+                   'parentSpatialVersion': parent['version'], 'parentManifestSHA256': digest(parent),
+                   'sourceAssetsSHA256': dict(sorted(asset_hashes.items())),
+                   'unitTemperatureElevation': 'each source unit corrected before area-weighted grouping',
+                   'units': units, 'weights': weights, 'aggregation': aggregation})
+    result['version'] = 'AGG-SPATIAL-' + digest(result)[:20]
+    return result
+
+
+def _write_new(path, data):
+    """Create a derived asset without silently replacing an existing file."""
+    try:
+        with path.open('xb') as stream:
+            stream.write(data)
+    except FileExistsError:
+        if path.read_bytes() != data:
+            raise ValueError('已有聚合空间文件与本次派生不一致：' + str(path))
+
+
+def ensure_aggregate(parent_version):
+    """Materialize only the reusable 31-group spatial derivative and its maps."""
+    from shapely.geometry import shape, mapping
+    from shapely.ops import unary_union
+    parent = load(parent_version)
+    source = directory(parent_version)
+    hashes = {name: sha_file(source / name) for name in _AGGREGATE_SOURCE_FILES}
+    manifest = aggregate_manifest(parent, hashes)
+    folder = directory(manifest['version'])
+    if (folder / 'manifest.json').is_file():
+        actual = load(manifest['version'])
+        if actual != manifest or any(not (folder / name).is_file() for name in
+                ('units.geojson', *_AGGREGATE_SOURCE_FILES, 'aggregate-receipt.json')):
+            raise ValueError('已存在的聚合空间不完整或身份不一致')
+        receipt = read_json(folder / 'aggregate-receipt.json')
+        if not receipt or any(sha_file(folder / name) != value for name, value in receipt['assetsSHA256'].items()):
+            raise ValueError('聚合空间图层摘要不一致')
+        return actual
+    folder.mkdir(parents=True, exist_ok=True)
+    for name in _AGGREGATE_SOURCE_FILES:
+        if name not in ('units.geojson', 'units-display.geojson'):
+            _write_new(folder / name, (source / name).read_bytes())
+            if sha_file(folder / name) != hashes[name]:
+                raise ValueError('来源图层复制校验失败：' + name)
+    for name in ('units.geojson', 'units-display.geojson'):
+        original = read_json(source / name)
+        features = original['features']
+        by_id = {f['properties']['id']: f for f in features}
+        if len(by_id) != len(parent['units']) or any(u['id'] not in by_id for u in parent['units']):
+            raise ValueError('来源几何与来源计算单元不一致')
+        derived = []
+        for unit, group in zip(manifest['units'], manifest['aggregation']):
+            geom = unary_union([shape(by_id[m['unitId']]['geometry']) for m in group['members']])
+            if geom.is_empty or not geom.is_valid:
+                raise ValueError('聚合单元几何为空或无效：' + unit['id'])
+            derived.append({'type': 'Feature', 'properties': unit, 'geometry': mapping(geom)})
+        data = (json.dumps({'type': 'FeatureCollection', 'features': derived}, ensure_ascii=False,
+                           separators=(',', ':'), allow_nan=False) + '\n').encode('utf-8')
+        _write_new(folder / name, data)
+    produced = ('units.geojson', 'units-display.geojson', 'display.geojson', 'rivers-display.geojson',
+                'display-context.json', 'grid.geojson', 'terrain-display.png')
+    receipt = {'parentSpatialVersion': parent_version, 'sourceAssetsSHA256': hashes,
+               'assetsSHA256': {name: sha_file(folder / name) for name in produced},
+               'unitCount': len(manifest['units']), 'sourceUnitCount': len(parent['units'])}
+    for name, value in (('aggregate-receipt.json', receipt), ('manifest.json', manifest)):
+        _write_new(folder / name, (json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + '\n').encode('utf-8'))
+    return load(manifest['version'])
 
 def build(progress=None):
     import geopandas as gpd

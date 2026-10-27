@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from .common import ROOT, read_json
+from .common import ROOT, read_json, digest
 from .observations import daily_series
 from .forcing import load_input, lake_precipitation_factor
 
@@ -34,12 +34,14 @@ def monitoring(db):
             from .observation_profiles import series as query_series
             rows = query_series(db, station['id'], variable,profile='quality-v2')['rows'] if variable else []
             station['daily'] = [{'date':r['time'][:10],'value':r['value']} for r in rows]
+            rain_rows=query_series(db,station['id'],'precipitation',profile='quality-v2')['rows']
+            station['rainDaily']=[{'date':r['time'][:10],'value':r['value']} for r in rain_rows]
             valid = [r for r in station['daily'] if r['value'] is not None]
             station['latest'] = valid[-1] if valid else None
             station['located'] = station['lon'] is not None and station['lat'] is not None
         result = {'stations':stations,'source':'SQLite原始观测整编日值','timeZone':'Asia/Shanghai',
                   'liveConnected':False,'forecastConnected':False,'warningThresholdConfigured':False,
-                  'note':'主站为工作基准；原统一零点确认已撤回，四岸零点待核。坐标为GCJ-02近似转换，日值采用覆盖质量规则。'}
+                  'note':'主站工作基准；四岸基准待核。','latestDate':max((s['latest']['date'] for s in stations if s['latest']),default=None)}
         _observations.clear()
         _observations[key] = result
         return result
@@ -76,7 +78,11 @@ def map_frame(db, input_id, day, variable='precipitation',spatial_version=None):
     spatial=load(spatial_version) if spatial_version else source_spatial
     if not spatial:
         raise ValueError('空间资料未建立')
-    key=(str(db.workspace),input_id,spatial['version'])
+    if digest(source_spatial['grids'])!=spatial.get('forcingGridVersion',digest(spatial['grids'])):
+        raise ValueError('气象格网坐标或顺序与显示空间不一致')
+    product=db.workspace/'inputs/products'/input_id
+    key=(str(db.workspace),input_id,spatial['version'],(product/'manifest.json').stat().st_mtime_ns,
+         (product/'forcing.npz').stat().st_mtime_ns)
     with _lock:
         if key not in _forcing:
             manifest,arrays=load_input(db,input_id,source_spatial)
@@ -89,7 +95,7 @@ def map_frame(db, input_id, day, variable='precipitation',spatial_version=None):
           'unit':'℃' if variable=='temperature' else 'mm/d','complete':values is not None,
           'note':'气温为格网基准，未作模型单元高程修正；蒸发为公开蒸发能力，非实测湖面蒸发。'}
     if values is None:
-        return {**base,'cells':[],'domainMean':None,'lakeMean':None,'message':'暂无资料','reasonCode':'INCOMPLETE_DAY'}
+        return {**base,'cells':[],'unitValues':[],'domainMean':None,'lakeMean':None,'message':'驱动缺少完整日资料','reasonCode':'INCOMPLETE_DAY'}
     areas=np.array([u['areaKm2'] for u in spatial['units']])
     if spatial.get('schemaVersion')==2:
         weights=np.zeros((len(areas),len(spatial['grids'])))
@@ -101,9 +107,15 @@ def map_frame(db, input_id, day, variable='precipitation',spatial_version=None):
     lake_factor=lake_precipitation_factor(manifest) if variable=='precipitation' else 1.
     lake_used=lake_raw*lake_factor
     domain_used=float(domain_weights@values)+(lake_used-lake_raw)*spatial['lakeAreaKm2']/(areas.sum()+spatial['lakeAreaKm2'])
+    unit_values=weights@values
     return {**base,'cells':[{**g,'value':float(v)} for g,v in zip(spatial['grids'],values)],
+            'unitValues':[{'id':u['id'],'value':float(v)} for u,v in zip(spatial['units'],unit_values)],
             'domainMean':domain_used,'lakeMean':lake_used,'lakeRawMean':lake_raw,
-            'lakePrecipitationFactor':lake_factor,'cellsRepresentRawGrid':True,'message':''}
+            'lakePrecipitationFactor':lake_factor,'cellsRepresentRawGrid':True,
+            'displaySupport':'model-units-and-lake' if variable=='precipitation' else 'raw-grid',
+            'domainAreaKm2':float(areas.sum()+spatial['lakeAreaKm2']),
+            'domainIncludesLake':True,'displayLabel':'模型采用日降水' if variable=='precipitation' else base['variable'],
+            'message':''}
 
 
 def snow_frame(db, task_id, day):

@@ -1,8 +1,9 @@
 export const rivers=[{id:'zajia',name:'扎加藏布',short:'扎加'},{id:'zagen',name:'扎根藏布',short:'扎根'},{id:'boqu',name:'波曲藏布',short:'波曲'},{id:'ali',name:'阿里藏布',short:'阿里'},{id:'fringe',name:'湖周补充区',short:'湖周'}]
-export const layers=[{id:'precipitation',label:'日降水',unit:'mm/d',colors:['#e1f4d1','#b4df86','#78be6d','#399ca1','#3772b3','#745b9b'],stops:[0,.1,2,5,10,25]},
+export const layers=[{id:'precipitation',label:'模型采用日降水',unit:'mm/d',colors:['#edf6ee','#bfdcc6','#7fbfb2','#439fa7','#28758f','#22516f'],stops:[0,.1,1,3,8,20]},
  {id:'temperature',label:'日均气温',unit:'℃',colors:['#486caa','#77a7c1','#afcfcb','#e6d99e','#dcb06c','#bd7554'],stops:[-30,-15,-5,0,5,15]},
  {id:'evaporation',label:'日蒸发能力',unit:'mm/d',colors:['#eef1d1','#dfdf9e','#ccc37a','#c6a15b','#b67a40','#96562f'],stops:[0,1,2,4,6,8]},
  {id:'snow',label:'日末雪水当量',unit:'mm',colors:['#e8edf0','#c4dcea','#91bfd9','#6593be','#536c9c','#534e80'],stops:[0,1,10,30,100,300]},
+ {id:'terrain',label:'地形高程',unit:'m',colors:['#78998a','#a5b299','#cac7a1','#c5b093','#b1a596','#ebe9e2'],stops:[4400,4600,4800,5000,5500,6000]},
  {id:'basin',label:'流域分区',unit:'',colors:[],stops:[]}]
 export function colorFor(value,layer){if(value==null||!Number.isFinite(value))return 'transparent';let i=0;for(let j=0;j<layer.stops.length;j++)if(value>=layer.stops[j])i=j;return layer.colors[i]||'transparent'}
 export function exactValue(station,day){return station?.daily?.find(r=>r.date===day)?.value??null}

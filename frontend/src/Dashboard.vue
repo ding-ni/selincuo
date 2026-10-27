@@ -1,73 +1,115 @@
 <script setup>
-import {ref,reactive,computed,watch,onMounted,onBeforeUnmount} from 'vue'
+import {ref,reactive,computed,onMounted,onBeforeUnmount,watch} from 'vue'
 import ScreenMap from './ScreenMap.vue'
 import ScreenChart from './ScreenChart.vue'
-import {rivers,layers,exactValue,timelineDates,defaultReplayDay} from './dashboard.mjs'
+import LakeMark from './LakeMark.vue'
+import {rivers,layers,exactValue,timelineDates,defaultReplayDay,balanceTerms} from './dashboard.mjs'
 import {api,number} from './api.mjs'
 import {scaledLayer} from './map-scale.mjs'
+import {createFrameCache} from './frame-cache.mjs'
 const props=defineProps({boot:Object,tasks:Array,active:Array,selectedId:String,viewDay:String,summary:Object}),emit=defineEmits(['navigate','result','station','context'])
-const mode=ref('model'),task=ref(null),monitor=ref(null),day=ref(''),variable=ref('basin'),frame=ref(null),snow=ref(null),rain=ref(null),error=ref(''),loading=ref(false),mapLoading=ref(false),playing=ref(false),dark=ref(localStorage.getItem('selinco:screen-theme')==='dark'),expanded=ref(false),host=ref(),feature=ref(null),more=ref(false)
-const show=reactive({ice:false,rivers:true,terrain:false,stations:true,control:false,names:true,grid:false,units:false})
-const requestedResult=props.selectedId
-const currentId=ref([...props.boot.publishedResults,...props.tasks].some(t=>t.id===requestedResult)?requestedResult:props.boot.standardResultId),meta=ref(null),rangeMode=ref('period'),range=ref(null),rangeLow=ref(0),rangeHigh=ref(10),lowMotion=ref(window.matchMedia('(prefers-reduced-motion: reduce)').matches)
-const choices=computed(()=>[...props.boot.publishedResults,...props.tasks.filter(t=>!t.trashed&&t.status==='succeeded'&&['simulation','continuation','calibration'].includes(t.kind))])
-const mapLayer=computed(()=>scaledLayer(layers.find(l=>l.id===variable.value)||layers[0],variable.value==='snow'?(snowMap.value?.units||[]).map(u=>u.value):(mapFrame.value?.cells||[]).map(c=>c.value),rangeMode.value==='period'?range.value:null,rangeMode.value==='custom'?[rangeLow.value,rangeHigh.value]:null))
-async function selectResult(){stop();const n=currentId.value;try{const [t,m]=await Promise.all([api(props.boot.publishedResults.some(r=>r.id===n)?'published-result?id='+n:'tasks/'+n),api('result-capabilities?resultId='+n)]);if(n!==currentId.value)return;task.value=t;meta.value=m;day.value=dates.value.includes(props.viewDay)?props.viewDay:defaultReplayDay(dates.value,result.value);emit('context',n,day.value);getRange()}catch(e){error.value=e.message}}
-let rangeTicket=0
-async function getRange(){const n=++rangeTicket;range.value=null;if(variable.value==='basin'||!inputId.value||rangeMode.value!=='period'||!dates.value.length)return;try{const r=await api('map-range?'+new URLSearchParams({inputId:inputId.value,resultId:currentId.value,variable:variable.value,start:dates.value[0],end:dates.value.at(-1)}));if(n===rangeTicket)range.value=r}catch(e){if(n===rangeTicket)error.value=e.message}}
-let timer,controller,sequence=0,disposed=false
-const result=computed(()=>mode.value==='model'?task.value?.result:null),dates=computed(()=>timelineDates(mode.value,monitor.value,result.value)),index=computed(()=>Math.max(0,dates.value.indexOf(day.value)))
-const current=computed(()=>result.value?.daily.find(r=>r.date.slice(0,10)===day.value)),stations=computed(()=>monitor.value?.stations||[]),main=computed(()=>stations.value.find(s=>s.id==='SLC'))
-const observed=computed(()=>mode.value==='model'?current.value?.observedLevel:exactValue(main.value,day.value)),level=computed(()=>mode.value==='model'?current.value?.lakeLevel:observed.value)
+const mode=ref('model'),task=ref(null),monitor=ref(null),meta=ref(null),shown=ref(null),requestedDay=ref(''),variable=ref('basin'),error=ref(''),loading=ref(true),pending=ref(false),playing=ref(false),speed=ref(1200),host=ref(),expanded=ref(false),feature=ref(null)
+const dark=ref(localStorage.getItem('selinco:screen-theme')!=='light'),show=reactive({ice:false,rivers:true,stations:true,names:true,boundaries:true,grid:false,units:false})
+const currentId=ref(props.selectedId||props.boot.homeResultId||(props.boot.builtinResultAvailable===false?'':props.boot.standardResultId))
+const frames=createFrameCache(),ranges=new Map();let sequence=0,timer,sliderTimer,disposed=false
+const choices=computed(()=>[...(props.boot.publishedResults||[]),...(props.tasks||[]).filter(t=>!t.trashed&&t.status==='succeeded'&&['simulation','continuation','trial','calibration'].includes(t.kind))])
+const result=computed(()=>mode.value==='model'?task.value?.result:null),stations=computed(()=>monitor.value?.stations||[]),main=computed(()=>stations.value.find(s=>s.id==='SLC'))
+const day=computed(()=>shown.value?.day||''),shownVariable=computed(()=>shown.value?.variable||'basin'),dates=computed(()=>timelineDates(mode.value,monitor.value,result.value)),index=computed(()=>Math.max(0,dates.value.indexOf(day.value)))
+const current=computed(()=>result.value?.daily?.find(r=>r.date.slice(0,10)===day.value)),observed=computed(()=>mode.value==='model'?current.value?.observedLevel:exactValue(main.value,day.value)),level=computed(()=>mode.value==='model'?current.value?.lakeLevel:observed.value)
 const lakeRows=computed(()=>result.value?.daily||main.value?.daily||[]),flowRows=computed(()=>result.value?.daily||stations.value.find(s=>s.id==='DUJA')?.daily||[])
-const shores=computed(()=>stations.value.filter(s=>s.kind==='lake'&&s.id!=='SLC')),inputId=computed(()=>result.value?.inputId||props.boot.operationalSchemes?.[0]?.inputId)
-const shoreRows=computed(()=>{const maps=shores.value.map(s=>new Map(s.daily.map(r=>[r.date,r.value])));return dates.value.map(date=>({date,...Object.fromEntries(shores.value.map((s,i)=>[s.id,maps[i].get(date)??null]))}))})
-const shoreSeries=computed(()=>shores.value.map(s=>({key:s.id,label:s.name.replace('色林错','')})))
-const snowMap=computed(()=>snow.value?.day===day.value?snow.value:null),mapFrame=computed(()=>frame.value?.day===day.value?frame.value:null)
-const lakeSeries=computed(()=>mode.value==='model'?[{key:'lakeLevel',label:'模拟湖位'},{key:'observedLevel',label:'主站实测'}]:[{key:'value',label:'主站实测'}])
-const flowSeries=computed(()=>mode.value==='model'?[{key:'total',label:meta.value?.inflowComplete===false?'已核实入湖合计':'旧假定入湖合计'},{key:'duja',label:'杜加模拟'},{key:'observedFlow',label:'杜加实测'}]:[{key:'value',label:'杜加实测'}])
-const delta=computed(()=>{const prev=mode.value==='model'?result.value?.daily.find(r=>r.date.slice(0,10)===dates.value[index.value-1])?.lakeLevel:exactValue(main.value,dates.value[index.value-1]);return level.value!=null&&prev!=null?level.value-prev:null})
-function stop(){playing.value=false;clearInterval(timer)}
-function setDay(value){stop();if(dates.value.includes(value))day.value=value}
-function move(n){const i=index.value+n;if(i<0||i>=dates.value.length){stop();return}day.value=dates.value[i]}
-function play(){if(playing.value){stop();return}if(index.value===dates.value.length-1)day.value=dates.value[0];playing.value=true;timer=setInterval(()=>{if(!mapLoading.value)move(1)},1500)}
-function changeMode(m){stop();mode.value=m;if(m==='observation'&&variable.value==='snow')variable.value='basin';day.value=defaultReplayDay(dates.value,result.value)}
-async function map(){
- const n=++sequence;controller?.abort();controller=new AbortController();frame.value=null;snow.value=null;rain.value=null;mapLoading.value=true
- try{if(!day.value||!inputId.value)return
- const params={inputId:inputId.value,day:day.value,...(meta.value?.spatialVersion?{spatialVersion:meta.value.spatialVersion}:{})},requests=[api('map-frame?'+new URLSearchParams({...params,variable:'precipitation'}),null,{signal:controller.signal})]
- if(variable.value==='snow'&&result.value)requests.push(api('snow-frame?'+new URLSearchParams({taskId:task.value.id,day:day.value}),null,{signal:controller.signal}))
- else if(!['basin','precipitation','snow'].includes(variable.value))requests.push(api('map-frame?'+new URLSearchParams({...params,variable:variable.value}),null,{signal:controller.signal}))
- const values=await Promise.all(requests);if(n!==sequence||disposed)return;rain.value=values[0];if(variable.value==='precipitation')frame.value=values[0];else if(variable.value==='snow')snow.value=values[1]||null;else frame.value=values[1]||null
- }catch(e){if(e.name!=='AbortError'&&n===sequence)error.value=e.message}finally{if(n===sequence)mapLoading.value=false}}
+const shores=computed(()=>stations.value.filter(s=>s.kind==='lake'&&s.id!=='SLC')),rain=computed(()=>shown.value?.rain)
+const rainObserved=computed(()=>main.value?.rainDaily?.find(r=>r.date===day.value)?.value)
+const flowValue=computed(()=>mode.value==='model'?current.value?.total:exactValue(stations.value.find(s=>s.id==='DUJA'),day.value))
+const lakeSeries=computed(()=>mode.value==='model'?[{key:'lakeLevel',label:'模拟湖位'},{key:'observedLevel',label:'主站实测',observed:true}]:[{key:'value',label:'主站实测',observed:true}])
+const flowSeries=computed(()=>mode.value==='model'?[{key:'total',label:'入湖流量'},{key:'duja',label:'杜加模拟'},{key:'observedFlow',label:'杜加实测',observed:true}]:[{key:'value',label:'杜加实测',observed:true}])
+const delta=computed(()=>{if(!day.value)return null;const previous=new Date(Date.parse(day.value+'T00:00:00Z')-86400000).toISOString().slice(0,10),value=mode.value==='model'?result.value?.daily?.find(r=>r.date.slice(0,10)===previous)?.lakeLevel:exactValue(main.value,previous);return value!=null&&level.value!=null?level.value-value:null})
+const mapLayer=computed(()=>scaledLayer(layers.find(l=>l.id===shownVariable.value)||layers.at(-1),shownVariable.value==='snow'?(shown.value?.snow?.units||[]).map(u=>u.value):(shown.value?.frame?.unitValues||shown.value?.frame?.cells||[]).map(c=>c.value),shown.value?.range))
+const mapMissing=computed(()=>!['basin','terrain'].includes(shownVariable.value)&&!(shownVariable.value==='snow'?shown.value?.snow?.complete:shown.value?.frame?.complete))
+const ticks=computed(()=>{const a=dates.value;if(!a.length)return [];const out=[a[0],...a.filter(d=>d.endsWith('-01-01'))];if(out.at(-1)!==a.at(-1))out.push(a.at(-1));return [...new Set(out)]})
+const selectedFlow=computed(()=>rivers.map(r=>({...r,value:current.value?.[r.id]}))),balance=computed(()=>balanceTerms(current.value))
+function defaultDay(m=mode.value,t=task.value){const a=timelineDates(m,monitor.value,t?.result);return a.includes(props.viewDay)?props.viewDay:m==='observation'?(main.value?.latest?.date||a.at(-1)||''):defaultReplayDay(a,t?.result)}
+function stop(){playing.value=false;clearTimeout(timer)}
+function schedule(){clearTimeout(timer);if(playing.value)timer=setTimeout(async()=>{if(index.value>=dates.value.length-1){stop();return}await requestView(dates.value[index.value+1]);schedule()},Number(speed.value))}
+function play(){if(playing.value){stop();return}playing.value=true;if(index.value===dates.value.length-1)requestView(dates.value[0]).then(schedule);else schedule()}
+async function rangeFor(t,m,v){
+ if(['basin','terrain'].includes(v))return null
+ const r=t.result,inputId=r.inputId,key=[t.id,inputId,m.spatialVersion,v,r.start,r.end].join('|')
+ if(!ranges.has(key)){const promise=api('map-range?'+new URLSearchParams({inputId,resultId:t.id,spatialVersion:m.spatialVersion||r.spatialVersion,variable:v,start:r.daily[0].date.slice(0,10),end:r.daily.at(-1).date.slice(0,10)})).catch(e=>{ranges.delete(key);throw e});ranges.set(key,promise);while(ranges.size>8)ranges.delete(ranges.keys().next().value)}
+ return ranges.get(key)
+}
+function frameFor(t,m,d,v,prefetch=false){
+ const inputId=t.result.inputId,spatialVersion=m.spatialVersion||t.result.spatialVersion,key=[t.id,inputId,spatialVersion,v,d].join('|')
+ return frames.get(key,async signal=>{
+  const params={inputId,day:d,spatialVersion},options={signal}
+  const requests=[api('map-frame?'+new URLSearchParams({...params,variable:'precipitation'}),null,options)]
+  if(v==='snow')requests.push(api('snow-frame?'+new URLSearchParams({taskId:t.id,day:d}),null,options))
+  else if(!['basin','terrain','precipitation'].includes(v))requests.push(api('map-frame?'+new URLSearchParams({...params,variable:v}),null,options))
+  const [values,range]=await Promise.all([Promise.all(requests),rangeFor(t,m,v)])
+  return {day:d,variable:v,rain:values[0],frame:v==='precipitation'?values[0]:values[1],snow:v==='snow'?values[1]:null,range}
+ },prefetch)
+}
+function prefetch(){
+ if(mode.value!=='model'||!task.value)return
+ for(const d of dates.value.slice(index.value+1,index.value+4))frameFor(task.value,meta.value,d,variable.value,true).catch(()=>{})
+}
+async function requestView(d,t=task.value,m=meta.value){
+ if(!d)return
+ const ticket=++sequence,v=variable.value;requestedDay.value=d;pending.value=true;error.value=''
+ try{
+  const view=mode.value==='observation'?{day:d,variable:['basin','terrain'].includes(v)?v:'basin'}:await frameFor(t,m,d,v)
+  if(disposed||ticket!==sequence)return
+  if(mode.value==='model'){task.value=t;meta.value=m}
+  shown.value=view;pending.value=false;emit('context',mode.value==='model'?t.id:undefined,d);prefetch()
+ }catch(e){if(ticket===sequence&&!disposed){pending.value=false;if(e.name!=='AbortError'){error.value=e.message;stop()}}}
+}
+async function selectResult(){
+ stop();const id=currentId.value,ticket=++sequence;pending.value=true;error.value=''
+ try{const [t,m]=await Promise.all([api((props.boot.publishedResults||[]).some(r=>r.id===id)?'published-result?id='+id:'tasks/'+id),api('result-capabilities?resultId='+id)]);if(ticket!==sequence||disposed)return;await requestView(defaultDay('model',t),t,m)}
+ catch(e){if(ticket===sequence){error.value=e.message;pending.value=false}}
+}
+function chooseDay(d){stop();if(dates.value.includes(d))requestView(d)}
+function slide(value){stop();clearTimeout(sliderTimer);const d=dates.value[Number(value)];requestedDay.value=d;sliderTimer=setTimeout(()=>requestView(d),75)}
+function move(n){stop();const d=dates.value[index.value+n];if(d)requestView(d)}
+function changeMode(m){stop();sequence++;mode.value=m;feature.value=null;if(m==='observation'&&!['basin','terrain'].includes(variable.value))variable.value='basin';if(m==='model')selectResult();else requestView(defaultDay('observation'))}
+function changeLayer(){requestView(day.value||defaultDay())}
 async function fullscreen(){if(document.fullscreenElement){await document.exitFullscreen();expanded.value=false;return}expanded.value=true;try{await host.value.requestFullscreen()}catch{}}
 function close(){if(document.fullscreenElement)document.exitFullscreen();expanded.value=false}
 function sync(){if(!document.fullscreenElement)expanded.value=false}
 function keys(e){if(e.key==='Escape')close()}
-watch(()=>props.selectedId,id=>{if(id&&id!==currentId.value){currentId.value=id;selectResult()}});watch(()=>props.viewDay,value=>{if(value&&value!==day.value&&dates.value.includes(value))day.value=value});watch(day,value=>{if(value)emit('context',currentId.value,value)});watch([day,variable,inputId,mode],map);watch([variable,inputId,rangeMode],getRange);watch(dark,v=>localStorage.setItem('selinco:screen-theme',v?'dark':'light'))
-onMounted(async()=>{document.addEventListener('fullscreenchange',sync);document.addEventListener('keydown',keys);loading.value=true;try{monitor.value=await api('dashboard');if(currentId.value)await selectResult();else mode.value='observation';if(!day.value)day.value=defaultReplayDay(dates.value,result.value)}catch(e){error.value=e.message}finally{loading.value=false}})
-onBeforeUnmount(()=>{disposed=true;sequence++;stop();controller?.abort();document.removeEventListener('fullscreenchange',sync);document.removeEventListener('keydown',keys)})
+function unit(id){const u=result.value?.units?.find(u=>u.id===id);feature.value={id,name:'计算单元',...u}}
+watch(()=>props.selectedId,id=>{if(id&&id!==currentId.value&&mode.value==='model'){currentId.value=id;selectResult()}})
+watch(()=>props.viewDay,value=>{if(value&&value!==day.value&&value!==requestedDay.value&&dates.value.includes(value))requestView(value)})
+watch(dark,v=>localStorage.setItem('selinco:screen-theme',v?'dark':'light'))
+onMounted(async()=>{document.addEventListener('fullscreenchange',sync);document.addEventListener('keydown',keys);try{monitor.value=await api('dashboard');if(currentId.value)await selectResult();else{mode.value='observation';await requestView(defaultDay('observation'))}}catch(e){error.value=e.message}finally{loading.value=false}})
+onBeforeUnmount(()=>{disposed=true;sequence++;stop();clearTimeout(sliderTimer);frames.clear();document.removeEventListener('fullscreenchange',sync);document.removeEventListener('keydown',keys)})
 </script>
 <template>
-<section ref="host" class="lake-screen" :class="{'screen-dark':dark,'screen-expanded':expanded}">
-<div class="screen-masthead"><div class="screen-wordmark"><span>◈</span><div><h2>色林错流域湖情总览</h2><p>湖泊水位 · 入湖径流 · 流域水情</p></div></div><div class="screen-header-actions"><button @click="emit('navigate','simulation')">历史模拟</button><button @click="dark=!dark">{{dark?'日常浅色':'汇报深色'}}</button><button @click="expanded?close():fullscreen()">{{expanded?'退出全屏':'全屏展示'}}</button></div></div>
-<div class="screen-context"><div class="screen-modes"><button :class="{on:mode==='model'}" :disabled="!task" @click="changeMode('model')">模拟回放</button><button :class="{on:mode==='observation'}" @click="changeMode('observation')">站点监测</button></div><label class="screen-result-choice">当前成果<select v-model="currentId" @change="selectResult"><option v-for="t in choices" :key="t.id" :value="t.id">{{t.id===boot.standardResultId?'当前默认 · '+(t.displayName||t.name):'研究 / 用户成果 · '+(t.name||t.id)}}</option></select></label><span>北京时间 <b>{{day||'—'}}</b></span><button v-if="task&&mode==='model'" class="link" @click="emit('result',task.id)">查看成果 →</button></div>
-<div v-if="result" class="screen-provenance"><span>{{result.scheme?.name||'用户计算方案（身份待核）'}} · {{summary?.id===currentId?summary.evaluation.label:'初始化口径待核验'}}</span><span>驱动 {{boot.inputs.find(i=>i.id===inputId)?.manifest.start.slice(0,10)||result.start.slice(0,10)}}—{{boot.inputs.find(i=>i.id===inputId)?.manifest.end.slice(0,10)||result.end.slice(0,10)}}</span><b v-if="meta?.inflowComplete===false">入湖合计不含排水归属未核实区</b></div>
-<p v-if="error" class="screen-alert" role="alert">{{error}}</p><div v-if="loading" class="empty">正在读取湖情资料…</div>
-<div v-else class="lake-layout">
-<aside class="overview-facts"><section class="screen-panel lake-level-card"><div class="screen-panel-heading"><h3>主站湖位</h3><span>{{mode==='model'?'历史模拟':'站点实测'}}</span></div><div class="primary-number">{{number(level,3)}}<small>m</small></div><div class="screen-inline"><span>较前一日 {{number(delta,3)}} m</span><span v-if="mode==='model'">实测 {{number(observed,3)}} m</span></div><p class="screen-note">{{day}} · 主站工作基准</p></section>
-<section class="screen-panel inflow-card"><div class="screen-panel-heading"><h3>{{mode==='model'?(meta?.inflowComplete===false?'已核实入湖合计':'旧假定入湖合计'):'杜加流量'}}</h3><span>{{mode==='model'?'模拟':'实测'}}</span></div><div class="primary-number">{{number(mode==='model'?current?.total:exactValue(stations.find(s=>s.id==='DUJA'),day),2)}}<small>m³/s</small></div><p class="screen-note">{{mode==='model'?'杜加属于扎加组成部分，仅计一次。':'缺测日期保留空值。'}}</p></section>
-<section class="screen-panel rainfall-card"><div><h3>流域日降水</h3><span>ERA5-Land · {{day}}</span></div><b>{{rain?.complete?number(rain.domainMean,2):'资料不足'}}<small v-if="rain?.complete">mm</small></b></section>
-</aside>
-<section class="screen-panel overview-lake-process"><div class="screen-panel-heading"><h3>湖位过程</h3><span>模拟与主站实测 · m</span></div><ScreenChart :rows="lakeRows" :series="lakeSeries" unit="m" :day="day" :dark="dark" :context="currentId+':'+mode+':lake'" @day="setDay"/></section>
-<section v-if="more" class="screen-panel overview-shores"><div class="screen-panel-heading"><h3>四岸水位</h3><span>原值 · 零点待核</span></div><div class="shore-list"><button :title="'零点待核；最近有效日 '+(s.daily?.filter(r=>r.value!=null).at(-1)?.date?.slice(0,10)||'无')" class="shore-row" v-for="s in shores" :key="s.id" @click="emit('station',s.id,day)"><span>{{s.name.replace('色林错','')}}</span><b>{{exactValue(s,day)==null?'当日缺测':number(exactValue(s,day),3)}}</b></button></div><ScreenChart :rows="shoreRows" :series="shoreSeries" unit="m" :day="day" :dark="dark" :context="'screen:shore-raw'" @day="setDay"/><div class="screen-card-link"><button @click="emit('station','SLC',day,true)">四岸过程对照与零点诊断 →</button></div></section>
-<section class="screen-panel map-panel"><div class="screen-map-heading"><h3>流域湖情一张图</h3><select v-model="variable" aria-label="地图图层"><option value="basin">流域与站网</option><option v-for="l in layers.filter(l=>l.id!=='basin')" :key="l.id" :value="l.id">{{l.label}}</option></select><details><summary>图层</summary><div class="map-overlay-options"><label v-for="(label,key) in {terrain:'地形',rivers:'河网',ice:'冰川',stations:'测站',names:'名称',control:'杜加控制区',grid:'0.1°气象格网',units:'计算细分单元'}" :key="key"><input type="checkbox" v-model="show[key]">{{label}}</label><label><input type="checkbox" v-model="lowMotion">低动态模式</label></div></details></div>
-<div v-if="variable!=='basin'" class="map-range-controls"><label>色标<select v-model="rangeMode"><option value="current">当前日期适配</option><option value="period">回放时段锁定</option><option value="custom">自定义范围</option></select></label><template v-if="rangeMode==='custom'"><input aria-label="色标下界" type="number" v-model.number="rangeLow"><input aria-label="色标上界" type="number" v-model.number="rangeHigh"></template><span v-if="rangeMode==='period'&&!range">计算时段范围…</span></div>
-<div class="map-stage"><ScreenMap :spatial-base="meta?.spatialBase||'/spatial/'" :show-grid="show.grid" :show-units="show.units" :reduced-motion="lowMotion||active?.length>0" :range-layer="mapLayer" :stations="stations" :focus="feature?.id" :frame="mapFrame||rain" :snow="snowMap" :variable="variable" :show-ice="show.ice" :show-rivers="show.rivers" :show-terrain="show.terrain" :show-stations="show.stations" :show-control="show.control" :show-names="show.names" @unit="feature={name:'计算单元 '+$event,...result.units.find(u=>u.id===$event)}" @select="emit('station',$event,day)" @feature="feature=$event" @failure="error=$event"/><div v-if="mapLoading" class="map-status">加载中…</div><div v-else-if="variable!=='basin'&&!(variable==='snow'?snowMap?.complete:mapFrame?.complete)" class="map-status">暂无资料</div></div>
-<div v-if="feature" class="feature-summary"><b>{{feature.name}}</b><span v-if="feature.areaKm2!=null">{{number(feature.areaKm2,2)}} km²</span><span v-if="feature.value!=null">{{number(feature.value,3)}} {{feature.unit}}</span><details v-if="feature.members?.length"><summary>{{feature.unitCount}}个计算单元</summary><div v-for="u in feature.members" :key="u.id">{{u.partition}} · {{u.elevationBandMin}}—{{u.elevationBandMax}}m · {{u.kind==='glacier'?'冰川':'陆面'}} · {{number(u.areaKm2,3)}} km²</div></details><button @click="feature=null">×</button></div></section>
-<section v-if="(more||dark)&&mode==='model'" class="screen-panel overview-rivers"><div class="screen-panel-heading"><h3>入湖径流组成</h3><span>m³/s</span></div><div v-for="r in rivers" :key="r.id" class="river-row"><i :class="r.id"></i><span>{{r.id==='fringe'?(meta?.modelFamily==='grid-continuous-v1'?'其他已核实入湖区':'残余集水区（旧）'):r.name}}</span><b>{{number(current?.[r.id],2)}}</b></div></section>
-<section class="screen-panel overview-flow-process"><div class="screen-panel-heading"><h3>来水过程</h3><span>m³/s</span></div><ScreenChart :rows="flowRows" :series="flowSeries" unit="m³/s" :day="day" :dark="dark" :context="currentId+':flow'" @day="setDay"/></section><div class="screen-replay"><span>历史回放</span><button aria-label="前一天" :disabled="!dates.length||index===0" @click="move(-1)">‹</button><button :disabled="!dates.length" @click="play">{{playing?'暂停':'播放'}}</button><input aria-label="过程回放日期" type="range" min="0" :max="Math.max(0,dates.length-1)" :value="index" @input="setDay(dates[Number($event.target.value)])"><button aria-label="后一天" :disabled="!dates.length||index===dates.length-1" @click="move(1)">›</button><input aria-label="选择回放日期" type="date" :value="day" :min="dates[0]" :max="dates.at(-1)" @input="setDay($event.target.value)"><button @click="more=!more">{{more?'收起诊断':'四岸与收支'}}</button></div></div>
-
-<section v-if="more&&result" class="screen-panel expanded-process"><div class="screen-panel-heading"><h3>冰雪消融与湖泊收支</h3><span>{{day}}</span></div><p v-if="summary?.evaluation.mode==='window'" class="screen-note">旧湖泊收支按观测窗口活动小时记账，窗口外缺项不等于无来水；全年比较须采用完整逐时通量。</p><div class="extra-chart-grid"><ScreenChart :rows="flowRows" :series="flowSeries" unit="m³/s" :day="day" :dark="dark" :context="'screen:'+mode+':flow'" @day="setDay"/><ScreenChart :rows="lakeRows" :series="[{key:'snowmeltMm',label:'融雪'},{key:'icemeltMm',label:'融冰'}]" unit="mm/d" :dark="dark" :day="day" :context="task.id+':snow'" @day="setDay"/><ScreenChart :rows="lakeRows" :series="[{key:'lakeInflowM3',label:'入湖水量',type:'bar'},{key:'lakePrecipitationM3',label:'湖面降水',type:'bar'},{key:'lakeEvaporationM3',label:'湖面蒸发',type:'bar'}]" unit="m³/d" :dark="dark" :day="day" :context="task.id+':balance'" @day="setDay"/></div></section>
+<section ref="host" class="lake-screen" :class="{'screen-dark':dark,'screen-expanded':expanded}" :aria-busy="pending">
+ <div class="screen-masthead"><div class="screen-wordmark"><LakeMark/><h2>色林错流域湖情总览</h2></div><div class="screen-header-actions"><button @click="emit('navigate','simulation')">历史模拟</button><button @click="dark=!dark">{{dark?'日常浅色':'汇报深色'}}</button><button @click="expanded?close():fullscreen()">{{expanded?'退出全屏':'全屏展示'}}</button></div></div>
+ <div class="screen-context"><div class="screen-modes"><button :class="{on:mode==='model'}" :disabled="!currentId" @click="changeMode('model')">模拟回放</button><button :class="{on:mode==='observation'}" @click="changeMode('observation')">站点监测</button></div><label v-if="mode==='model'" class="screen-result-choice"><span>成果</span><select v-model="currentId" aria-label="当前成果" @change="selectResult"><option v-for="t in choices" :key="t.id" :value="t.id">{{t.displayName||t.name||t.id}}</option></select></label><span v-else class="monitor-clock">{{boot.builtinResultAvailable===false?boot.builtinResultMessage:'主站最近有效观测 '+(main?.latest?.date||'暂无')+' · 北京时间'}}</span><button v-if="task&&mode==='model'" class="link" @click="emit('result',task.id)">成果详情 →</button><span class="business-date">北京时间 <b>{{day||'—'}}</b></span></div>
+ <div v-if="loading&&!shown" class="screen-initial" role="status">正在读取湖情资料…</div>
+ <template v-else>
+ <div class="screen-metrics">
+  <section class="screen-panel metric-card"><span>主站湖位 <small>{{mode==='model'?'模拟':'实测'}}</small></span><b>{{number(level,3)}}<small>m</small></b><p>{{mode==='model'?'实测 '+number(observed,3)+' m':'主站工作基准'}}</p></section>
+  <section class="screen-panel metric-card"><span>当日涨落</span><b :class="{'metric-rise':delta>0}">{{delta>0?'+':''}}{{number(delta==null?null:delta*100,1)}}<small>cm</small></b><p>{{delta==null?'相邻日期无完整值':'较前一日 · 相同日值口径'}}</p></section>
+  <section class="screen-panel metric-card"><span>{{mode==='model'?'入湖流量':'杜加站流量'}} <small>{{mode==='model'?'模拟':'实测'}}</small></span><b>{{number(flowValue,2)}}<small>m³/s</small></b><p>{{mode==='model'?'已核实入湖范围':'最近有效日 '+(stations.find(s=>s.id==='DUJA')?.latest?.date||'暂无')}}</p></section>
+  <section class="screen-panel metric-card"><span>{{mode==='model'?'流域日降水':'主站日降水'}}</span><b v-if="mode==='model'">{{rain?.complete?number(rain.domainMean,2):'无完整日'}}<small v-if="rain?.complete">mm</small></b><b v-else>{{number(rainObserved,2)}}<small>mm</small></b><p>{{mode==='model'?'模型采用 · 面积加权含湖面':'站点实测 · 无记录保持空白'}}</p></section>
+ </div>
+ <div class="screen-main">
+  <section class="screen-panel map-panel"><div class="screen-map-heading"><h3>{{mode==='model'?'流域水情':'站点分布'}}</h3><select v-model="variable" aria-label="地图主题" @change="changeLayer"><option value="basin">流域分区</option><option value="terrain">地形高程</option><template v-if="mode==='model'"><option v-for="l in layers.filter(l=>!['basin','terrain','evaporation'].includes(l.id))" :key="l.id" :value="l.id">{{l.label}}</option></template></select><details><summary>叠加要素</summary><div class="map-overlay-options"><label v-for="(label,key) in {boundaries:'流域边界',rivers:'河网',ice:'冰川边界',stations:'测站',names:'名称',grid:'气象格网',units:'计算单元'}" :key="key"><input type="checkbox" v-model="show[key]">{{label}}</label></div></details></div>
+   <div class="map-stage"><ScreenMap :spatial-base="mode==='model'?(meta?.spatialBase||'/spatial/'):'/spatial/'" :show-grid="mode==='model'&&show.grid" :show-units="mode==='model'&&show.units" :show-boundaries="show.boundaries" :range-layer="mapLayer" :stations="stations" :focus="feature?.id" :selected-unit="feature?.id" :frame="shown?.frame" :snow="shown?.snow" :variable="shownVariable" :show-ice="show.ice" :show-rivers="show.rivers" :show-terrain="shownVariable==='terrain'" :show-stations="show.stations" :show-names="show.names" @unit="unit" @select="emit('station',$event,day)" @feature="feature=$event" @failure="error=$event"/><div v-if="mapMissing" class="map-status">{{shownVariable==='snow'?'无日末状态':'驱动缺少完整日'}}</div><div v-if="feature" class="feature-summary"><b>{{feature.name}}</b><span v-if="feature.areaKm2!=null">{{number(feature.areaKm2,2)}} km²</span><span v-if="feature.value!=null">{{number(feature.value,2)}} {{feature.unit}}</span><button aria-label="关闭区域信息" @click="feature=null">×</button></div></div>
+  </section>
+  <aside class="screen-panel summary-stack">
+   <section class="shore-summary"><div class="screen-panel-heading"><h3>四岸简况</h3><span>基准待核</span></div><div class="shore-list"><button v-for="s in shores" :key="s.id" class="shore-row" @click="emit('station',s.id,day)"><span>{{s.name.replace('色林错','')}}</span><b>{{exactValue(s,day)==null?'无观测':'当日有记录'}}</b><small>最近 {{s.latest?.date||'暂无'}}</small></button></div></section>
+   <template v-if="mode==='model'">
+    <section class="inflow-summary"><div class="screen-panel-heading"><h3>入湖组成</h3><span>m³/s</span></div><div v-for="r in selectedFlow" :key="r.id" class="river-row"><i :class="r.id"></i><span>{{r.id==='fringe'?'其他入湖区':r.name}}</span><b>{{number(r.value,2)}}</b></div><p v-if="current?.unresolved!=null" class="screen-note">未核实区产流 {{number(current.unresolved,2)}} m³/s · 单列</p></section>
+    <section class="balance-summary"><div class="screen-panel-heading"><h3>当日湖泊收支</h3><span>百万 m³</span></div><div class="balance-grid"><div v-for="b in balance" :key="b.key"><span>{{b.label}}</span><b>{{number(b.value,2)}}</b></div></div></section>
+   </template>
+   <section v-else class="station-recency"><div class="screen-panel-heading"><h3>最近记录</h3><span>实际观测日期</span></div><button v-for="s in stations.filter(s=>s.kind!=='lake')" :key="s.id" @click="emit('station',s.id,s.latest?.date)"><span>{{s.name}}</span><b>{{number(s.latest?.value,2)}} {{s.kind==='rain'?'mm':'m³/s'}}</b><small>{{s.latest?.date||'暂无有效记录'}}</small></button></section>
+  </aside>
+ </div>
+ <div class="screen-processes"><section class="screen-panel"><div class="screen-panel-heading"><h3>湖位过程</h3><span>m · {{mode==='model'?'连续模拟 / 主站实测':'主站实测'}}</span></div><ScreenChart :rows="lakeRows" :series="lakeSeries" unit="m" :day="day" :dark="dark" :context="(task?.id||'monitor')+':'+mode+':lake'" @day="chooseDay"/></section><section class="screen-panel"><div class="screen-panel-heading"><h3>{{mode==='model'?'入湖与杜加过程':'杜加流量过程'}}</h3><span>m³/s</span></div><ScreenChart :rows="flowRows" :series="flowSeries" unit="m³/s" :day="day" :dark="dark" :context="(task?.id||'monitor')+':'+mode+':flow'" @day="chooseDay"/></section></div>
+ <div class="screen-replay"><button aria-label="前一天" :disabled="!dates.length||index===0" @click="move(-1)">‹</button><button :disabled="!dates.length" @click="play">{{playing?'暂停':'播放'}}</button><div class="timeline-track"><input aria-label="过程回放日期" type="range" min="0" :max="Math.max(0,dates.length-1)" :value="index" @input="slide($event.target.value)"><div class="timeline-ticks"><span v-for="t in ticks" :key="t">{{t.slice(0,7)}}</span></div></div><button aria-label="后一天" :disabled="!dates.length||index===dates.length-1" @click="move(1)">›</button><input aria-label="选择回放日期" type="date" :value="day" :min="dates[0]" :max="dates.at(-1)" @input="chooseDay($event.target.value)"><select v-model="speed" aria-label="播放速度" @change="schedule"><option :value="2000">慢速</option><option :value="1200">常速</option><option :value="600">快速</option></select><span v-if="pending" class="frame-progress" role="status">正在读取 {{requestedDay}}</span><span v-else-if="error" class="frame-error" role="alert">{{error}}<button @click="requestView(requestedDay||day)">重试</button></span><span v-else class="frame-progress">已显示 {{day}}</span></div>
+ </template>
 </section>
 </template>

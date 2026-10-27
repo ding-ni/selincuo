@@ -46,7 +46,7 @@ def main():
         return
     bootstrap_parser = argparse.ArgumentParser(add_help=False)
     bootstrap_parser.add_argument('--workspace', type=Path)
-    bootstrap_parser.add_argument('--port',type=int,default=8879)
+    bootstrap_parser.add_argument('--port',type=int,default=8882)
     bootstrap_args, _ = bootstrap_parser.parse_known_args()
     target_workspace = (bootstrap_args.workspace or WORKSPACE).resolve()
     port=bootstrap_args.port
@@ -74,7 +74,7 @@ def main():
     try:
         serve()
     except OSError as exc:
-        print(f'启动失败：{exc}；请检查8879端口，或使用 --port 其他端口。', flush=True)
+        print(f'启动失败：{exc}；请检查{port}端口，或使用 --port 其他端口。', flush=True)
         raise SystemExit(1)
 
 

@@ -6,14 +6,33 @@ import uuid
 import time
 from concurrent.futures import ThreadPoolExecutor
 
+from . import common
 from .common import CONTEXT_KEY, ROOT, canonical, digest, model_identity, now, read_json, write_json
 from .model_core import parameters
 from .simulation import observation_snapshot, run_simulation
 
 
+CODE_SENSITIVE_TASKS = frozenset((
+    'simulation', 'trial', 'continuation', 'calibration', 'calibration-workflow',
+    'sensitivity', 'evaluation', 'continuous-reference', 'import-observations',
+    'build-spatial', 'build-grid-spatial', 'register-inputs', 'download-forcing',
+    'update-forcing',
+))
+
+
+def grid_observation_snapshot(db):
+    from .grid_simulation import observations
+    snapshot = observations(db)
+    snapshot['sourceDigests'] = db.rows("SELECT DISTINCT s.id,s.sha256 FROM sources s JOIN observations o ON o.source_id=s.id WHERE s.rowid IN (SELECT MAX(rowid) FROM sources GROUP BY path) AND ((o.station_id='SLC' AND o.variable='level') OR (o.station_id='DUJA' AND o.variable='flow')) ORDER BY s.id")
+    return snapshot
+
+
 class Jobs:
     def __init__(self, database):
         self.db = database
+        # Worker threads run code imported by this process. The on-disk sources
+        # must still match that startup identity before creating a new result.
+        self.backend_source_identity = common.model_identity()
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='selinco-model')
         self.cancelled = set()
         self.lock = threading.RLock()
@@ -25,8 +44,18 @@ class Jobs:
     def active(self):
         return self.db.rows("SELECT id,kind,status,progress,message FROM tasks WHERE status IN ('queued','running','stopping')")
 
+    def _check_backend_identity(self):
+        try:
+            current_identity = common.model_identity()
+        except OSError as exc:
+            raise ValueError('无法核验平台源码，请重启平台后重试') from exc
+        if current_identity != self.backend_source_identity:
+            raise ValueError('平台源码已变化，请重启平台后再提交或运行计算任务')
+
     def submit(self, kind, payload):
         with self.lock:
+            if kind in CODE_SENSITIVE_TASKS:
+                self._check_backend_identity()
             request_id = payload.get('clientRequestId')
             submission = None
             if request_id is not None:
@@ -104,7 +133,7 @@ class Jobs:
             if kind=='calibration' and payload.get('candidateParameterId'):
                 raise ValueError('请将候选参数保存为方案新修订后再率定')
             from .research_schemes import prepare_request
-            payload = prepare_request(self.db, payload)
+            payload = prepare_request(self.db, payload, kind=kind)
         elif not release_bound and payload.get('modelFamily') == 'grid-continuous-v1' and kind != 'continuation':
             raise ValueError('请先保存研究方案修订，再提交计算')
         standard = kind == 'simulation' and (release_bound or bool(payload.get('schemeId')))
@@ -131,9 +160,8 @@ class Jobs:
                 if not payload.get('_observations') or not payload.get('_modelIdentity'):
                     raise ValueError('发布请求缺少服务端冻结观测或真实模型身份')
             elif research:
-                from .grid_simulation import observations, model_identity as grid_identity
-                payload['_observations'] = observations(self.db)
-                payload['_observations']['sourceDigests']=self.db.rows("SELECT DISTINCT s.id,s.sha256 FROM sources s JOIN observations o ON o.source_id=s.id WHERE s.rowid IN (SELECT MAX(rowid) FROM sources GROUP BY path) AND ((o.station_id='SLC' AND o.variable='level') OR (o.station_id='DUJA' AND o.variable='flow')) ORDER BY s.id")
+                from .grid_simulation import model_identity as grid_identity
+                payload['_observations'] = grid_observation_snapshot(self.db)
                 payload['_modelIdentity'] = grid_identity()
             else:
                 payload['_observations'] = observation_snapshot(self.db)
@@ -178,9 +206,13 @@ class Jobs:
                 payload['spatialVersion'] = checkpoint['identity']['spatialVersion']
                 payload['_modelIdentity'] = grid_identity()
                 payload['origin'] = 'user-research'
+                # Evaluation observations can grow independently of the
+                # parent's fixed physical state and initialization.
+                payload['_observations'] = grid_observation_snapshot(self.db)
+            else:
+                payload['_observations'] = parent_task['request']['_observations']
             if 'partitionParameters' not in payload and checkpoint.get('partitionParameters'):
                 payload['partitionParameters'] = checkpoint['partitionParameters']
-            payload['_observations'] = parent_task['request']['_observations']
             for field in ('schemeSnapshot','researchSchemeId','researchConfiguration','periods'):
                 if field in parent_task['request']:payload[field]=parent_task['request'][field]
         folder.mkdir(parents=True, exist_ok=False)
@@ -258,11 +290,13 @@ class Jobs:
         try:
             if is_cancelled():
                 raise InterruptedError('用户停止任务')
+            kind = task['kind']
+            if kind in CODE_SENSITIVE_TASKS:
+                self._check_backend_identity()
             with self.db.connect() as db:
                 db.execute("UPDATE tasks SET status='running',updated_at=? WHERE id=?", (now(), identifier))
             heartbeat_thread=threading.Thread(target=heartbeat,daemon=True,name='selinco-task-heartbeat')
             heartbeat_thread.start()
-            kind = task['kind']
             if kind=='simulation' and request.get('expectedReleaseId'):
                 from .release_registry import current
                 if current(self.db)['id']!=request['expectedReleaseId']:
@@ -313,7 +347,8 @@ class Jobs:
                 result={'artifacts':[artifact],'termination':'completed','files':artifact['files']}
             elif kind == 'update-forcing':
                 from .forcing_latest import acquire_latest
-                result = acquire_latest(self.db, progress, is_cancelled)
+                result = acquire_latest(self.db, progress, is_cancelled,
+                                        start_date=request.get('startDate'), end_date=request.get('endDate'))
             elif kind == 'build-grid-spatial':
                 from .grid_spatial import build
                 result = build(progress)

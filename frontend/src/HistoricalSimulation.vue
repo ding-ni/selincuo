@@ -1,32 +1,87 @@
 <script setup>
 import {computed,ref,watch,onBeforeUnmount} from 'vue'
-import {historyIssue,shiftCalendarDay,schemeInputCompatible} from './history-workflow.mjs'
-import {api,standardName} from './api.mjs'
-const props=defineProps({boot:Object,run:Object,busy:Boolean,active:Array,expert:Boolean})
-const emit=defineEmits(['submit','navigate','research','plan'])
-const plan=ref(null),planError=ref(''),planning=ref(false);let planTicket=0,planTimer
-watch(()=>[props.run.start,props.run.end,props.run.inputId,props.run.schemeId,props.run.schemeRevision],()=>{const ticket=++planTicket;clearTimeout(planTimer);plan.value=null;emit('plan',null);planning.value=true;planTimer=setTimeout(async()=>{try{const data=await api('simulation-plan?'+new URLSearchParams(Object.fromEntries(Object.entries(props.run).filter(([k,v])=>v!=null&&k!=='name'))));if(ticket===planTicket){plan.value=data;planError.value='';emit('plan',data)}}catch(e){if(ticket===planTicket)planError.value=e.message}finally{if(ticket===planTicket)planning.value=false}},250)},{immediate:true})
-onBeforeUnmount(()=>{clearTimeout(planTimer);planTicket++})
-const researchId=ref(''),researchEnd=ref('2025-12-31'),researchName=ref(''),candidateId=ref(''),manual=ref(false),initialLevel=ref(null),initialTime=ref(''),initialSource=ref('')
-const research=computed(()=>props.boot.schemes.filter(s=>s.payload?.modelFamily==='grid-continuous-v1'))
-const selectedResearch=computed(()=>research.value.find(s=>s.id===researchId.value))
-function runResearch(){emit('research',{kind:'simulation',researchSchemeId:researchId.value,candidateParameterId:candidateId.value||undefined,name:researchName.value||selectedResearch.value.name+' · 连续模拟',end:shiftCalendarDay(researchEnd.value,1)+'T00:00:00',...(manual.value?{initialLakeLevel:initialLevel.value,initialLakeTime:initialTime.value,initialLakeSource:initialSource.value}:{})})}
-const scheme=computed(()=>props.boot.operationalSchemes?.find(s=>s.id===props.run.schemeId)),issue=computed(()=>historyIssue(props.run,props.boot,plan.value?.action==='reuse'?false:props.active.length>0))
-const endDay=computed(()=>props.run.end?shiftCalendarDay(props.run.end,-1):'')
-const maximum=computed(()=>{const input=props.boot.inputs.find(i=>i.id===props.run.inputId);return input?shiftCalendarDay(input.manifest.end,-1):''})
-const latestCompatible=computed(()=>props.boot.inputs.filter(i=>i.compatible!==false&&schemeInputCompatible(scheme.value,i.manifest)&&i.manifest.start<=scheme.value?.initialization.origin).sort((a,b)=>b.manifest.end.localeCompare(a.manifest.end))[0])
-const selectedInput=computed(()=>props.boot.inputs.find(i=>i.id===props.run.inputId))
-function useInput(id){props.run.inputId=id;const input=props.boot.inputs.find(i=>i.id===id);if(input)props.run.end=input.manifest.end.slice(0,10)+'T00:00'}
-function date(key,value){if(value)props.run[key]=(key==='end'?shiftCalendarDay(value,1):value)+'T00:00'}
+import {api,parameterCompatible} from './api.mjs'
+import {shiftCalendarDay} from './history-workflow.mjs'
+const props=defineProps({boot:Object,selection:Object,busy:Boolean,active:Array})
+const emit=defineEmits(['submit','navigate'])
+const schemeId=ref(''),parameterId=ref(''),inputId=ref(''),start=ref(''),end=ref(''),name=ref('')
+const plan=ref(null),planError=ref(''),planning=ref(false)
+let planTicket=0,planTimer,planController
+const schemes=computed(()=>(props.boot.schemes||[]).filter(s=>s.payload?.modelFamily==='grid-continuous-v1'))
+const selectedScheme=computed(()=>schemes.value.find(s=>s.id===schemeId.value))
+const inputs=computed(()=>(props.boot.inputs||[]).filter(i=>{
+ if(!i.manifest)return false
+ const scheme=selectedScheme.value?.payload;if(!scheme)return true
+ const required=scheme.inputRequirement?.transformationSHA256
+ return i.manifest.start<=scheme.periods.warmupStart&&(!required||i.manifest.transformationSHA256===required)
+}))
+const selectedInput=computed(()=>inputs.value.find(i=>i.id===inputId.value))
+const firstDay=computed(()=>selectedScheme.value?.payload?.periods?.warmupStart?.slice(0,10)||'')
+const lakeAnchor=computed(()=>selectedScheme.value?.payload?.initialization?.initialLakeTime||'')
+const lakeAnchorSource=computed(()=>selectedScheme.value?.payload?.initialization?.initialLakeSource||'')
+const firstLakeDay=computed(()=>!lakeAnchor.value?'':lakeAnchor.value.slice(11,19)==='00:00:00'?lakeAnchor.value.slice(0,10):shiftCalendarDay(lakeAnchor.value,1))
+const lastDay=computed(()=>selectedInput.value?.manifest?.end?shiftCalendarDay(selectedInput.value.manifest.end,-1):'')
+const parameters=computed(()=>(props.boot.parameters||[]).filter(p=>p.payload?.sourceTaskId&&parameterCompatible(p,selectedScheme.value?.payload)))
+const issue=computed(()=>{
+ if(!selectedScheme.value)return '请选择可用方案。'
+ if(!selectedInput.value)return '没有可用的气象资料，请先更新资料。'
+ if(!start.value||!end.value||end.value<start.value)return '请选择有效的开始和结束日期。'
+ if(firstDay.value&&start.value<firstDay.value)return '开始日期早于该方案的起算时间。'
+ if(selectedInput.value.manifest.start>selectedScheme.value.payload.periods.warmupStart)return '气象资料未覆盖方案预热起点，请更新资料或调整方案。'
+ if(lastDay.value&&end.value>lastDay.value)return '结束日期超出气象资料的完整日范围。'
+ return ''
+})
+function pickScheme(id,force=false){
+ const s=schemes.value.find(x=>x.id===id);if(!s)return
+ schemeId.value=id;parameterId.value=force?(props.selection?.parameterId||''):''
+ const compatible=inputs.value.slice().sort((a,b)=>b.manifest.end.localeCompare(a.manifest.end))
+ inputId.value=compatible[0]?.id||''
+ const source=inputs.value.find(i=>i.id===inputId.value)
+ const limit=source?.manifest?.end?shiftCalendarDay(source.manifest.end,-1):''
+ start.value=s.payload.periods?.trainingStart?.slice(0,10)||s.payload.periods?.warmupStart?.slice(0,10)||''
+ const preferred=s.payload.periods?.evaluationEnd?shiftCalendarDay(s.payload.periods.evaluationEnd,-1):limit
+ end.value=limit&&preferred>limit?limit:preferred
+}
+watch(schemes,rows=>{if(!rows.length)return;if(!rows.some(s=>s.id===schemeId.value)){const s=rows.find(x=>x.id===props.selection?.schemeId)||rows.find(x=>x.builtin||x.payload?.builtin)||rows[0];pickScheme(s.id,!!props.selection)}},{immediate:true})
+watch(()=>props.selection,value=>{if(value?.schemeId)pickScheme(value.schemeId,true)},{deep:true})
+function planRequest(){return {researchSchemeId:schemeId.value,inputId:inputId.value,start:start.value+'T00:00:00',end:shiftCalendarDay(end.value,1)+'T00:00:00',...(parameterId.value?{candidateParameterId:parameterId.value}:{})}}
+watch(()=>[schemeId.value,parameterId.value,inputId.value,start.value,end.value,issue.value],()=>{
+ const ticket=++planTicket;clearTimeout(planTimer);planController?.abort();plan.value=null;planError.value=''
+ if(issue.value){planning.value=false;return}
+ planning.value=true;planController=new AbortController()
+ planTimer=setTimeout(async()=>{try{const data=await api('simulation-plan?'+new URLSearchParams(planRequest()),null,{signal:planController.signal});if(ticket===planTicket)plan.value=data}catch(e){if(e.name!=='AbortError'&&ticket===planTicket)planError.value=e.message}finally{if(ticket===planTicket)planning.value=false}},250)
+},{immediate:true})
+onBeforeUnmount(()=>{planTicket++;clearTimeout(planTimer);planController?.abort()})
+function run(force=false){
+ if(issue.value||planError.value||planning.value||!plan.value||props.busy||props.active.length)return
+ if(!force&&plan.value.action==='reuse'){emit('navigate','results',plan.value.resultId,{id:plan.value.resultId,start:start.value,end:end.value});return}
+ if(plan.value.action==='blocked')return
+ emit('submit',{kind:'simulation',...planRequest(),name:name.value.trim()||selectedScheme.value.name+' · '+start.value+'—'+end.value})
+}
 </script>
 <template>
- <section class="panel simulation-form"><div class="panel-title"><h3>历史模拟</h3><span class="badge">{{researchId?'研究候选':'已发布默认方案'}}</span><button class="link" @click="emit('navigate','results')">成果中心 →</button></div>
- <label v-if="expert">研究入口 · 选择方案<select v-model="researchId"><option value="">{{standardName}}</option><option v-for="s in research" :key="s.id" :value="s.id">{{s.name}} · 修订 {{s.payload.revision}}</option></select></label>
- <div v-if="researchId" class="scheme-heading">{{selectedResearch?.name}}</div><p v-else class="muted">默认采用已发布方案。下面的日期是成果查看窗口，实际计算从方案规定的统一预热起点开始。</p>
- <div v-if="!researchId" class="simulation-input-status"><span>当前驱动完整日至 <b>{{maximum}}</b></span><button v-if="latestCompatible&&latestCompatible.id!==run.inputId&&latestCompatible.manifest.end>selectedInput?.manifest.end" class="link" @click="useInput(latestCompatible.id)">使用最新兼容资料 · 至 {{shiftCalendarDay(latestCompatible.manifest.end,-1)}}</button><button v-if="boot.defaultResultInputId&&run.inputId!==boot.defaultResultInputId" class="link" @click="useInput(boot.defaultResultInputId)">返回默认成果的冻结资料</button><span v-if="run.inputId!==boot.defaultResultInputId" class="warning">新输入将重新检查计算计划</span></div>
- <form v-if="!researchId" class="query-grid" @submit.prevent="emit('submit')"><label>开始日期<input type="date" :value="run.start?.slice(0,10)" min="2024-01-01" :max="maximum" :disabled="busy||active.length>0" required @input="date('start',$event.target.value)"></label><label>结束日期<input type="date" :value="endDay" min="2024-01-01" :max="maximum" :disabled="busy||active.length>0" required @input="date('end',$event.target.value)"></label><label class="grow">成果名称<input v-model="run.name" placeholder="按计算时段自动命名" :disabled="busy||active.length>0"></label><button class="primary" :disabled="busy||!!issue||planning||!!planError">{{planning?'检查运行计划…':plan?.action==='reuse'?'查看已有成果':'开始模拟'}}</button></form>
- <form v-else @submit.prevent="runResearch"><div class="query-grid"><label>陆面预热起点<input type="date" :value="selectedResearch.payload.periods.warmupStart.slice(0,10)" readonly></label><label>结束日期<input type="date" v-model="researchEnd" required></label><label class="grow">成果名称<input v-model="researchName" placeholder="方案名称与时段"></label><button class="primary" :disabled="busy||active.length>0">开始连续模拟</button></div><div class="result-toolbar"><label class="grow">参数<select v-model="candidateId"><option value="">方案修订内冻结参数</option><option v-for="p in boot.parameters.filter(p=>p.payload.sourceTaskId)" :key="p.id" :value="p.id">{{p.name}}</option></select></label><label class="inline-check"><input type="checkbox" v-model="manual">使用有来源的可信初始湖位</label></div><div v-if="manual" class="query-grid"><label>湖位 m<input type="number" step=".001" v-model.number="initialLevel" required></label><label>锚点时刻<input type="datetime-local" v-model="initialTime" required></label><label class="grow">基准与资料来源<input v-model="initialSource" placeholder="相对主站工作基准；注明出处" required></label></div><p class="muted">默认从首个可靠主站值建立湖位锚点并连续积分，锚点前保留相对水量。我的方案与候选参数不会替换业务标准。</p></form>
- <div v-if="plan&&!researchId" class="simulation-plan"><b>{{({reuse:'复用已有成果',rerun:'从统一起点重算',extend:'兼容续算',blocked:'暂不可计算'})[plan.action]}}</b><p v-for="reason in plan.reasons" :key="reason">{{reason}}</p></div><p v-if="planError" class="note warning">{{planError}}</p><p v-if="issue" class="note warning" role="status">{{issue}}</p>
- <details><summary>计算配置</summary><dl><dt>气象资料</dt><dd>{{boot.inputs.find(i=>i.id===run.inputId)?.name}}</dd><dt>预热起点</dt><dd>{{scheme?.initialization.origin.slice(0,10)}}</dd><dt>计算尺度</dt><dd>逐小时计算，逐日输出</dd></dl></details>
- </section><slot/>
+ <section class="panel simulation-form">
+  <div class="panel-title"><h3>历史模拟</h3><button class="link" @click="emit('navigate','results')">查看已有成果 →</button></div>
+  <p v-if="boot.builtinResultAvailable===false" class="note warning">{{boot.builtinResultMessage}}</p>
+  <p class="muted">选择方案、参数和时段；计算所需的预热与资料检查由平台处理。</p>
+  <form @submit.prevent="run(false)">
+   <div class="query-grid">
+    <label class="grow">模型方案<select :value="schemeId" @change="pickScheme($event.target.value)"><option value="" disabled>选择方案</option><option v-for="s in schemes" :key="s.id" :value="s.id">{{s.name}}{{s.builtin||s.payload?.builtin?' · 内置':''}}</option></select></label>
+    <label class="grow">参数<select v-model="parameterId"><option value="">方案采用的参数</option><option v-for="p in parameters" :key="p.id" :value="p.id">{{p.name}}</option></select></label>
+    <label>开始日期<input v-model="start" type="date" :min="firstDay" :max="lastDay" required></label>
+    <label>结束日期<input v-model="end" type="date" :min="firstDay" :max="lastDay" required></label>
+   </div>
+   <div class="query-grid simulation-details">
+    <label class="grow">气象资料<select v-model="inputId"><option value="" disabled>选择已登记资料</option><option v-for="i in inputs" :key="i.id" :value="i.id">{{i.name}} · {{i.manifest.start.slice(0,10)}} — {{i.manifest.end.slice(0,10)}}</option></select></label>
+    <label class="grow">成果名称<input v-model="name" placeholder="可留空，按方案和时段命名"></label>
+    <button class="primary" :disabled="busy||active.length>0||!!issue||planning||!!planError||!plan||plan.action==='blocked'">{{planning?'检查资料…':plan?.action==='reuse'?'查看已有成果':'开始模拟'}}</button><button v-if="plan?.action==='reuse'" type="button" :disabled="busy||active.length>0" @click="run(true)">重新计算</button>
+   </div>
+  </form>
+  <div class="simulation-input-status" v-if="selectedInput"><span>气象资料：{{selectedInput.manifest.start.slice(0,10)}} 起，完整日至 {{lastDay}}</span><span>方案预热起点：{{firstDay}}</span><button class="link" @click="emit('navigate','model')">更新资料 →</button></div>
+  <p v-if="firstLakeDay" class="note">陆面自预热起点计算；湖位锚点为 {{lakeAnchor.replace('T',' ').slice(0,16)}}<template v-if="lakeAnchorSource.includes('日值')">（日值代表时刻假设）</template>，完整湖位日从 {{firstLakeDay}} 开始。</p>
+  <p v-if="issue" class="note warning" role="status">{{issue}}</p>
+  <p v-if="planError" class="note warning" role="alert">计算前检查失败：{{planError}}</p><p v-if="plan?.action==='blocked'" class="note warning">{{plan.reasons?.join('；')||'当前资料或起算条件不满足计算要求。'}}</p><p v-else-if="plan?.action==='reuse'" class="note">已有条件一致的完整成果，可直接查看，也可选择重新计算。</p>
+ </section>
+ <slot/>
 </template>
+<style scoped>.simulation-details{margin-top:18px}.simulation-input-status{display:flex;flex-wrap:wrap;align-items:center;gap:20px;margin-top:18px;color:var(--muted);font-size:13px}</style>

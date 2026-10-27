@@ -1,0 +1,225 @@
+{
+  "id": "selinco-comprehensive-continuous-v1",
+  "name": "色林错综合模拟方案",
+  "schemaVersion": 2,
+  "modelFamily": "grid-continuous-v1",
+  "spatialVersion": "AGG-SPATIAL-e5960a39dda5d4247cc6",
+  "inputId": "INPUT-479ada7cc12ab8dd892a716d",
+  "parameters": {
+    "KC": 0.7294530893648382,
+    "WM": 226.55679731833598,
+    "B": 0.08475148517233684,
+    "C": 0.15,
+    "SM": 5.0,
+    "EX": 1.2,
+    "KI": 0.0922935896415091,
+    "KG": 0.0001,
+    "IM": 0.01,
+    "snowDdf": 4.0,
+    "iceDdf": 7.0,
+    "snowTemperature": -1.0,
+    "rainTemperature": 2.0,
+    "liquidCapacity": 0.05,
+    "refreezeFactor": 1.0,
+    "snowSublimation": 0.35,
+    "glacierRecessionDay": 0.5,
+    "tauHours": 168.0,
+    "lagHours": 0.0,
+    "lakeCoefficient": 1.5,
+    "lapseRate": -0.0065,
+    "interflowTauHours": 48.0,
+    "baseflowTauHours": 720.0,
+    "iceSublimationFraction": 0.25,
+    "iceSublimationMaxMmHour": 0.08
+  },
+  "partitionParameters": {
+    "duja": {
+      "KC": 0.7714797672529675,
+      "WM": 300.0,
+      "B": 0.8,
+      "C": 0.15,
+      "SM": 100.0,
+      "EX": 1.2,
+      "KI": 0.12447649497308605,
+      "KG": 0.1,
+      "IM": 0.01,
+      "snowDdf": 4.0,
+      "iceDdf": 7.0,
+      "snowTemperature": -1.0,
+      "rainTemperature": 2.0,
+      "liquidCapacity": 0.05,
+      "refreezeFactor": 1.0,
+      "snowSublimation": 0.35,
+      "glacierRecessionDay": 0.5,
+      "tauHours": 71.40081518816966,
+      "lagHours": 0.0,
+      "lapseRate": -0.0065,
+      "interflowTauHours": 123.4066595475932,
+      "baseflowTauHours": 2160.0,
+      "iceSublimationFraction": 0.25,
+      "iceSublimationMaxMmHour": 0.08
+    }
+  },
+  "routingMode": "source-separated",
+  "target": "duja",
+  "periods": {
+    "warmupStart": "2023-01-01T00:00:00",
+    "trainingStart": "2024-01-01T00:00:00",
+    "trainingEnd": "2025-01-01T00:00:00",
+    "evaluationStart": "2025-01-01T00:00:00",
+    "evaluationEnd": "2026-10-21T00:00:00"
+  },
+  "search": {
+    "scope": "duja",
+    "keys": [
+      "KC",
+      "WM",
+      "B",
+      "SM",
+      "KI",
+      "KG",
+      "tauHours",
+      "interflowTauHours",
+      "baseflowTauHours"
+    ],
+    "bounds": {
+      "KC": [
+        0.2,
+        1.5
+      ],
+      "WM": [
+        40,
+        300
+      ],
+      "B": [
+        0.02,
+        0.8
+      ],
+      "C": [
+        0.01,
+        0.5
+      ],
+      "SM": [
+        5,
+        100
+      ],
+      "EX": [
+        0.1,
+        2.5
+      ],
+      "KI": [
+        0.001,
+        0.15
+      ],
+      "KG": [
+        0.0001,
+        0.1
+      ],
+      "IM": [
+        0,
+        0.2
+      ],
+      "snowDdf": [
+        1,
+        10
+      ],
+      "iceDdf": [
+        2,
+        14
+      ],
+      "snowTemperature": [
+        -5,
+        1
+      ],
+      "rainTemperature": [
+        0,
+        5
+      ],
+      "liquidCapacity": [
+        0.01,
+        0.15
+      ],
+      "refreezeFactor": [
+        0,
+        3
+      ],
+      "snowSublimation": [
+        0,
+        1
+      ],
+      "iceSublimationFraction": [
+        0,
+        1
+      ],
+      "iceSublimationMaxMmHour": [
+        0,
+        0.4
+      ],
+      "glacierRecessionDay": [
+        0.05,
+        3
+      ],
+      "tauHours": [
+        1,
+        168
+      ],
+      "lagHours": [
+        0,
+        72
+      ],
+      "lakeCoefficient": [
+        0.2,
+        1.5
+      ],
+      "lapseRate": [
+        -0.01,
+        -0.002
+      ],
+      "interflowTauHours": [
+        6,
+        240
+      ],
+      "baseflowTauHours": [
+        168,
+        2160
+      ]
+    },
+    "budgets": {
+      "runoff": 120,
+      "routing": 120,
+      "lake": 30
+    },
+    "seed": 42,
+    "objectiveProfile": "balanced"
+  },
+  "initialization": {
+    "initialLakeTime": "2023-04-20T12:00:00",
+    "initialLakeLevel": 4544.03,
+    "initialLakeSource": "主站2023-04-20质量控制日值取当日12时作为代表锚点；该时刻并非已核实的瞬时实测"
+  },
+  "inputRequirement": {
+    "transformationSHA256": "a28542996c03152f4bc7fcdbec1510a7cabbb4843c3fa51e928b49b5f135d458",
+    "lakePrecipitationCorrection": {
+      "method": "station-point-annual-ratio-v1",
+      "scope": "lake-only",
+      "factor": 0.5336700706945834,
+      "station": "SLC",
+      "gridId": "89.4,31.8",
+      "developmentYear": 2024,
+      "pairedDays": 366,
+      "gaugeMm": 226.5,
+      "gridMm": 424.41952891456936,
+      "gaugeSeriesSHA256": "e0abfd77539b3aaf758a6a8ca85c601ecf1716f069683357d34107bc53e59832",
+      "limitations": [
+        "One shore gauge represents the lake only as a provisional spatial transfer.",
+        "Source daily labels used; station reporting day boundary not independently verified.",
+        "Gauge catch bias and snowfall undercatch not corrected."
+      ]
+    }
+  },
+  "evidence": {
+    "spatialComparison": "docs/E3同新域聚合顺序受控诊断-20261027.md",
+    "note": "沿用已有参数及同新域面积聚合；长期初态与未核实排水去向仍有限制，2025和2026并非未触碰的独立验证。"
+  },
+  "resultId": "JOB-2bac578f2ae646eaad18"
+}

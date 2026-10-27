@@ -16,7 +16,12 @@ PARTITIONS=['duja','zajia_rest','zagen','boqu','ali','fringe','external','unreso
 _cache={};_prefixes={}
 
 def model_identity():
-    return digest({'format':'grid-continuous-v1','files':{name:sha_file(ROOT/'backend'/name) for name in ('model_core.py','routing.py','parameter_regions.py','grid_simulation.py')}})
+    # Reuse and continuation also depend on forcing interpretation, spatial
+    # loading and the shared evaluation routines used below.
+    files = ('model_core.py', 'routing.py', 'parameter_regions.py',
+             'grid_simulation.py', 'forcing.py', 'grid_spatial.py', 'simulation.py')
+    return digest({'format': 'grid-continuous-v1',
+                   'files': {name: sha_file(ROOT / 'backend' / name) for name in files}})
 
 def observations(db):
     result={'profile':QUALITY_VERSION,'level':{},'flow':{}}
@@ -59,6 +64,36 @@ def anchor(request,observation,start,end):
     if t>end:return None
     return {'time':t.isoformat(),'level':level,'method':'first-quality-daily-level-at-noon','source':observation['profile'],'reference':'SLC-working-datum'}
 
+def unit_forcing(spatial,arrays,ids,base,regions):
+    """Apply the temperature correction before optional HRU area aggregation."""
+    units=spatial['units']
+    if spatial.get('unitStrategy') == grid_spatial.AGGREGATE_STRATEGY:
+        groups=spatial.get('aggregation',[])
+        if len(groups)!=len(units):raise ValueError('聚合单元的成员清单不完整')
+        columns={'precipitation':[],'temperature':[],'evaporation':[]}
+        for unit,group in zip(units,groups):
+            if group.get('unitId')!=unit['id'] or not group.get('members'):
+                raise ValueError('聚合单元与成员身份不一致')
+            members=group['members'];indexes=np.array([m['gridIndex'] for m in members],dtype=int)
+            weights=np.array([m['areaWeight'] for m in members],dtype=float)
+            dz=np.array([m['elevationOffsetM'] for m in members],dtype=float)
+            if (np.any(indexes<0) or np.any(indexes>=len(spatial['grids'])) or
+                    not np.isfinite(weights).all() or np.any(weights<=0) or abs(weights.sum()-1)>1e-12 or
+                    not np.isfinite(dz).all()):
+                raise ValueError('聚合成员的气象索引、高程或面积权重无效')
+            lapse=regions.get(unit['partition'],base)['lapseRate']
+            for key in columns:
+                values=arrays[key][ids][:,indexes]
+                if key=='temperature':values=values+dz[None,:]*lapse
+                columns[key].append(values@weights)
+        return tuple(np.ascontiguousarray(np.stack(columns[k],axis=1)) for k in ('precipitation','temperature','evaporation'))
+    grid_ids=np.array([u['gridIndex'] for u in units])
+    dz=np.array([u['elevation']-spatial['grids'][u['gridIndex']]['referenceElevation'] for u in units])
+    lapse=np.array([regions.get(u['partition'],base)['lapseRate'] for u in units])
+    return (np.ascontiguousarray(arrays['precipitation'][ids][:,grid_ids]),
+            np.ascontiguousarray(arrays['temperature'][ids][:,grid_ids]+dz[None,:]*lapse[None,:]),
+            np.ascontiguousarray(arrays['evaporation'][ids][:,grid_ids]))
+
 def run(db,request,folder=None,progress=None,cancelled=None,prepared=None):
     source=prepared or prepare(db,request['inputId'],request['spatialVersion'])
     spatial=source['spatial'];arrays=source['arrays'];all_times=source['times'];units=spatial['units']
@@ -72,7 +107,14 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None):
     identity={'projectId':'selinco','modelFamily':'grid-continuous-v1','modelImplementation':request.get('_modelIdentity') or model_identity(),'spatialVersion':spatial['version'],'parameterSHA256':digest(p),'partitionParameterSHA256':digest(regions_patch),
               'initializationSHA256':digest(initial),'observationProfile':observation['profile'],'observationSnapshotSHA256':digest(observation),'forcingGridSHA256':spatial['forcingGridVersion'],'forcingTransformationSHA256':source['manifest'].get('transformationSHA256'),'routingMode':request.get('routingMode','source-separated')}
     if parent:
-        if parent.get('schemaVersion')!=3 or parent.get('identity')!=identity:raise ValueError('完整父状态的模型、空间、参数、初始化或观测身份不一致')
+        # Observations are evaluation inputs, not physical state. Keep both
+        # snapshots in their respective results, but allow newly imported
+        # observations without resetting an already established lake anchor.
+        observation_fields={'observationProfile','observationSnapshotSHA256'}
+        numerical_identity=lambda value:{k:v for k,v in value.items() if k not in observation_fields}
+        if (parent.get('schemaVersion')!=3 or
+                numerical_identity(parent.get('identity',{}))!=numerical_identity(identity)):
+            raise ValueError('完整父状态的模型、空间、参数、初始化或汇流身份不一致')
         if pd.Timestamp(parent['validAt'])+pd.Timedelta(hours=1)!=start:raise ValueError('续算必须从完整末状态下一小时开始')
         if prefix_identity(source,parent['validAt'])!=parent.get('forcingPrefixSHA256'):raise ValueError('历史气象前缀发生变化，不允许续算')
         if set(parent.get('routing',{}))!=set(PARTITIONS):raise ValueError('父状态缺少分区传播队列')
@@ -87,8 +129,7 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None):
         state=np.asarray(parent['unitStates'],dtype=float)
         if state.shape!=(len(units),8) or not np.isfinite(state).all() or np.min(state)<-1e-8:raise ValueError('父状态单元形状或数值错误')
     else:state=region_initial_states(units,p,regions)
-    grid_ids=np.array([u['gridIndex'] for u in units]);areas=np.array([u['areaKm2'] for u in units]);glaciers=np.array([u['kind']=='glacier' for u in units])
-    delta_z=np.array([u['elevation']-spatial['grids'][u['gridIndex']]['referenceElevation'] for u in units]);lapse=np.array([regions.get(u['partition'],p)['lapseRate'] for u in units])
+    areas=np.array([u['areaKm2'] for u in units]);glaciers=np.array([u['kind']=='glacier' for u in units])
     lake_weights=np.array(spatial['lakeWeights']);lake_area=spatial['lakeAreaKm2']*1e6;lake_factor=lake_precipitation_factor(source['manifest'])
     old_routing=deepcopy((parent or {}).get('routing',{}));lake=deepcopy((parent or {}).get('lake',{}));continuous=float((parent or {}).get('continuousLakeVolume',0.))
     total_hours=len(times);output={k:np.full(total_hours,np.nan) for k in [*RIVERS,'lakeLevel','volumeChange','continuousLakeVolumeChange','lakeFlux','lakeRainMm','lakeEvaporationMm','excludedRunoff','snowmeltMm','icemeltMm','etMm','RS M3','RI M3','RG M3','glacierRunoffM3']}
@@ -101,7 +142,7 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None):
     for offset in range(0,total_hours,168):
         if cancelled and cancelled():raise InterruptedError('用户停止逐格网计算')
         stop=min(total_hours,offset+168);ids=indexes[offset:stop];local_times=times[offset:stop]
-        rain=np.ascontiguousarray(arrays['precipitation'][ids][:,grid_ids]);temperature=np.ascontiguousarray(arrays['temperature'][ids][:,grid_ids]+delta_z[None,:]*lapse[None,:]);evap=np.ascontiguousarray(arrays['evaporation'][ids][:,grid_ids])
+        rain,temperature,evap=unit_forcing(spatial,arrays,ids,p,regions)
         diagnostic,history,state=run_region_kernel(rain,temperature,evap,glaciers,state,units,p,regions)
         balance_max=max(balance_max,float(np.max(np.abs(diagnostic[:,:,7]))))
         if balance_max>1e-6:raise ValueError('逐格网产流水量守恒失败')
@@ -133,7 +174,7 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None):
         for key,col in [('RS M3',0),('RI M3',1),('RG M3',2),('glacierRunoffM3',3)]:local[key]=(diagnostic[:,:,col]*areas*1000).sum(axis=1)
         for key,value in local.items():output[key][offset:stop]=value
         if writer:writer.put(offset,stop,{'time':local_times.asi8,'flow':np.stack([q[k] for k in RIVERS],axis=1),'unitStates':history,'unitDiagnostics':diagnostic,'routingStorage':np.stack(stores,axis=1),'sourceRoutingStorage':np.stack(source_stores,axis=1),**{k:local[k] for k in ('lakeLevel','volumeChange','continuousLakeVolumeChange','lakeFlux','excludedRunoff')}})
-        if progress:progress(5+90*stop/total_hours,f'逐格网连续计算 {local_times[-1]} · {len(units)}单元')
+        if progress:progress(5+90*stop/total_hours,f'连续计算 {local_times[-1]} · {len(units)}单元')
     hourly=pd.DataFrame(output,index=times);counts=hourly.total.resample('D',closed='right',label='left').count()
     daily=hourly[list(RIVERS)+['lakeLevel']].resample('D',closed='right',label='left').mean().where(counts.eq(24),axis=0)
     daily['lakeLevel']=hourly.lakeLevel.resample('D',closed='right',label='left').mean().where(hourly.lakeLevel.resample('D',closed='right',label='left').count().eq(24))

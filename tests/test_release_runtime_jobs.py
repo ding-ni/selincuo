@@ -76,5 +76,46 @@ class ReleaseRuntimeJobTests(unittest.TestCase):
     def test_grid_release_adapter_dispatches_without_mutable_template_or_observation_recapture(self):self.check_family(True)
     def test_legacy_release_adapter_keeps_frozen_request_and_uses_legacy_runner(self):self.check_family(False)
 
+    def test_grid_continuation_captures_current_observations_not_parent_snapshot(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Database(tmp)
+            manifest = {'id': 'input', 'spatialVersion': 'space', 'start': '2023-01-01T00:00:00',
+                        'end': '2026-01-01T00:00:00', 'sources': []}
+            checkpoint = {'schemaVersion': 3, 'identity': {'spatialVersion': 'space'},
+                          'partitionParameters': {}, 'validAt': '2024-12-31T23:00:00'}
+            old = {'profile': 'old', 'level': {}, 'flow': {}}
+            fresh = {'profile': 'new', 'level': {'2025-01-01T00:00:00': 4544.2}, 'flow': {}}
+            with db.connect() as conn:
+                conn.execute('INSERT INTO input_products VALUES(?,?,?,?)', ('input', 'input', now(), canonical(manifest)))
+                conn.execute('INSERT INTO tasks(id,kind,status,created_at,updated_at,request,result) VALUES(?,?,?,?,?,?,?)',
+                             ('parent', 'simulation', 'succeeded', now(), now(), canonical({'_observations': old}),
+                              canonical({'checkpointSHA256': digest(checkpoint)})))
+                conn.execute('INSERT INTO states VALUES(?,?,?,?,?,?,?)',
+                             ('state', 'parent', now(), checkpoint['validAt'], canonical(checkpoint), '', 0))
+            captured = []
+            def runner(db, request, folder, progress, cancelled):
+                captured.append(request)
+                return {'identity': {}, 'daily': []}
+            jobs = Jobs(db)
+            try:
+                with patch('backend.grid_simulation.observations', return_value=fresh), \
+                     patch('backend.grid_simulation.model_identity', return_value='current-model'), \
+                     patch('backend.grid_simulation.run', side_effect=runner):
+                    submitted = jobs.submit('continuation', {'stateId': 'state', 'inputId': 'input',
+                        'parameters': parameters({}), 'start': '2025-01-01T00:00:00', 'end': '2025-02-01T00:00:00'})
+                    deadline = time.monotonic() + 10
+                    while time.monotonic() < deadline:
+                        result = db.task(submitted['id'])
+                        if result['status'] not in ('queued', 'running'):
+                            break
+                        time.sleep(.02)
+                    self.assertEqual(result['status'], 'succeeded', result['message'])
+                    self.assertEqual(captured[0]['_observations']['profile'], 'new')
+                    self.assertEqual(captured[0]['_observations']['level']['2025-01-01T00:00:00'], 4544.2)
+                    self.assertEqual(captured[0]['_parentState'], checkpoint)
+                    self.assertEqual(db.task('parent')['request']['_observations'], old)
+            finally:
+                jobs.executor.shutdown(wait=True)
+
 
 if __name__=='__main__':unittest.main()

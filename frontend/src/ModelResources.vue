@@ -2,42 +2,74 @@
 import {ref,computed,onMounted} from 'vue'
 import DataImport from './DataImport.vue'
 import BasinMap from './Map.vue'
-import {api,standardName,number} from './api.mjs'
+import {api,number} from './api.mjs'
+import {shiftCalendarDay} from './history-workflow.mjs'
 import {variableDefinitions} from './business-view.mjs'
 import {stationLocation,stationDatum} from './shore-comparison.mjs'
 const props=defineProps({boot:Object,busy:Boolean,active:Array})
 const emit=defineEmits(['navigate','refresh','error','submit','station'])
-const tab=ref('readiness'),catalog=ref(null),files=ref([]),station=ref('SLC'),working=ref(false),message=ref(''),coverage=ref(null),context=ref(null),readinessError=ref('')
-const standard=computed(()=>props.boot.operationalSchemes[0])
-const input=computed(()=>props.boot.inputs.find(i=>i.id===(props.boot.defaultResultInputId||standard.value.inputId)))
-const latestInput=computed(()=>[...props.boot.inputs].sort((a,b)=>b.manifest.end.localeCompare(a.manifest.end))[0])
-const observationElements=computed(()=>(catalog.value?.stations||[]).reduce((total,s)=>total+s.variables.length,0))
+const tab=ref('forcing'),catalog=ref(null),coverage=ref(null),files=ref([]),station=ref('SLC'),working=ref(false),message=ref(''),startDate=ref(''),endDate=ref('')
+const inputs=computed(()=>(props.boot.inputs||[]).filter(i=>i.manifest).slice().sort((a,b)=>b.manifest.end.localeCompare(a.manifest.end)))
+const latestInput=computed(()=>inputs.value[0])
+const lastDay=computed(()=>latestInput.value?.manifest.end?shiftCalendarDay(latestInput.value.manifest.end,-1):'尚未登记')
 const label=v=>variableDefinitions.find(x=>x.id===v)?.label||v
-async function change(t){files.value=[];message.value='';tab.value=t;if(['observations','spatial'].includes(t))try{catalog.value=await api('observation-catalog')}catch(e){emit('error',e.message)}}
-async function imported(){await emit('refresh');catalog.value=await api('observation-catalog')}
-async function checkCoverage(){working.value=true;try{coverage.value=await api('forcing-coverage?check=true')}catch(e){emit('error',e.message)}finally{working.value=false}}
+async function imported(){
+ emit('refresh')
+ try{catalog.value=await api('observation-catalog')}catch(e){emit('error',e.message)}
+}
+async function checkCoverage(){
+ working.value=true
+ try{coverage.value=await api('forcing-coverage?check=true')}catch(e){emit('error',e.message)}finally{working.value=false}
+}
+function update(range=false){
+ message.value=''
+ if(range&&(!startDate.value||!endDate.value||endDate.value<startDate.value)){message.value='请选择有效的起止日期。';return}
+ emit('submit',{kind:'update-forcing',...(range?{startDate:startDate.value,endDate:endDate.value}:{})})
+}
 async function upload(kind){
  working.value=true;message.value=''
- try{const uploaded=[];for(const file of files.value){const response=await fetch('/api/model/upload?'+new URLSearchParams({filename:file.name,station:station.value}),{method:'PUT',body:file});const d=await response.json();if(!response.ok)throw Error(d.error);uploaded.push('incoming/'+d.filename)}
- emit('submit',kind==='forcing'?{kind:'register-inputs',files:uploaded,...(input.value?{baseInputId:input.value.id}:{})}:{kind:'import-observations'});message.value='资料已上传，正在校验并建立新版本';files.value=[]
+ try{
+  const uploaded=[]
+  for(const file of files.value){
+   const response=await fetch('/api/model/upload?'+new URLSearchParams({filename:file.name,station:station.value}),{method:'PUT',body:file})
+   const data=await response.json();if(!response.ok)throw Error(data.error);uploaded.push('incoming/'+data.filename)
+  }
+  emit('submit',kind==='forcing'?{kind:'register-inputs',files:uploaded,...(latestInput.value?{baseInputId:latestInput.value.id}:{})}:{kind:'import-observations'})
+  message.value='资料已上传，正在校验和登记。';files.value=[]
  }catch(e){emit('error',e.message)}finally{working.value=false}
 }
-onMounted(async()=>{const results=await Promise.allSettled([api('observation-catalog'),api('business-context')]);if(results[0].status==='fulfilled')catalog.value=results[0].value;if(results[1].status==='fulfilled')context.value=results[1].value;readinessError.value=results.filter(r=>r.status==='rejected').map(r=>r.reason.message).join('；')})
+onMounted(async()=>{
+ const results=await Promise.allSettled([api('observation-catalog'),api('forcing-coverage')])
+ if(results[0].status==='fulfilled')catalog.value=results[0].value
+ if(results[1].status==='fulfilled')coverage.value=results[1].value
+})
 </script>
 <template>
- <nav class="workspace-tabs"><button v-for="t in [['readiness','资料就绪'],['observations','观测资料'],['forcing','气象驱动'],['spatial','空间与站网'],['configuration','模型配置']]" :key="t[0]" :class="{active:tab===t[0]}" @click="change(t[0])">{{t[1]}}</button></nav>
- <section v-if="tab==='readiness'" class="panel"><div class="panel-title"><h3>资料准备与更新</h3><span class="badge">资料按版本登记</span></div><p v-if="readinessError" class="note warning">部分目录读取失败：{{readinessError}}</p><div class="readiness-grid"><article><span class="eyebrow">观测资料</span><h3>{{catalog?observationElements+' 项站点要素':'正在读取资料目录'}}</h3><p>主站最后合格日 {{context?.observations?.mainStation?.lastValidDay||'尚未取得'}}。四岸保留原值，水位零点待核。</p><button @click="emit('navigate','monitor')">查询与质量</button><button @click="change('observations')">导入与修订</button></article><article><span class="eyebrow">气象驱动</span><h3>{{context?.forcing?.latest?.lastCompleteDay||'待核验'}} 完整日</h3><p>最新三变量共同末时 {{context?.forcing?.latest?.end?.slice(0,16).replace('T',' ')||latestInput?.manifest.end?.slice(0,16).replace('T',' ')||'无已登记输入'}}（北京时间）。</p><button @click="change('forcing')">检查与更新</button></article><article><span class="eyebrow">空间资料</span><h3>计水范围保留版本</h3><p>旧成果使用自身空间资料。1597单元研究方案的未核实排水区独立产流，未计入已核实入湖量。</p><button @click="change('spatial')">来源与空间审计</button></article><article><span class="eyebrow">模型方案</span><h3>已发布 · 修订 {{standard.revision}}</h3><p>默认成果与输入冻结保存；新资料先建立新输入，再判断复用、续算或重算。</p><button @click="emit('navigate','simulation')">历史模拟</button><button @click="emit('navigate','results')">已有默认成果</button></article></div><details><summary>当前资料缺口与下一步</summary><p>长期初态稳定性需要更长同源真实气象；排水归属需要更细地形及现场证据；四岸水位基准需要水准联测和仪器变更记录。资料不足时保留限制。</p></details><div class="table-wrap" v-if="catalog"><table><thead><tr><th>站点 / 要素</th><th>目录实有时段</th><th>有值记录</th><th>资料身份</th><th>操作</th></tr></thead><tbody><template v-for="s in catalog.stations" :key="s.id"><tr v-for="v in s.variables" :key="v.id"><td>{{s.name}} · {{label(v.id)}}</td><td>{{v.start.slice(0,10)}} — {{v.end.slice(0,10)}}</td><td>{{v.valid.toLocaleString()}}</td><td>{{s.kind==='lake'?(s.id==='SLC'?'主站工作基准':'四岸零点待核'):'原始观测'}}</td><td><button class="link" @click="emit('station',s.id)">查询与来源</button></td></tr></template></tbody></table></div><p class="muted">目录末次有值记录不等于末次合格评价日，评价资格由质量日规则决定。</p></section>
- <section v-if="tab==='configuration'" class="panel"><div class="panel-title"><h3>{{standardName}}</h3><span class="badge">业务采用方案</span></div>
- <div class="configuration-grid"><div><span>陆面模型</span><b>半分布式新安江</b></div><div><span>高寒过程</span><b>积雪与冰川消融</b></div><div><span>空间组织</span><b>子流域 · 500米垂直高程分带</b></div><div><span>汇流方法</span><b>分水源调蓄与河道汇流</b></div><div><span>湖泊模型</span><b>定面积水量平衡</b></div><div><span>气象驱动</span><b>ERA5-Land · 0.1°</b></div></div>
- <details><summary>计算结构</summary><div class="model-chain"><span>降水、气温、蒸发能力</span><span>雨雪划分 · 积雪与冰川消融</span><span>陆面产流 · 分水源汇流</span><span>四河及湖周来水</span><b>湖泊水量平衡与湖位</b></div></details>
- <div class="actions"><button class="primary" @click="emit('navigate','simulation')">历史模拟</button><button @click="emit('navigate','calibration')">查看标准参数</button><button @click="change('forcing')">查看驱动资料</button></div>
- <details><summary>方案技术信息</summary><dl><dt>版本</dt><dd>修订 {{standard.revision}}</dd><dt>空间版本</dt><dd>{{standard.spatialVersion}}</dd><dt>模型依据</dt><dd>计算方法与适用范围见技术文档</dd></dl></details>
+ <nav class="workspace-tabs"><button v-for="t in [['forcing','气象资料'],['observations','观测资料'],['spatial','空间与站网']]" :key="t[0]" :class="{active:tab===t[0]}" @click="tab=t[0]">{{t[1]}}</button></nav>
+ <template v-if="tab==='forcing'">
+  <section class="panel">
+   <div class="panel-title"><h3>更新气象资料</h3><span class="badge">ERA5-Land</span><button :disabled="working||busy" @click="checkCoverage">{{working?'检查中…':'检查官方可用范围'}}</button></div>
+   <div class="resource-summary"><div><span>已登记资料</span><b>{{latestInput?.manifest.start?.slice(0,10)||'—'}} 至 {{lastDay}}</b><small>截至完整北京时间日</small></div><div><span>官方目录</span><b>{{coverage?.catalog?.availableEndUTC?.slice(0,10)||'尚未检查'}}</b><small>以三变量实际覆盖校验为准</small></div></div>
+   <p class="muted">按需下载、续传并登记气象资料；已有成果继续使用各自的输入。</p>
+   <div class="query-grid"><label>补充起日<input type="date" v-model="startDate"></label><label>补充止日<input type="date" v-model="endDate"></label><button :disabled="working||busy||active.length>0" @click="update(true)">更新所选时段</button><button class="primary" :disabled="working||busy||active.length>0" @click="update(false)">更新至可用最新日期</button></div>
+   <p v-if="message" class="note warning" role="status">{{message}}</p>
+   <p v-if="coverage?.update?.status&&coverage.update.status!=='succeeded'" class="note">上次更新：{{coverage.update.message||coverage.update.status}}</p>
+   <p class="note">如提示 CDS 账户或许可问题，可查看 <a href="/api/model/cds-help">账户配置说明</a>。</p>
+   <div class="actions"><button @click="emit('navigate','simulation')">前往历史模拟 →</button><button @click="emit('navigate','calibration')">前往方案与率定 →</button></div>
+   <details><summary>已登记资料及手动导入</summary><div class="table-wrap"><table><thead><tr><th>资料</th><th>起始</th><th>结束</th></tr></thead><tbody><tr v-for="i in inputs" :key="i.id"><td>{{i.name}}</td><td>{{i.manifest.start.replace('T',' ')}}</td><td>{{i.manifest.end.replace('T',' ')}}</td></tr></tbody></table></div><div class="result-toolbar"><label class="grow">已有气象文件<input type="file" multiple accept=".nc" @change="files=Array.from($event.target.files)"></label><button :disabled="working||busy||active.length>0||!files.length" @click="upload('forcing')">导入并处理</button></div></details>
+  </section>
+ </template>
+ <template v-if="tab==='observations'">
+  <section class="panel"><div class="panel-title"><h3>更新观测资料</h3><button class="link" @click="emit('navigate','monitor')">查询监测资料 →</button></div>
+   <DataImport :stations="boot.stations" :disabled="busy||working||active.length>0" @imported="imported" @error="emit('error',$event)"/>
+   <details><summary>导入原格式观测表</summary><div class="result-toolbar"><label>所属站点<select v-model="station"><option v-for="s in boot.stations.filter(s=>['SLC','DUJA','BLQ','115DB'].includes(s.id))" :key="s.id" :value="s.id">{{s.name}}</option></select></label><label class="grow">Excel 文件<input type="file" multiple accept=".xls,.xlsx" @change="files=Array.from($event.target.files)"></label><button :disabled="working||busy||active.length>0||!files.length" @click="upload('observations')">导入</button></div></details>
+   <div class="actions"><button @click="emit('navigate','simulation')">前往历史模拟 →</button><button @click="emit('navigate','calibration')">前往方案与率定 →</button></div>
+  </section>
+  <section class="panel"><div class="panel-title"><h3>站点资料范围</h3></div><div class="table-wrap"><table><thead><tr><th>站点 / 要素</th><th>资料时段</th><th>有值记录</th><th>状态</th></tr></thead><tbody><template v-for="s in catalog?.stations||[]" :key="s.id"><tr v-for="v in s.variables" :key="v.id"><td><button class="link" @click="emit('station',s.id)">{{s.name}} · {{label(v.id)}}</button></td><td>{{v.start.slice(0,10)}} — {{v.end.slice(0,10)}}</td><td>{{v.valid.toLocaleString()}}</td><td>{{s.kind==='lake'?(s.id==='SLC'?'主站工作基准':'基准待核'):'观测资料'}}</td></tr></template></tbody></table></div></section>
+ </template>
+ <section v-if="tab==='spatial'" class="panel"><div class="panel-title"><h3>流域与站网</h3></div><BasinMap :stations="boot.stations" @station="emit('station',$event)"/>
+  <div class="table-wrap"><table><thead><tr><th>分区</th><th>陆域面积 km²</th><th>冰川面积 km²</th></tr></thead><tbody><tr v-for="b in boot.spatial?.basins||[]" :key="b.id"><td>{{b.name}}</td><td>{{number(b.areaKm2)}}</td><td>{{number(b.glacierAreaKm2)}}</td></tr></tbody></table></div>
+  <details><summary>站点位置与基准</summary><div class="table-wrap"><table><thead><tr><th>站点</th><th>经度 WGS84</th><th>纬度 WGS84</th><th>水位基准</th><th>定位来源</th></tr></thead><tbody><tr v-for="s in catalog?.stations||boot.stations" :key="s.id"><td><button class="link" @click="emit('station',s.id)">{{s.name}}</button></td><td>{{number(s.lon,6)}}</td><td>{{number(s.lat,6)}}</td><td>{{stationDatum(s)?(s.id==='SLC'?'主站工作基准':'基准待核'):'—'}}</td><td>{{stationLocation(s)?.source||'既有登记'}}</td></tr></tbody></table></div></details>
  </section>
- <template v-if="tab==='observations'"><section class="panel"><div class="panel-title"><h3>观测资料接入</h3><button class="link" @click="emit('navigate','monitor')">查询监测资料 →</button></div><DataImport :disabled="busy||working||active.length>0" @imported="imported" @error="emit('error',$event)"/>
- <details><summary>导入原格式观测表</summary><div class="result-toolbar"><label>所属站点<select v-model="station"><option v-for="s in boot.stations.filter(s=>['SLC','DUJA','BLQ','115DB'].includes(s.id))" :key="s.id" :value="s.id">{{s.name}}</option></select></label><label class="grow">Excel文件<input type="file" multiple accept=".xls,.xlsx" @change="files=Array.from($event.target.files)"></label><button :disabled="working||busy||active.length>0||!files.length" @click="upload('observations')">导入</button></div></details><p v-if="message" role="status">{{message}}</p></section>
- <section class="panel"><div class="panel-title"><h3>站点资料目录</h3></div><div class="table-wrap"><table><thead><tr><th>站点</th><th>要素</th><th>实有时段</th><th>数值记录</th></tr></thead><tbody><template v-for="s in catalog?.stations||[]" :key="s.id"><tr v-for="v in s.variables" :key="v.id"><td>{{s.name}}</td><td>{{label(v.id)}}</td><td>{{v.start.slice(0,10)}} — {{v.end.slice(0,10)}}</td><td>{{v.valid.toLocaleString()}}</td></tr></template></tbody></table></div></section></template>
- <template v-if="tab==='forcing'"><section class="panel"><div class="panel-title"><h3>默认成果对应的气象输入</h3><span class="badge">ERA5-Land · 冻结版本</span></div><div v-if="input" class="configuration-grid"><div><span>共同覆盖起点</span><b>{{input.manifest.start.slice(0,16).replace('T',' ')}}</b></div><div><span>共同覆盖末时</span><b>{{input.manifest.end.slice(0,16).replace('T',' ')}}</b></div><div><span>记录数</span><b>{{input.manifest.hours.toLocaleString()}} 小时</b></div></div><p v-else class="empty">尚未找到默认成果对应的已登记输入，请先核对资料版本</p><p class="muted">最新输入与默认成果输入分别保存。最后不足24小时的本地日不作为完整业务日。</p></section>
- <section class="panel"><div class="panel-title"><h3>更新气象资料</h3><button :disabled="working||busy" @click="checkCoverage">{{working?'检查中…':'检查可用时段'}}</button><button class="primary" :disabled="working||busy||active.length>0" @click="emit('submit',{kind:'update-forcing'})">补齐到最新</button></div><p v-if="coverage?.catalog" class="note">官方目录末日 UTC {{coverage.catalog.availableEndUTC.slice(0,10)}}；计算末日以三变量逐时共同覆盖核验为准。暂定／最终资料均保留来源，后续修订建立新输入。</p><p v-if="input?.provenanceSummary?.hasProvisional" class="note warning">当前驱动含官方暂定资料（expver 0005）。后续最终修订将建立新输入，不覆盖本版本。</p><div class="table-wrap" v-if="coverage"><table><thead><tr><th>已登记输入</th><th>北京时间共同覆盖</th></tr></thead><tbody><tr v-for="i in coverage.inputs" :key="i.id"><td>{{i.name}}</td><td>{{i.manifest.start.slice(0,16)}}—{{i.manifest.end.slice(0,16)}}</td></tr></tbody></table></div><div class="result-toolbar"><label class="grow">NetCDF文件<input type="file" multiple accept=".nc" @change="files=Array.from($event.target.files)"></label><button :disabled="working||busy||active.length>0||!files.length" @click="upload('forcing')">导入并处理</button></div><p v-if="message" role="status">{{message}}</p><details><summary>资料处理规则</summary><p>沿用冻结的湖面降水转换，检查累计量重置、UTC与北京时间日界、三变量时间连续性和空间覆盖。旧输入与任务保持冻结；由用户主动更新。</p></details></section></template>
- <section v-if="tab==='spatial'" class="panel"><div class="panel-title"><h3>色林错流域与站网</h3></div><BasinMap :stations="boot.stations" @station="emit('station',$event)"/><div class="table-wrap"><table><thead><tr><th>流域分区</th><th>陆域面积 km²</th><th>冰川面积 km²</th></tr></thead><tbody><tr v-for="b in boot.spatial?.basins||[]" :key="b.id"><td>{{b.name}}</td><td>{{number(b.areaKm2)}}</td><td>{{number(b.glacierAreaKm2)}}</td></tr></tbody></table></div>
- <details><summary>站点档案</summary><p class="muted">原统一零点确认已撤回。主站位于东岸，作为工作基准；东岸站在其南侧约7.2公里，北、南、西站分别约43、43、79公里。四岸零点待核，未指定国家高程基准。地图统一使用WGS84，GCJ-02近似转换尚未作测量控制点校核。</p><div class="table-wrap"><table><thead><tr><th>站点</th><th>地图经度 WGS84</th><th>地图纬度 WGS84</th><th>水位基准</th><th>定位来源</th></tr></thead><tbody><tr v-for="s in catalog?.stations||boot.stations" :key="s.id"><td><button class="link" @click="emit('station',s.id)">{{s.name}}</button></td><td>{{number(s.lon,6)}}</td><td>{{number(s.lat,6)}}</td><td><details v-if="stationDatum(s)"><summary>{{s.id==='SLC'?'主站工作基准':'零点待核'}}</summary><p>{{stationDatum(s).source}}</p><p>统一零点确认已撤回；原始数值保留。</p></details><span v-else>—</span></td><td><details v-if="stationLocation(s)"><summary>用户坐标 · GCJ-02近似转换</summary><p>原经度 {{stationLocation(s).sourceLon}}，原纬度 {{stationLocation(s).sourceLat}}</p><p>K码 {{stationLocation(s).kCode}}</p><p>{{stationLocation(s).source}}；{{stationLocation(s).accuracy}}</p></details><span v-else>{{s.lon!=null&&s.lat!=null?'既有登记':'尚未登记坐标'}}</span></td></tr></tbody></table></div></details><details v-if="boot.gridSpatial"><summary>新格网空间审计（研究方案）</summary><dl><dt>空间版本</dt><dd>{{boot.gridSpatial.version}}</dd><dt>面积闭合误差</dt><dd>{{number(boot.gridSpatial.areaClosureErrorKm2,6)}} km²</dd><dt>未核实区</dt><dd>{{number(boot.gridSpatial.drainage.unresolvedAreaKm2,2)}} km²，未计入入湖合计</dd></dl></details></section>
 </template>
+<style scoped>.resource-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin:18px 0}.resource-summary>div{display:grid;gap:4px;padding:16px;background:#f3f7f8;border-radius:6px}.resource-summary span,.resource-summary small{font-size:12px;color:var(--muted)}.resource-summary b{font-size:19px;font-variant-numeric:tabular-nums}@media(max-width:700px){.resource-summary{grid-template-columns:1fr}}</style>

@@ -4,6 +4,28 @@ import math
 from .common import ROOT, canonical, now, read_json
 
 
+def datum_at(station_id, time):
+    """Resolve registered effective intervals without inventing a surveyed zero.
+
+    Undated records describe the unresolved current metadata; they never permit
+    an absolute conversion. Future survey entries can use half-open intervals.
+    """
+    from datetime import datetime, timezone, timedelta
+    def local(value):
+        instant=datetime.fromisoformat(value.replace('Z','+00:00'))
+        return instant.astimezone(timezone(timedelta(hours=8))).replace(tzinfo=None) if instant.tzinfo else instant
+    instant=local(time)
+    registry=read_json(ROOT/'config/station-datums.json',{})
+    matches=[r for r in registry.get('periods',[]) if r['stationId']==station_id
+             and (r.get('effectiveFrom') is None or local(r['effectiveFrom'])<=instant)
+             and (r.get('effectiveTo') is None or instant<local(r['effectiveTo']))]
+    if len(matches)>1:raise ValueError('站点基准生效时段重叠，请核对登记')
+    record=matches[0] if matches else None
+    return {'stationId':station_id,'time':time,'period':record,
+            'absoluteConversionAvailable':bool(record and record.get('status')=='survey-verified'
+                and record.get('surveySource') and record.get('zeroElevationM') is not None)}
+
+
 def wgs84_to_gcj02(lon, lat):
     """Conventional approximate GCJ-02 transform, not a survey transformation."""
     if not (72.004 <= lon <= 137.8347 and .8293 <= lat <= 55.8271):
@@ -95,6 +117,7 @@ def sync_datums(db):
             metadata['verticalDatum'] = {k: registry[k] for k in ('status', 'source', 'confirmation', 'referenceStation', 'zeroUnified', 'namedDatum')}
             metadata['verticalDatum']['registryRevision'] = registry['revision']
             metadata['verticalDatum']['role'] = 'working-reference' if identifier==registry['referenceStation'] else 'zero-under-review'
+            metadata['verticalDatum']['periods'] = [r for r in registry.get('periods',[]) if r['stationId']==identifier]
             conn.execute('UPDATE stations SET metadata=? WHERE id=?', (canonical(metadata), identifier))
             changes.append({'station': identifier, 'previous': previous, 'verticalDatum': metadata['verticalDatum']})
         if changes:

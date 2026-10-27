@@ -1,0 +1,244 @@
+{
+  "at": "2026-10-27T21:24:57.326119+08:00",
+  "scope": "实际本机最终构建；导入预览及资源故障为浏览器模拟，未实网下载或实际导入",
+  "dashboard": {
+    "url": "http://127.0.0.1:8882",
+    "screens": [
+      {
+        "width": 1920,
+        "height": 1080,
+        "scrollWidth": 1920,
+        "scrollHeight": 1080,
+        "map": {
+          "x": 223,
+          "y": 231,
+          "width": 1390,
+          "height": 540.59375,
+          "top": 231,
+          "right": 1613,
+          "bottom": 771.59375,
+          "left": 223
+        },
+        "replay": {
+          "x": 222,
+          "y": 1010,
+          "width": 1684,
+          "height": 56,
+          "top": 1010,
+          "right": 1906,
+          "bottom": 1066,
+          "left": 222
+        },
+        "summary": {
+          "x": 1624,
+          "y": 190,
+          "width": 282,
+          "height": 582.59375,
+          "top": 190,
+          "right": 1906,
+          "bottom": 772.59375,
+          "left": 1624
+        },
+        "balance": {
+          "x": 1637,
+          "y": 680.203125,
+          "width": 256,
+          "height": 81.390625,
+          "top": 680.203125,
+          "right": 1893,
+          "bottom": 761.59375,
+          "left": 1637
+        }
+      },
+      {
+        "width": 1366,
+        "height": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "map": {
+          "x": 223,
+          "y": 231,
+          "width": 864,
+          "height": 292,
+          "top": 231,
+          "right": 1087,
+          "bottom": 523,
+          "left": 223
+        },
+        "replay": {
+          "x": 222,
+          "y": 698,
+          "width": 1130,
+          "height": 56,
+          "top": 698,
+          "right": 1352,
+          "bottom": 754,
+          "left": 222
+        },
+        "summary": {
+          "x": 1098,
+          "y": 190,
+          "width": 254,
+          "height": 334,
+          "top": 190,
+          "right": 1352,
+          "bottom": 524,
+          "left": 1098
+        },
+        "balance": {
+          "x": 1109,
+          "y": 443.9375,
+          "width": 232,
+          "height": 77.390625,
+          "top": 443.9375,
+          "right": 1341,
+          "bottom": 521.328125,
+          "left": 1109
+        }
+      }
+    ],
+    "checks": {
+      "oneScreenAtBothSizes": true,
+      "modelRainUsesActualUnits": true,
+      "delayedRequestPreservesWholeFrame": true,
+      "lateResponseCannotReplaceLatestDay": true,
+      "failedRequestPreservesFrameAndRetries": true,
+      "playbackWholeFrames": [
+        "2024-11-07",
+        "2024-11-08",
+        "2024-11-09",
+        "2024-11-10",
+        "2024-11-11",
+        "2024-11-12",
+        "2024-11-13",
+        "2024-11-14",
+        "2024-11-15",
+        "2024-11-16"
+      ],
+      "terrainSnowAndExactFringeGeometry": true,
+      "monitoringIndependentOfSimulation": true
+    },
+    "errors": [],
+    "httpErrors": [],
+    "resultId": "JOB-2bac578f2ae646eaad18",
+    "health": {
+      "backendSourceSHA256": "a6b97d2690c5232d128936188e19d140792c27e051583d91f570d61b996f9b44",
+      "instanceId": "983cb46f9ef84f45bd1e10d4e0b4d16c",
+      "projectId": "selinco",
+      "version": "0.11.0",
+      "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+    }
+  },
+  "businessPages": {
+    "errors": [],
+    "checks": {
+      "duja_calibration_initial_WM": "300",
+      "trial_duja_WM": "299",
+      "monitor_bootstrap_503": {
+        "start": "2021-04-23",
+        "end": "2026-09-14",
+        "context": "整编日值 · 2021-04-23 — 2026-09-14\n有效 1305 日 / 缺测 666 日\n末次有效值 4,544.075 m · 2026-09-13"
+      },
+      "missing_builtin_process_selected": ""
+    }
+  },
+  "resultReuse": {
+    "pageErrors": [],
+    "submitted": false,
+    "selectedStart": "2024-01-10",
+    "selectedEnd": "2024-01-20",
+    "resultUrl": "http://127.0.0.1:8882/?page=results&result=JOB-2bac578f2ae646eaad18"
+  },
+  "importPreview": {
+    "pageErrors": [],
+    "mockPreviewRequests": 3,
+    "submitted": false,
+    "mapping": {
+      "站点": "站点",
+      "时间": "时间",
+      "数值": "水位"
+    },
+    "conflictInitiallyBlocked": true,
+    "keepAfterRecheckEnabled": true
+  },
+  "artifacts": [
+    {
+      "path": "build/首页最终验收-1fd7bc13e03a/验收结果.json",
+      "bytes": 2992,
+      "sha256": "a2312de37714d594f77e81cae84ea9d37542e4fc102954454721d2f1e1cd5ae9"
+    },
+    {
+      "path": "build/前端最终复验-ui-20261027/检查结果.json",
+      "bytes": 394,
+      "sha256": "e0110769b920c2f021a598ed229e6d86b92fd07f68cb40333d3382b3f8e18040"
+    },
+    {
+      "path": "build/前端最终复验-ui-20261027/成果复用检查.json",
+      "bytes": 200,
+      "sha256": "e9f160936448dcf14ed1e5dc6a94f397f1b9aabc676233d3eb7e2f9529fb9477"
+    },
+    {
+      "path": "build/前端最终复验-ui-20261027/导入模拟检查.json",
+      "bytes": 245,
+      "sha256": "3120a95cd41ac6a2e96bf925a8921cacebea52e3baf1a55af62111c2f78b039b"
+    },
+    {
+      "path": "build/首页最终验收-1fd7bc13e03a/地形高程.png",
+      "bytes": 318994,
+      "sha256": "93923c66e348d5de89fa66837a257d6fb179c658b59b70f61a6b376b0cbc9e6b"
+    },
+    {
+      "path": "build/首页最终验收-1fd7bc13e03a/日末雪水当量.png",
+      "bytes": 257198,
+      "sha256": "abe06506cefd4c314052c16a8ec27d0897eca614520ee74daa6a3799a76f4b94"
+    },
+    {
+      "path": "build/首页最终验收-1fd7bc13e03a/模型日降水.png",
+      "bytes": 259756,
+      "sha256": "f15d46a014e8ae9bf452f97a24119e7fc7636a6a320316f6f9944181397d864a"
+    },
+    {
+      "path": "build/首页最终验收-1fd7bc13e03a/站点监测.png",
+      "bytes": 290286,
+      "sha256": "4ae2e85c1b94966edfb5c2a4e2f0a9d90259d87f49fee5042329d4b0db9511fe"
+    },
+    {
+      "path": "build/首页最终验收-1fd7bc13e03a/首页-1366.png",
+      "bytes": 162745,
+      "sha256": "33ea936181f29705adc14c6f4cc5894841d5a17f2c1a65431940ab0c864b9f74"
+    },
+    {
+      "path": "build/首页最终验收-1fd7bc13e03a/首页-1920.png",
+      "bytes": 224799,
+      "sha256": "837750032b2d961e5b9b59763699e057b55e5acf54fe1417f47aff6f0f853b4c"
+    }
+  ],
+  "builtFrontend": [
+    {
+      "path": "frontend/dist/index.html",
+      "sha256": "c2df3b8221a2f29ec4e6f150948667ad3c9b1c923f4b08af1a4cda600006a5e3"
+    },
+    {
+      "path": "frontend/dist/assets/index-iDJeYSYT.js",
+      "sha256": "8f3e6f8bb0c1272c0ad548a81453a8d68b82ec3fe128ce51b263601de2cac709"
+    },
+    {
+      "path": "frontend/dist/assets/index-oFTBZs-J.css",
+      "sha256": "680e508b5728508bdaf08cc86932a628db2eee0fd104d7f2ef8fe143021e5767"
+    }
+  ],
+  "launcher": {
+    "entry": "启动平台.bat",
+    "lineEndings": "CRLF",
+    "windowsPowerShellSource": "UTF-8 BOM",
+    "actualCommandExitCode": 0,
+    "output": "色林错平台 0.11.0 · http://127.0.0.1:8882"
+  },
+  "finalHealth": {
+    "backendSourceSHA256": "a6b97d2690c5232d128936188e19d140792c27e051583d91f570d61b996f9b44",
+    "instanceId": "983cb46f9ef84f45bd1e10d4e0b4d16c",
+    "projectId": "selinco",
+    "version": "0.11.0",
+    "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+  }
+}

@@ -133,23 +133,54 @@ def normalize(db, document):
 def import_records(db, document, archive=None):
     records = normalize(db, document)  # Validate every row before any database mutation.
     logical = 'exchange/' + document['sourceKey'].strip()
-    identity = {'schemaVersion': 1, 'sourceKey': logical,
-                'records': sorted([{k:v for k,v in r.items() if k != 'row'} for r in records],
-                                  key=lambda r:(r['station'],r['variable'],r['step'],r['time']))}
-    checksum = digest(identity)
-    identifier = 'SRC-' + checksum[:24]
-    metadata = {'adapter': 'observation-exchange-v1', 'timeZone': document.get('timeZone', 'Asia/Shanghai'),
-                'sourceKey': document['sourceKey'].strip(), 'fullSnapshot': True,
-                'schemaVersion': 1}
-    groups = defaultdict(list)
-    for row in records:
-        groups[(row['station'], row['variable'], row['step'])].append(row)
+    mode = document.get('mode', 'snapshot')
+    policy = document.get('duplicatePolicy', 'reject')
+    if mode not in ('snapshot', 'append') or policy not in ('reject', 'keep', 'replace'):
+        raise ValueError('导入方式或重复记录处理方式无效')
     with db.connect() as conn:
+        # Serialize source revision selection and write; a concurrent upload
+        # cannot accidentally omit another just-committed increment.
+        conn.execute('BEGIN IMMEDIATE')
+        latest = conn.execute('SELECT id FROM sources WHERE path=? ORDER BY rowid DESC LIMIT 1', (logical,)).fetchone()
+        base_id = latest['id'] if latest else None
+        duplicates = conflicts = 0
+        if mode == 'append' and base_id:
+            old = [dict(r) for r in conn.execute('''SELECT station_id AS station,variable,step,time,
+                         period_start AS start,period_end AS end,unit,value,quality,raw_text AS raw
+                         FROM observations WHERE source_id=? ORDER BY id''', (base_id,))]
+            indexed = {(r['station'], r['variable'], r['step'], r['time']): r for r in old}
+            for row in records:
+                key = (row['station'], row['variable'], row['step'], row['time'])
+                existing = indexed.get(key)
+                if existing is not None:
+                    duplicates += 1
+                    changed = any(existing.get(k) != row.get(k) for k in ('start', 'end', 'unit', 'value', 'quality'))
+                    if changed:
+                        conflicts += 1
+                        if policy == 'reject':
+                            raise ValueError('增量资料包含冲突记录，请明确选择保留原值或采用新值')
+                    if policy != 'replace':
+                        continue
+                indexed[key] = row
+            records = list(indexed.values())
+        for index, row in enumerate(records, 1):
+            row['row'] = index
+        identity = {'schemaVersion': 1, 'sourceKey': logical,
+                    'records': sorted([{k:v for k,v in r.items() if k != 'row'} for r in records],
+                                      key=lambda r:(r['station'],r['variable'],r['step'],r['time']))}
+        checksum = digest(identity)
+        identifier = 'SRC-' + checksum[:24]
+        metadata = {'adapter': 'observation-exchange-v1', 'timeZone': document.get('timeZone', 'Asia/Shanghai'),
+                    'sourceKey': document['sourceKey'].strip(), 'fullSnapshot': True, 'schemaVersion': 1,
+                    'importMode': mode, 'baseSourceId': base_id if mode == 'append' else None,
+                    'duplicatePolicy': policy if mode == 'append' else None}
+        groups = defaultdict(list)
+        for row in records:
+            groups[(row['station'], row['variable'], row['step'])].append(row)
         exists = conn.execute('SELECT id FROM sources WHERE id=?', (identifier,)).fetchone()
         if exists:
-            latest = conn.execute('SELECT id FROM sources WHERE path=? ORDER BY rowid DESC LIMIT 1', (logical,)).fetchone()
             return {'status': 'unchanged', 'sourceId': identifier, 'records': len(records),
-                    'active': latest['id'] == identifier}
+                    'active': bool(latest and latest['id'] == identifier), 'duplicates': duplicates, 'conflicts': conflicts}
         if archive:
             archive = Path(archive)
             dest = db.workspace / 'observation-sources' / identifier / archive.name
@@ -171,23 +202,44 @@ def import_records(db, document, archive=None):
                                      'policy': 'explicit-records-only; missing intervals are not zero'})))
         conn.execute('INSERT INTO audit(at,action,payload) VALUES(?,?,?)',
                      (now(), 'observations.exchange', canonical({'id': identifier, 'records': len(records)})))
-    return {'status': 'imported', 'sourceId': identifier, 'records': len(records), 'active': True}
+    return {'status': 'imported', 'sourceId': identifier, 'records': len(records), 'active': True,
+            'duplicates': duplicates, 'conflicts': conflicts}
 
 
-def import_file(db, request):
-    """Map known export headers once; no reliance on filename or directory names."""
+def _file_records(db, request, use_suggestions=False):
     path = within(db.workspace / 'incoming', request['filename'])
     mapping = request.get('mapping', {})
     if not isinstance(mapping, dict) or set(mapping)-set(contract()['requiredColumns']+contract()['optionalColumns']):
         raise ValueError('字段映射包含未知字段')
+    sheets = []
     if path.suffix.lower() == '.xlsx':
-        frame = pd.read_excel(path, sheet_name=request.get('sheet', 0), dtype=object)
+        with pd.ExcelFile(path) as book:
+            sheets = list(book.sheet_names)
+            frame = pd.read_excel(book, sheet_name=request.get('sheet') or 0, dtype=object)
     elif path.suffix.lower() == '.csv':
         frame = pd.read_csv(path, dtype=object, encoding='utf-8-sig')
     else:
         raise ValueError('统一导入支持xlsx或UTF-8 CSV；旧版xls继续使用原资料适配器')
+    if len(frame) > 50000:
+        raise ValueError('每批最多50000条记录')
     if len(set(frame.columns)) != len(frame.columns):
         raise ValueError('表头重复')
+    columns = [str(column) for column in frame.columns]
+    aliases = {'station': ('station', '站点', '站点编号', '测站编号'),
+               'variable': ('variable', '变量', '要素', '观测要素'),
+               'time': ('time', '时间', '日期', '观测时间'),
+               'value': ('value', '数值', '值', '观测值'),
+               'unit': ('unit', '单位'), 'step': ('step', '时间尺度', '时间步长'),
+               'quality': ('quality', '质量', '质量标记'),
+               'periodStart': ('periodStart', '统计起始时间'),
+               'periodEnd': ('periodEnd', '统计结束时间')}
+    suggestions = {}
+    for field, names in aliases.items():
+        candidates = [column for column in columns if column in names]
+        if len(candidates) == 1:
+            suggestions[field] = candidates[0]
+    if use_suggestions and not mapping:
+        mapping = suggestions
     if any(column not in frame.columns for column in mapping.values()):
         raise ValueError('字段映射的表头不存在')
     frame = frame.rename(columns={source: target for target, source in mapping.items()})
@@ -198,4 +250,52 @@ def import_file(db, request):
     for row in frame.to_dict('records'):
         normalized = {k: v for k, v in row.items() if k in contract()['requiredColumns']+contract()['optionalColumns'] and pd.notna(v)}
         records.append({**defaults, **normalized})
+    return path, records, sheets, columns, suggestions
+
+
+def preview_file(db, request):
+    """Inspect a file and conflicts without changing the observation database."""
+    _, records, sheets, columns, suggestions = _file_records(db, request, use_suggestions=True)
+    stations = db.rows('SELECT id FROM stations')
+    class StationView:
+        def rows(self, sql):
+            return stations
+    previous = {}
+    source = request.get('sourceKey')
+    if isinstance(source, str) and source.strip():
+        rows = db.rows('''SELECT o.station_id AS station,o.variable,o.step,o.time,o.period_start AS start,
+                                 o.period_end AS end,o.unit,o.value,o.quality FROM observations o
+                          WHERE o.source_id=(SELECT id FROM sources WHERE path=? ORDER BY rowid DESC LIMIT 1)''',
+                       ('exchange/' + source.strip(),))
+        previous = {(r['station'], r['variable'], r['step'], r['time']): r for r in rows}
+    valid = invalid = duplicates = existing_duplicates = conflicts = 0
+    issues = []
+    seen = set()
+    for index, raw in enumerate(records, 2):
+        try:
+            document = {'schemaVersion': 1, 'projectId': 'selinco', 'sourceKey': 'preview',
+                        'timeZone': request.get('timeZone', 'Asia/Shanghai'), 'records': [raw]}
+            row = normalize(StationView(), document)[0]
+            key = (row['station'], row['variable'], row['step'], row['time'])
+            if key in seen:
+                duplicates += 1
+            seen.add(key)
+            existing = previous.get(key)
+            if existing is not None:
+                existing_duplicates += 1
+                if any(existing.get(k) != row.get(k) for k in ('start', 'end', 'unit', 'value', 'quality')):
+                    conflicts += 1
+            valid += 1
+        except (ValueError, TypeError, KeyError) as exc:
+            invalid += 1
+            if len(issues) < 20:
+                issues.append({'row': index, 'message': str(exc).removeprefix('第1条：')})
+    return {'sheets': sheets, 'columns': columns, 'suggestedMapping': suggestions, 'records': len(records),
+            'valid': valid, 'invalid': invalid, 'duplicates': duplicates,
+            'existingDuplicates': existing_duplicates, 'conflicts': conflicts, 'issues': issues}
+
+
+def import_file(db, request):
+    """Map known export headers once; no reliance on filename or directory names."""
+    path, records, _, _, _ = _file_records(db, request)
     return import_records(db, {**request, 'records': records}, path)

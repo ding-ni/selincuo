@@ -1,0 +1,31 @@
+{
+  "at": "2026-10-27T20:02:38",
+  "port": 8882,
+  "scope": "旧进程阶段业务联调；之后数值源码已更新，需新进程单独验证",
+  "schemeId": "SCHEME-ff57f0f6cd914bc590df",
+  "adoptedSchemeId": "SCHEME-8d6b3f458c7541b4a8b3",
+  "trialTaskId": "JOB-43dcb690bf174f9e8d76",
+  "parameterId": "PARAM-84dd61e6eb544c319063",
+  "simulationTaskId": "JOB-b9ba3e30171e454cbf56",
+  "trialInputId": "INPUT-3faa73605321b03d4a9f6bf7",
+  "laterInputId": "INPUT-479ada7cc12ab8dd892a716d",
+  "trialPeriod": [
+    "2024-01-01",
+    "2024-01-31"
+  ],
+  "simulationPeriod": [
+    "2024-02-01",
+    "2024-02-29"
+  ],
+  "dujaWM": 299.0,
+  "calibrationInitialDujaWM": 300.0,
+  "parameterMatchesActualTrial": true,
+  "parameterMatchesLaterSimulation": true,
+  "resultNamedSaved": true,
+  "resultTrashAndRestore": true,
+  "referencedParameterProtectedFromPhysicalCleanup": true,
+  "reuseAfterSourceChange": "rerun",
+  "reuseNote": "数值源码随后变更，原成果保留原模型身份，不作为更新后核心的复用证据。",
+  "trialModelIdentity": "ebece38589c5679cb2a0d4ce2f51eb9953e5b5c4c921e3822c3a201c69092216",
+  "simulationModelIdentity": "ebece38589c5679cb2a0d4ce2f51eb9953e5b5c4c921e3822c3a201c69092216"
+}

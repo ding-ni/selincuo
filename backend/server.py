@@ -142,6 +142,7 @@ class Handler(SimpleHTTPRequestHandler):
         path = url.path.removeprefix('/api/model/')
         if url.path == '/api/health':
             return self.send_json({'projectId': 'selinco', 'version': VERSION, 'instanceId': self.server.instance_id,
+                                   'backendSourceSHA256': self.server.jobs.backend_source_identity,
                                    'workspace': str(self.db.workspace)})
         if not url.path.startswith('/api/'):
             if url.path.startswith('/spatial/'):
@@ -159,11 +160,19 @@ class Handler(SimpleHTTPRequestHandler):
             from .business_context import simulation_plan
             return self.send_json(simulation_plan(self.db, query))
         if path == 'bootstrap':
-            spatial = read_json(ROOT / 'data/derived/spatial/manifest.json')
+            spatial_message = ''
+            try:
+                spatial = read_json(ROOT / 'data/derived/spatial/manifest.json')
+                if not isinstance(spatial, dict):
+                    spatial = None
+                    spatial_message = '空间基础资料缺失，请接入完整空间资源。'
+            except (OSError, ValueError, TypeError):
+                spatial = None
+                spatial_message = '空间基础资料无法读取，请检查空间资源。'
             summary = {k: v for k, v in (spatial or {}).items() if k not in ('weights', 'lakeWeights', 'grids', 'sourceFiles')}
             inputs = self.db.items('input_products')
             for item in inputs:
-                item['compatible'] = bool(spatial and item['manifest']['spatialVersion'] == spatial['version'])
+                item['compatible'] = bool(spatial and item['manifest'].get('spatialVersion') == spatial.get('version'))
                 from .forcing_latest import provenance_summary
                 item['provenanceSummary']=provenance_summary(self.db,item['manifest'])
             from .calibration_config import public_config
@@ -172,19 +181,40 @@ class Handler(SimpleHTTPRequestHandler):
             from .release_registry import current as current_release
             annual_ready = any(i['compatible'] and i['manifest']['start'] <= '2023-01-01T00:00:00' and i['manifest']['end'] >= '2026-01-01T00:00:00' for i in inputs)
             from .grid_spatial import current as grid_current
-            grid=grid_current()
+            from .research_schemes import builtin, list_schemes
+            from .business_context import builtin_result_available
+            try:
+                grid=grid_current()
+                if not grid and not spatial_message:
+                    spatial_message = '当前空间版本缺失，请接入完整空间资源。'
+            except (OSError, ValueError, KeyError, TypeError):
+                grid = None
+                spatial_message = '当前空间版本缺失或校验失败，请检查空间资源。'
             grid_summary={k:v for k,v in (grid or {}).items() if k not in ('grids','units','lakeWeights')}
+            try:
+                operational_schemes = catalog(self.db)
+                operational_message = ''
+            except (OSError, ValueError, KeyError, TypeError):
+                operational_schemes = []
+                operational_message = '原历史方案或其空间资料无法读取，请检查基础资源。'
+            builtin_scheme = builtin(self.db)
+            builtin_result = (builtin_scheme or {}).get('payload', {}).get('resultId')
+            builtin_available = builtin_result_available(self.db, builtin_result)
             return self.send_json({'projectId': 'selinco', 'name': '色林错预警预报平台', 'version': VERSION, 'gridSpatial':grid_summary,
+                                   'spatialResourceMessage': spatial_message, 'operationalSchemesMessage': operational_message,
                                    'contextKey': CONTEXT_KEY, 'spatial': summary, 'database': self.db.summary(),
                                    'stations': self.db.rows('SELECT * FROM stations ORDER BY id'),
                                    'inputs': inputs, 'parameters': self.db.items('parameter_versions'),
-                                   'schemes': self.db.items('schemes'),
-                                   'operationalSchemes': catalog(self.db),
+                                   'schemes': list_schemes(self.db),
+                                   'operationalSchemes': operational_schemes,
                                    'publishedResults': published_catalog(), 'standardResultId': current_release(self.db)['resultId'],
+                                   'homeResultId': builtin_result if builtin_available else None,
+                                   'builtinResultAvailable': builtin_available,
+                                   'builtinResultMessage': '' if builtin_available else '当前工作区缺少内置连续成果或其完整逐时资料，请接入对应成果资源。',
                                    'calibrationConfig': public_config(), 'routingModes': [{'id':'source-separated','label':'分水源调蓄 + 河道汇流'},{'id':'lumped','label':'原方案：合并径流单库汇流'}],
                                    'parameterDefinitions': PARAMETER_DEFINITIONS, 'defaultParameters': DEFAULT_PARAMETERS,
                                    'forecast': {'enabled': False, 'reason': '本版完成历史计算，7—15天滚动预报在下一阶段接入'},
-                                   'ready': bool(spatial and inputs), 'missingInputs': [] if inputs else ['ERA5-Land真实逐小时降水、气温与蒸发能力输入'],
+                                   'ready': bool(spatial and grid and inputs), 'missingInputs': [] if inputs else ['ERA5-Land真实逐小时降水、气温与蒸发能力输入'],
                                    'historicalPlan': {'warmupYear': 2023, 'calibrationYear': 2024, 'validationYear': 2025, 'start': '2023-01-01T00:00:00', 'end': '2026-01-01T00:00:00', 'dailyConvention': '(day 00:00, next day 00:00] Asia/Shanghai', 'futureObservationsUsedInSearch': False},
                                    'annualValidation': {'ready': annual_ready, 'message': '年度历史驱动完整' if annual_ready else '完整2023—2025年真实驱动尚未齐备，年度率定验证待开展'},
                                    'periodDefaults': {'start': '2023-01-01T00:00', 'end': '2026-01-01T00:00'},
@@ -217,9 +247,17 @@ class Handler(SimpleHTTPRequestHandler):
                 write_json(target,candidate);self.db.log('analysis.datum-candidate',{'id':candidate['id'],'sources':candidate['observationSourcesSHA256']})
             elif digest(read_json(target))!=digest(candidate):raise ValueError('已归档零点候选与当前摘要不一致')
             return self.send_json(candidate)
+        if path == 'station-datum':
+            from .stations import datum_at
+            return self.send_json(datum_at(query['stationId'], query['time']))
         if path == 'research-template':
             from .research_schemes import template
             return self.send_json(template(self.db))
+        if path == 'schemes':
+            from .research_schemes import list_schemes
+            return self.send_json({'schemes': list_schemes(self.db, query.get('includeTrashed') == 'true')})
+        if path == 'parameters':
+            return self.send_json({'parameters': self.db.items('parameter_versions')})
         if path == 'spatial-version':
             from .grid_spatial import load
             return self.send_json(load(query['version']))
@@ -323,6 +361,11 @@ class Handler(SimpleHTTPRequestHandler):
             rows = self.db.rows('''SELECT id,kind,status,created_at,updated_at,progress,message,trashed,favorite,name,notes,collection,
                 json_object('researchSchemeId',json_extract(request,'$.researchSchemeId'),
                             'researchSchemeRevision',json_extract(request,'$.researchSchemeRevision'),
+                            'schemeName',json_extract(request,'$.schemeSnapshot.name'),
+                            'start',json_extract(request,'$.start'),
+                            'end',json_extract(request,'$.end'),
+                            'evaluationStart',json_extract(request,'$.evaluationStart'),
+                            'evaluationEnd',json_extract(request,'$.evaluationEnd'),
                             'modelFamily',json_extract(request,'$.modelFamily'),
                             'inputId',json_extract(request,'$.inputId'),
                             'schemeId',json_extract(request,'$.schemeId'),
@@ -448,6 +491,9 @@ class Handler(SimpleHTTPRequestHandler):
         if path == 'operational-release':
             from .release_registry import publish
             return self.send_json(publish(self.db, value))
+        if path == 'data-import-preview':
+            from .data_exchange import preview_file
+            return self.send_json(preview_file(self.db, value))
         if path in ('data-import', 'data-import-file'):
             if self.server.jobs.active():
                 raise ValueError('请等待计算结束后更新资料')
@@ -458,6 +504,25 @@ class Handler(SimpleHTTPRequestHandler):
             return self.send_json(confirm_coverage(self.db, value))
         if path == 'tasks':
             return self.send_json(self.server.jobs.submit(value.pop('kind'), value), 202)
+        if path == 'parameters/from-task':
+            from .research_schemes import save_parameters_from_task
+            return self.send_json(save_parameters_from_task(self.db, value.get('taskId'), value.get('name')))
+        if path.startswith('schemes/'):
+            parts = path.split('/')
+            if len(parts) != 3:
+                raise FileNotFoundError('接口不存在')
+            _, identifier, action = parts
+            if action == 'adopt-parameters':
+                from .research_schemes import adopt_parameters
+                with self.server.jobs.lock:
+                    return self.send_json(adopt_parameters(self.db, identifier, value.get('parameterId')))
+            if action == 'metadata':
+                if not isinstance(value.get('trashed'), bool):
+                    raise ValueError('请指定是否移入回收站')
+                from .research_schemes import scheme_metadata
+                with self.server.jobs.lock:
+                    return self.send_json(scheme_metadata(self.db, identifier, value['trashed']))
+            raise FileNotFoundError('接口不存在')
         if path.startswith('tasks/'):
             _, identifier, action = path.split('/')
             task = self.db.task(identifier)
@@ -467,6 +532,11 @@ class Handler(SimpleHTTPRequestHandler):
                 allowed = {k: v for k, v in value.items() if k in ('name', 'notes', 'collection', 'favorite', 'trashed')}
                 if task['status'] in ('queued', 'running', 'stopping') and allowed.get('trashed'):
                     raise ValueError('活动任务不能移入回收站')
+                if allowed.get('trashed'):
+                    from .research_schemes import builtin
+                    standard = builtin(self.db)
+                    if standard and standard['payload'].get('resultId') == identifier:
+                        raise ValueError('内置方案成果受到保护，不能移入回收站')
                 if any(len(str(v)) > 4000 for v in allowed.values()):
                     raise ValueError('备注过长')
                 with self.db.connect() as conn:
@@ -484,19 +554,21 @@ class Handler(SimpleHTTPRequestHandler):
         if path in ('parameters', 'schemes'):
             if path=='schemes' and value.get('payload',{}).get('schemaVersion')==2:
                 from .research_schemes import save
-                return self.send_json(save(self.db,value['payload'],value.get('parentId')))
+                with self.server.jobs.lock:
+                    return self.send_json(save(self.db,value['payload'],value.get('parentId')))
+            if path == 'parameters':
+                from .research_schemes import save_parameters_from_task, _result_parameters
+                requested = value.get('payload') or {}
+                task_id = requested.get('sourceTaskId') or value.get('sourceTaskId')
+                if not task_id:
+                    raise ValueError('参数组必须从成功成果保存')
+                actual = _result_parameters(self.db, task_id)
+                for field in ('parameters', 'partitionParameters'):
+                    if field in requested and requested[field] != actual[field]:
+                        raise ValueError('参数必须与来源成果实际计算值一致')
+                return self.send_json(save_parameters_from_task(self.db, task_id, value.get('name')))
             table = 'parameter_versions' if path == 'parameters' else 'schemes'
             item = dict(value['payload'])
-            if path == 'parameters':
-                from .model_core import parameters
-                from .parameter_regions import resolve_regions
-                item['parameters'] = parameters(item.get('parameters'))
-                units = read_json(ROOT / 'data/derived/spatial/manifest.json')['units']
-                item['partitionParameters'], _ = resolve_regions(units, item['parameters'], item.get('partitionParameters'))
-                if item.get('sourceTaskId'):
-                    task = self.db.task(item['sourceTaskId'])
-                    if task['status'] != 'succeeded' or task['result']['parameters'] != item['parameters'] or task['result'].get('partitionParameters', {}) != item['partitionParameters']:
-                        raise ValueError('命名参数必须与已完成成果参数一致')
             identifier = ('PARAM-' if path == 'parameters' else 'SCHEME-') + uuid.uuid4().hex[:16]
             self.db.save_item(table, identifier, value['name'], item)
             return self.send_json({'id': identifier})
@@ -558,7 +630,7 @@ class Handler(SimpleHTTPRequestHandler):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--port', type=int, default=8879)
+    parser.add_argument('--port', type=int, default=8882)
     parser.add_argument('--workspace', type=Path)
     parser.add_argument('--no-browser', action='store_true')
     args = parser.parse_args()
