@@ -3,7 +3,7 @@ import {ref,reactive,computed,onMounted,onBeforeUnmount,watch} from 'vue'
 import ScreenMap from './ScreenMap.vue'
 import ScreenChart from './ScreenChart.vue'
 import LakeMark from './LakeMark.vue'
-import {rivers,layers,exactValue,timelineDates,defaultReplayDay,balanceTerms} from './dashboard.mjs'
+import {rivers,layers,exactValue,timelineDates,defaultReplayDay,balanceTerms,basinRain} from './dashboard.mjs'
 import {api,number} from './api.mjs'
 import {scaledLayer} from './map-scale.mjs'
 import {createFrameCache} from './frame-cache.mjs'
@@ -26,7 +26,10 @@ const delta=computed(()=>{if(!day.value)return null;const previous=new Date(Date
 const mapLayer=computed(()=>scaledLayer(layers.find(l=>l.id===shownVariable.value)||layers.at(-1),shownVariable.value==='snow'?(shown.value?.snow?.units||[]).map(u=>u.value):(shown.value?.frame?.unitValues||shown.value?.frame?.cells||[]).map(c=>c.value),shown.value?.range))
 const mapMissing=computed(()=>!['basin','terrain'].includes(shownVariable.value)&&!(shownVariable.value==='snow'?shown.value?.snow?.complete:shown.value?.frame?.complete))
 const ticks=computed(()=>{const a=dates.value;if(!a.length)return [];const out=[a[0],...a.filter(d=>d.endsWith('-01-01'))];if(out.at(-1)!==a.at(-1))out.push(a.at(-1));return [...new Set(out)]})
-const selectedFlow=computed(()=>rivers.map(r=>({...r,value:current.value?.[r.id]}))),balance=computed(()=>balanceTerms(current.value))
+const selectedFlow=computed(()=>rivers.filter(r=>r.id!=='fringe').map(r=>({...r,value:current.value?.[r.id]}))),balance=computed(()=>balanceTerms(current.value))
+const rainfall=computed(()=>[...basinRain(rain.value,result.value?.units),{id:'lake',name:'湖面',value:rain.value?.complete?rain.value.lakeMean:null}])
+const rainPeak=computed(()=>Math.max(1,...rainfall.value.map(r=>r.value||0))),flowPeak=computed(()=>Math.max(1,...selectedFlow.value.map(r=>r.value||0)))
+const duja=computed(()=>stations.value.find(s=>s.id==='DUJA'))
 function defaultDay(m=mode.value,t=task.value){const a=timelineDates(m,monitor.value,t?.result);return a.includes(props.viewDay)?props.viewDay:m==='observation'?(main.value?.latest?.date||a.at(-1)||''):defaultReplayDay(a,t?.result)}
 function stop(){playing.value=false;clearTimeout(timer)}
 function schedule(){clearTimeout(timer);if(playing.value)timer=setTimeout(async()=>{if(index.value>=dates.value.length-1){stop();return}await requestView(dates.value[index.value+1]);schedule()},Number(speed.value))}
@@ -59,7 +62,7 @@ async function requestView(d,t=task.value,m=meta.value){
   const view=mode.value==='observation'?{day:d,variable:['basin','terrain'].includes(v)?v:'basin'}:await frameFor(t,m,d,v)
   if(disposed||ticket!==sequence)return
   if(mode.value==='model'){task.value=t;meta.value=m}
-  shown.value=view;pending.value=false;emit('context',mode.value==='model'?t.id:undefined,d);prefetch()
+  shown.value=view;feature.value=null;pending.value=false;emit('context',mode.value==='model'?t.id:undefined,d);prefetch()
  }catch(e){if(ticket===sequence&&!disposed){pending.value=false;if(e.name!=='AbortError'){error.value=e.message;stop()}}}
 }
 async function selectResult(){
@@ -92,17 +95,21 @@ onBeforeUnmount(()=>{disposed=true;sequence++;stop();clearTimeout(sliderTimer);f
  <div class="screen-metrics">
   <section class="screen-panel metric-card"><span>主站湖位 <small>{{mode==='model'?'模拟':'实测'}}</small></span><b>{{number(level,3)}}<small>m</small></b><p>{{mode==='model'?'实测 '+number(observed,3)+' m':'主站工作基准'}}</p></section>
   <section class="screen-panel metric-card"><span>当日涨落</span><b :class="{'metric-rise':delta>0}">{{delta>0?'+':''}}{{number(delta==null?null:delta*100,1)}}<small>cm</small></b><p>{{delta==null?'相邻日期无完整值':'较前一日 · 相同日值口径'}}</p></section>
-  <section class="screen-panel metric-card"><span>{{mode==='model'?'入湖流量':'杜加站流量'}} <small>{{mode==='model'?'模拟':'实测'}}</small></span><b>{{number(flowValue,2)}}<small>m³/s</small></b><p>{{mode==='model'?'已核实入湖范围':'最近有效日 '+(stations.find(s=>s.id==='DUJA')?.latest?.date||'暂无')}}</p></section>
+  <section class="screen-panel metric-card"><span>{{mode==='model'?'入湖流量':'杜加站流量'}} <small>{{mode==='model'?'模拟':'实测'}}</small></span><b>{{number(flowValue,2)}}<small>m³/s</small></b><p>{{mode==='model'?'当日平均入湖流量':'最近有效日 '+(duja?.latest?.date||'暂无')}}</p></section>
   <section class="screen-panel metric-card"><span>{{mode==='model'?'流域日降水':'主站日降水'}}</span><b v-if="mode==='model'">{{rain?.complete?number(rain.domainMean,2):'无完整日'}}<small v-if="rain?.complete">mm</small></b><b v-else>{{number(rainObserved,2)}}<small>mm</small></b><p>{{mode==='model'?'模型采用 · 面积加权含湖面':'站点实测 · 无记录保持空白'}}</p></section>
  </div>
  <div class="screen-main">
+  <aside class="screen-panel hydrology-stack">
+   <section v-if="mode==='model'" class="rain-summary"><div class="screen-panel-heading"><h3>流域雨情</h3><span>日降水 · mm</span></div><div v-for="r in rainfall" :key="r.id" class="rain-summary-row"><span>{{r.name}}</span><b>{{number(r.value,2)}}</b><div class="hydrology-bar"><i :style="{width:((r.value||0)/rainPeak*100)+'%'}"></i></div></div><p class="screen-note">{{rain?.complete?'流域面雨量 · 湖面采用订正值':'当日气象资料不完整'}}</p></section>
+   <section class="observation-summary"><div class="screen-panel-heading"><h3>当日实测</h3><span>{{day}}</span></div><div><span>主站湖位</span><b>{{number(exactValue(main,day),3)}} <small>m</small></b><small>最近记录 {{main?.latest?.date||'暂无'}}</small></div><div><span>杜加流量</span><b>{{number(exactValue(duja,day),2)}} <small>m³/s</small></b><small>最近记录 {{duja?.latest?.date||'暂无'}}</small></div></section>
+   <section class="shore-summary"><div class="screen-panel-heading"><h3>四岸观测</h3><span>各站原基准</span></div><div class="shore-list"><button v-for="s in shores" :key="s.id" class="shore-row" @click="emit('station',s.id,day)"><span>{{s.name.replace('色林错','')}}</span><b>{{exactValue(s,day)==null?'当日缺测':'当日有记录'}}</b><small>最近 {{s.latest?.date||'暂无'}}</small></button></div></section>
+  </aside>
   <section class="screen-panel map-panel"><div class="screen-map-heading"><h3>{{mode==='model'?'流域水情':'站点分布'}}</h3><select v-model="variable" aria-label="地图主题" @change="changeLayer"><option value="basin">流域分区</option><option value="terrain">地形高程</option><template v-if="mode==='model'"><option v-for="l in layers.filter(l=>!['basin','terrain','evaporation'].includes(l.id))" :key="l.id" :value="l.id">{{l.label}}</option></template></select><details><summary>叠加要素</summary><div class="map-overlay-options"><label v-for="(label,key) in {boundaries:'流域边界',rivers:'河网',ice:'冰川边界',stations:'测站',names:'名称',grid:'气象格网',units:'计算单元'}" :key="key"><input type="checkbox" v-model="show[key]">{{label}}</label></div></details></div>
-   <div class="map-stage"><ScreenMap :spatial-base="mode==='model'?(meta?.spatialBase||'/spatial/'):'/spatial/'" :show-grid="mode==='model'&&show.grid" :show-units="mode==='model'&&show.units" :show-boundaries="show.boundaries" :range-layer="mapLayer" :stations="stations" :focus="feature?.id" :selected-unit="feature?.id" :frame="shown?.frame" :snow="shown?.snow" :variable="shownVariable" :show-ice="show.ice" :show-rivers="show.rivers" :show-terrain="shownVariable==='terrain'" :show-stations="show.stations" :show-names="show.names" @unit="unit" @select="emit('station',$event,day)" @feature="feature=$event" @failure="error=$event"/><div v-if="mapMissing" class="map-status">{{shownVariable==='snow'?'无日末状态':'驱动缺少完整日'}}</div><div v-if="feature" class="feature-summary"><b>{{feature.name}}</b><span v-if="feature.areaKm2!=null">{{number(feature.areaKm2,2)}} km²</span><span v-if="feature.value!=null">{{number(feature.value,2)}} {{feature.unit}}</span><button aria-label="关闭区域信息" @click="feature=null">×</button></div></div>
+   <div class="map-stage"><ScreenMap :spatial-base="mode==='model'?(meta?.spatialBase||'/spatial/'):'/spatial/'" :show-grid="mode==='model'&&show.grid" :show-units="mode==='model'&&show.units" :show-boundaries="show.boundaries" :range-layer="mapLayer" :stations="stations" :focus="feature?.id" :selected-unit="feature?.id" :frame="shown?.frame" :grid-frame="shown?.rain" :snow="shown?.snow" :variable="shownVariable" :show-ice="show.ice" :show-rivers="show.rivers" :show-terrain="shownVariable==='terrain'" :show-stations="show.stations" :show-names="show.names" @unit="unit" @select="emit('station',$event,day)" @feature="feature=$event" @failure="error=$event"/><div v-if="mapMissing" class="map-status">{{shownVariable==='snow'?'无日末状态':'气象资料缺少完整日'}}</div><div v-if="feature" class="feature-summary"><b>{{feature.name}}</b><span v-if="feature.areaKm2!=null">{{number(feature.areaKm2,2)}} km²</span><span v-if="feature.value!=null">{{number(feature.value,2)}} {{feature.unit}}</span><button aria-label="关闭区域信息" @click="feature=null">×</button></div></div>
   </section>
   <aside class="screen-panel summary-stack">
-   <section class="shore-summary"><div class="screen-panel-heading"><h3>四岸简况</h3><span>基准待核</span></div><div class="shore-list"><button v-for="s in shores" :key="s.id" class="shore-row" @click="emit('station',s.id,day)"><span>{{s.name.replace('色林错','')}}</span><b>{{exactValue(s,day)==null?'无观测':'当日有记录'}}</b><small>最近 {{s.latest?.date||'暂无'}}</small></button></div></section>
    <template v-if="mode==='model'">
-    <section class="inflow-summary"><div class="screen-panel-heading"><h3>入湖组成</h3><span>m³/s</span></div><div v-for="r in selectedFlow" :key="r.id" class="river-row"><i :class="r.id"></i><span>{{r.id==='fringe'?'其他入湖区':r.name}}</span><b>{{number(r.value,2)}}</b></div><p v-if="current?.unresolved!=null" class="screen-note">未核实区产流 {{number(current.unresolved,2)}} m³/s · 单列</p></section>
+    <section class="inflow-summary"><div class="screen-panel-heading"><h3>四河来水</h3><span>m³/s</span></div><div v-for="r in selectedFlow" :key="r.id" class="river-row"><i :class="r.id"></i><span>{{r.name}}</span><b>{{number(r.value,2)}}</b><div class="hydrology-bar"><i :style="{width:((r.value||0)/flowPeak*100)+'%'}"></i></div></div><div class="inflow-total"><span>入湖合计</span><b>{{number(current?.total,2)}} <small>m³/s</small></b></div></section>
     <section class="balance-summary"><div class="screen-panel-heading"><h3>当日湖泊收支</h3><span>百万 m³</span></div><div class="balance-grid"><div v-for="b in balance" :key="b.key"><span>{{b.label}}</span><b>{{number(b.value,2)}}</b></div></div></section>
    </template>
    <section v-else class="station-recency"><div class="screen-panel-heading"><h3>最近记录</h3><span>实际观测日期</span></div><button v-for="s in stations.filter(s=>s.kind!=='lake')" :key="s.id" @click="emit('station',s.id,s.latest?.date)"><span>{{s.name}}</span><b>{{number(s.latest?.value,2)}} {{s.kind==='rain'?'mm':'m³/s'}}</b><small>{{s.latest?.date||'暂无有效记录'}}</small></button></section>

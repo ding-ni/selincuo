@@ -144,6 +144,35 @@ class SchemeWorkflowTests(unittest.TestCase):
         self.assertEqual(len(schemes.list_schemes(self.db)), 1)
         self.assertEqual(len(self.db.tables['schemes']), 2)
 
+    def test_builtin_trash_restores_same_identity_without_changing_configuration(self):
+        self.builtin_patch.stop()
+        config = {'id': 'builtin-selinco', **deepcopy(self.config), 'resultId': 'saved-result'}
+        with patch.object(schemes, 'read_json', return_value=config):
+            standard = schemes.builtin(self.db)
+            identity = standard['payload']['configurationSHA256']
+            for status in ('queued', 'running', 'stopping'):
+                self.db.tasks['active'] = {'id': 'active', 'status': status,
+                                           'request': {'researchSchemeId': standard['id']}}
+                with self.assertRaisesRegex(ValueError, '正在计算'):
+                    schemes.scheme_metadata(self.db, standard['id'], True)
+            self.db.tasks['active']['status'] = 'succeeded'
+            schemes.scheme_metadata(self.db, standard['id'], True)
+            self.assertEqual(schemes.list_schemes(self.db), [])
+            hidden = schemes.list_schemes(self.db, include_trashed=True)[0]
+            self.assertTrue(hidden['trashed'])
+            self.assertEqual(hidden['payload']['configurationSHA256'], identity)
+            self.assertEqual(hidden['payload']['resultId'], 'saved-result')
+            self.assertEqual(schemes.template(self.db)['name'], '我的色林错方案')
+            with self.assertRaisesRegex(ValueError, '请先恢复'):
+                schemes.prepare_request(self.db, {'researchSchemeId': standard['id']})
+            with self.assertRaisesRegex(ValueError, '请先恢复'):
+                schemes.save(self.db, self.config, standard['id'])
+            schemes.scheme_metadata(self.db, standard['id'], False)
+            restored = schemes.list_schemes(self.db)[0]
+            self.assertEqual(restored['id'], standard['id'])
+            self.assertEqual(restored['payload']['configurationSHA256'], identity)
+            self.assertFalse(restored['trashed'])
+
     def test_lake_anchor_defines_first_complete_day(self):
         self.config['initialization'] = {'initialLakeTime': '2022-04-20T12:00:00',
                                          'initialLakeLevel': 4544.03, 'initialLakeSource': '日值代表锚点'}
@@ -204,6 +233,48 @@ class ForcingWindowTests(unittest.TestCase):
             acquisition_window(product, catalog, '2026-10-23', '2026-10-24')
         with self.assertRaisesRegex(ValueError, '超过官方'):
             acquisition_window(product, catalog, '2026-10-21', '2026-11-01')
+
+
+class PersistentSchemeTrashTests(unittest.TestCase):
+    def test_builtin_and_revision_family_survive_database_reopen_and_restore(self):
+        import json
+        import tempfile
+        from backend.database import Database
+        from backend.common import now
+
+        # This isolated database is deliberately left intact for inspection.
+        workspace = tempfile.mkdtemp(prefix='selinco-scheme-check-')
+        db = Database(workspace)
+        standard = schemes.builtin(db)
+        before = deepcopy(standard['payload'])
+        family = 'FAMILY-test'
+        for revision in (1, 2):
+            db.save_item('schemes', f'SCHEME-test-{revision}', '测试方案',
+                         {'schemaVersion': 2, 'name': '测试方案', 'familyId': family, 'revision': revision})
+        stamp = now()
+        with db.connect() as connection:
+            connection.execute('INSERT INTO tasks(id,kind,status,created_at,updated_at,request) VALUES(?,?,?,?,?,?)',
+                               ('JOB-test', 'simulation', 'running', stamp, stamp,
+                                json.dumps({'researchSchemeId': standard['id']})))
+        with self.assertRaisesRegex(ValueError, '正在计算'):
+            schemes.scheme_metadata(db, standard['id'], True)
+        with db.connect() as connection:
+            connection.execute("UPDATE tasks SET status='succeeded' WHERE id='JOB-test'")
+        schemes.scheme_metadata(db, standard['id'], True)
+        schemes.scheme_metadata(db, 'SCHEME-test-2', True)
+        reopened = Database(workspace)
+        self.assertEqual(schemes.list_schemes(reopened), [])
+        self.assertEqual({row['id'] for row in schemes.list_schemes(reopened, True)},
+                         {standard['id'], 'SCHEME-test-2'})
+        self.assertEqual(schemes.builtin(reopened)['payload'], before)
+        self.assertEqual(len(reopened.items('schemes')), 2)
+        self.assertEqual(schemes.template(reopened)['name'], '我的色林错方案')
+        schemes.scheme_metadata(reopened, standard['id'], False)
+        schemes.scheme_metadata(reopened, 'SCHEME-test-2', False)
+        reopened_again = Database(workspace)
+        self.assertEqual({row['id'] for row in schemes.list_schemes(reopened_again)},
+                         {standard['id'], 'SCHEME-test-2'})
+        self.assertEqual(schemes.builtin(reopened_again)['payload'], before)
 
 
 if __name__ == '__main__':

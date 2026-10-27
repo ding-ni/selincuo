@@ -68,13 +68,27 @@ def main():
               map:document.querySelector('.map-stage').getBoundingClientRect().toJSON(),
               replay:document.querySelector('.screen-replay').getBoundingClientRect().toJSON(),
               summary:document.querySelector('.summary-stack').getBoundingClientRect().toJSON(),
-              balance:document.querySelector('.balance-summary').getBoundingClientRect().toJSON()})""")
+              balance:document.querySelector('.balance-summary').getBoundingClientRect().toJSON(),
+              inflow:document.querySelector('.inflow-summary').getBoundingClientRect().toJSON(),
+              total:document.querySelector('.inflow-total').getBoundingClientRect().toJSON(),
+              hydro:document.querySelector('.hydrology-stack').getBoundingClientRect().toJSON(),
+              shores:document.querySelector('.shore-summary').getBoundingClientRect().toJSON(),
+              lastShore:document.querySelector('.shore-row:last-child').getBoundingClientRect().toJSON()})""")
             page.screenshot(path=str(output / f'首页-{width}.png'), full_page=True)
             assert geometry['scrollWidth'] <= width + 1, geometry
             assert geometry['scrollHeight'] <= height + 1, geometry
             assert geometry['balance']['bottom'] <= geometry['summary']['bottom'] + 1, geometry
+            assert geometry['inflow']['bottom'] <= geometry['balance']['top'] + 1, geometry
+            assert geometry['total']['bottom'] <= geometry['balance']['top'] + 1, geometry
+            assert geometry['lastShore']['bottom'] <= geometry['hydro']['bottom'] + 1, geometry
+            assert geometry['map']['width'] < width * .5, geometry
             report['screens'].append(geometry)
         report['checks']['oneScreenAtBothSizes'] = True
+        report['checks']['centralMapAndVisibleHydrologyPanels'] = True
+        assert page.locator('[data-label="fringe"], [data-label="unresolved"]').count() == 0
+        assert page.locator('.basin-map-key button').count() == 4
+        assert '未核实区产流' not in page.locator('.screen-main').inner_text()
+        report['checks']['technicalPartitionsHidden'] = True
         page.set_viewport_size({'width': 1920, 'height': 1080})
         theme = page.get_by_label('地图主题')
         theme.select_option('precipitation')
@@ -148,22 +162,51 @@ def main():
         theme.select_option('terrain')
         page.locator('image.terrain-image').wait_for()
         page.locator('.lake-screen[aria-busy="false"]').wait_for()
-        assert '已登记1 km DEM' in page.locator('.screen-map-legend').inner_text()
+        assert '1 km 地形高程' in page.locator('.screen-map-legend').inner_text()
         assert page.locator('.basin').first.evaluate("e=>getComputedStyle(e).fill") in ('none', 'rgba(0, 0, 0, 0)', 'transparent')
         page.screenshot(path=str(output / '地形高程.png'))
+
+        page.locator('.screen-map-heading summary').click()
+        page.get_by_label('气象格网', exact=True).check()
+        page.locator('.screen-map-heading summary').click()
+        grid = page.locator('.meteorological-grid')
+        grid.wait_for()
+        assert grid.get_attribute('data-variable') == 'precipitation'
+        forcing = page.request.get(args.url+'/api/model/map-frame?'+
+            'inputId='+saved['inputId']+'&spatialVersion='+saved['spatialVersion']+
+            '&day='+snapshot(page)['day']+'&variable=precipitation').json()
+        actual = grid.locator('path').evaluate_all("nodes=>Object.fromEntries(nodes.filter(n=>n.hasAttribute('data-value')).map(n=>[n.dataset.grid,Number(n.dataset.value)]))")
+        expected = {c['id']: c['value'] for c in forcing['cells']}
+        assert actual == expected, (len(actual), len(expected))
+        assert grid.locator('path[data-value]').first.evaluate("e=>getComputedStyle(e).fill") not in ('none','transparent','rgba(0, 0, 0, 0)')
+        assert page.locator('.weather-grid-legend').is_visible()
+        hit = grid.locator('path[data-value]').evaluate_all("""nodes=>{
+          for(const n of nodes){const b=n.getBoundingClientRect();for(const f of [.5,.3,.7]){
+            const x=b.x+b.width*f,y=b.y+b.height*f;
+            if(document.elementFromPoint(x,y)===n)return {x,y,value:Number(n.dataset.value)};
+          }}return null
+        }""")
+        assert hit, 'No actual grid cell is reachable'
+        page.mouse.click(hit['x'], hit['y'])
+        page.locator('.feature-summary').wait_for()
+        assert '日降水' in page.locator('.feature-summary').inner_text()
+        page.screenshot(path=str(output / '地形叠加气象格网.png'))
+        report['checks']['terrainThenGridUsesRealMeteorologicalValues'] = {'cells': len(actual), 'day': forcing['day'], 'clickedValue': hit['value']}
+        page.locator('.screen-map-heading summary').click()
+        page.get_by_label('气象格网', exact=True).uncheck()
+        page.locator('.screen-map-heading summary').click()
         theme.select_option('snow')
         page.locator('.snow-unit').first.wait_for()
         assert page.locator('.snow-unit').count() == len(saved['units'])
         page.screenshot(path=str(output / '日末雪水当量.png'))
         theme.select_option('basin')
         page.locator('.basin-map-key').wait_for()
-        page.locator('.basin-map-key button.fringe').click()
-        selected = page.locator('.basin-selection.fringe')
+        page.locator('.basin-map-key button.zajia').click()
+        selected = page.locator('.basin-selection')
         selected.wait_for()
-        assert selected.get_attribute('d') == page.locator('.basin[data-basin="fringe"]').get_attribute('d')
+        assert selected.get_attribute('d') == page.locator('.basin[data-basin="zajia"]').get_attribute('d')
         assert selected.get_attribute('fill-rule') == 'evenodd'
-        assert selected.evaluate('e=>getComputedStyle(e).stroke') == 'none'
-        report['checks']['terrainSnowAndExactFringeGeometry'] = True
+        report['checks']['terrainSnowAndExactRiverBasinGeometry'] = True
 
         page.get_by_role('button', name='站点监测', exact=True).click()
         page.locator('.monitor-clock').wait_for()

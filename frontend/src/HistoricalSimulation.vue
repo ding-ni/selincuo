@@ -19,7 +19,7 @@ const selectedInput=computed(()=>inputs.value.find(i=>i.id===inputId.value))
 const firstDay=computed(()=>selectedScheme.value?.payload?.periods?.warmupStart?.slice(0,10)||'')
 const lakeAnchor=computed(()=>selectedScheme.value?.payload?.initialization?.initialLakeTime||'')
 const lakeAnchorSource=computed(()=>selectedScheme.value?.payload?.initialization?.initialLakeSource||'')
-const firstLakeDay=computed(()=>!lakeAnchor.value?'':lakeAnchor.value.slice(11,19)==='00:00:00'?lakeAnchor.value.slice(0,10):shiftCalendarDay(lakeAnchor.value,1))
+const firstLakeDay=computed(()=>!lakeAnchor.value?'':lakeAnchor.value.slice(11,16)==='00:00'?lakeAnchor.value.slice(0,10):shiftCalendarDay(lakeAnchor.value,1))
 const lastDay=computed(()=>selectedInput.value?.manifest?.end?shiftCalendarDay(selectedInput.value.manifest.end,-1):'')
 const parameters=computed(()=>(props.boot.parameters||[]).filter(p=>p.payload?.sourceTaskId&&parameterCompatible(p,selectedScheme.value?.payload)))
 const issue=computed(()=>{
@@ -78,7 +78,7 @@ function run(force=false){
    </div>
   </form>
   <div class="simulation-input-status" v-if="selectedInput"><span>气象资料：{{selectedInput.manifest.start.slice(0,10)}} 起，完整日至 {{lastDay}}</span><span>方案预热起点：{{firstDay}}</span><button class="link" @click="emit('navigate','model')">更新资料 →</button></div>
-  <p v-if="firstLakeDay" class="note">陆面自预热起点计算；湖位锚点为 {{lakeAnchor.replace('T',' ').slice(0,16)}}<template v-if="lakeAnchorSource.includes('日值')">（日值代表时刻假设）</template>，完整湖位日从 {{firstLakeDay}} 开始。</p>
+  <p v-if="firstLakeDay" class="note">陆面从预热起点开始计算；湖位从 {{lakeAnchor.replace('T',' ').slice(0,16)}} 起算<template v-if="lakeAnchorSource.includes('日值')">（该时刻由日值代表，并非已核实的瞬时观测）</template>，首个完整湖位日为 {{firstLakeDay}}。</p>
   <p v-if="issue" class="note warning" role="status">{{issue}}</p>
   <p v-if="planError" class="note warning" role="alert">计算前检查失败：{{planError}}</p><p v-if="plan?.action==='blocked'" class="note warning">{{plan.reasons?.join('；')||'当前资料或起算条件不满足计算要求。'}}</p><p v-else-if="plan?.action==='reuse'" class="note">已有条件一致的完整成果，可直接查看，也可选择重新计算。</p>
  </section>

@@ -28,7 +28,10 @@ def builtin(db):
     value['builtin'] = True
     value['origin'] = 'builtin'
     value['configurationSHA256'] = digest({k: v for k, v in value.items() if k != 'resultId'})
-    return {'id': identifier, 'name': value['name'], 'payload': value, 'builtin': True}
+    # Visibility is business metadata, not part of the immutable configuration.
+    family = value.get('familyId') or identifier
+    return {'id': identifier, 'name': value['name'], 'payload': value, 'builtin': True,
+            'trashed': bool(db.setting('scheme-hidden:' + family, False))}
 
 
 def template(db):
@@ -74,7 +77,7 @@ def list_schemes(db, include_trashed=False):
             latest[family] = row
     result = []
     standard = builtin(db)
-    if standard:
+    if standard and (include_trashed or not standard['trashed']):
         result.append(standard)
     for row in latest.values():
         row['trashed'] = bool(db.setting('scheme-hidden:' + _family(row), False))
@@ -95,11 +98,11 @@ def _scheme(db, identifier):
 
 def scheme_metadata(db, identifier, trashed):
     row = _scheme(db, identifier)
-    if row.get('builtin'):
-        raise ValueError('内置方案不能移入回收站')
     family = _family(row)
     if trashed:
         ids = [r['id'] for r in db.items('schemes') if _family(r) == family]
+        if row.get('builtin'):
+            ids.append(row['id'])
         for active in db.rows("SELECT id,request FROM tasks WHERE status IN ('queued','running','stopping')"):
             import json
             if json.loads(active['request']).get('researchSchemeId') in ids:
@@ -207,12 +210,12 @@ def validate(db, payload, coverage_end=None):
 
 
 def save(db, payload, parent_id=None):
+    parent = _scheme(db, parent_id) if parent_id else None
+    if parent and db.setting('scheme-hidden:' + _family(parent), False):
+        raise ValueError('方案已移入回收站，请先恢复')
     value = validate(db, payload)
     for key in ('configurationSHA256', 'revision', 'familyId', 'parentRevisionId', 'id', 'created_at', 'builtin', 'resultId'):
         value.pop(key, None)
-    parent = _scheme(db, parent_id) if parent_id else None
-    if parent and not parent.get('builtin') and db.setting('scheme-hidden:' + _family(parent), False):
-        raise ValueError('方案已移入回收站，请先恢复')
     if parent and not parent.get('builtin'):
         latest_revision = max((r['payload'].get('revision', 1) for r in db.items('schemes')
                                if _family(r) == _family(parent)), default=1)
@@ -306,7 +309,7 @@ def adopt_parameters(db, scheme_id, parameter_id):
 def prepare_request(db, request, kind='simulation'):
     identifier = request.get('researchSchemeId')
     row = _scheme(db, identifier)
-    if not row.get('builtin') and db.setting('scheme-hidden:' + _family(row), False):
+    if db.setting('scheme-hidden:' + _family(row), False):
         raise ValueError('方案已移入回收站，请先恢复')
     value = deepcopy(row['payload'])
     p = value['periods']

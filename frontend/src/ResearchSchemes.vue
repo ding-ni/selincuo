@@ -1,7 +1,7 @@
 <script setup>
 import {ref,computed,watch} from 'vue'
 import {api,number} from './api.mjs'
-const props=defineProps({boot:Object,locked:Boolean,selectedId:String})
+const props=defineProps({boot:Object,locked:Boolean,busy:Boolean,selectedId:String})
 const emit=defineEmits(['refresh','submit','selected','simulate'])
 const draft=ref(null),parent=ref(''),snapshot=ref(''),error=ref(''),message=ref(''),working=ref(false),group=ref('land'),scope=ref('background'),trash=ref(null),spatialRegions=ref([])
 let spatialTicket=0
@@ -17,23 +17,30 @@ const definitions=computed(()=>(props.boot.parameterDefinitions||[]).filter(d=>d
 function prepare(value){
  const data=copyValue(value)
  data.partitionParameters||={}
+ data.initialization||={}
  data.calibrationInitialParameters||=copyValue(data.parameters)
  data.calibrationInitialPartitionParameters||=copyValue(data.partitionParameters)
  return data
 }
-function choose(id){
+function choose(id,clearMessage=true){
  const row=rows.value.find(s=>s.id===id)
  if(!row)return
- draft.value=prepare(row.payload);parent.value=row.id;snapshot.value=JSON.stringify(draft.value);scope.value='background';message.value='';error.value='';emit('selected',row.id)
+ draft.value=prepare(row.payload);parent.value=row.id;snapshot.value=JSON.stringify(draft.value);scope.value='background';if(clearMessage)message.value='';error.value='';emit('selected',row.id)
 }
-watch(rows,value=>{if(props.selectedId&&props.selectedId!==parent.value&&value.some(r=>r.id===props.selectedId)){choose(props.selectedId);return}if(!draft.value&&value.length){const row=value.find(r=>r.id===props.selectedId)||value.find(r=>r.builtin||r.payload?.builtin)||value[0];choose(row.id)}},{immediate:true})
-watch(()=>props.selectedId,id=>{if(id&&id!==parent.value&&rows.value.some(s=>s.id===id))choose(id)})
+function chooseFromUser(event){
+ const id=event.target.value
+ if(id!==parent.value&&dirty.value&&!confirm('当前方案有未保存的修改。切换后这些修改将丢失，继续切换吗？')){event.target.value=parent.value;return}
+ choose(id)
+}
+watch(rows,value=>{if(props.selectedId&&props.selectedId!==parent.value&&value.some(r=>r.id===props.selectedId)){choose(props.selectedId,false);return}if(!draft.value&&value.length){const row=value.find(r=>r.id===props.selectedId)||value.find(r=>r.builtin||r.payload?.builtin)||value[0];choose(row.id,false)}},{immediate:true})
+watch(()=>props.selectedId,id=>{if(id&&id!==parent.value&&rows.value.some(s=>s.id===id))choose(id,false)})
 watch(()=>draft.value?.spatialVersion,async version=>{
  const ticket=++spatialTicket;spatialRegions.value=[];if(!version)return
  try{const spatial=await api('spatial-version?'+new URLSearchParams({version}));if(ticket===spatialTicket)spatialRegions.value=[...new Set((spatial.units||[]).map(u=>u.partition).filter(Boolean))]}
  catch(e){if(ticket===spatialTicket)error.value='空间分区读取失败：'+e.message}
 },{immediate:true})
 async function create(){
+ if(dirty.value&&!confirm('当前方案有未保存的修改。新建方案后这些修改将丢失，继续新建吗？'))return
  working.value=true;error.value=''
  try{draft.value=prepare(await api('research-template'));draft.value.name='新方案';delete draft.value.builtin;parent.value='';snapshot.value='';scope.value='background';message.value='';emit('selected','')}
  catch(e){error.value=e.message}finally{working.value=false}
@@ -71,19 +78,34 @@ function target(){
  draft.value.search.keys=draft.value.target==='lake'?['lakeCoefficient']:['KC','WM','B','SM','KI','KG','tauHours','interflowTauHours','baseflowTauHours']
  draft.value.search.scope=draft.value.target==='lake'?'background':'duja'
 }
+function lakeInitializationIssue(value){
+ const initial=value.initialization||{},level=initial.initialLakeLevel,time=String(initial.initialLakeTime||''),source=String(initial.initialLakeSource||'').trim()
+ if(level==null||level===''||!time||!source)return '请完整填写湖位起算时间、初始湖位和依据来源。'
+ if(!Number.isFinite(Number(level))||Number(level)<4000||Number(level)>6500)return '初始湖位须在4000—6500米之间。'
+ if(!/^\d{4}-\d{2}-\d{2}T\d{2}:00(?::00)?$/.test(time))return '湖位起算时间须为北京时间整小时。'
+ const parsed=new Date(time.slice(0,16)+':00Z')
+ if(!Number.isFinite(parsed.getTime())||parsed.toISOString().slice(0,16)!==time.slice(0,16))return '请填写有效的湖位起算时间。'
+ const at=time.slice(0,16),warmup=value.periods?.warmupStart?.slice(0,16),end=value.periods?.evaluationEnd?.slice(0,16)
+ if(!warmup||!end||at<warmup||at>=end)return '湖位起算时间须在预热起点与评价结束之间，且早于评价结束。'
+ return ''
+}
 async function save(kind){
  if(!draft.value||working.value||props.locked)return
  working.value=true;error.value='';message.value=''
  try{
+  const issue=lakeInitializationIssue(draft.value);if(issue)throw Error(issue)
   let id=parent.value
   if(!id||dirty.value){
    if(builtin.value)throw Error('内置方案请先复制，再修改和保存。')
-   const row=await api('schemes',{payload:draft.value,...(id?{parentId:id}:{})})
+   const payload=copyValue(draft.value)
+   payload.initialization.initialLakeSource=payload.initialization.initialLakeSource.trim()
+   if(Object.hasOwn(payload.initialization,'origin'))payload.initialization.origin=payload.periods.warmupStart
+   const row=await api('schemes',{payload,...(id?{parentId:id}:{})})
    draft.value=prepare(row.payload);parent.value=row.id;snapshot.value=JSON.stringify(draft.value);id=row.id;emit('selected',id)
   }
   if(kind){
    emit('submit',{kind,researchSchemeId:id,name:draft.value.name+(kind==='calibration'?' · 率定':' · 试算')})
-  }else{message.value='方案已保存。';emit('refresh')}
+  }else{message.value='方案已保存到本机，重新打开平台后仍可使用。';emit('refresh')}
  }catch(e){error.value=e.message}finally{working.value=false}
 }
 async function showTrash(){
@@ -92,9 +114,9 @@ async function showTrash(){
  catch(e){error.value=e.message}
 }
 async function moveToTrash(){
- if(!parent.value||builtin.value)return
+ if(!parent.value||dirty.value||working.value||props.busy)return
  working.value=true;error.value=''
- try{await api('schemes/'+encodeURIComponent(parent.value)+'/metadata',{trashed:true});draft.value=null;parent.value='';snapshot.value='';message.value='方案已移入回收站。';emit('selected','');emit('refresh')}
+ try{await api('schemes/'+encodeURIComponent(parent.value)+'/metadata',{trashed:true});draft.value=null;parent.value='';snapshot.value='';message.value='方案已移入回收站，已有成果保留。';emit('selected','');emit('refresh');if(trash.value!==null)await showTrash()}
  catch(e){error.value=e.message}finally{working.value=false}
 }
 async function restore(id){
@@ -106,11 +128,11 @@ async function restore(id){
 <template>
  <div class="scheme-editor">
   <div class="result-toolbar">
-   <label class="grow">方案<select :value="parent" @change="choose($event.target.value)"><option v-if="!parent" value="">新建方案</option><option v-for="s in rows" :key="s.id" :value="s.id">{{s.name}}{{s.builtin||s.payload?.builtin?' · 内置':''}}</option></select></label>
+   <label class="grow">方案<select :value="parent" :disabled="working||busy" @change="chooseFromUser"><option v-if="!parent" value="">新建方案</option><option v-for="s in rows" :key="s.id" :value="s.id">{{s.name}}{{s.builtin||s.payload?.builtin?' · 内置':''}}</option></select></label>
    <button :disabled="working||locked" @click="create">新建方案</button><button :disabled="!draft||working||locked" @click="copy">复制方案</button>
-   <button :disabled="!parent||builtin||working||locked" @click="moveToTrash">移入回收站</button><button @click="trash===null?showTrash():trash=null">{{trash===null?'方案回收站':'关闭回收站'}}</button>
+   <button :disabled="!parent||dirty||working||busy" :title="dirty?'请先保存方案修改':''" @click="moveToTrash">移入回收站</button><button @click="trash===null?showTrash():trash=null">{{trash===null?'方案回收站':'关闭回收站'}}</button>
   </div>
-  <div v-if="trash!==null" class="scheme-trash"><b>方案回收站</b><p v-if="!trash.length" class="muted">暂无已移入回收站的方案。</p><div v-for="s in trash" :key="s.id" class="trash-row"><span>{{s.name}}</span><button :disabled="working" @click="restore(s.id)">恢复</button></div></div>
+  <div v-if="trash!==null" class="scheme-trash"><b>方案回收站</b><p class="muted">移入回收站的方案可恢复，已有成果保留。</p><p v-if="!trash.length" class="muted">暂无已移入回收站的方案。</p><div v-for="s in trash" :key="s.id" class="trash-row"><span>{{s.name}}{{s.builtin||s.payload?.builtin?' · 内置':''}}</span><button :disabled="working||busy" @click="restore(s.id)">恢复</button></div></div>
   <p v-if="error" class="message error" role="alert">{{error}}</p><p v-if="message" class="message success" role="status">{{message}}</p>
   <template v-if="draft">
    <div class="scheme-heading-row"><div><h3>{{draft.name}}</h3><span class="muted">{{builtin?'内置方案 · 复制后可修改':dirty?'有未保存的修改':'方案设置已保存'}}</span></div><button class="primary" :disabled="builtin||working||locked||!draft.name?.trim()" @click="save()">保存方案</button></div>
@@ -119,6 +141,10 @@ async function restore(id){
     <label class="grow">气象资料<select v-model="draft.inputId" :disabled="builtin||locked"><option v-for="i in boot.inputs" :key="i.id" :value="i.id">{{i.name}} · {{i.manifest.start.slice(0,10)}} — {{i.manifest.end.slice(0,10)}}</option></select></label>
    </div>
    <fieldset class="scheme-periods"><legend>计算与评价时段</legend><label v-for="(label,key) in {warmupStart:'预热起日',trainingStart:'率定起日',trainingEnd:'率定止日（不含）',evaluationStart:'评价起日',evaluationEnd:'评价止日（不含）'}" :key="key">{{label}}<input type="date" :disabled="builtin||locked" :value="draft.periods[key].slice(0,10)" @input="draft.periods[key]=$event.target.value+'T00:00:00'"></label></fieldset>
+   <details class="lake-start"><summary>湖位起算设置</summary>
+    <div class="query-grid"><label>起算时间（北京时间）<input type="datetime-local" step="3600" v-model="draft.initialization.initialLakeTime" :disabled="builtin||locked"></label><label>初始湖位（m）<input type="number" min="4000" max="6500" step="any" v-model.number="draft.initialization.initialLakeLevel" :disabled="builtin||locked"></label><label class="grow">依据来源<input v-model="draft.initialization.initialLakeSource" :disabled="builtin||locked" placeholder="填写站点、日期和资料来源"></label></div>
+    <p class="note">修改起算条件时请核对来源；日值按12时代表不视作瞬时测量，请在来源中写明。</p>
+   </details>
    <div class="result-toolbar"><label>参数适用范围<select v-model="scope"><option value="background">其他分区共用</option><option v-for="r in regions" :key="r" :value="r">{{regionNames[r]||r}}</option></select></label><span class="muted">分区参数单独保存，未单独设置的分区使用共用值。</span></div>
    <div class="parameter-group-tabs"><button v-for="g in groups" :key="g" :class="{primary:g===group}" @click="group=g">{{labels[g]||g}}</button></div>
    <div class="table-wrap scheme-parameters"><table><thead><tr><th>参数</th><th>当前值</th><th>单位</th><th>允许范围</th></tr></thead><tbody><tr v-for="d in definitions" :key="d.key"><td :title="d.parameterBasis">{{d.label}}</td><td><input type="number" :min="d.min" :max="d.max" :step="d.step" :value="valueFor(d.key)" :disabled="builtin||locked" :aria-label="d.label" @input="setValue(d.key,$event)"></td><td>{{d.unit||'无量纲'}}</td><td>{{number(d.min,6)}} — {{number(d.max,6)}}</td></tr></tbody></table></div>

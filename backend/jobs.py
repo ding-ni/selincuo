@@ -40,6 +40,20 @@ class Jobs:
         self.restart_required = False
         with self.db.connect() as db:
             db.execute("UPDATE tasks SET status='interrupted',message='服务重启，任务已中断；可恢复原条件重新计算',updated_at=? WHERE status IN ('queued','running','stopping')", (now(),))
+        # Repair only update-status metadata if a crash occurred between its
+        # filesystem write and the database's final task transaction.
+        status_path = self.db.workspace / 'downloads/era5-land/latest-status.json'
+        try:
+            status = read_json(status_path, {})
+            task_id = status.get('taskId')
+            if task_id:
+                task = self.db.task(task_id)
+                if task['kind'] == 'update-forcing' and task['status'] == 'interrupted':
+                    status.update(status='interrupted', at=now(),
+                                  message='服务已重启；已完成资料及已登记输入均保留，可继续更新')
+                    write_json(status_path, status)
+        except (OSError, ValueError, FileNotFoundError):
+            pass
 
     def active(self):
         return self.db.rows("SELECT id,kind,status,progress,message FROM tasks WHERE status IN ('queued','running','stopping')")
@@ -287,6 +301,28 @@ class Jobs:
                 db.execute('UPDATE tasks SET progress=?,message=?,updated_at=? WHERE id=?',
                            (min(99.9, float(value)), message, now(), identifier))
 
+        def commit_forcing(result):
+            # Stopping and completion share this lock. A stop before this point
+            # cancels while keeping any registered inputs; a later stop sees a
+            # succeeded task and cannot turn a committed update into cancelled.
+            with self.lock:
+                if is_cancelled():
+                    raise InterruptedError('用户停止更新，已完成资料及已登记输入保留')
+                public_result = {**result, 'taskId': identifier}
+                status = {k: v for k, v in result.items() if k not in ('manifest', 'downloadedFiles')}
+                status['at'] = now()
+                status['taskId'] = identifier
+                if result.get('status') == 'up-to-date':
+                    status['status'] = 'succeeded'
+                    status['message'] = '气象资料已是当前可用版本'
+                write_json(folder / 'result.json', public_result)
+                write_json(self.db.workspace / 'downloads/era5-land/latest-status.json', status)
+                with self.db.connect() as connection:
+                    connection.execute("UPDATE tasks SET status='succeeded',result=?,progress=100,message=?,updated_at=? WHERE id=?",
+                                       (canonical(public_result), status.get('message') or '气象资料已登记', now(), identifier))
+                    connection.execute('INSERT INTO audit(at,action,payload) VALUES(?,?,?)',
+                                       (now(), 'task.succeeded', canonical({'id': identifier})))
+
         try:
             if is_cancelled():
                 raise InterruptedError('用户停止任务')
@@ -347,8 +383,10 @@ class Jobs:
                 result={'artifacts':[artifact],'termination':'completed','files':artifact['files']}
             elif kind == 'update-forcing':
                 from .forcing_latest import acquire_latest
-                result = acquire_latest(self.db, progress, is_cancelled,
-                                        start_date=request.get('startDate'), end_date=request.get('endDate'))
+                acquire_latest(self.db, progress, is_cancelled,
+                               start_date=request.get('startDate'), end_date=request.get('endDate'),
+                               commit=commit_forcing, task_id=identifier)
+                return
             elif kind == 'build-grid-spatial':
                 from .grid_spatial import build
                 result = build(progress)

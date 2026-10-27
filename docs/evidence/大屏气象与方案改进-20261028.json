@@ -1,0 +1,619 @@
+{
+  "snapshotAt": "2026-10-28T00:12:41.141639+08:00",
+  "scope": "大屏、方案保存与回收、真实ERA5-Land补数；本轮不重建EXE，不重算默认模型",
+  "health": {
+    "backendSourceSHA256": "3f847929f598ba0bd31e4ec8cc5826628d423c462c5cdc74285a4f982cf5ed74",
+    "instanceId": "2e622761b1134b91af509c241bb9f0de",
+    "projectId": "selinco",
+    "version": "0.11.0",
+    "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+  },
+  "numericalIdentity": "7ded4d4d20d6cc35a82d1aac43de62370ce9d7cba814b4c43cc7baa715a2c1d7",
+  "unchangedBuiltinSHA256": "3a85665510375c639aba424df13e3875acd284fc4082a6a5f9043a860d97c2fe",
+  "tests": [
+    {
+      "command": "node --test tests/dashboard.test.mjs tests/map-view.test.mjs tests/map-scale.test.mjs tests/frame-cache.test.mjs tests/shore-comparison.test.mjs tests/business-view.test.mjs",
+      "passed": 22
+    },
+    {
+      "command": "D:/miniconda3/python.exe -B -m unittest discover -s tests -p test_forcing_latest_resume.py -q",
+      "passed": 15
+    },
+    {
+      "command": "D:/miniconda3/python.exe -B -m unittest discover -s tests -p test_scheme_workflow.py -q",
+      "passed": 9
+    },
+    {
+      "command": "D:/miniconda3/python.exe -B -m unittest discover -s tests -p test_forcing_revisions.py -q",
+      "passed": 2
+    }
+  ],
+  "browser": {
+    "home": {
+      "url": "http://127.0.0.1:8882",
+      "screens": [
+        {
+          "width": 1920,
+          "height": 1080,
+          "scrollWidth": 1920,
+          "scrollHeight": 1080,
+          "map": {
+            "x": 613.328125,
+            "y": 231,
+            "width": 901.328125,
+            "height": 540.59375,
+            "top": 231,
+            "right": 1514.65625,
+            "bottom": 771.59375,
+            "left": 613.328125
+          },
+          "replay": {
+            "x": 222,
+            "y": 1010,
+            "width": 1684,
+            "height": 56,
+            "top": 1010,
+            "right": 1906,
+            "bottom": 1066,
+            "left": 222
+          },
+          "summary": {
+            "x": 1525.65625,
+            "y": 190,
+            "width": 380.328125,
+            "height": 582.59375,
+            "top": 190,
+            "right": 1905.984375,
+            "bottom": 772.59375,
+            "left": 1525.65625
+          },
+          "balance": {
+            "x": 1542.65625,
+            "y": 561.234375,
+            "width": 346.328125,
+            "height": 198.359375,
+            "top": 561.234375,
+            "right": 1888.984375,
+            "bottom": 759.59375,
+            "left": 1542.65625
+          },
+          "inflow": {
+            "x": 1542.65625,
+            "y": 203,
+            "width": 346.328125,
+            "height": 289.59375,
+            "top": 203,
+            "right": 1888.984375,
+            "bottom": 492.59375,
+            "left": 1542.65625
+          },
+          "total": {
+            "x": 1542.65625,
+            "y": 444.796875,
+            "width": 346.328125,
+            "height": 47.796875,
+            "top": 444.796875,
+            "right": 1888.984375,
+            "bottom": 492.59375,
+            "left": 1542.65625
+          },
+          "hydro": {
+            "x": 222,
+            "y": 190,
+            "width": 380.328125,
+            "height": 582.59375,
+            "top": 190,
+            "right": 602.328125,
+            "bottom": 772.59375,
+            "left": 222
+          },
+          "shores": {
+            "x": 239,
+            "y": 606.21875,
+            "width": 346.328125,
+            "height": 153.359375,
+            "top": 606.21875,
+            "right": 585.328125,
+            "bottom": 759.578125,
+            "left": 239
+          },
+          "lastShore": {
+            "x": 417.15625,
+            "y": 702.796875,
+            "width": 168.171875,
+            "height": 56.78125,
+            "top": 702.796875,
+            "right": 585.328125,
+            "bottom": 759.578125,
+            "left": 417.15625
+          }
+        },
+        {
+          "width": 1366,
+          "height": 768,
+          "scrollWidth": 1366,
+          "scrollHeight": 768,
+          "map": {
+            "x": 486.703125,
+            "y": 231,
+            "width": 600.578125,
+            "height": 292,
+            "top": 231,
+            "right": 1087.28125,
+            "bottom": 523,
+            "left": 486.703125
+          },
+          "replay": {
+            "x": 222,
+            "y": 698,
+            "width": 1130,
+            "height": 56,
+            "top": 698,
+            "right": 1352,
+            "bottom": 754,
+            "left": 222
+          },
+          "summary": {
+            "x": 1098.28125,
+            "y": 190,
+            "width": 253.703125,
+            "height": 334,
+            "top": 190,
+            "right": 1351.984375,
+            "bottom": 524,
+            "left": 1098.28125
+          },
+          "balance": {
+            "x": 1109.28125,
+            "y": 379.828125,
+            "width": 231.703125,
+            "height": 135.171875,
+            "top": 379.828125,
+            "right": 1340.984375,
+            "bottom": 515,
+            "left": 1109.28125
+          },
+          "inflow": {
+            "x": 1109.28125,
+            "y": 199,
+            "width": 231.703125,
+            "height": 171.375,
+            "top": 199,
+            "right": 1340.984375,
+            "bottom": 370.375,
+            "left": 1109.28125
+          },
+          "total": {
+            "x": 1109.28125,
+            "y": 332.984375,
+            "width": 231.703125,
+            "height": 37.390625,
+            "top": 332.984375,
+            "right": 1340.984375,
+            "bottom": 370.375,
+            "left": 1109.28125
+          },
+          "hydro": {
+            "x": 222,
+            "y": 190,
+            "width": 253.703125,
+            "height": 334,
+            "top": 190,
+            "right": 475.703125,
+            "bottom": 524,
+            "left": 222
+          },
+          "shores": {
+            "x": 233,
+            "y": 403.828125,
+            "width": 231.703125,
+            "height": 111.171875,
+            "top": 403.828125,
+            "right": 464.703125,
+            "bottom": 515,
+            "left": 233
+          },
+          "lastShore": {
+            "x": 353.84375,
+            "y": 477.8125,
+            "width": 110.859375,
+            "height": 37.1875,
+            "top": 477.8125,
+            "right": 464.703125,
+            "bottom": 515,
+            "left": 353.84375
+          }
+        }
+      ],
+      "checks": {
+        "oneScreenAtBothSizes": true,
+        "centralMapAndVisibleHydrologyPanels": true,
+        "technicalPartitionsHidden": true,
+        "modelRainUsesActualUnits": true,
+        "delayedRequestPreservesWholeFrame": true,
+        "lateResponseCannotReplaceLatestDay": true,
+        "failedRequestPreservesFrameAndRetries": true,
+        "playbackWholeFrames": [
+          "2024-11-07",
+          "2024-11-08",
+          "2024-11-09",
+          "2024-11-10",
+          "2024-11-11",
+          "2024-11-12",
+          "2024-11-13",
+          "2024-11-14",
+          "2024-11-15",
+          "2024-11-16"
+        ],
+        "terrainThenGridUsesRealMeteorologicalValues": {
+          "cells": 535,
+          "day": "2024-11-16",
+          "clickedValue": 0.0004351138045421976
+        },
+        "terrainSnowAndExactRiverBasinGeometry": true,
+        "monitoringIndependentOfSimulation": true
+      },
+      "errors": [],
+      "httpErrors": [],
+      "resultId": "JOB-2bac578f2ae646eaad18",
+      "health": {
+        "backendSourceSHA256": "3f847929f598ba0bd31e4ec8cc5826628d423c462c5cdc74285a4f982cf5ed74",
+        "instanceId": "2e622761b1134b91af509c241bb9f0de",
+        "projectId": "selinco",
+        "version": "0.11.0",
+        "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+      }
+    },
+    "businessPages": {
+      "errors": [],
+      "httpErrors": [],
+      "writes": [],
+      "checks": {
+        "builtinFieldsReadOnlyAndTrashAvailable": true,
+        "runningStrip": "补充气象资料\n10.1%\n停止",
+        "taskCenterTitle": "补充气象资料",
+        "mockMidnightFirstCompleteDay": "2023-04-20"
+      }
+    },
+    "mockOnly": [
+      "主动中断/延迟请求的故障场景",
+      "午夜起算显示",
+      "前期方案字段写入与重载使用隔离内存"
+    ]
+  },
+  "builtFrontend": [
+    {
+      "path": "frontend/dist/index.html",
+      "bytes": 412,
+      "sha256": "2a8b8dff460a34df2ec488b01993dfc6c62688ec5af907286f4887efeea3d0cf"
+    },
+    {
+      "path": "frontend/dist/assets/index-moaPGQu3.js",
+      "bytes": 810092,
+      "sha256": "f238fa2a147cd7c8340d0f0fd31cf18e1d42c5cea28a097c04e6c8c23ee432a9"
+    },
+    {
+      "path": "frontend/dist/assets/index-CqS66hKQ.css",
+      "bytes": 36447,
+      "sha256": "fced79d3eb9886c6a90e3715d5eb3dba81885b2260956b6e1a754593c0df4999"
+    }
+  ],
+  "buildRetention": {
+    "emptyOutDir": false,
+    "priorBuildRetained": true,
+    "note": "本轮早期构建曾沿用Vite默认清理旧编译产物行为，发现后已改正；原始资料与工作区未动。后续构建保留旧带摘要产物。"
+  },
+  "recycle": {
+    "action": "Windows SendToRecycleBin",
+    "at": "2026-10-27T22:44:32.5721700+08:00",
+    "items": [
+      {
+        "name": "SystemWorkspace.vue",
+        "bytes": 5871,
+        "sha256": "9bf9473eb21c4eb11b07e75f1059b382ca749e2010d7efae5f5dc950ab9d9394",
+        "verified": true
+      },
+      {
+        "name": "HelpCenter.vue",
+        "bytes": 7272,
+        "sha256": "6832ee1d12e9a8b3bb3cb08c9672bc8ed3def06b4ce55ea4fce43ce18acb1e9f",
+        "verified": true
+      }
+    ],
+    "schemeId": "SCHEME-ad0f68568a6249a18d7b",
+    "schemeTrashed": true,
+    "preservedTasks": [
+      {
+        "id": "JOB-08ff54773f4944b0a3f4",
+        "status": "succeeded",
+        "hasResult": true
+      },
+      {
+        "id": "JOB-2bac578f2ae646eaad18",
+        "status": "succeeded",
+        "hasResult": true
+      }
+    ],
+    "visibleSchemeIds": [
+      "selinco-comprehensive-continuous-v1"
+    ]
+  },
+  "era5": {
+    "snapshot": {
+      "status": "running",
+      "stage": "request",
+      "at": "2026-10-27T16:08:24+00:00",
+      "completed": [
+        "era5-land-201912-30-31-ef2164e64119ab55.nc",
+        "era5-land-202001-01-31-2edca6e8184ea38f.nc",
+        "era5-land-202002-01-29-4f31c214863b89cf.nc",
+        "era5-land-202003-01-31-29dc9e1cb186b4b5.nc",
+        "era5-land-202004-01-30-aacaea16c081caf1.nc",
+        "era5-land-202005-01-31-c4ebd403f91c40c2.nc"
+      ],
+      "requestedStartDate": "2020-01-01",
+      "requestedEndDate": "2022-12-31",
+      "updateId": "1efdcd8ecfbf437289bca256eb481e2c",
+      "taskId": "JOB-9cc92d0b181147bfabcc",
+      "catalog": {
+        "dataset": "reanalysis-era5-land",
+        "source": "https://cds.climate.copernicus.eu/api/catalogue/v1/collections/reanalysis-era5-land",
+        "checkedAt": "2026-10-27T16:05:14+00:00",
+        "catalogUpdated": "2026-10-27T00:00:00Z",
+        "availableStartUTC": "1950-01-01T00:00:00+00:00",
+        "availableEndUTC": "2026-10-21T00:00:00+00:00",
+        "policy": "latest-available; provisional files kept immutable; final complete local day verified from all three variables",
+        "variables": [
+          "2m_temperature",
+          "total_precipitation",
+          "potential_evaporation"
+        ],
+        "provisionalAllowed": true
+      },
+      "startUTC": "2019-12-30T00:00:00",
+      "requestedEndUTC": "2022-12-31T23:00:00",
+      "currentMonth": "2020-06",
+      "bytesExpected": 8746131,
+      "message": ""
+    },
+    "task": {
+      "id": "JOB-9cc92d0b181147bfabcc",
+      "kind": "update-forcing",
+      "status": "running",
+      "progress": 12.162162162162163,
+      "message": "2020-06：补齐官方逐时资料",
+      "updated_at": "2026-10-27T16:12:38+00:00"
+    },
+    "verifiedFiles": [
+      {
+        "name": "era5-land-201912-30-31-ef2164e64119ab55.nc",
+        "bytes": 483946,
+        "sha256": "973cd467024b70efdb2ac46c2754571d690baa60dc91cd791ddd194726d5b651",
+        "expver": [
+          "0001"
+        ],
+        "coverage": {
+          "temperature": {
+            "startUTC": "2019-12-30T00:00:00",
+            "endUTC": "2019-12-31T23:00:00",
+            "hours": 48,
+            "units": "K",
+            "accumulation": "instant"
+          },
+          "precipitation": {
+            "startUTC": "2019-12-30T00:00:00",
+            "endUTC": "2019-12-31T23:00:00",
+            "hours": 48,
+            "units": "m",
+            "accumulation": "accum"
+          },
+          "evaporation": {
+            "startUTC": "2019-12-30T00:00:00",
+            "endUTC": "2019-12-31T23:00:00",
+            "hours": 48,
+            "units": "m",
+            "accumulation": "accum"
+          }
+        }
+      },
+      {
+        "name": "era5-land-202001-01-31-2edca6e8184ea38f.nc",
+        "bytes": 7926591,
+        "sha256": "c5253347786edff25c6f18ef58e326f416c2dab74b0fd50557182e9984a2b784",
+        "expver": [
+          "0001"
+        ],
+        "coverage": {
+          "temperature": {
+            "startUTC": "2020-01-01T00:00:00",
+            "endUTC": "2020-01-31T23:00:00",
+            "hours": 744,
+            "units": "K",
+            "accumulation": "instant"
+          },
+          "precipitation": {
+            "startUTC": "2020-01-01T00:00:00",
+            "endUTC": "2020-01-31T23:00:00",
+            "hours": 744,
+            "units": "m",
+            "accumulation": "accum"
+          },
+          "evaporation": {
+            "startUTC": "2020-01-01T00:00:00",
+            "endUTC": "2020-01-31T23:00:00",
+            "hours": 744,
+            "units": "m",
+            "accumulation": "accum"
+          }
+        }
+      },
+      {
+        "name": "era5-land-202002-01-29-4f31c214863b89cf.nc",
+        "bytes": 7294642,
+        "sha256": "642e21b31ffab1c4b6eaa524750ef3becff6e8cd378985af97952cc191d0ed54",
+        "expver": [
+          "0001"
+        ],
+        "coverage": {
+          "temperature": {
+            "startUTC": "2020-02-01T00:00:00",
+            "endUTC": "2020-02-29T23:00:00",
+            "hours": 696,
+            "units": "K",
+            "accumulation": "instant"
+          },
+          "precipitation": {
+            "startUTC": "2020-02-01T00:00:00",
+            "endUTC": "2020-02-29T23:00:00",
+            "hours": 696,
+            "units": "m",
+            "accumulation": "accum"
+          },
+          "evaporation": {
+            "startUTC": "2020-02-01T00:00:00",
+            "endUTC": "2020-02-29T23:00:00",
+            "hours": 696,
+            "units": "m",
+            "accumulation": "accum"
+          }
+        }
+      },
+      {
+        "name": "era5-land-202003-01-31-29dc9e1cb186b4b5.nc",
+        "bytes": 8118736,
+        "sha256": "78c247475932afc73eee11ed0b612291a134e371eeb939a1fa1faa6f72ba8af4",
+        "expver": [
+          "0001"
+        ],
+        "coverage": {
+          "temperature": {
+            "startUTC": "2020-03-01T00:00:00",
+            "endUTC": "2020-03-31T23:00:00",
+            "hours": 744,
+            "units": "K",
+            "accumulation": "instant"
+          },
+          "precipitation": {
+            "startUTC": "2020-03-01T00:00:00",
+            "endUTC": "2020-03-31T23:00:00",
+            "hours": 744,
+            "units": "m",
+            "accumulation": "accum"
+          },
+          "evaporation": {
+            "startUTC": "2020-03-01T00:00:00",
+            "endUTC": "2020-03-31T23:00:00",
+            "hours": 744,
+            "units": "m",
+            "accumulation": "accum"
+          }
+        }
+      },
+      {
+        "name": "era5-land-202004-01-30-aacaea16c081caf1.nc",
+        "bytes": 8310215,
+        "sha256": "2c7b1cbb73c6c42c50c4fd8751fcd08e7cdb0b08d22693dc0ddc65cd9ca8e662",
+        "expver": [
+          "0001"
+        ],
+        "coverage": {
+          "temperature": {
+            "startUTC": "2020-04-01T00:00:00",
+            "endUTC": "2020-04-30T23:00:00",
+            "hours": 720,
+            "units": "K",
+            "accumulation": "instant"
+          },
+          "precipitation": {
+            "startUTC": "2020-04-01T00:00:00",
+            "endUTC": "2020-04-30T23:00:00",
+            "hours": 720,
+            "units": "m",
+            "accumulation": "accum"
+          },
+          "evaporation": {
+            "startUTC": "2020-04-01T00:00:00",
+            "endUTC": "2020-04-30T23:00:00",
+            "hours": 720,
+            "units": "m",
+            "accumulation": "accum"
+          }
+        }
+      },
+      {
+        "name": "era5-land-202005-01-31-c4ebd403f91c40c2.nc",
+        "bytes": 8746131,
+        "sha256": "983bbc27ef84e3f981d80800aad79cfffef84c38b192c477c92565f6f5bb1434",
+        "expver": [
+          "0001"
+        ],
+        "coverage": {
+          "temperature": {
+            "startUTC": "2020-05-01T00:00:00",
+            "endUTC": "2020-05-31T23:00:00",
+            "hours": 744,
+            "units": "K",
+            "accumulation": "instant"
+          },
+          "precipitation": {
+            "startUTC": "2020-05-01T00:00:00",
+            "endUTC": "2020-05-31T23:00:00",
+            "hours": 744,
+            "units": "m",
+            "accumulation": "accum"
+          },
+          "evaporation": {
+            "startUTC": "2020-05-01T00:00:00",
+            "endUTC": "2020-05-31T23:00:00",
+            "hours": 744,
+            "units": "m",
+            "accumulation": "accum"
+          }
+        }
+      }
+    ],
+    "mayRequestIds": [
+      "4fdecd1b-001d-44e1-bf6f-3716591c50dc"
+    ],
+    "mayReceiptCount": 1,
+    "wholeRequestedPeriodRegistered": false,
+    "note": "月份下载完成不等于整段入库；全部时段完成后才整理合并登记。2020为较早模拟准备预热资料，不代表长期初态已验证。"
+  },
+  "artifacts": [
+    {
+      "path": "build/首页调整最终验收-20261028/验收结果.json",
+      "bytes": 5823,
+      "sha256": "165d595f7b71a9958ba00629fde8d9761017a0a336ea69543974a1db27f14b7f"
+    },
+    {
+      "path": "build/首页调整最终验收-20261028/首页-1920.png",
+      "bytes": 236677,
+      "sha256": "3862bfc772a7c9bbeb606a65e34419d18dae67eb53973c62afbad2ef6a948b51"
+    },
+    {
+      "path": "build/首页调整最终验收-20261028/首页-1366.png",
+      "bytes": 166572,
+      "sha256": "27f3a4889a4d673817e1e51660fae530683e609bbd7ccd24fb44c7ab721643c7"
+    },
+    {
+      "path": "build/首页调整最终验收-20261028/地形叠加气象格网.png",
+      "bytes": 335225,
+      "sha256": "19f5a92be28ffcd908d65e97e55ffc91f453039ddd9cf8cd6e807aa44ec38866"
+    },
+    {
+      "path": "build/最终业务页面验收-20261027-2144/非首页最终检查.json",
+      "bytes": 286,
+      "sha256": "708f603e140692a13f8d8a1d489242fcaca4439ef5a872988857db461f181acc"
+    },
+    {
+      "path": "build/湖位起算页面核验-20261027/湖位起算检查.json",
+      "bytes": 283,
+      "sha256": "1135d112ccf65ab092d37bf1f33d9d6800aafad422e3f6597db134a9c61d0857"
+    },
+    {
+      "path": "build/方案页面核验-20261027/界面检查.json",
+      "bytes": 232,
+      "sha256": "dd876c4642606331bad6eabc0281025cb2fffd64942e050d687577bde56e8525"
+    }
+  ]
+}

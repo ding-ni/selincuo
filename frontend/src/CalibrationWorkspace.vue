@@ -36,7 +36,7 @@ watch(parameters,rows=>{if(parameterId.value&&!rows.some(p=>p.id===parameterId.v
  <section class="panel">
   <div class="panel-title"><h3>模型方案与率定</h3></div>
   <nav class="workspace-tabs"><button :class="{active:tab==='schemes'}" @click="tab='schemes'">方案与参数</button><button :class="{active:tab==='records'}" @click="tab='records'">试算与率定结果</button></nav>
-  <ResearchSchemes v-show="tab==='schemes'" :boot="boot" :locked="locked" :selected-id="schemeId" @selected="schemeId=$event" @refresh="emit('refresh')" @submit="run" @simulate="emit('simulate',$event)"/>
+  <ResearchSchemes v-show="tab==='schemes'" :boot="boot" :locked="locked" :busy="busy" :selected-id="schemeId" @selected="schemeId=$event" @refresh="emit('refresh')" @submit="run" @simulate="emit('simulate',$event)"/>
   <template v-if="tab==='records'">
    <p class="muted">选择一次计算结果，查看过程和指标，再保存实际使用的参数。</p>
    <div class="table-wrap"><table><thead><tr><th>名称</th><th>类型</th><th>时间</th><th>状态</th></tr></thead><tbody><tr v-for="t in records" :key="t.id" :class="{selected:t.id===detail?.id}"><td><button class="link" @click="emit('select',t.id)">{{t.name||'计算结果'}}</button></td><td>{{t.kind==='trial'?'试算':'率定'}}</td><td>{{(t.created_at||'').slice(0,16).replace('T',' ')}}</td><td>{{status(t)}}</td></tr></tbody></table></div>
@@ -45,7 +45,7 @@ watch(parameters,rows=>{if(parameterId.value&&!rows.some(p=>p.id===parameterId.v
  </section>
  <template v-if="tab==='records'&&detail">
   <p v-if="error" class="message error" role="alert">{{error}}</p><p v-if="message" class="message success" role="status">{{message}}</p>
-  <CalibrationTrace v-if="detail.result?.calibration" :task="detail"/>
+  <CalibrationTrace v-if="detail.result?.calibration" :task="detail" :definitions="boot.parameterDefinitions"/>
   <section v-if="detail.status==='succeeded'&&detail.result?.parameters" class="panel">
    <div class="panel-title"><h3>结果参数</h3><button :disabled="locked" @click="saveParameters">保存参数</button></div>
    <p class="muted">参数从这次已完成的计算结果读取，不使用页面中尚未运行的编辑值。</p>

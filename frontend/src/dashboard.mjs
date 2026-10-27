@@ -7,6 +7,14 @@ export const layers=[{id:'precipitation',label:'模型采用日降水',unit:'mm/
  {id:'basin',label:'流域分区',unit:'',colors:[],stops:[]}]
 export function colorFor(value,layer){if(value==null||!Number.isFinite(value))return 'transparent';let i=0;for(let j=0;j<layer.stops.length;j++)if(value>=layer.stops[j])i=j;return layer.colors[i]||'transparent'}
 export function exactValue(station,day){return station?.daily?.find(r=>r.date===day)?.value??null}
+export function basinRain(frame,units=[]){
+ const values=new Map((frame?.unitValues||[]).map(u=>[u.id,u.value]))
+ return rivers.filter(r=>r.id!=='fringe').map(r=>{
+  let total=0,area=0,missing=!frame?.complete
+  for(const u of units){const basin=['duja','zajia_rest'].includes(u.partition)?'zajia':u.basin||u.partition;if(basin!==r.id)continue;const value=values.get(u.id);if(value==null||!Number.isFinite(value))missing=true;else{total+=value*u.areaKm2;area+=u.areaKm2}}
+  return {...r,value:missing||!area?null:total/area}
+ })
+}
 export function timelineDates(mode,monitor,result){
  if(mode==='model')return (result?.daily||[]).map(r=>r.date.slice(0,10))
  const all=(monitor?.stations||[]).flatMap(s=>s.daily||[]).map(r=>r.date).sort()

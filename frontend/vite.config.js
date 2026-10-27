@@ -9,4 +9,4 @@ function localProxy(){return {target:developmentApi,changeOrigin:true,configure(
   if(origin){try{if(new URL(origin).host===incoming.headers.host)outgoing.setHeader('origin',new URL(developmentApi).origin)}catch{}}
  })
 }}}
-export default defineConfig({plugins:[vue()],server:{proxy:{'/api':localProxy(),'/spatial':localProxy()}},build:{chunkSizeWarningLimit:1200}})
+export default defineConfig({plugins:[vue()],server:{proxy:{'/api':localProxy(),'/spatial':localProxy()}},build:{emptyOutDir:false,chunkSizeWarningLimit:1200}})

@@ -40,7 +40,7 @@ onBeforeUnmount(()=>{ticket++;controller?.abort()})
 <template><div class="shore-comparison" :aria-busy="working">
  <form class="result-toolbar" @submit.prevent="query"><label>对照起日<input type="date" v-model="start" required></label><label>对照止日<input type="date" v-model="end" required></label><button class="primary">查询对照</button><button type="button" :disabled="!shoreRange" @click="shorePeriod">四岸资料时段</button><button type="button" class="link" :disabled="working||!rows.length" @click="exportRows">导出对照 ↓</button></form>
  <label>日值类型<select v-model="profile" @change="query"><option value="quality-v2">整编日值</option><option value="candidate">统计偏移分析</option></select></label><p class="note">主站采用工作基准；四岸基准待核。各站保留原值，相对涨落用于比较变化。</p>
- <p v-if="hasModel" class="muted">实测取当前资料目录，模拟取所选成果；该对照不重算冻结的评价指标与观测快照。点标记保留孤立有效日，缺测段不连线。</p>
+ <p v-if="hasModel" class="muted">实测取当前监测资料，模拟取所选成果；本次对照不会改变成果生成时保存的评价指标和观测资料。孤立有效日以点显示，缺测段不连线。</p>
  <p v-if="error" class="message error" role="alert">{{error}}</p>
  <p v-if="evaluationError" class="message error" role="alert">{{evaluationError}}</p>
  <nav class="workspace-tabs"><button v-for="v in [['relative','共同参考日涨落'],['raw','本站水位'],['difference','与主站同日差'],...(hasModel&&datumConfirmed?[['residual','绝对湖位残差']]:[])]" :key="v[0]" :class="{active:mode===v[0]}" @click="mode=v[0]">{{v[1]}}</button></nav>
