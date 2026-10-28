@@ -1,29 +1,56 @@
 """Versioned station location metadata; no observation or model changes."""
 import json
 import math
+from datetime import datetime, timedelta, timezone
 from .common import ROOT, canonical, now, read_json
 
 
-def datum_at(station_id, time):
-    """Resolve registered effective intervals without inventing a surveyed zero.
+def _local_instant(value):
+    instant=datetime.fromisoformat(value.replace('Z','+00:00'))
+    return instant.astimezone(timezone(timedelta(hours=8))).replace(tzinfo=None) if instant.tzinfo else instant
 
-    Undated records describe the unresolved current metadata; they never permit
-    an absolute conversion. Future survey entries can use half-open intervals.
+
+def datum_at(station_id, time, registry=None, end=None):
+    """Resolve one station's half-open datum period and a safe transformation.
+
+    For a daily value, ``end`` is the end of the whole local business day. A
+    shore period must have a measured source, start date and explicit relation
+    to the working reference. A level already expressed as an elevation needs
+    its surveyed reference offset; a gauge reading uses its surveyed zero.
+    Statistical candidates never satisfy these conditions.
     """
-    from datetime import datetime, timezone, timedelta
-    def local(value):
-        instant=datetime.fromisoformat(value.replace('Z','+00:00'))
-        return instant.astimezone(timezone(timedelta(hours=8))).replace(tzinfo=None) if instant.tzinfo else instant
-    instant=local(time)
-    registry=read_json(ROOT/'config/station-datums.json',{})
+    instant=_local_instant(time);stop=_local_instant(end) if end else None
+    if stop is not None and stop<=instant:raise ValueError('站点基准查询时段无效')
+    registry=registry if registry is not None else read_json(ROOT/'config/station-datums.json',{})
     matches=[r for r in registry.get('periods',[]) if r['stationId']==station_id
-             and (r.get('effectiveFrom') is None or local(r['effectiveFrom'])<=instant)
-             and (r.get('effectiveTo') is None or instant<local(r['effectiveTo']))]
+             and (r.get('effectiveFrom') is None or _local_instant(r['effectiveFrom'])<=instant)
+             and (r.get('effectiveTo') is None or instant<_local_instant(r['effectiveTo']))]
     if len(matches)>1:raise ValueError('站点基准生效时段重叠，请核对登记')
     record=matches[0] if matches else None
-    return {'stationId':station_id,'time':time,'period':record,
-            'absoluteConversionAvailable':bool(record and record.get('status')=='survey-verified'
-                and record.get('surveySource') and record.get('zeroElevationM') is not None)}
+    if record and stop:
+        overlaps=[r for r in registry.get('periods',[]) if r['stationId']==station_id
+                  and (r.get('effectiveFrom') is None or _local_instant(r['effectiveFrom'])<stop)
+                  and (r.get('effectiveTo') is None or instant<_local_instant(r['effectiveTo']))]
+        if len(overlaps)!=1 or (record.get('effectiveTo') and stop>_local_instant(record['effectiveTo'])):
+            record=None
+    method=None;offset=None;reason='零点高程未登记'
+    reference=registry.get('referenceStation')
+    if (record and station_id==reference and record.get('status')=='working-reference'
+            and record.get('recordType')=='water-level-record' and record.get('unit')=='m'):
+        method='working-reference';offset=0.;reason='主站工作基准'
+    elif (record and record.get('status')=='survey-verified' and record.get('surveySource')
+          and record.get('effectiveFrom') and record.get('referenceStation')==reference
+          and reference and record.get('unit')=='m'):
+        if record.get('recordType')=='water-gauge-reading':
+            offset=record.get('zeroElevationM');method='surveyed-gauge-zero'
+        elif record.get('recordType')=='water-level-record':
+            offset=record.get('referenceOffsetM');method='surveyed-reference-offset'
+        if isinstance(offset,bool) or not isinstance(offset,(int,float)) or not math.isfinite(offset):
+            offset=None;method=None;reason='实测基准转换关系未登记'
+        else:reason='实测基准已登记'
+    return {'stationId':station_id,'time':time,'period':record,'reason':reason,
+            'absoluteConversionAvailable':offset is not None,'referenceStation':reference,
+            'method':method,'referenceOffsetM':offset}
 
 
 def wgs84_to_gcj02(lon, lat):

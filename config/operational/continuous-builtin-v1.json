@@ -3,8 +3,8 @@
   "name": "色林错综合模拟方案",
   "schemaVersion": 2,
   "modelFamily": "grid-continuous-v1",
-  "spatialVersion": "AGG-SPATIAL-e5960a39dda5d4247cc6",
-  "inputId": "INPUT-479ada7cc12ab8dd892a716d",
+  "spatialVersion": "AGG-SPATIAL-dbb6e03518db589dc16f",
+  "inputId": "INPUT-fc731ba1bf2b5e79d3e03d92",
   "parameters": {
     "KC": 0.7294530893648382,
     "WM": 226.55679731833598,
@@ -218,8 +218,11 @@
     }
   },
   "evidence": {
-    "spatialComparison": "docs/E3同新域聚合顺序受控诊断-20261027.md",
-    "note": "沿用已有参数及同新域面积聚合；长期初态与未核实排水去向仍有限制，2025和2026并非未触碰的独立验证。"
+    "spatialComparison": "docs/第二轮空间归属与剩余资料-20261028.md",
+    "numericalComparison": "docs/evidence/第二轮空间完整期对照-20261028-152049-2fca47.json",
+    "shortComparison": "docs/evidence/第二轮空间短期对照-20261028-151648-b08348.json",
+    "previousComparison": "docs/E3同新域聚合顺序受控诊断-20261027.md",
+    "note": "沿用完整全局及杜加参数、原固定湖位起算和31组结构；90米DEM保守追踪使93.219146平方公里获得入湖归属，2247.523850平方公里仍单列。气象重叠期值未改、湖面订正一次；长期初态和出口资料仍有限制，2025和2026并非未触碰的独立验证。"
   },
-  "resultId": "JOB-2bac578f2ae646eaad18"
+  "resultId": "JOB-f671b2a7af4d472cb70b"
 }

@@ -1,7 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {lakeStations,compareShoreLevels,stationLocation,commonLakeDatum} from '../frontend/src/shore-comparison.mjs'
+import {lakeStations,compareShoreLevels,stationLocation} from '../frontend/src/shore-comparison.mjs'
 const sample=()=>Object.fromEntries(lakeStations.map((s,i)=>[s.id,[{time:'2025-01-01',value:100+i},{time:'2025-01-02',value:101+i},{time:'2025-01-03',value:102+i}]]))
+const withReferences=data=>{for(const rows of Object.values(data))for(const row of rows){row.referenceValue=row.value;row.referenceDatum={available:true,referenceStation:'SLC'}}return data}
 
 test('same-day diagnostics preserve original offsets and missing days',()=>{
  const data=sample();data['SLC-N'][1].value=null;data.SLC[2].value=null
@@ -38,7 +39,7 @@ test('station provenance accepts API JSON metadata without discarding raw coordi
 })
 
 test('absolute model evaluation keeps offsets and offers equal-date samples without filling gaps',()=>{
- const data=sample();data['SLC-N'][1].value=null
+ const data=sample();data['SLC-N'][1].value=null;withReferences(data)
  const r=compareShoreLevels(data,[{date:'2025-01-01',lakeLevel:100},{date:'2025-01-02',lakeLevel:101},{date:'2025-01-03',lakeLevel:null}])
  assert.equal(r.evaluation[0].count,2)
  assert.equal(r.evaluation[1].count,1)
@@ -52,16 +53,22 @@ test('absolute model evaluation keeps offsets and offers equal-date samples with
  assert.equal(r.residual[2].SLC,null)
 })
 
-test('absolute evaluation needs datum and zero confirmation for all five stations',()=>{
- const stations=lakeStations.map(s=>({...s,metadata:JSON.stringify({datumVerified:true,verticalDatum:{referenceStation:'SLC',zeroUnified:true}})}))
- assert.equal(commonLakeDatum(stations),true)
- assert.equal(commonLakeDatum(stations.slice(1)),false)
- stations[1].metadata=JSON.stringify({datumVerified:false,verticalDatum:{referenceStation:'SLC',zeroUnified:true}})
- assert.equal(commonLakeDatum(stations),false)
+test('absolute evaluation requires the independently resolved reference for each station and day',()=>{
+ const data=sample(),main=data.SLC,north=data['SLC-N']
+ for(const row of main){row.referenceValue=row.value;row.referenceDatum={available:true,referenceStation:'SLC'}}
+ north[1].referenceValue=99;north[1].referenceDatum={available:true,referenceStation:'SLC'}
+ north[2].referenceValue=99;north[2].referenceDatum={available:false,referenceStation:'SLC'}
+ const r=compareShoreLevels(data,[{date:'2025-01-01',lakeLevel:100},{date:'2025-01-02',lakeLevel:101},{date:'2025-01-03',lakeLevel:102}])
+ assert.deepEqual(r.referenceStations,['SLC','SLC-N'])
+ assert.equal(r.evaluation[0].count,3);assert.equal(r.evaluation[1].count,1)
+ assert.equal(r.evaluation[1].bias,2);assert.equal(r.residual[0]['SLC-N'],null)
+ assert.equal(r.residual[1]['SLC-N'],2);assert.equal(r.residual[2]['SLC-N'],null)
+ assert.equal(r.evaluation[2].count,0);assert.equal(r.commonModelDays,0)
+ assert.equal(r.rows[1]['SLC-N'],102)
 })
 
 test('initialization days remain visible but cannot score their own anchor',()=>{
- const r=compareShoreLevels(sample(),[{date:'2025-01-01',lakeLevel:100},{date:'2025-01-02',lakeLevel:101}],['2025-01-01'])
+ const r=compareShoreLevels(withReferences(sample()),[{date:'2025-01-01',lakeLevel:100},{date:'2025-01-02',lakeLevel:101}],['2025-01-01'])
  assert.equal(r.rows[0].model,100)
  assert.equal(r.evaluation[0].count,1)
  assert.equal(r.evaluation[0].start,'2025-01-02')

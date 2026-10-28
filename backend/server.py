@@ -181,7 +181,7 @@ class Handler(SimpleHTTPRequestHandler):
             from .release_registry import current as current_release
             annual_ready = any(i['compatible'] and i['manifest']['start'] <= '2023-01-01T00:00:00' and i['manifest']['end'] >= '2026-01-01T00:00:00' for i in inputs)
             from .grid_spatial import current as grid_current
-            from .research_schemes import builtin, list_schemes
+            from .research_schemes import builtin, list_schemes, list_parameters
             from .business_context import builtin_result_available
             try:
                 grid=grid_current()
@@ -204,7 +204,7 @@ class Handler(SimpleHTTPRequestHandler):
                                    'spatialResourceMessage': spatial_message, 'operationalSchemesMessage': operational_message,
                                    'contextKey': CONTEXT_KEY, 'spatial': summary, 'database': self.db.summary(),
                                    'stations': self.db.rows('SELECT * FROM stations ORDER BY id'),
-                                   'inputs': inputs, 'parameters': self.db.items('parameter_versions'),
+                                   'inputs': inputs, 'parameters': list_parameters(self.db),
                                    'schemes': list_schemes(self.db),
                                    'operationalSchemes': operational_schemes,
                                    'publishedResults': published_catalog(), 'standardResultId': current_release(self.db)['resultId'],
@@ -241,12 +241,7 @@ class Handler(SimpleHTTPRequestHandler):
             return self.send_json(page(self.db, query))
         if path == 'datum-candidates':
             from .observation_profiles import datum_candidates
-            candidate=datum_candidates(self.db)
-            target=self.db.workspace/'reports/observation-candidates'/(candidate['id']+'.json')
-            if not target.exists():
-                write_json(target,candidate);self.db.log('analysis.datum-candidate',{'id':candidate['id'],'sources':candidate['observationSourcesSHA256']})
-            elif digest(read_json(target))!=digest(candidate):raise ValueError('已归档零点候选与当前摘要不一致')
-            return self.send_json(candidate)
+            return self.send_json(datum_candidates(self.db))
         if path == 'station-datum':
             from .stations import datum_at
             return self.send_json(datum_at(query['stationId'], query['time']))
@@ -257,21 +252,26 @@ class Handler(SimpleHTTPRequestHandler):
             from .research_schemes import list_schemes
             return self.send_json({'schemes': list_schemes(self.db, query.get('includeTrashed') == 'true')})
         if path == 'parameters':
-            return self.send_json({'parameters': self.db.items('parameter_versions')})
+            from .research_schemes import list_parameters
+            return self.send_json({'parameters': list_parameters(self.db, query.get('includeTrashed') == 'true')})
         if path == 'spatial-version':
             from .grid_spatial import load
             return self.send_json(load(query['version']))
         if path == 'forcing-coverage':
             from .forcing_latest import availability
+            from .model_forcing import current_summary
             folder=self.db.workspace/'downloads/era5-land'
             meta=availability() if query.get('check')=='true' else read_json(folder/'latest-catalog.json')
             if query.get('check')=='true':write_json(folder/'latest-catalog.json',meta)
-            return self.send_json({'catalog':meta,'update':read_json(folder/'latest-status.json'),'inputs':self.db.items('input_products')})
+            return self.send_json({'catalog':meta,'update':read_json(folder/'latest-status.json'),'current':current_summary(self.db)})
         if path == 'search-progress':
             self.db.task(query['taskId'])
             value=read_json(within(self.db.workspace/'tasks',query['taskId'])/'search-progress.json',{'trace':[]})
             trace=value.get('trace',[]);after=max(0,int(query.get('after',0)))
             return self.send_json({**value,'trace':trace[after:],'count':len(trace)})
+        if path == 'result-range':
+            from .result_query import range_for
+            return self.send_json(range_for(self.db, query))
         if path in ('result-capabilities', 'result-series', 'result-frame', 'result-checkpoint'):
             from .result_query import metadata, read, final
             if path == 'result-capabilities': return self.send_json(metadata(self.db, query['resultId']))
@@ -507,6 +507,15 @@ class Handler(SimpleHTTPRequestHandler):
         if path == 'parameters/from-task':
             from .research_schemes import save_parameters_from_task
             return self.send_json(save_parameters_from_task(self.db, value.get('taskId'), value.get('name')))
+        if path.startswith('parameters/'):
+            parts = path.split('/')
+            if len(parts) != 3 or parts[2] != 'metadata':
+                raise FileNotFoundError('接口不存在')
+            if not isinstance(value.get('trashed'), bool):
+                raise ValueError('请指定是否移入回收站')
+            from .research_schemes import parameter_metadata
+            with self.server.jobs.lock:
+                return self.send_json(parameter_metadata(self.db, parts[1], value['trashed']))
         if path.startswith('schemes/'):
             parts = path.split('/')
             if len(parts) != 3:

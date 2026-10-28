@@ -1,0 +1,118 @@
+{
+  "at": "2026-10-28T07:16:48+00:00",
+  "shortEvaluation": "2024-06-01—2024-07-31",
+  "warmup": "2024-05-01—2024-05-31（独立短期诊断，不改变业务一年预热门槛）",
+  "durationSeconds": 9.36,
+  "forcingCoverage": {
+    "start": "2019-12-30T09:00:00",
+    "end": "2026-10-21T07:00:00",
+    "hours": 59687,
+    "firstCompleteDay": "2019-12-31",
+    "lastCompleteDay": "2026-10-20",
+    "variables": [
+      "降水",
+      "气温",
+      "蒸发能力"
+    ],
+    "complete": true
+  },
+  "results": {
+    "old": {
+      "days": 61,
+      "totalMeanM3s": 191.37429118603276,
+      "dujaMeanM3s": 119.30451273746556,
+      "lakeLastM": 4544.534882866,
+      "lakeInflowM3": 1008619064.2668469,
+      "lakePrecipitationM3": 271277315.2898368,
+      "lakeEvaporationM3": 751668944.3768846,
+      "lakeDeltaVolumeM3": 528227435.1797994,
+      "snowmeltMm": 6.7417583042,
+      "icemeltMm": 6.7428821490000015,
+      "etMm": 173.7155962391,
+      "excludedRunoff": 18566733.436046466,
+      "lakeDailyBalanceMaxAbsM3": 3.7e-09,
+      "landGlacierMaxBalanceErrorMm": 1.1399908794729186e-13,
+      "routingMaxBalanceErrorM3": 1.7881393432617188e-07,
+      "initialization": {
+        "time": "2024-05-01T12:00:00",
+        "level": 4544.35,
+        "method": "user-known-level",
+        "source": "主站2024-05-01质量控制日值按当日12时代表，并非已核实的瞬时实测",
+        "reference": "SLC-working-datum"
+      },
+      "inputId": "INPUT-fc731ba1bf2b5e79d3e03d92",
+      "spatialVersion": "AGG-SPATIAL-e5960a39dda5d4247cc6",
+      "identity": {
+        "projectId": "selinco",
+        "modelFamily": "grid-continuous-v1",
+        "modelImplementation": "d0e305a5d3cd7193ef81628073bdfe769883a506bf9b936a490622ef28013f08",
+        "spatialVersion": "AGG-SPATIAL-e5960a39dda5d4247cc6",
+        "parameterSHA256": "d4c46990d931f2a8e321ea3a14a516e72df4f66bf73325ba22c236211958a90b",
+        "partitionParameterSHA256": "6d1a7cd7402073c79eb9f5ba7a213bb3d46205b111def511d34ad67c5868d666",
+        "initializationSHA256": "462cfcc92468c57c58ab49d1cd958c737a150b41b66d8523bcb0542acd79edd3",
+        "observationProfile": "time-weighted-level-v2-gap6h-cover18h",
+        "observationSnapshotSHA256": "d5871d988ca451820df0508982ce2646b7cb071f0e32ae678d779effb91f2dd9",
+        "forcingGridSHA256": "e0ea22478c85fc3c8c87fe868c15de68516a220632e6d0b11ac943941f63ca3e",
+        "forcingTransformationSHA256": "a28542996c03152f4bc7fcdbec1510a7cabbb4843c3fa51e928b49b5f135d458",
+        "routingMode": "source-separated"
+      }
+    },
+    "new": {
+      "days": 61,
+      "totalMeanM3s": 191.60060543162294,
+      "dujaMeanM3s": 119.30663182247542,
+      "lakeLastM": 4544.5353882229,
+      "lakeInflowM3": 1009811830.8668125,
+      "lakePrecipitationM3": 271277315.2898368,
+      "lakeEvaporationM3": 751668944.3768846,
+      "lakeDeltaVolumeM3": 529420201.7797646,
+      "snowmeltMm": 6.753453522,
+      "icemeltMm": 6.7428821490000015,
+      "etMm": 173.70564783679998,
+      "excludedRunoff": 17963985.598542657,
+      "lakeDailyBalanceMaxAbsM3": 3.7e-09,
+      "landGlacierMaxBalanceErrorMm": 1.1399908794729186e-13,
+      "routingMaxBalanceErrorM3": 2.384185791015625e-07,
+      "initialization": {
+        "time": "2024-05-01T12:00:00",
+        "level": 4544.35,
+        "method": "user-known-level",
+        "source": "主站2024-05-01质量控制日值按当日12时代表，并非已核实的瞬时实测",
+        "reference": "SLC-working-datum"
+      },
+      "inputId": "INPUT-fc731ba1bf2b5e79d3e03d92",
+      "spatialVersion": "AGG-SPATIAL-dbb6e03518db589dc16f",
+      "identity": {
+        "projectId": "selinco",
+        "modelFamily": "grid-continuous-v1",
+        "modelImplementation": "d0e305a5d3cd7193ef81628073bdfe769883a506bf9b936a490622ef28013f08",
+        "spatialVersion": "AGG-SPATIAL-dbb6e03518db589dc16f",
+        "parameterSHA256": "d4c46990d931f2a8e321ea3a14a516e72df4f66bf73325ba22c236211958a90b",
+        "partitionParameterSHA256": "6d1a7cd7402073c79eb9f5ba7a213bb3d46205b111def511d34ad67c5868d666",
+        "initializationSHA256": "462cfcc92468c57c58ab49d1cd958c737a150b41b66d8523bcb0542acd79edd3",
+        "observationProfile": "time-weighted-level-v2-gap6h-cover18h",
+        "observationSnapshotSHA256": "d5871d988ca451820df0508982ce2646b7cb071f0e32ae678d779effb91f2dd9",
+        "forcingGridSHA256": "e0ea22478c85fc3c8c87fe868c15de68516a220632e6d0b11ac943941f63ca3e",
+        "forcingTransformationSHA256": "a28542996c03152f4bc7fcdbec1510a7cabbb4843c3fa51e928b49b5f135d458",
+        "routingMode": "source-separated"
+      }
+    }
+  },
+  "newMinusOld": {
+    "totalMeanM3s": 0.22631424559017432,
+    "dujaMeanM3s": 0.0021190850098662395,
+    "lakeLastM": 0.0005053569002484437,
+    "lakeInflowM3": 1192766.5999655724,
+    "lakePrecipitationM3": 0.0,
+    "lakeEvaporationM3": 0.0,
+    "lakeDeltaVolumeM3": 1192766.5999652147,
+    "snowmeltMm": 0.011695217799999824,
+    "icemeltMm": 0.0,
+    "etMm": -0.009948402300011594,
+    "excludedRunoff": -602747.8375038095
+  },
+  "limitations": [
+    "短预热仅量化空间变更的近似影响，不能作为长期初态或科学精度验证。",
+    "积雪/冰川融水以模型单元面积加权的流域平均深度表示。"
+  ]
+}

@@ -20,9 +20,8 @@ _forcing = {}
 
 def monitoring(db):
     # Revisions and coverage confirmations invalidate the observation product.
-    with db.connect() as conn:
-        key = (str(db.workspace), tuple(conn.execute('SELECT COUNT(*),MAX(id) FROM audit').fetchone()),
-               tuple(conn.execute('SELECT COUNT(*),MAX(id) FROM observations').fetchone()))
+    from .observation_query import revision
+    key = revision(db)
     with _lock:
         if key in _observations:
             return _observations[key]
@@ -32,10 +31,15 @@ def monitoring(db):
             variable = {'lake':'level','river':'flow','rain':'precipitation'}.get(station['kind'])
             station['variable'] = variable
             from .observation_profiles import series as query_series
-            rows = query_series(db, station['id'], variable,profile='quality-v2')['rows'] if variable else []
-            station['daily'] = [{'date':r['time'][:10],'value':r['value']} for r in rows]
-            rain_rows=query_series(db,station['id'],'precipitation',profile='quality-v2')['rows']
-            station['rainDaily']=[{'date':r['time'][:10],'value':r['value']} for r in rain_rows]
+            try:
+                series = query_series(db, station['id'], variable,profile='quality-v2') if variable else {'rows':[]}
+                station['coverage'] = series.get('coverage', {})
+                station['daily'] = [{'date':r['time'][:10],'value':r['value'],
+                                     'quality':r.get('quality'),'reason':r.get('reason')} for r in series['rows']]
+                rain_rows=query_series(db,station['id'],'precipitation',profile='quality-v2')['rows']
+                station['rainDaily']=[{'date':r['time'][:10],'value':r['value']} for r in rain_rows]
+            except (ValueError, OSError, RuntimeError) as exc:
+                station.update(daily=[],rainDaily=[],coverage={},error=str(exc))
             valid = [r for r in station['daily'] if r['value'] is not None]
             station['latest'] = valid[-1] if valid else None
             station['located'] = station['lon'] is not None and station['lat'] is not None

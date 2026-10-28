@@ -1,0 +1,395 @@
+{
+  "at": "2026-10-28T07:20:49+00:00",
+  "durationSeconds": 106.59,
+  "schemeId": "SCHEME-688ab9ae904744a08d0d",
+  "resultId": "JOB-f671b2a7af4d472cb70b",
+  "oldResultId": "JOB-2bac578f2ae646eaad18",
+  "newSpatialVersion": "AGG-SPATIAL-dbb6e03518db589dc16f",
+  "oldSpatialVersion": "AGG-SPATIAL-e5960a39dda5d4247cc6",
+  "inputId": "INPUT-fc731ba1bf2b5e79d3e03d92",
+  "initialization": {
+    "level": 4544.03,
+    "method": "user-known-level",
+    "reference": "SLC-working-datum",
+    "source": "主站2023-04-20质量控制日值取当日12时作为代表锚点；该时刻并非已核实的瞬时实测",
+    "time": "2023-04-20T12:00:00"
+  },
+  "identity": {
+    "forcingGridSHA256": "e0ea22478c85fc3c8c87fe868c15de68516a220632e6d0b11ac943941f63ca3e",
+    "forcingTransformationSHA256": "a28542996c03152f4bc7fcdbec1510a7cabbb4843c3fa51e928b49b5f135d458",
+    "initializationSHA256": "fcac43e3a618b74ad5496b86e55ca3d4c2150778dc99b88dd41e82ea86d65f9b",
+    "modelFamily": "grid-continuous-v1",
+    "modelImplementation": "d0e305a5d3cd7193ef81628073bdfe769883a506bf9b936a490622ef28013f08",
+    "observationProfile": "time-weighted-level-v2-gap6h-cover18h",
+    "observationSnapshotSHA256": "d5871d988ca451820df0508982ce2646b7cb071f0e32ae678d779effb91f2dd9",
+    "parameterSHA256": "d4c46990d931f2a8e321ea3a14a516e72df4f66bf73325ba22c236211958a90b",
+    "partitionParameterSHA256": "6d1a7cd7402073c79eb9f5ba7a213bb3d46205b111def511d34ad67c5868d666",
+    "projectId": "selinco",
+    "routingMode": "source-separated",
+    "spatialVersion": "AGG-SPATIAL-dbb6e03518db589dc16f"
+  },
+  "diagnostics": {
+    "lakeAreaKm2": 2422.199823361506,
+    "lakeWindows": [
+      {
+        "initialization": "user-known-level",
+        "start": "2023-04-20T12:00:00"
+      }
+    ],
+    "landGlacierMaxBalanceErrorMm": 7.830180958918326e-11,
+    "partitions": {
+      "ali": {
+        "generatedM3": 503636920.59867585,
+        "routedM3": 502707630.8483366
+      },
+      "boqu": {
+        "generatedM3": 73922627.04662585,
+        "routedM3": 73727099.14811134
+      },
+      "duja": {
+        "generatedM3": 5508111643.721128,
+        "routedM3": 5380287992.534666
+      },
+      "external": {
+        "generatedM3": 0.0,
+        "routedM3": 0.0
+      },
+      "fringe": {
+        "generatedM3": 75605951.19303493,
+        "routedM3": 75495953.81387484
+      },
+      "unresolved": {
+        "generatedM3": 143498019.53154576,
+        "routedM3": 143233384.43243575
+      },
+      "zagen": {
+        "generatedM3": 2705855207.179932,
+        "routedM3": 2702805721.476256
+      },
+      "zajia_rest": {
+        "generatedM3": 67621103.73703568,
+        "routedM3": 67541728.88927463
+      }
+    },
+    "routingMaxBalanceErrorM3": 5.364418029785156e-07
+  },
+  "comparison": {
+    "commonDays": 1389,
+    "daily": {
+      "total": {
+        "unit": "m³/s",
+        "pairedDays": 1389,
+        "meanNewMinusOld": 0.09558400453866106,
+        "maxAbsoluteDifference": 0.9896198402999801
+      },
+      "duja": {
+        "unit": "m³/s",
+        "pairedDays": 1389,
+        "meanNewMinusOld": 0.0007830790526996971,
+        "maxAbsoluteDifference": 0.009041011899967089
+      },
+      "lakeLevel": {
+        "unit": "m",
+        "pairedDays": 1279,
+        "meanNewMinusOld": 0.002739728664739852,
+        "maxAbsoluteDifference": 0.0047350580998681835
+      },
+      "snowmeltMm": {
+        "unit": "mm/day",
+        "pairedDays": 1389,
+        "meanNewMinusOld": 4.387174168466473e-05,
+        "maxAbsoluteDifference": 0.019743975899999988
+      },
+      "icemeltMm": {
+        "unit": "mm/day",
+        "pairedDays": 1389,
+        "meanNewMinusOld": 0.0,
+        "maxAbsoluteDifference": 0.0
+      },
+      "lakeInflowM3": {
+        "unit": "m³/day",
+        "pairedDays": 1389,
+        "meanNewMinusOld": 8258.45799209778,
+        "maxAbsoluteDifference": 85503.15420747176
+      },
+      "lakeDeltaVolumeM3": {
+        "unit": "m³/day",
+        "pairedDays": 1389,
+        "meanNewMinusOld": 8258.457992097807,
+        "maxAbsoluteDifference": 85503.15420747548
+      }
+    },
+    "annualCommonObservations": {
+      "2023": {
+        "lake": {
+          "pairedDays": 221,
+          "old": {
+            "logNse": 0.9361949475353722,
+            "count": 221,
+            "nse": 0.9361925804334024,
+            "kge": 0.9052109274057606,
+            "rmse": 0.06714728682668865,
+            "mae": 0.05920364364391805,
+            "bias": -0.01025410906017423,
+            "pbias": -0.00022564969332437908,
+            "observedMean": 4544.2601357466065,
+            "simulatedMean": 4544.2498816375455
+          },
+          "new": {
+            "logNse": 0.9357631257944261,
+            "count": 221,
+            "nse": 0.9357606496030698,
+            "kge": 0.9026996502373738,
+            "rmse": 0.06737417318713777,
+            "mae": 0.05936054076022324,
+            "bias": -0.009530566622619748,
+            "pbias": -0.00020972757584120804,
+            "observedMean": 4544.2601357466065,
+            "simulatedMean": 4544.250605179984
+          }
+        },
+        "duja": {
+          "pairedDays": 0,
+          "old": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          },
+          "new": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          }
+        }
+      },
+      "2024": {
+        "lake": {
+          "pairedDays": 232,
+          "old": {
+            "logNse": 0.7582518104162469,
+            "count": 232,
+            "nse": 0.7582489035492916,
+            "kge": 0.8677623459424577,
+            "rmse": 0.06375605942112306,
+            "mae": 0.05344759190734686,
+            "bias": 0.0050307086806061965,
+            "pbias": 0.00011069834320461951,
+            "observedMean": 4544.520301724137,
+            "simulatedMean": 4544.525332432819
+          },
+          "new": {
+            "logNse": 0.7539748974394405,
+            "count": 232,
+            "nse": 0.7539716770696274,
+            "kge": 0.8650048083859411,
+            "rmse": 0.06431759454643618,
+            "mae": 0.05356759099656913,
+            "bias": 0.007481791300039794,
+            "pbias": 0.00016463324626806683,
+            "observedMean": 4544.520301724137,
+            "simulatedMean": 4544.5277835154375
+          }
+        },
+        "duja": {
+          "pairedDays": 229,
+          "old": {
+            "logNse": 0.00731138319271718,
+            "count": 229,
+            "nse": 0.5290882590961481,
+            "kge": 0.5633715450740188,
+            "rmse": 59.36707567779899,
+            "mae": 36.5854399191214,
+            "bias": -4.2877624339641915,
+            "pbias": -5.3002488320304435,
+            "observedMean": 80.89737991266375,
+            "simulatedMean": 76.60961747869956
+          },
+          "new": {
+            "logNse": 0.007314759751451239,
+            "count": 229,
+            "nse": 0.5290930180520107,
+            "kge": 0.5633840040858431,
+            "rmse": 59.36677570013641,
+            "mae": 36.585855504814404,
+            "bias": -4.286353520082532,
+            "pbias": -5.298507225709966,
+            "observedMean": 80.89737991266375,
+            "simulatedMean": 76.61102639258122
+          }
+        }
+      },
+      "2025": {
+        "lake": {
+          "pairedDays": 255,
+          "old": {
+            "logNse": 0.49485891813195704,
+            "count": 255,
+            "nse": 0.49486373506046544,
+            "kge": 0.7195820295275928,
+            "rmse": 0.0623081703240855,
+            "mae": 0.05146773724551239,
+            "bias": 0.04887414926826536,
+            "pbias": 0.0010755279820435632,
+            "observedMean": 4544.200623716154,
+            "simulatedMean": 4544.24949786542
+          },
+          "new": {
+            "logNse": 0.4504272187783964,
+            "count": 255,
+            "nse": 0.4504322087854211,
+            "kge": 0.7202554735766041,
+            "rmse": 0.06499072174965609,
+            "mae": 0.05430640940311266,
+            "bias": 0.052412222068215115,
+            "pbias": 0.0011533870620649112,
+            "observedMean": 4544.200623716154,
+            "simulatedMean": 4544.253035938221
+          }
+        },
+        "duja": {
+          "pairedDays": 211,
+          "old": {
+            "logNse": 0.43156234118623915,
+            "count": 211,
+            "nse": 0.7255260468505084,
+            "kge": 0.8515684989857126,
+            "rmse": 19.878700499433798,
+            "mae": 14.192705371621802,
+            "bias": -1.448862309237915,
+            "pbias": -2.955195467196658,
+            "observedMean": 49.027630331753564,
+            "simulatedMean": 47.578768022515646
+          },
+          "new": {
+            "logNse": 0.431569632243226,
+            "count": 211,
+            "nse": 0.7255238028296047,
+            "kge": 0.8515700897819902,
+            "rmse": 19.878781760565815,
+            "mae": 14.192768648530805,
+            "bias": -1.4487357949109008,
+            "pbias": -2.9549374202012024,
+            "observedMean": 49.027630331753564,
+            "simulatedMean": 47.57889453684265
+          }
+        }
+      },
+      "2026": {
+        "lake": {
+          "pairedDays": 80,
+          "old": {
+            "logNse": -0.46561389712506407,
+            "count": 80,
+            "nse": -0.4656108795471512,
+            "kge": 0.4767829293696122,
+            "rmse": 0.07552416500216731,
+            "mae": 0.06977774194374434,
+            "bias": -0.05442577498624814,
+            "pbias": -0.0011977617085252529,
+            "observedMean": 4543.956832053014,
+            "simulatedMean": 4543.902406278028
+          },
+          "new": {
+            "logNse": -0.34735514651939914,
+            "count": 80,
+            "nse": -0.34735388437427384,
+            "kge": 0.48006690356518167,
+            "rmse": 0.07241314863387635,
+            "mae": 0.06693224000503051,
+            "bias": -0.05018916476001323,
+            "pbias": -0.0011045255625225022,
+            "observedMean": 4543.956832053014,
+            "simulatedMean": 4543.906642888255
+          }
+        },
+        "duja": {
+          "pairedDays": 0,
+          "old": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          },
+          "new": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          }
+        }
+      }
+    },
+    "limitations": [
+      "共同观测评价只用于本项目已有参数和空间变更的对照。",
+      "旧成果与新成果的气象输入ID及模型实现身份不同，因此此处不是严格单一空间变量实验。",
+      "2025—2026观测曾参与开发，不能称为未触碰的独立验证。",
+      "短期预热对照只是空间影响诊断，不替代完整采用时期的计算。"
+    ]
+  },
+  "oldInputId": "INPUT-479ada7cc12ab8dd892a716d",
+  "identityComparison": {
+    "modelImplementation": {
+      "old": "7ded4d4d20d6cc35a82d1aac43de62370ce9d7cba814b4c43cc7baa715a2c1d7",
+      "new": "d0e305a5d3cd7193ef81628073bdfe769883a506bf9b936a490622ef28013f08",
+      "equal": false
+    },
+    "parameterSHA256": {
+      "old": "d4c46990d931f2a8e321ea3a14a516e72df4f66bf73325ba22c236211958a90b",
+      "new": "d4c46990d931f2a8e321ea3a14a516e72df4f66bf73325ba22c236211958a90b",
+      "equal": true
+    },
+    "partitionParameterSHA256": {
+      "old": "6d1a7cd7402073c79eb9f5ba7a213bb3d46205b111def511d34ad67c5868d666",
+      "new": "6d1a7cd7402073c79eb9f5ba7a213bb3d46205b111def511d34ad67c5868d666",
+      "equal": true
+    },
+    "initializationSHA256": {
+      "old": "fcac43e3a618b74ad5496b86e55ca3d4c2150778dc99b88dd41e82ea86d65f9b",
+      "new": "fcac43e3a618b74ad5496b86e55ca3d4c2150778dc99b88dd41e82ea86d65f9b",
+      "equal": true
+    },
+    "observationProfile": {
+      "old": "time-weighted-level-v2-gap6h-cover18h",
+      "new": "time-weighted-level-v2-gap6h-cover18h",
+      "equal": true
+    },
+    "observationSnapshotSHA256": {
+      "old": "d5871d988ca451820df0508982ce2646b7cb071f0e32ae678d779effb91f2dd9",
+      "new": "d5871d988ca451820df0508982ce2646b7cb071f0e32ae678d779effb91f2dd9",
+      "equal": true
+    },
+    "forcingGridSHA256": {
+      "old": "e0ea22478c85fc3c8c87fe868c15de68516a220632e6d0b11ac943941f63ca3e",
+      "new": "e0ea22478c85fc3c8c87fe868c15de68516a220632e6d0b11ac943941f63ca3e",
+      "equal": true
+    },
+    "forcingTransformationSHA256": {
+      "old": "a28542996c03152f4bc7fcdbec1510a7cabbb4843c3fa51e928b49b5f135d458",
+      "new": "a28542996c03152f4bc7fcdbec1510a7cabbb4843c3fa51e928b49b5f135d458",
+      "equal": true
+    },
+    "routingMode": {
+      "old": "source-separated",
+      "new": "source-separated",
+      "equal": true
+    }
+  }
+}

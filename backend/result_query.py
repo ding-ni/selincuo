@@ -111,7 +111,7 @@ def variables():
     rows=[{'id':k,'label':n,'unit':u,'scope':'unit','kind':'state','aggregation':'日末'} for k,n,u in STATE]
     rows +=[{'id':k,'label':n,'unit':u,'scope':'unit','kind':'flux','aggregation':'日累计'} for k,n,u in DIAG]
     rows +=[{'id':'flow','label':'分区流量','unit':'m³/s','scope':'river','kind':'flow','aggregation':'日均'},{'id':'routingStorage','label':'汇流总储水量','unit':'m³','scope':'partition','kind':'state','aggregation':'日末'},{'id':'interflowStorage','label':'壤中调蓄储水量','unit':'m³','scope':'partition','kind':'state','aggregation':'日末'},{'id':'baseflowStorage','label':'地下调蓄储水量','unit':'m³','scope':'partition','kind':'state','aggregation':'日末'}]
-    rows +=[{'id':k,'label':n,'unit':u,'scope':'lake','kind':kind,'aggregation':'日累计' if kind=='flux' else '日末'} for k,n,u,kind in [('lakeLevel','湖泊水位','m','state'),('volumeChange','锚点相对蓄水量（旧版为窗口）','m³','state'),('continuousLakeVolumeChange','连续相对水量','m³','state'),('lakeFlux','湖泊净水量','m³','flux')]]
+    rows +=[{'id':k,'label':n,'unit':u,'scope':'lake','kind':kind,'aggregation':'日累计' if kind=='flux' else '日末'} for k,n,u,kind in [('lakeLevel','湖泊水位','m','state'),('volumeChange','起算相对蓄水量','m³','state'),('continuousLakeVolumeChange','连续相对水量','m³','state'),('lakeFlux','湖泊净水量','m³','flux')]]
     return rows
 
 def compatible(state):
@@ -178,6 +178,67 @@ def metadata(db,identifier):
     return {'id':identifier,'start':times[0].isoformat(),'end':times[-1].isoformat(),'hours':len(times),'units':result['units'],'variables':variables(),'rivers':result.get('rivers',RIVERS),'partitions':result.get('partitions',PARTITIONS),'canContinue':not task.get('builtin',False) and compatible(state),'warmupEnd':task.get('request',{}).get('periods',{}).get('trainingStart','2024-01-01T00:00:00'),'lakeInitializationDays':initialization_days,
             'spatialVersion':version,'spatialBase':spatial_path,'initialization':result.get('initialization'),'storageFormat':result.get('storageFormat','npz'),'inflowComplete':result.get('inflowComplete',True),'drainage':result.get('drainage'),'modelFamily':result.get('modelFamily','legacy-v0.8')}
 
+
+def range_for(db, query):
+    """True saved-period bounds for the same variable and temporal convention.
+
+    Only one variable is read, in bounded blocks. The frozen source descriptor
+    owns this cache, so switching objects or dates never scans the period again.
+    """
+    entry = _entry(db, query['resultId'])
+    key = query.get('variable', 'swe')
+    definition = next((v for v in variables() if v['id'] == key), None)
+    if not definition:
+        raise ValueError('状态变量不存在')
+    step = query.get('step', 'day')
+    if step not in ('day', 'hour'):
+        raise ValueError('查询尺度须为逐日或逐小时')
+    with _lock:
+        cache = entry.setdefault('ranges', {})
+        if (key, step) in cache:
+            return deepcopy(cache[key, step])
+        times, data = entry['times'], entry['data']
+        minimum, maximum, count = np.inf, -np.inf, 0
+
+        def collect(block):
+            nonlocal minimum, maximum, count
+            finite = np.asarray(block).ravel()
+            finite = finite[np.isfinite(finite)]
+            if finite.size:
+                minimum = min(minimum, float(finite.min()))
+                maximum = max(maximum, float(finite.max()))
+                count += finite.size
+
+        if step == 'hour' or definition['kind'] == 'state':
+            for first in range(0, len(times), 744):
+                last = min(first + 744, len(times))
+                block = values(data, key, slice(first, last))
+                if step == 'day':
+                    block = block[(times[first:last].hour == 0) & (times[first:last] > times[0])]
+                collect(block)
+        else:
+            # End each day at its actual local midnight. Missing hours must
+            # not shift subsequent 24-row groups into another calendar day.
+            ends = np.flatnonzero((times.hour == 0) & (times > times[0]))
+            valid = [int(i) for i in ends if i >= 23 and
+                     np.all(np.diff(times.asi8[i-23:i+1]) == 3600 * 10**9)]
+            for first in range(0, len(valid), 31):
+                batch = valid[first:first+31]
+                offset, last = batch[0]-23, batch[-1]+1
+                block = np.asarray(values(data, key, slice(offset, last)))
+                shaped = np.stack([block[i-23-offset:i+1-offset] for i in batch])
+                aggregate = shaped.mean(axis=1) if definition['kind'] == 'flow' else shaped.sum(axis=1)
+                collect(aggregate)
+        result = {'variable': key, 'unit': definition['unit'], 'step': step,
+                  'minimum': minimum if count else None, 'maximum': maximum if count else None,
+                  'count': int(count), 'scope': 'result-period',
+                  'start': times[0].isoformat(), 'end': times[-1].isoformat(),
+                  'aggregation': definition['aggregation'] if step == 'day' else '逐时保存值',
+                  'spatialVersion': entry['task']['result'].get('spatialVersion'),
+                  'source': '所选成果全部对象、完整已保存时段', 'exact': True}
+        cache[key, step] = result
+        return deepcopy(result)
+
 def values(data,key,rows=slice(None),column=slice(None)):
     if key in [r[0] for r in STATE]:return data['unitStates'][rows,column,[r[0] for r in STATE].index(key)]
     if key in [r[0] for r in DIAG]:return data['unitDiagnostics'][rows,column,[r[0] for r in DIAG].index(key)]
@@ -201,7 +262,9 @@ def read(db,q,frame=False):
                 if lo<0 or times[idx]-times[lo]!=pd.Timedelta(hours=23):vals=np.full(len(ids),np.nan)
                 else:
                     block=values(data,key,slice(lo,idx+1));vals=np.atleast_1d(block.mean(axis=0) if definition['kind']=='flow' else block.sum(axis=0))
-        return {'time':t.isoformat(),'variable':definition,'aggregation':aggregation,'values':[{'id':i,'value':float(v) if np.isfinite(v) else None} for i,v in zip(ids,vals)],'completeCheckpoint':False}
+        return {'time':t.isoformat(),'variable':definition,'aggregation':aggregation,'values':[{'id':i,'value':float(v) if np.isfinite(v) else None} for i,v in zip(ids,vals)],'completeCheckpoint':False,
+                'resultId':q['resultId'],'spatialVersion':task['result'].get('spatialVersion'),
+                'timeZone':'Asia/Shanghai','scope':definition['scope']}
     idx=int(q.get('unit',0));cols=len(task['result']['units']) if definition['scope']=='unit' else len(task['result'].get('rivers',RIVERS)) if definition['scope']=='river' else len(task['result'].get('partitions',PARTITIONS)) if definition['scope']=='partition' else 1
     if not 0<=idx<cols:raise ValueError('查询单元不存在')
     start=pd.Timestamp(q.get('start') or times[0]);end=pd.Timestamp(q.get('end') or times[-1])

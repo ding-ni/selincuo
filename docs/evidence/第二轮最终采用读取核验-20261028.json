@@ -1,0 +1,103 @@
+{
+  "resultId": "JOB-f671b2a7af4d472cb70b",
+  "spatialVersion": "AGG-SPATIAL-dbb6e03518db589dc16f",
+  "inputId": "INPUT-fc731ba1bf2b5e79d3e03d92",
+  "backendSHA256": "7bdeebe7a2d7990f68d596b180953ffccf696fc5a362dd938533e90352c97977",
+  "modelImplementation": "d0e305a5d3cd7193ef81628073bdfe769883a506bf9b936a490622ef28013f08",
+  "hours": 33337,
+  "dailyDays": 1389,
+  "checks": {
+    "hourlyManifestFilesSHA256": 2202,
+    "dailyCompleteInflowCompositionIntegralAndBudget": true,
+    "initializationDayExcludedWithoutReset": true,
+    "rangesContainRealFramesAndCache": true,
+    "actualHttpExportsMatchSavedBytes": true,
+    "oldNewFrozenSpatialAndCurrentBuiltin": true,
+    "noActiveTasks": true
+  },
+  "readSeconds": {
+    "swe": {
+      "coldProcess": 0.8279,
+      "hot": 0.1757,
+      "range": {
+        "variable": "swe",
+        "unit": "mm",
+        "step": "day",
+        "minimum": 0.0,
+        "maximum": 1075.851596479258,
+        "count": 43059,
+        "scope": "result-period",
+        "start": "2023-01-01T00:00:00",
+        "end": "2026-10-21T00:00:00",
+        "aggregation": "日末",
+        "spatialVersion": "AGG-SPATIAL-dbb6e03518db589dc16f",
+        "source": "所选成果全部对象、完整已保存时段",
+        "exact": true
+      }
+    },
+    "flow": {
+      "coldProcess": 0.4509,
+      "hot": 0.1602,
+      "range": {
+        "variable": "flow",
+        "unit": "m³/s",
+        "step": "day",
+        "minimum": 0.0,
+        "maximum": 527.4087808297393,
+        "count": 9723,
+        "scope": "result-period",
+        "start": "2023-01-01T00:00:00",
+        "end": "2026-10-21T00:00:00",
+        "aggregation": "日均",
+        "spatialVersion": "AGG-SPATIAL-dbb6e03518db589dc16f",
+        "source": "所选成果全部对象、完整已保存时段",
+        "exact": true
+      }
+    },
+    "lakeLevel": {
+      "coldProcess": 0.421,
+      "hot": 0.1986,
+      "range": {
+        "variable": "lakeLevel",
+        "unit": "m",
+        "step": "day",
+        "minimum": 4543.833912761216,
+        "maximum": 4544.744481007468,
+        "count": 1280,
+        "scope": "result-period",
+        "start": "2023-01-01T00:00:00",
+        "end": "2026-10-21T00:00:00",
+        "aggregation": "日末",
+        "spatialVersion": "AGG-SPATIAL-dbb6e03518db589dc16f",
+        "source": "所选成果全部对象、完整已保存时段",
+        "exact": true
+      }
+    }
+  },
+  "artifacts": {
+    "daily.csv": {
+      "bytes": 620521,
+      "sha256": "552aa9f68334c2ad84b31e46125580fff42d6a433f9e5b8b968b478e559e8ff4"
+    },
+    "checkpoint.json": {
+      "bytes": 78269,
+      "sha256": "3991500be92e31fa26f9fc6a76de5962fca9cf52d8cdb0c99be9254761620e38"
+    },
+    "result.json": {
+      "bytes": 1652442,
+      "sha256": "60f6ea9737397e46603380c237871f56f96fd8d45cfe0617175d84d86f2c83a9"
+    },
+    "request.json": {
+      "bytes": 130029,
+      "sha256": "825835ce4016340d9f3ec2b2402ed50e897245b143bd6a62debaedc86f78819b"
+    },
+    "hourly-manifest.json": {
+      "bytes": 205541,
+      "sha256": "8a6c6565302e3d33313d1a9000570ab3df0d4da34bdb27d66eba626f30476a44"
+    }
+  },
+  "notes": [
+    "本进程冷查询，OS文件缓存可能已经热；不是严格性能基准。",
+    "正式完整期与旧版本对照并非只改空间的单因子实验；单因子短诊断另存。"
+  ]
+}

@@ -157,6 +157,51 @@ class Jobs:
         if kind == 'calibration-workflow':
             from .calibration_workflow import prepare
             payload = prepare(self.db, payload)
+        if kind == 'continuation':
+            import pandas as pd
+            states = self.db.rows('SELECT * FROM states WHERE id=?', (payload.get('stateId'),))
+            if not states:
+                raise ValueError('父状态不存在')
+            parent_record = states[0]
+            parent_task = self.db.task(parent_record['task_id'])
+            if parent_task['status'] != 'succeeded':
+                raise ValueError('父状态的生产任务不是成功任务')
+            checkpoint = json.loads(parent_record['payload'])
+            if digest(checkpoint) != parent_task['result'].get('checkpointSHA256'):
+                raise ValueError('父状态与成功成果摘要不一致')
+            for field in ('parameters','partitionParameters'):
+                saved = checkpoint.get(field) or {}
+                if payload.get(field) is not None and payload[field] != saved:
+                    raise ValueError('续算参数与父状态不一致，请重新模拟')
+                payload[field] = saved
+            payload['routingMode'] = checkpoint['identity']['routingMode']
+            start, end = pd.Timestamp(payload.get('start')), pd.Timestamp(payload.get('end'))
+            if (pd.isna(start) or pd.isna(end) or start.tzinfo or end.tzinfo or
+                    start.minute or start.second or end.minute or end.second or
+                    start != pd.Timestamp(checkpoint['validAt']) + pd.Timedelta(hours=1) or end < start):
+                raise ValueError('续算须从父状态下一整小时开始，结束时刻须在其后')
+            payload['_parentState'] = checkpoint
+            if checkpoint.get('schemaVersion') == 3:
+                from .grid_simulation import model_identity as grid_identity, prepare as grid_prepare, verify_parent_forcing
+                from .grid_spatial import load as load_spatial
+                from .model_forcing import resolve as resolve_model_forcing
+                implementation = grid_identity()
+                if checkpoint['identity'].get('modelImplementation') != implementation:
+                    raise ValueError('模型实现已变化，请从有效起点重新模拟')
+                spatial = load_spatial(checkpoint['identity']['spatialVersion'])
+                product, _ = resolve_model_forcing(self.db, start, end, spatial)
+                if payload.get('inputId') and payload['inputId'] != product['id']:
+                    raise ValueError('气象资料已更新，请重新选择续算时期')
+                source = grid_prepare(self.db, product['id'], spatial['version'])
+                verify_parent_forcing(self.db, source, checkpoint)
+                payload.update({'modelFamily': 'grid-continuous-v1', 'spatialVersion': spatial['version'],
+                                'inputId': product['id'], '_modelIdentity': implementation, 'origin': 'user-research',
+                                '_observations': grid_observation_snapshot(self.db)})
+            else:
+                payload['inputId'] = checkpoint.get('inputId') or parent_task['request'].get('inputId')
+                payload['_observations'] = parent_task['request']['_observations']
+            for field in ('schemeSnapshot','researchSchemeId','researchConfiguration','periods'):
+                if field in parent_task['request']:payload[field]=parent_task['request'][field]
         identifier = 'JOB-' + uuid.uuid4().hex[:20]
         folder = self.db.workspace / 'tasks' / identifier
         if kind in ('simulation', 'trial', 'continuation', 'calibration', 'calibration-workflow', 'sensitivity'):
@@ -175,9 +220,15 @@ class Jobs:
                     raise ValueError('发布请求缺少服务端冻结观测或真实模型身份')
             elif research:
                 from .grid_simulation import model_identity as grid_identity
+                from .research_schemes import resolved_initialization, plan_token
                 payload['_observations'] = grid_observation_snapshot(self.db)
                 payload['_modelIdentity'] = grid_identity()
-            else:
+                initial, first_lake_day = resolved_initialization(payload, payload['_observations'], kind)
+                payload['earliestCompleteLakeDay'] = first_lake_day
+                expected_plan = payload.pop('expectedPlanToken', None)
+                if expected_plan and expected_plan != plan_token(payload, initial, payload['_observations']):
+                    raise ValueError('计算条件或资料已更新，请重新检查所选时期')
+            elif kind != 'continuation':
                 payload['_observations'] = observation_snapshot(self.db)
                 payload['_modelIdentity'] = model_identity()
         if kind == 'calibration' and not research and payload.get('stage') in ('lake', 'routing'):
@@ -202,33 +253,6 @@ class Jobs:
             import pandas as pd
             if pd.Timestamp(payload.get('start') or '2100') > pd.Timestamp('2023-01-01') or pd.Timestamp(payload.get('end') or '1900') < pd.Timestamp('2025-01-01'):
                 raise ValueError('敏感性实验需要完整2023预热和2024评价时段')
-        if kind == 'continuation':
-            states = self.db.rows('SELECT * FROM states WHERE id=?', (payload.get('stateId'),))
-            if not states:
-                raise ValueError('父状态不存在')
-            parent_record = states[0]
-            parent_task = self.db.task(parent_record['task_id'])
-            if parent_task['status'] != 'succeeded':
-                raise ValueError('父状态的生产任务不是成功任务')
-            checkpoint = json.loads(parent_record['payload'])
-            if digest(checkpoint) != parent_task['result'].get('checkpointSHA256'):
-                raise ValueError('父状态与成功成果摘要不一致')
-            payload['_parentState'] = checkpoint
-            if checkpoint.get('schemaVersion') == 3:
-                from .grid_simulation import model_identity as grid_identity
-                payload['modelFamily'] = 'grid-continuous-v1'
-                payload['spatialVersion'] = checkpoint['identity']['spatialVersion']
-                payload['_modelIdentity'] = grid_identity()
-                payload['origin'] = 'user-research'
-                # Evaluation observations can grow independently of the
-                # parent's fixed physical state and initialization.
-                payload['_observations'] = grid_observation_snapshot(self.db)
-            else:
-                payload['_observations'] = parent_task['request']['_observations']
-            if 'partitionParameters' not in payload and checkpoint.get('partitionParameters'):
-                payload['partitionParameters'] = checkpoint['partitionParameters']
-            for field in ('schemeSnapshot','researchSchemeId','researchConfiguration','periods'):
-                if field in parent_task['request']:payload[field]=parent_task['request'][field]
         folder.mkdir(parents=True, exist_ok=False)
         write_json(folder / 'request.json', payload)
         with self.db.connect() as db:
@@ -308,6 +332,8 @@ class Jobs:
             with self.lock:
                 if is_cancelled():
                     raise InterruptedError('用户停止更新，已完成资料及已登记输入保留')
+                from .model_forcing import CURRENT_SETTING, _product, verify_product
+                verify_product(self.db, _product(self.db, result.get('inputId')))
                 public_result = {**result, 'taskId': identifier}
                 status = {k: v for k, v in result.items() if k not in ('manifest', 'downloadedFiles')}
                 status['at'] = now()
@@ -318,6 +344,10 @@ class Jobs:
                 write_json(folder / 'result.json', public_result)
                 write_json(self.db.workspace / 'downloads/era5-land/latest-status.json', status)
                 with self.db.connect() as connection:
+                    # The durable current-library pointer and completed task
+                    # are committed in the same SQLite transaction.
+                    connection.execute('INSERT OR REPLACE INTO settings VALUES(?,?)',
+                                       (CURRENT_SETTING, canonical({'inputId': result['inputId'], 'taskId': identifier})))
                     connection.execute("UPDATE tasks SET status='succeeded',result=?,progress=100,message=?,updated_at=? WHERE id=?",
                                        (canonical(public_result), status.get('message') or '气象资料已登记', now(), identifier))
                     connection.execute('INSERT INTO audit(at,action,payload) VALUES(?,?,?)',

@@ -1,0 +1,83 @@
+{
+  "projectId": "selinco",
+  "date": "2026-10-28",
+  "scope": "独立业务测试对象；真实本机输入与观测，不改变已采用参数或历史成果",
+  "service": {
+    "port": 8882,
+    "instanceId": "e5c82e91dfba40b4b2a9d40d0676f0a4",
+    "backendSourceSHA256": "7bdeebe7a2d7990f68d596b180953ffccf696fc5a362dd938533e90352c97977",
+    "gridModelImplementationSHA256": "d0e305a5d3cd7193ef81628073bdfe769883a506bf9b936a490622ef28013f08",
+    "inputId": "INPUT-fc731ba1bf2b5e79d3e03d92",
+    "simulationSpatialVersion": "AGG-SPATIAL-e5960a39dda5d4247cc6",
+    "dataFirstCompleteDay": "2019-12-31",
+    "dataLastCompleteDay": "2026-10-20"
+  },
+  "schemeWorkflow": {
+    "source": "复制内置方案，独立修改共用WM后保存",
+    "savedSchemeId": "SCHEME-5501d837383c4f048528",
+    "trialTaskId": "JOB-0721ddff54974c58b784",
+    "savedParameterId": "PARAM-c3b2485a73e8410a97f8",
+    "adoptedSchemeId": "SCHEME-3208d3a1f4f5485e8e85",
+    "checks": "保存后重新读取参数；试算实际参数保存为参数组；采用后再次读取方案并核对共用及杜加参数。",
+    "initialization": {
+      "time": "2021-04-23T12:00:00",
+      "levelM": 4543.66,
+      "method": "first-quality-daily-level-at-noon",
+      "firstCompleteLakeDay": "2021-04-24",
+      "note": "主站质量控制日值按12时代表，并非已核实的瞬时观测；计划、试算、整段及续算初始化一致。"
+    }
+  },
+  "continuation": {
+    "fullTaskId": "JOB-5beb530f84b4473ea1df",
+    "parentTrialId": "JOB-0721ddff54974c58b784",
+    "continuationTaskId": "JOB-fbd817c418c7438a83ed",
+    "comparison": "整段逐时Zarr与试算前段及续算后段拼接，逐变量比较所有有效值、缺测位置与时间；同一输入及参数。",
+    "acceptance": "沿用既有项目容差：绝对1e-8、相对1e-12，见业务前端重构与验收-20261025。",
+    "maximumAbsoluteDifference": {
+      "unitStates_mm_or_dimensionless": 1.6409840153386313e-10,
+      "unitDiagnostics_original_units": 3.247402347028583e-14,
+      "flow_m3_per_s": 1.0516032489249483e-12,
+      "lakeLevel_m": 0.0,
+      "routingStorage_m3": 1.2367963790893555e-06,
+      "sourceRoutingStorage_m3": 6.183981895446777e-07,
+      "lakeVolumeChange_m3": 5.960464477539063e-08,
+      "lakeFlux_m3_per_hour": 3.7834979593753815e-09,
+      "excludedRunoff_m3_per_hour": 2.3283064365386963e-10
+    },
+    "status": "全部逐时数组及末状态在既有容差内"
+  },
+  "calibration": {
+    "taskId": "JOB-c9216a2066d641eaa334",
+    "schemeId": "SCHEME-23b0c0cbe2004d83ac06",
+    "trainingStart": "2024-04-02T00:00:00",
+    "trainingEndExclusive": "2024-06-02T00:00:00",
+    "target": "杜加流量",
+    "parameter": "KC",
+    "budget": 1,
+    "evaluations": 1,
+    "pairedDays": 61,
+    "validationExcludedFromSearch": true,
+    "futureObservationCheck": "构造2021-04-20前无主站日值、评价期才出现首条观测的独立方案，提交率定时在入队前明确拒绝。",
+    "limitations": "单次候选仅核验率定链，不能视为优化或精度提升。"
+  },
+  "export": {
+    "taskId": "JOB-ff5769358a9442598701",
+    "sourceTaskId": "JOB-5beb530f84b4473ea1df",
+    "format": "daily.csv",
+    "bytes": 209027,
+    "sha256": "5ca91fb0514f5d2c0a321aeef1b08f3ed2085644dd2bfda84aa4defce3f4280b",
+    "checks": "下载字节摘要一致；2021-05-01湖位与成果日值一致。"
+  },
+  "targetedChecks": [
+    {"suite": "test_model_forcing_round2.py", "passed": 5, "scope": "完整气象、缺测、格网、硬链接、续算任务解析"},
+    {"suite": "test_scheme_workflow.py", "passed": 11, "scope": "方案、参数、自然时期、初始化、计划身份与回收"},
+    {"suite": "test_forcing_latest_resume.py", "passed": 15, "scope": "续传、官方更新、取消与成功任务原子切换"},
+    {"suite": "test_grid_revision.py", "passed": 11, "scope": "连续和回填前缀、湖面订正、守恒、成果查询"},
+    {"suite": "test_aggregate_continuous.py", "passed": 4, "scope": "面积加权、观测缺口、续算身份及状态"},
+    {"suite": "test_forcing_revisions.py", "passed": 2, "scope": "重叠修订与驱动时段衔接"},
+    {"suite": "test_release_runtime_jobs.py::test_grid_continuation_captures_current_observations_not_parent_snapshot", "passed": 1, "scope": "续算读取当前观测并冻结父状态"}
+  ],
+  "recycleEvidence": "docs/evidence/第二轮业务对象可恢复回收-20261028-152620-2dc06c.json",
+  "fileOperationNote": "误运行的test_grid_revision.py和test_forcing_revisions.py中，Python自动清理了测试专用临时目录；未触及原始资料或工作区数据，但不符合本项目禁止自动清理的规则。之后停止执行含此行为的测试。",
+  "scientificBoundary": "真实业务链检查不表示已完成独立精度评价；新版90米空间另有受控短期对照和完整期版本对照证据。"
+}

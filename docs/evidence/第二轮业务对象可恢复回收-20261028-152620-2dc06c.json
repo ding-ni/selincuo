@@ -1,0 +1,154 @@
+{
+  "at": "2026-10-28T15:26:20.737431",
+  "projectId": "selinco",
+  "method": "平台metadata软回收，可恢复",
+  "priorVerification": "测试方案及成果曾各执行回收并恢复，导出与状态均核验通过。",
+  "preserved": {
+    "currentInput": "INPUT-fc731ba1bf2b5e79d3e03d92",
+    "parameter": "PARAM-c3b2485a73e8410a97f8",
+    "states": [
+      "STATE-c9216a2066d641eaa334",
+      "STATE-fbd817c418c7438a83ed",
+      "STATE-5beb530f84b4473ea1df",
+      "STATE-0721ddff54974c58b784"
+    ],
+    "protected": [
+      "JOB-f671b2a7af4d472cb70b",
+      "JOB-2bac578f2ae646eaad18"
+    ]
+  },
+  "objects": [
+    {
+      "type": "scheme",
+      "id": "SCHEME-5f307fa4e7b04846a681",
+      "name": "第二轮业务核验 · 未来观测屏蔽",
+      "familyId": "FAMILY-c084e8cb97bd453e",
+      "action": "软回收方案家族",
+      "reason": "本轮独立业务核验",
+      "status": "recycled"
+    },
+    {
+      "type": "scheme",
+      "id": "SCHEME-23b0c0cbe2004d83ac06",
+      "name": "第二轮业务核验 · 2024率定",
+      "familyId": "FAMILY-cf0807283fd54f97",
+      "action": "软回收方案家族",
+      "reason": "本轮独立业务核验",
+      "status": "recycled"
+    },
+    {
+      "type": "scheme",
+      "id": "SCHEME-3208d3a1f4f5485e8e85",
+      "name": "第二轮业务核验 · 2021",
+      "familyId": "FAMILY-d83889a2b9874ba2",
+      "action": "软回收方案家族",
+      "reason": "本轮独立业务核验",
+      "status": "recycled"
+    },
+    {
+      "type": "task",
+      "id": "JOB-ff5769358a9442598701",
+      "name": "第二轮核验 · 成果导出",
+      "action": "软回收任务",
+      "reason": "本轮独立业务核验",
+      "inputId": null,
+      "stateId": null,
+      "dependsOnTaskId": "JOB-5beb530f84b4473ea1df",
+      "dependsOnStateId": null,
+      "schemeId": null,
+      "status": "recycled"
+    },
+    {
+      "type": "task",
+      "id": "JOB-c9216a2066d641eaa334",
+      "name": "第二轮核验 · 小预算杜加率定",
+      "action": "软回收任务",
+      "reason": "本轮独立业务核验",
+      "inputId": "INPUT-fc731ba1bf2b5e79d3e03d92",
+      "stateId": "STATE-c9216a2066d641eaa334",
+      "dependsOnTaskId": null,
+      "dependsOnStateId": null,
+      "schemeId": "SCHEME-23b0c0cbe2004d83ac06",
+      "status": "recycled"
+    },
+    {
+      "type": "task",
+      "id": "JOB-fbd817c418c7438a83ed",
+      "name": "第二轮核验 · 状态续算",
+      "action": "软回收任务",
+      "reason": "本轮独立业务核验",
+      "inputId": "INPUT-fc731ba1bf2b5e79d3e03d92",
+      "stateId": "STATE-fbd817c418c7438a83ed",
+      "dependsOnTaskId": null,
+      "dependsOnStateId": "STATE-0721ddff54974c58b784",
+      "schemeId": "SCHEME-5501d837383c4f048528",
+      "status": "recycled"
+    },
+    {
+      "type": "task",
+      "id": "JOB-5beb530f84b4473ea1df",
+      "name": "第二轮核验 · 连续模拟",
+      "action": "软回收任务",
+      "reason": "本轮独立业务核验",
+      "inputId": "INPUT-fc731ba1bf2b5e79d3e03d92",
+      "stateId": "STATE-5beb530f84b4473ea1df",
+      "dependsOnTaskId": null,
+      "dependsOnStateId": null,
+      "schemeId": "SCHEME-3208d3a1f4f5485e8e85",
+      "status": "recycled"
+    },
+    {
+      "type": "task",
+      "id": "JOB-0721ddff54974c58b784",
+      "name": "第二轮核验 · 2021试算",
+      "action": "软回收任务",
+      "reason": "本轮独立业务核验",
+      "inputId": "INPUT-fc731ba1bf2b5e79d3e03d92",
+      "stateId": "STATE-0721ddff54974c58b784",
+      "dependsOnTaskId": null,
+      "dependsOnStateId": null,
+      "schemeId": "SCHEME-5501d837383c4f048528",
+      "status": "recycled"
+    },
+    {
+      "type": "scheme",
+      "id": "SCHEME-688ab9ae904744a08d0d",
+      "action": "软回收方案家族",
+      "reason": "仅用于完成新空间正式计算；参数、起算和空间现已写入内置方案，历史记录及成果依赖保留。",
+      "dependsOnResultId": "JOB-f671b2a7af4d472cb70b",
+      "status": "recycled"
+    },
+    {
+      "type": "parameter",
+      "id": "PARAM-c3b2485a73e8410a97f8",
+      "name": "第二轮核验 · 试算参数",
+      "action": "可恢复回收，仅改变选择列表可见性",
+      "reason": "本轮真实业务核验产生，明确属于测试；原件及已采用方案/历史成果引用保留。",
+      "status": "recycled",
+      "payloadSHA256": "bfb5b55a3a6dcfdc1a238318d44a222a1f406dfdaabc5836e38320bd9d4f5b7c"
+    }
+  ],
+  "finalStatus": "completed",
+  "verificationErrors": [],
+  "adoptedResultMetadata": {
+    "id": "JOB-f671b2a7af4d472cb70b",
+    "oldName": "第二轮空间核验 · 完整采用时期",
+    "name": "色林错综合模拟方案 · 连续历史成果（90米地形复核）",
+    "favorite": true,
+    "status": "verified",
+    "stateId": "STATE-f671b2a7af4d472cb70b"
+  },
+  "parameterFollowup": {
+    "at": "2026-10-28T16:31:08.101745+08:00",
+    "evidence": "docs/evidence/第二轮前后端集中验收-20261028.json",
+    "restoredAndRecycledThroughPage": true,
+    "payloadBytesUnchanged": true,
+    "sourceResultReadableAndUnchanged": true,
+    "otherParameterIdsPreserved": [
+      "PARAM-84dd61e6eb544c319063",
+      "PARAM-e2408a664bbc47e9ab1c"
+    ],
+    "userSchemePreserved": "SCHEME-2fc5ec56b31742e69874",
+    "note": "preserved.parameter表示参数原件和历史引用仍保留；本次只将该明确测试参数移出默认选择列表。"
+  }
+}

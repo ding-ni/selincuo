@@ -1,0 +1,690 @@
+{
+  "projectId": "selinco",
+  "atLocal": "2026-10-28T16:40:45.789824+08:00",
+  "scope": "第二轮任务书集中验收；汇总已执行检查，不再次计算模型。",
+  "service": {
+    "backendSourceSHA256": "86898351e2bee7663c747f2e455a354dad9eca53d716f36f4d34d447ae2594d5",
+    "instanceId": "d8b1273e4e8646fa8d13c8917f36ffff",
+    "projectId": "selinco",
+    "version": "0.11.0",
+    "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+  },
+  "frontendBundle": "/assets/index-dlRguIgv.js",
+  "calculationBackendSHA256": "7bdeebe7a2d7990f68d596b180953ffccf696fc5a362dd938533e90352c97977",
+  "modelImplementationSHA256": "d0e305a5d3cd7193ef81628073bdfe769883a506bf9b936a490622ef28013f08",
+  "queryOnlyChangeSinceCalculation": "补可恢复参数列表元数据；七文件数值实现摘要保持不变。",
+  "adoptedResultId": "JOB-f671b2a7af4d472cb70b",
+  "dashboardAndState": {
+    "checks": {
+      "ordinaryAnd125PercentEquivalentViewport": true,
+      "observationBoundariesAndFiveInflowComponents": true,
+      "actualFullscreenPreservesDateAndLayer": true,
+      "terrainThenMeteorologicalGrid": {
+        "actualCells": 535
+      },
+      "delayedAndSupersededFramesStayWhole": true,
+      "playbackCompleteDays": [
+        "2025-08-19",
+        "2025-08-20",
+        "2025-08-21",
+        "2025-08-22",
+        "2025-08-23",
+        "2025-08-24",
+        "2025-08-25",
+        "2025-08-26"
+      ],
+      "exactUnitRiverLakeGeometryAndFrameReuse": true,
+      "periodScaleStaysFixedAcrossDates": true
+    },
+    "comprehensiveScenarioBundle": "/assets/index-lJppb_t-.js",
+    "fullScenarioSeconds": 45.0924785,
+    "pageErrors": [],
+    "source": {
+      "path": "build/第二轮精修-20261028/最终采用界面/验收结果.json",
+      "bytes": 9788,
+      "sha256": "0652593767ae59b89514316bbb86c7552d6b498d1ae96707534e63ae8a93dec6"
+    }
+  },
+  "finalBundleRealBrowserZoomAndFullscreen": {
+    "checks": [
+      {
+        "width": 1366,
+        "height": 768,
+        "dpr": 1.0000000298023224,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "fullscreen": false,
+        "date": "2025-06-15",
+        "layer": "basin",
+        "elements": {
+          ".lake-screen": {
+            "x": 222,
+            "y": 14,
+            "width": 1130,
+            "height": 740,
+            "top": 14,
+            "right": 1352,
+            "bottom": 754,
+            "left": 222
+          },
+          ".shore-row:last-child": {
+            "x": 353.85418701171875,
+            "y": 457.5520935058594,
+            "width": 110.1875,
+            "height": 34.88541793823242,
+            "top": 457.5520935058594,
+            "right": 464.04168701171875,
+            "bottom": 492.4375114440918,
+            "left": 353.85418701171875
+          },
+          ".hydrology-stack": {
+            "x": 222,
+            "y": 169,
+            "width": 253.70834350585938,
+            "height": 367.60418701171875,
+            "top": 169,
+            "right": 475.7083435058594,
+            "bottom": 536.6041870117188,
+            "left": 222
+          },
+          ".balance-grid>div:last-child": {
+            "x": 1228.135498046875,
+            "y": 463.8333435058594,
+            "width": 112.19792175292969,
+            "height": 50.25,
+            "top": 463.8333435058594,
+            "right": 1340.3334197998047,
+            "bottom": 514.0833435058594,
+            "left": 1228.135498046875
+          },
+          ".summary-stack": {
+            "x": 1098.28125,
+            "y": 169,
+            "width": 253.71875,
+            "height": 367.60418701171875,
+            "top": 169,
+            "right": 1352,
+            "bottom": 536.6041870117188,
+            "left": 1098.28125
+          },
+          ".inflow-summary": {
+            "x": 1109.947998046875,
+            "y": 178.6666717529297,
+            "width": 230.3854217529297,
+            "height": 186.45834350585938,
+            "top": 178.6666717529297,
+            "right": 1340.3334197998047,
+            "bottom": 365.12501525878906,
+            "left": 1109.947998046875
+          },
+          ".balance-summary": {
+            "x": 1109.947998046875,
+            "y": 373.125,
+            "width": 230.3854217529297,
+            "height": 140.95834350585938,
+            "top": 373.125,
+            "right": 1340.3334197998047,
+            "bottom": 514.0833435058594,
+            "left": 1109.947998046875
+          },
+          ".screen-processes": {
+            "x": 222,
+            "y": 543.6041870117188,
+            "width": 1130,
+            "height": 155.39584350585938,
+            "top": 543.6041870117188,
+            "right": 1352,
+            "bottom": 699.0000305175781,
+            "left": 222
+          },
+          ".screen-replay": {
+            "x": 222,
+            "y": 706,
+            "width": 1130,
+            "height": 48,
+            "top": 706,
+            "right": 1352,
+            "bottom": 754,
+            "left": 222
+          }
+        },
+        "zoom": 1,
+        "zoomApiVerified": 1
+      },
+      {
+        "width": 1366,
+        "height": 768,
+        "dpr": 1.0000000298023224,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "fullscreen": true,
+        "date": "2025-06-15",
+        "layer": "basin",
+        "elements": {
+          ".lake-screen": {
+            "x": 0,
+            "y": 0,
+            "width": 1366,
+            "height": 768,
+            "top": 0,
+            "right": 1366,
+            "bottom": 768,
+            "left": 0
+          },
+          ".shore-row:last-child": {
+            "x": 169.625,
+            "y": 457.5520935058594,
+            "width": 133.95834350585938,
+            "height": 34.88541793823242,
+            "top": 457.5520935058594,
+            "right": 303.5833435058594,
+            "bottom": 492.4375114440918,
+            "left": 169.625
+          },
+          ".hydrology-stack": {
+            "x": 14,
+            "y": 169,
+            "width": 301.25,
+            "height": 367.60418701171875,
+            "top": 169,
+            "right": 315.25,
+            "bottom": 536.6041870117188,
+            "left": 14
+          },
+          ".balance-grid>div:last-child": {
+            "x": 1204.3646240234375,
+            "y": 463.8333435058594,
+            "width": 135.95834350585938,
+            "height": 50.25,
+            "top": 463.8333435058594,
+            "right": 1340.3229675292969,
+            "bottom": 514.0833435058594,
+            "left": 1204.3646240234375
+          },
+          ".summary-stack": {
+            "x": 1050.7396240234375,
+            "y": 169,
+            "width": 301.25,
+            "height": 367.60418701171875,
+            "top": 169,
+            "right": 1351.9896240234375,
+            "bottom": 536.6041870117188,
+            "left": 1050.7396240234375
+          },
+          ".inflow-summary": {
+            "x": 1062.40625,
+            "y": 178.6666717529297,
+            "width": 277.91668701171875,
+            "height": 186.45834350585938,
+            "top": 178.6666717529297,
+            "right": 1340.3229370117188,
+            "bottom": 365.12501525878906,
+            "left": 1062.40625
+          },
+          ".balance-summary": {
+            "x": 1062.40625,
+            "y": 373.125,
+            "width": 277.91668701171875,
+            "height": 140.95834350585938,
+            "top": 373.125,
+            "right": 1340.3229370117188,
+            "bottom": 514.0833435058594,
+            "left": 1062.40625
+          },
+          ".screen-processes": {
+            "x": 14,
+            "y": 543.6041870117188,
+            "width": 1338,
+            "height": 155.39584350585938,
+            "top": 543.6041870117188,
+            "right": 1352,
+            "bottom": 699.0000305175781,
+            "left": 14
+          },
+          ".screen-replay": {
+            "x": 14,
+            "y": 706,
+            "width": 1338,
+            "height": 48,
+            "top": 706,
+            "right": 1352,
+            "bottom": 754,
+            "left": 14
+          }
+        },
+        "zoom": 1,
+        "zoomApiVerified": 1
+      },
+      {
+        "width": 1093,
+        "height": 614,
+        "dpr": 1.250000037252903,
+        "scrollWidth": 1093,
+        "scrollHeight": 614,
+        "fullscreen": false,
+        "date": "2025-06-15",
+        "layer": "basin",
+        "elements": {
+          ".lake-screen": {
+            "x": 80.00000762939453,
+            "y": 14.000000953674316,
+            "width": 998.800048828125,
+            "height": 586.4000244140625,
+            "top": 14.000000953674316,
+            "right": 1078.8000564575195,
+            "bottom": 600.4000253677368,
+            "left": 80.00000762939453
+          },
+          ".shore-row:last-child": {
+            "x": 196.85833740234375,
+            "y": 351.0666809082031,
+            "width": 96.33333587646484,
+            "height": 33.75,
+            "top": 351.0666809082031,
+            "right": 293.1916732788086,
+            "bottom": 384.8166809082031,
+            "left": 196.85833740234375
+          },
+          ".hydrology-stack": {
+            "x": 80.00000762939453,
+            "y": 153.00001525878906,
+            "width": 223.72500610351562,
+            "height": 271.4000244140625,
+            "top": 153.00001525878906,
+            "right": 303.72501373291016,
+            "bottom": 424.40003967285156,
+            "left": 80.00000762939453
+          },
+          ".balance-grid>div:last-child": {
+            "x": 968.925048828125,
+            "y": 368.0000305175781,
+            "width": 99.33333587646484,
+            "height": 37.20000076293945,
+            "top": 368.0000305175781,
+            "right": 1068.2583847045898,
+            "bottom": 405.2000312805176,
+            "left": 968.925048828125
+          },
+          ".summary-stack": {
+            "x": 855.0667114257812,
+            "y": 153.00001525878906,
+            "width": 223.72500610351562,
+            "height": 271.4000244140625,
+            "top": 153.00001525878906,
+            "right": 1078.7917175292969,
+            "bottom": 424.40003967285156,
+            "left": 855.0667114257812
+          },
+          ".inflow-summary": {
+            "x": 865.6000366210938,
+            "y": 160.53334045410156,
+            "width": 202.65834045410156,
+            "height": 133.73333740234375,
+            "top": 160.53334045410156,
+            "right": 1068.2583770751953,
+            "bottom": 294.2666778564453,
+            "left": 865.6000366210938
+          },
+          ".balance-summary": {
+            "x": 865.6000366210938,
+            "y": 300.2666931152344,
+            "width": 202.65834045410156,
+            "height": 104.93334197998047,
+            "top": 300.2666931152344,
+            "right": 1068.2583770751953,
+            "bottom": 405.20003509521484,
+            "left": 865.6000366210938
+          },
+          ".screen-processes": {
+            "x": 80.00000762939453,
+            "y": 429.4000244140625,
+            "width": 998.800048828125,
+            "height": 120.00000762939453,
+            "top": 429.4000244140625,
+            "right": 1078.8000564575195,
+            "bottom": 549.400032043457,
+            "left": 80.00000762939453
+          },
+          ".screen-replay": {
+            "x": 80.00000762939453,
+            "y": 554.4000244140625,
+            "width": 998.800048828125,
+            "height": 46.000003814697266,
+            "top": 554.4000244140625,
+            "right": 1078.8000564575195,
+            "bottom": 600.4000282287598,
+            "left": 80.00000762939453
+          }
+        },
+        "zoom": 1.25,
+        "zoomApiVerified": 1.25
+      },
+      {
+        "width": 1093,
+        "height": 614,
+        "dpr": 1.250000037252903,
+        "scrollWidth": 1093,
+        "scrollHeight": 614,
+        "fullscreen": true,
+        "date": "2025-06-15",
+        "layer": "basin",
+        "elements": {
+          ".lake-screen": {
+            "x": 0,
+            "y": 0,
+            "width": 1092.800048828125,
+            "height": 614.4000244140625,
+            "top": 0,
+            "right": 1092.800048828125,
+            "bottom": 614.4000244140625,
+            "left": 0
+          },
+          ".shore-row:last-child": {
+            "x": 138.40000915527344,
+            "y": 351.0666809082031,
+            "width": 103.87500762939453,
+            "height": 33.75,
+            "top": 351.0666809082031,
+            "right": 242.27501678466797,
+            "bottom": 384.8166809082031,
+            "left": 138.40000915527344
+          },
+          ".hydrology-stack": {
+            "x": 14.000000953674316,
+            "y": 153.00001525878906,
+            "width": 238.808349609375,
+            "height": 271.4000244140625,
+            "top": 153.00001525878906,
+            "right": 252.80835056304932,
+            "bottom": 424.40003967285156,
+            "left": 14.000000953674316
+          },
+          ".balance-grid>div:last-child": {
+            "x": 961.3917236328125,
+            "y": 368.0000305175781,
+            "width": 106.87500762939453,
+            "height": 37.20000076293945,
+            "top": 368.0000305175781,
+            "right": 1068.266731262207,
+            "bottom": 405.2000312805176,
+            "left": 961.3917236328125
+          },
+          ".summary-stack": {
+            "x": 839.9833984375,
+            "y": 153.00001525878906,
+            "width": 238.81668090820312,
+            "height": 271.4000244140625,
+            "top": 153.00001525878906,
+            "right": 1078.8000793457031,
+            "bottom": 424.40003967285156,
+            "left": 839.9833984375
+          },
+          ".inflow-summary": {
+            "x": 850.5167236328125,
+            "y": 160.53334045410156,
+            "width": 217.75001525878906,
+            "height": 133.73333740234375,
+            "top": 160.53334045410156,
+            "right": 1068.2667388916016,
+            "bottom": 294.2666778564453,
+            "left": 850.5167236328125
+          },
+          ".balance-summary": {
+            "x": 850.5167236328125,
+            "y": 300.2666931152344,
+            "width": 217.75001525878906,
+            "height": 104.93334197998047,
+            "top": 300.2666931152344,
+            "right": 1068.2667388916016,
+            "bottom": 405.20003509521484,
+            "left": 850.5167236328125
+          },
+          ".screen-processes": {
+            "x": 14.000000953674316,
+            "y": 429.4000244140625,
+            "width": 1064.800048828125,
+            "height": 120.00000762939453,
+            "top": 429.4000244140625,
+            "right": 1078.8000497817993,
+            "bottom": 549.400032043457,
+            "left": 14.000000953674316
+          },
+          ".screen-replay": {
+            "x": 14.000000953674316,
+            "y": 554.4000244140625,
+            "width": 1064.800048828125,
+            "height": 46.000003814697266,
+            "top": 554.4000244140625,
+            "right": 1078.8000497817993,
+            "bottom": 600.4000282287598,
+            "left": 14.000000953674316
+          }
+        },
+        "zoom": 1.25,
+        "zoomApiVerified": 1.25
+      }
+    ],
+    "stateReady": {
+      "object": "AGG-e3c500fd567568193757",
+      "ready": true
+    },
+    "passed": true,
+    "source": {
+      "path": "build/第二轮精修-20261028/最终缩放与就绪-复核/验收结果.json",
+      "bytes": 13404,
+      "sha256": "229b542d789081bfc99ae05d603fbfc50da7f6c88d9d8a15e7c5400027447dde"
+    }
+  },
+  "monitoring": {
+    "checks": {
+      "southJuneDailyVisible": true,
+      "southJuneRawVisible": true,
+      "southComparisonRow": "南岸\t有效日值\t23\t2025-06-01 — 2025-06-27\t23\t0.151\t0.118 — 0.182",
+      "datumRequestsAfterOpen": 1,
+      "datumRequestsAfterTabAndReopen": 1,
+      "noCommonDaysPreserveMain": true,
+      "lateResponseDiscarded": true,
+      "singleFailureSouthRow": "南岸\t有效日值\t356\t2025-04-11 — 2026-09-14\t270\t0.153\t0.1 — 0.415",
+      "pageErrors": []
+    },
+    "queryTimingsSeconds": {
+      "catalogCold": 0.6112,
+      "catalogHot": 0.0127,
+      "southSeriesCold": 0.3642,
+      "southSeriesHot": 0.0318,
+      "southOtherDates": 0.0223,
+      "mainPointRead": 0.4211,
+      "southReadAndPair": 0.1333,
+      "candidateCold": 0.8334,
+      "candidateHot": 0.0132,
+      "candidateSerialization": 0.001
+    },
+    "timingMethod": "独立进程内首次查询与同进程热缓存；操作系统文件缓存可能已热",
+    "source": {
+      "path": "build/第二轮精修-20261028/观测/监测页面验证-d01658ee40.json",
+      "bytes": 452,
+      "sha256": "0739a2e6732bdb0d599d52e995ef1c6a03bd32c03bc631df85e385b0df707bae"
+    },
+    "timingSource": {
+      "path": "build/第二轮精修-20261028/观测/最终监测耗时-基准缓存.json",
+      "bytes": 10529,
+      "sha256": "39f3c3bd8462143b087b9b542afe3131da93e4f71aaa26e55446c735be3c55fd"
+    }
+  },
+  "formsAndGlacier": {
+    "checks": {
+      "savedSchemeDateDisplay": {
+        "预热起日": "2020-01-01",
+        "率定起日": "2021-01-01",
+        "率定止日": "2021-04-30",
+        "评价起日": "2021-05-01",
+        "评价止日": "2021-06-01"
+      },
+      "separateParameterScopes": {
+        "parameter": "陆面蒸发系数",
+        "shared": 0.7294530893648382,
+        "duja": 0.7714797672529675
+      },
+      "calibrationPanel": {
+        "keyboardOpen": true,
+        "expandedState": true,
+        "draftSurvivesClose": true,
+        "adoptedValueUnchanged": true
+      },
+      "unsavedSwitchGuard": true,
+      "unsavedNotPersistedOnReload": true,
+      "glacierGroup": {
+        "parameters": [
+          "融冰度日因子",
+          "裸冰升华潜在蒸发比例",
+          "裸冰升华小时上限",
+          "冰川日调蓄常数"
+        ],
+        "displayValuesMatchScheme": true,
+        "calibrationFollowsGroup": true,
+        "calibrationDraftSeparatedFromAdopted": true
+      },
+      "simulationInclusiveEnd": {
+        "researchSchemeId": [
+          "SCHEME-3208d3a1f4f5485e8e85"
+        ],
+        "start": [
+          "2021-05-01T00:00:00"
+        ],
+        "end": [
+          "2021-06-02T00:00:00"
+        ]
+      },
+      "simulationNoInputVersionSelector": true,
+      "simulationPlanText": "历史模拟\n查看已有成果 →\n\n选择方案、参数和时段；计算所需的预热与资料检查由平台处理。\n\n模型方案\n选择方案\n色林错综合模拟方案 · 内置\n第二轮空间核验 · 完整采用时期\n第二轮业务核验 · 未来观测屏蔽\n第二轮业务核验 · 2024率定\n第二轮业务核验 · 2021\n色林错综合模拟方案 · 副本\n参数\n方案采用的参数\n第二轮核验 · 试算参数\n最终验证 2024-03 参数\n重构流程核验·实际参数\n开始日期\n结束日期\n成果名称\n查看已有成果\n重新计算\n气象完整日：2019-12-31 至 2026-10-20\n最早可选择 2020-12-30（含一年预热，湖位起算另行核查）\n更新资料 →\n\n陆面从 2020-01-01 开始预热；湖位从 2021-04-23 12:00、4543.66 m 起算（日值按12时代表，并非已核实的瞬时观测），首个完整湖位日为 2021-04-24。\n\n已有条件一致的完整成果，可直接查看，也可选择重新计算。",
+      "forcingCoverage": {
+        "complete": true,
+        "end": "2026-10-21T07:00:00",
+        "firstCompleteDay": "2019-12-31",
+        "hours": 59687,
+        "lastCompleteDay": "2026-10-20",
+        "start": "2019-12-30T09:00:00",
+        "variables": [
+          "降水",
+          "气温",
+          "蒸发能力"
+        ]
+      },
+      "observationUpdateVisible": true,
+      "pageErrors": [],
+      "apiErrors": [],
+      "blockedMutations": []
+    },
+    "source": {
+      "path": "build/第二轮精修-20261028/观测/业务表单验证-9250819f03.json",
+      "bytes": 2605,
+      "sha256": "ba29be3be5295f4cbcfe810a782fb88e84367e13b7e101d277240ffe8863c7ec"
+    }
+  },
+  "parameterRecycle": {
+    "checks": {
+      "date": "2026-10-28T16:31:08.101745+08:00",
+      "health": {
+        "backendSourceSHA256": "86898351e2bee7663c747f2e455a354dad9eca53d716f36f4d34d447ae2594d5",
+        "instanceId": "d8b1273e4e8646fa8d13c8917f36ffff",
+        "projectId": "selinco",
+        "version": "0.11.0",
+        "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+      },
+      "parameterId": "PARAM-c3b2485a73e8410a97f8",
+      "otherParametersPreserved": [
+        "PARAM-84dd61e6eb544c319063",
+        "PARAM-e2408a664bbc47e9ab1c"
+      ],
+      "pageErrors": [],
+      "targetedSchemeWorkflowTestsPassed": 12,
+      "retryReason": "首轮label精确匹配未找到包含选项文字的下拉框，改为对应表单内的select定位；原失败收据保留。",
+      "parameterPayloadSHA256Before": "bfb5b55a3a6dcfdc1a238318d44a222a1f406dfdaabc5836e38320bd9d4f5b7c",
+      "restoredThroughActualPage": true,
+      "recycledThroughActualPage": true,
+      "dailyParameterOptions": [
+        "",
+        "PARAM-e2408a664bbc47e9ab1c",
+        "PARAM-84dd61e6eb544c319063"
+      ],
+      "oldUserSchemePreserved": "SCHEME-2fc5ec56b31742e69874",
+      "bundle": "/assets/index-dlRguIgv.js",
+      "sourceResultUnchangedAndReadable": true,
+      "parameterPayloadSHA256After": "bfb5b55a3a6dcfdc1a238318d44a222a1f406dfdaabc5836e38320bd9d4f5b7c",
+      "builtinPlan": {
+        "action": "reuse",
+        "resultId": "JOB-f671b2a7af4d472cb70b"
+      },
+      "oldAdoptedResultReadable": true,
+      "modelImplementation": "d0e305a5d3cd7193ef81628073bdfe769883a506bf9b936a490622ef28013f08",
+      "passed": true
+    },
+    "source": {
+      "path": "build/第二轮精修-20261028/参数回收复核/验收结果.json",
+      "bytes": 1530,
+      "sha256": "2a1f2278ae2bce61242122288fbb7a86a82bea0d3a7370474dbb3bcaaddc8c56"
+    }
+  },
+  "targetedTests": {
+    "pythonBeforeFinalParameterMetadata": {
+      "forcingLatestResume": 15,
+      "modelForcing": 5,
+      "gridRevision": 11,
+      "schemeWorkflow": 11,
+      "releaseRuntimeJobs": 3,
+      "observation": 8,
+      "resultQuery": 8,
+      "coarseFlatOutlets": 7,
+      "dem90Drainage": 5,
+      "aggregateContinuous": 4,
+      "forcingRevisions": 2
+    },
+    "nodePriorTargetedChecks": 15,
+    "nodeShoreComparison": 7,
+    "note": "以上为本轮已经运行的定向用例数量；不重复累加同一用例重试。参数回收新增用例在对应收据单列。"
+  },
+  "screenshots": [
+    {
+      "original": {
+        "path": "build/第二轮精修-20261028/最终缩放与就绪-复核/普通窗口-1.png",
+        "bytes": 202686,
+        "sha256": "b7d29f7f90aa67ac66aef0460ca2c8ce4a6643821eebf15d3b06f1714fd8a10f"
+      },
+      "saved": {
+        "path": "docs/images/第二轮总览普通窗口-20261028.png",
+        "bytes": 202686,
+        "sha256": "b7d29f7f90aa67ac66aef0460ca2c8ce4a6643821eebf15d3b06f1714fd8a10f"
+      }
+    },
+    {
+      "original": {
+        "path": "build/第二轮精修-20261028/最终缩放与就绪-复核/全屏展示-1.25.png",
+        "bytes": 212325,
+        "sha256": "c4e3b4f732525227c246af64bb5b3dfa9770865eaaddef226e2b438f23ec2601"
+      },
+      "saved": {
+        "path": "docs/images/第二轮总览全屏125缩放-20261028.png",
+        "bytes": 212325,
+        "sha256": "c4e3b4f732525227c246af64bb5b3dfa9770865eaaddef226e2b438f23ec2601"
+      }
+    },
+    {
+      "original": {
+        "path": "build/第二轮精修-20261028/最终缩放与就绪-复核/真实单元定位-就绪.png",
+        "bytes": 192470,
+        "sha256": "2f746d7e2e9cffd53f551ac63cfe52dfb3aa38d01832f1c058a808bfcc14a8a7"
+      },
+      "saved": {
+        "path": "docs/images/第二轮真实单元定位-20261028.png",
+        "bytes": 192470,
+        "sha256": "2f746d7e2e9cffd53f551ac63cfe52dfb3aa38d01832f1c058a808bfcc14a8a7"
+      }
+    }
+  ],
+  "verificationBoundary": [
+    "完整页面场景先于最后冰川分组/参数回收入口；受影响表单分别核验，最终摘要资源另实测真实缩放、全屏和状态就绪。",
+    "125%通过chrome.tabs.setZoom并用getZoom和devicePixelRatio核对，不只使用等效视口。",
+    "计时为同机独立进程首次与热缓存；操作系统文件缓存可能已热，不作严格性能倍率。",
+    "截图只证明界面与真实数据对应，不构成模型精度或实际排水连接证据。"
+  ]
+}

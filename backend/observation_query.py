@@ -1,5 +1,6 @@
 """Revision-aware monitoring reads sharing the numerical aggregation rules."""
 from collections import OrderedDict
+from datetime import date,timedelta
 from threading import RLock
 import numpy as np
 import pandas as pd
@@ -10,9 +11,13 @@ _flights={}
 
 def revision(db):
     with db.connect() as c:
-        return (str(db.workspace),tuple(c.execute('SELECT COUNT(*),MAX(id) FROM observations').fetchone()),
-                tuple(c.execute('SELECT COUNT(*),MAX(rowid) FROM sources').fetchone()),
-                c.execute("SELECT MAX(id) FROM audit WHERE action LIKE 'observations.%' OR action LIKE 'coverage.%' OR action LIKE 'stations.%'").fetchone()[0])
+        # Importers publish a new source/observation and log changes in the same
+        # transaction. MAX on the primary keys is index-backed; COUNT(*) on the
+        # entire observations table at every cache hit was needlessly expensive.
+        audit=c.execute("SELECT id FROM audit WHERE action LIKE 'observations.%' OR action LIKE 'coverage.%' OR action LIKE 'stations.%' ORDER BY id DESC LIMIT 1").fetchone()
+        return (str(db.workspace),c.execute('SELECT MAX(id) FROM observations').fetchone()[0],
+                c.execute('SELECT MAX(rowid) FROM sources').fetchone()[0],
+                audit[0] if audit else None)
 
 def cached(db,name,make):
     key=(revision(db),name)
@@ -35,7 +40,11 @@ def cached(db,name,make):
 
 def selected_sql(station=None,variable=None,step=None,start=None,end=None,lean=False):
     clauses=['s.rowid IN (SELECT MAX(rowid) FROM sources GROUP BY path)'];args=[]
-    for field,op,value in [('station_id','=',station),('variable','=',variable),('step','=',step),('time','>=',start+'T00:00:00' if start and len(start)==10 else start),('time','<=',end+'T23:59:59' if end and len(end)==10 else end)]:
+    # A date-only end includes the entire business day, including fractional
+    # seconds. Explicit timestamps keep their existing inclusive semantics.
+    end_is_day=bool(end and len(end)==10)
+    day_after=(date.fromisoformat(end)+timedelta(days=1)).isoformat() if end_is_day else None
+    for field,op,value in [('station_id','=',station),('variable','=',variable),('step','=',step),('time','>=',start),('time','<' if end_is_day else '<=',day_after if end_is_day else end)]:
         if value:clauses.append('o.'+field+op+'?');args.append(value)
     fields="o.id,o.station_id,o.variable,o.time,o.step,o.quality,o.value" if lean else "o.*"
     return "WITH ranked AS (SELECT "+fields+",ROW_NUMBER() OVER(PARTITION BY station_id,variable,step,time ORDER BY s.imported_at DESC,o.id DESC) rn FROM observations o JOIN sources s ON s.id=o.source_id WHERE "+' AND '.join(clauses)+') SELECT * FROM ranked WHERE rn=1',args
@@ -43,13 +52,13 @@ def selected_sql(station=None,variable=None,step=None,start=None,end=None,lean=F
 def catalog(db):
     def make():
         sql,args=selected_sql(lean=True)
-        rows=db.rows('SELECT station_id,variable,step,COUNT(*) records,COUNT(value) valid,MIN(time) start,MAX(time) end,MIN(CASE WHEN value IS NOT NULL THEN time END) validStart,MAX(CASE WHEN value IS NOT NULL THEN time END) validEnd FROM ('+sql+') GROUP BY station_id,variable,step',args)
+        rows=db.rows("SELECT station_id,variable,step,COUNT(*) records,COUNT(CASE WHEN quality IN ('valid','qualified') THEN value END) valid,MIN(time) start,MAX(time) end,MIN(CASE WHEN quality IN ('valid','qualified') AND value IS NOT NULL THEN time END) validStart,MAX(CASE WHEN quality IN ('valid','qualified') AND value IS NOT NULL THEN time END) validEnd FROM ("+sql+") GROUP BY station_id,variable,step",args)
         stations=db.rows('SELECT * FROM stations ORDER BY id')
         for s in stations:
             s['located']=s['lon'] is not None and s['lat'] is not None;s['variables']=[]
             for variable in sorted({r['variable'] for r in rows if r['station_id']==s['id']}):
                 parts=[r for r in rows if r['station_id']==s['id'] and r['variable']==variable];valid=[r for r in parts if r['validStart']]
-                s['variables'].append({'id':variable,'steps':[r['step'] for r in parts],'records':sum(r['records'] for r in parts),'valid':sum(r['valid'] for r in parts),'start':min((r['validStart'] for r in valid),default=min(r['start'] for r in parts)),'end':max((r['validEnd'] for r in valid),default=max(r['end'] for r in parts))})
+                s['variables'].append({'id':variable,'steps':[r['step'] for r in parts],'records':sum(r['records'] for r in parts),'valid':sum(r['valid'] for r in parts),'start':min((r['validStart'] for r in valid),default=min(r['start'] for r in parts)),'end':max((r['validEnd'] for r in valid),default=max(r['end'] for r in parts)),'recordStart':min(r['start'] for r in parts),'recordEnd':max(r['end'] for r in parts),'validStart':min((r['validStart'] for r in valid),default=None),'validEnd':max((r['validEnd'] for r in valid),default=None)})
         return {'stations':stations}
     return cached(db,'catalog',make)
 

@@ -204,6 +204,7 @@ class ForcingLatestResumeTests(TestCase):
                     return merged
 
                 with patch.object(latest, 'availability', return_value=meta), \
+                     patch('backend.model_forcing.resolve', return_value=({'manifest': base}, {})), \
                      patch.object(latest, 'acquisition_window', return_value=(lo, hi)), \
                      patch.object(latest, '_candidate_files', return_value=[self.source]), \
                      patch('cdsapi.Client', return_value=client), \
@@ -290,6 +291,7 @@ class ForcingCommitTests(TestCase):
         checked = {'expver': ['0005'], 'sha256': 'test', 'variables': {
             key: {'startUTC': lo.isoformat(), 'endUTC': hi.isoformat()} for key in latest.VARIABLES}}
         with patch.object(latest, 'availability', return_value=meta), \
+             patch('backend.model_forcing.resolve', return_value=({'manifest': base}, {})), \
              patch.object(latest, 'acquisition_window', return_value=(lo, hi)), \
              patch.object(latest, '_local_candidate', return_value=(None, True)), \
              patch.object(latest, 'verified_coverage', return_value=checked), \
@@ -336,7 +338,9 @@ class ForcingCommitTests(TestCase):
                             raise RuntimeError('test gate timed out')
                     return result
 
-                with patch.object(latest, 'acquire_latest', side_effect=acquire):
+                with patch.object(latest, 'acquire_latest', side_effect=acquire), \
+                     patch('backend.model_forcing._product', return_value={'id': 'input-test'}), \
+                     patch('backend.model_forcing.verify_product', return_value={'complete': True}):
                     jobs = Jobs(db)
                     task = jobs.submit('update-forcing', {})
                     self.assertTrue(ready.wait(10))
@@ -353,6 +357,8 @@ class ForcingCommitTests(TestCase):
                     status = read_json(workspace / 'downloads/era5-land/latest-status.json')
                     self.assertEqual(status['status'], actual['status'])
                     self.assertEqual(status['inputId'], 'input-test')
+                    pointer = db.setting('current-model-forcing')
+                    self.assertEqual(pointer, None if stop_before_commit else {'inputId': 'input-test', 'taskId': task['id']})
                     jobs.close()
 
     @patch.object(latest, '_local_candidate', return_value=((Path('verified-local.nc'), {}), False))
@@ -371,6 +377,7 @@ class ForcingCommitTests(TestCase):
                       'inputRequirement': {}}
         lo, hi = pd.Timestamp('2022-12-01'), pd.Timestamp('2022-12-02T23:00:00')
         with patch.object(latest, 'availability', return_value=meta), \
+             patch('backend.model_forcing.resolve', return_value=({'manifest': base}, {})), \
              patch.object(latest, 'acquisition_window', return_value=(lo, hi)), \
              patch.object(latest, '_candidate_files', return_value=[source]), \
              patch('cdsapi.Client', return_value=client), \

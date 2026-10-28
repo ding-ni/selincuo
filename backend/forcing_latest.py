@@ -325,12 +325,12 @@ def acquire_latest(db,progress=None,cancelled=lambda:False,start_date=None,end_d
         check()
         import cdsapi
         meta=availability();write_json(folder/'latest-catalog.json',meta)
-        products=db.items('input_products')
-        if not products:raise ValueError('先接入包含预热期的基础驱动，再补齐最新资料')
+        from .model_forcing import resolve as resolve_model_forcing
+        current,_=resolve_model_forcing(db)
         from .operational_scheme import definition
-        fixed=definition();eligible=[r for r in products if r['manifest']['start']<=fixed['initialization']['origin'] and r['manifest']['spatialVersion']==fixed['spatialVersion']]
-        if not eligible:raise ValueError('缺少覆盖统一预热起点的基础驱动，不能用独立片段替代连续历史')
-        first=max(eligible,key=lambda r:(r['manifest']['end'],bool(r['manifest'].get('lakePrecipitationCorrection')),r.get('created_at','')))['manifest']
+        fixed=definition();first=current['manifest']
+        if first['start']>fixed['initialization']['origin'] or first['spatialVersion']!=fixed['spatialVersion']:
+            raise ValueError('当前气象资料不能覆盖统一预热起点或格网不匹配')
         start,last=acquisition_window(first,meta,start_date,end_date)
         provenance=provenance_summary(db,first)['sources']
         provisional_sources=[s for s in provenance if '0005' in s['experimentVersions']]

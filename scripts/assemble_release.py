@@ -152,6 +152,7 @@ def main():
     shutil.copy2(ROOT / 'config/platform.json', dest / 'config/platform.json')
     shutil.copy2(ROOT / 'config/station-locations.json', dest / 'config/station-locations.json')
     shutil.copy2(ROOT / 'config/station-datums.json', dest / 'config/station-datums.json')
+    shutil.copy2(ROOT / 'config/observation-analysis.json', dest / 'config/observation-analysis.json')
     shutil.copytree(ROOT / 'config/operational', dest / 'config/operational')
     source_manifest = ROOT / 'docs/source-manifest.json'
     if source_manifest.is_file():

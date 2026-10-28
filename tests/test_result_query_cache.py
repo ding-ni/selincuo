@@ -19,8 +19,7 @@ from backend import result_query as query,grid_storage
 
 class ResultQueryCacheTests(unittest.TestCase):
     def setUp(self):
-        self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
-        self.root=Path(self.tmp.name);self.db=Database(self.root/'one')
+        self.root=Path(tempfile.mkdtemp(prefix='selinco-query-check-'));self.db=Database(self.root/'one')
         query.clear_source_cache();self.addCleanup(query.clear_source_cache)
 
     def fixture(self,db=None,identifier='same',offset=0):
@@ -79,6 +78,21 @@ class ResultQueryCacheTests(unittest.TestCase):
         self.assertEqual(two['values'][0]['value']-one['values'][0]['value'],100)
         self.assertEqual(query.source_cache_info()['entries'],2)
 
+    def test_range_matches_daily_objects_and_ignores_partial_days(self):
+        _, arrays = self.fixture()
+        for variable, expected in [('swe', arrays['unitStates'][[24,48],:,0]),
+                                   ('lakeLevel', arrays['lakeLevel'][[24,48]]),
+                                   ('flow', arrays['flow'][1:49].reshape(2,24,7).mean(axis=1)),
+                                   ('lakeFlux', arrays['lakeFlux'][1:49].reshape(2,24).sum(axis=1))]:
+            actual = query.range_for(self.db, {'resultId':'same','variable':variable,'step':'day'})
+            self.assertEqual(actual['minimum'],float(expected.min()))
+            self.assertEqual(actual['maximum'],float(expected.max()))
+            self.assertEqual(actual['count'],expected.size)
+            self.assertTrue(actual['exact'])
+        prior = query.range_for(self.db, {'resultId':'same','variable':'swe','step':'day'})
+        with patch.object(query,'values',side_effect=AssertionError('cached range read arrays')):
+            self.assertEqual(query.range_for(self.db, {'resultId':'same','variable':'swe','step':'day'}),prior)
+
     def test_concurrent_same_cold_source_builds_once_and_capacity_is_eight(self):
         self.fixture();real=query._open_source;barrier=threading.Barrier(8)
         def slow(*args):time.sleep(.04);return real(*args)
@@ -90,6 +104,25 @@ class ResultQueryCacheTests(unittest.TestCase):
             self.fixture(identifier='result-'+str(i));query.source(self.db,'result-'+str(i))
         self.assertEqual(query.source_cache_info()['entries'],8)
         self.assertEqual(query.source_cache_info()['timeAxisBytes'],8*49*8)
+
+    def test_daily_range_keeps_calendar_alignment_when_hours_are_missing(self):
+        for missing, first in [([1],0),([37],0),([1,37],0),([],9)]:
+            with self.subTest(missing=missing, first=first):
+                all_times=pd.date_range('2024-01-01',periods=73,freq='h')
+                keep=np.array([i for i in range(first,73) if i not in missing])
+                times=all_times[keep]
+                data={'flow':np.repeat(keep[:,None],7,axis=1).astype(float)}
+                entry={'times':times,'data':data,'task':{'result':{'spatialVersion':'fixture'}},'state':{}}
+                q={'resultId':'fixture','variable':'flow','step':'day'}
+                with patch.object(query,'_entry',return_value=entry):
+                    daily=[]
+                    for at in pd.date_range('2024-01-02',periods=3,freq='D'):
+                        frame=query.read(self.db,{**q,'time':at.isoformat()},frame=True)
+                        daily.extend(v['value'] for v in frame['values'] if v['value'] is not None)
+                    actual=query.range_for(self.db,q)
+                self.assertEqual(actual['count'],len(daily))
+                self.assertEqual(actual['minimum'],min(daily))
+                self.assertEqual(actual['maximum'],max(daily))
 
     def test_failed_status_invalidates_and_never_returns_old_success(self):
         self.fixture();query.source(self.db,'same')

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {timelineDates,exactValue,balanceTerms,defaultReplayDay,colorFor,layers,screenResults,basinRain} from '../frontend/src/dashboard.mjs'
+import {timelineDates,exactValue,balanceTerms,defaultReplayDay,colorFor,layers,screenResults,basinRain,observationDay,timelineTicks} from '../frontend/src/dashboard.mjs'
 test('monitoring replay includes missing days but never borrows the latest observation',()=>{
  const monitor={stations:[{id:'SLC',daily:[{date:'2024-01-01',value:4540},{date:'2024-01-03',value:4541}]}]}
  const dates=timelineDates('observation',monitor,null)
@@ -35,4 +35,14 @@ test('basin rain weights the Duja and lower Zajia areas once and retains missing
  assert.equal(rows.some(r=>r.id==='fringe'),false)
  assert.equal(basinRain({...frame,unitValues:frame.unitValues.filter(r=>r.id!=='lower')},units)[0].value,null)
  assert.ok(basinRain({...frame,complete:false},units).every(r=>r.value===null))
+})
+test('selected-day observations distinguish record boundaries, missing days, zero and failure',()=>{
+ const station={coverage:{start:'2025-01-01T00:00:00',end:'2025-01-03T00:00:00'},daily:[{date:'2025-01-01',value:0},{date:'2025-01-02',value:null},{date:'2025-01-03',value:2}]}
+ assert.equal(observationDay(station,'2024-06-19').status,'outside')
+ assert.equal(observationDay(station,'2025-01-01').value,0)
+ assert.equal(observationDay(station,'2025-01-02').status,'missing')
+ assert.equal(observationDay({...station,error:'offline'},'2025-01-03').status,'failed')
+ const ticks=timelineTicks(['2023-04-20','2024-01-01','2025-01-01','2025-01-10'])
+ assert.equal(ticks[0].position,0);assert.equal(ticks.at(-1).position,100)
+ assert.ok(ticks.at(-2).position>95)
 })

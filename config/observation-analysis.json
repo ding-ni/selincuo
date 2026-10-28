@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "revision": "shore-pair-analysis-20261028",
+  "estimationStart": "2025-01-01",
+  "estimationEndExclusive": "2026-01-01",
+  "validationStart": "2026-01-01",
+  "validationEndExclusive": null,
+  "acceptedQuality": ["valid", "qualified"],
+  "pairToleranceMinutes": 15,
+  "minimumEstimationDays": 30,
+  "minimumEstimationMonths": 3,
+  "maximumMonthlySpreadM": 0.05,
+  "minimumValidationDaysPerMonth": 5,
+  "maximumValidationResidualM": 0.05
+}

@@ -3,7 +3,7 @@ from copy import deepcopy
 import hashlib
 import numpy as np
 import pandas as pd
-from .common import ROOT,digest,sha_file,read_json,write_json
+from .common import ROOT,digest,sha_file,read_json,write_json,within
 from .model_core import parameters,PARAMETER_NAMES,STATE_NAMES,initial_states
 from .parameter_regions import resolve_regions,region_initial_states,run_region_kernel
 from .routing import route_partition
@@ -40,17 +40,38 @@ def prepare(db,input_id,spatial_version):
         _cache.clear();_cache[key]={'spatial':spatial,'manifest':manifest,'arrays':arrays,'times':arrays['time']}
     return _cache[key]
 
-def prefix_identity(source,end):
-    times=source['times'];n=int(times.searchsorted(pd.Timestamp(end),side='right'))
-    key=(source['manifest']['dataSHA256'],source['manifest'].get('transformationSHA256'),source['spatial']['forcingGridVersion'],n)
+def prefix_identity(source,end,start=None):
+    """Hash the legacy prefix, optionally starting at an earlier input's first hour."""
+    times=source['times'];begin=0 if start is None else int(times.searchsorted(pd.Timestamp(start),side='left'))
+    stop=int(times.searchsorted(pd.Timestamp(end),side='right'))
+    if (begin>=len(times) or stop<=begin or times[stop-1]!=pd.Timestamp(end) or
+            (start is not None and times[begin]!=pd.Timestamp(start))):
+        raise ValueError('当前气象资料未完整覆盖父状态的历史前缀')
+    n=stop-begin
+    key=(source['manifest']['dataSHA256'],source['manifest'].get('transformationSHA256'),source['spatial']['forcingGridVersion'],begin,stop)
     if key in _prefixes:return _prefixes[key]
     h=hashlib.sha256();h.update(digest({'grids':source['spatial']['forcingGridVersion'],'transformation':source['manifest'].get('transformationSHA256'),'n':n}).encode())
-    h.update(times[:n].asi8.tobytes())
+    h.update(times[begin:stop].asi8.tobytes())
     for k in ('precipitation','temperature','evaporation'):
         h.update(k.encode())
-        for offset in range(0,n,744):h.update(np.ascontiguousarray(source['arrays'][k][offset:min(n,offset+744)],dtype='<f8').tobytes())
+        for offset in range(begin,stop,744):h.update(np.ascontiguousarray(source['arrays'][k][offset:min(stop,offset+744)],dtype='<f8').tobytes())
     value=h.hexdigest();_prefixes[key]=value
     return value
+
+def verify_parent_forcing(db,source,parent):
+    """Do not count new leading hours as a revision of the parent's history."""
+    identifier=parent.get('inputId')
+    if identifier and identifier==source['manifest'].get('id'):
+        if prefix_identity(source,parent['validAt'])!=parent.get('forcingPrefixSHA256'):
+            raise ValueError('历史气象资料已修订，请从有效起点重新模拟')
+        return
+    rows=[r for r in db.items('input_products') if r['id']==identifier]
+    if len(rows)!=1:raise ValueError('父状态对应的历史气象资料不存在')
+    manifest=read_json(within(db.workspace/'inputs/products',identifier)/'manifest.json')
+    if not manifest or manifest.get('id')!=identifier or digest(manifest)!=digest(rows[0]['manifest']):
+        raise ValueError('父状态对应的历史气象资料登记不一致')
+    if prefix_identity(source,parent['validAt'],manifest['start'])!=parent.get('forcingPrefixSHA256'):
+        raise ValueError('历史气象资料已修订，请从有效起点重新模拟')
 
 def anchor(request,observation,start,end):
     manual=request.get('initialLakeLevel')
@@ -116,7 +137,7 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None):
                 numerical_identity(parent.get('identity',{}))!=numerical_identity(identity)):
             raise ValueError('完整父状态的模型、空间、参数、初始化或汇流身份不一致')
         if pd.Timestamp(parent['validAt'])+pd.Timedelta(hours=1)!=start:raise ValueError('续算必须从完整末状态下一小时开始')
-        if prefix_identity(source,parent['validAt'])!=parent.get('forcingPrefixSHA256'):raise ValueError('历史气象前缀发生变化，不允许续算')
+        verify_parent_forcing(db,source,parent)
         if set(parent.get('routing',{}))!=set(PARTITIONS):raise ValueError('父状态缺少分区传播队列')
         if parent.get('unitIds') != [u['id'] for u in units]:raise ValueError('父状态单元顺序不一致')
         for key,route in parent['routing'].items():

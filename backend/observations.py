@@ -208,6 +208,9 @@ def import_observations(database=None, root=None, progress=None):
                             'flags': sorted({r['quality'] for r in rows})}
                 conn.execute('INSERT INTO coverage VALUES(?,?,?,?,?,?,?,?,?)',
                              (source_id, station, variable, step, min(times), max(times), sum(r['value'] is not None for r in rows), len(rows), canonical(metadata)))
+            # Invalidate observation views in the same transaction as the source.
+            conn.execute('INSERT INTO audit(at,action,payload) VALUES(?,?,?)',
+                         (now(), 'observations.source-import', canonical({'sourceId': source_id, 'records': len(records)})))
         report['files'].append({**info, 'sourceId': source_id, 'records': len(records), 'status': 'imported'})
     write_json(db.workspace / 'reports/observation-import.json', report)
     db.log('observations.import', {'files': len(files), 'imported': sum(x['status'] == 'imported' for x in report['files'])})
@@ -287,5 +290,6 @@ def confirm_coverage(db, value):
                         'confirmedAt': now(), 'note': str(value.get('note', '')), 'zeroForAbsent': value['variable'] == 'precipitation'}
             conn.execute('UPDATE coverage SET start=?,end=?,metadata=? WHERE source_id=? AND station_id=? AND variable=? AND step=?',
                          (a.isoformat(), b.isoformat(), canonical(metadata), r['source_id'], r['station_id'], r['variable'], r['step']))
-    db.log('coverage.confirm', {**value, 'stoppedIntervals': stopped})
+        conn.execute('INSERT INTO audit(at,action,payload) VALUES(?,?,?)',
+                     (now(), 'coverage.confirm', canonical({**value, 'stoppedIntervals': stopped})))
     return {'status': 'confirmed', 'start': a.isoformat(), 'end': b.isoformat()}

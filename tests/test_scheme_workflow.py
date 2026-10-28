@@ -1,5 +1,10 @@
 """Regression checks for scheme/parameter lineage and safe result reuse."""
 from copy import deepcopy
+from contextlib import contextmanager
+import json
+import sqlite3
+from threading import RLock
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -13,7 +18,17 @@ class MemoryDB:
     def __init__(self):
         self.tables = {'schemes': [], 'parameter_versions': [], 'input_products': []}
         self.tasks = {}
-        self.settings = {}
+        self.connection = sqlite3.connect(':memory:')
+        self.connection.executescript('''
+            CREATE TABLE parameter_versions(id TEXT PRIMARY KEY);
+            CREATE TABLE settings(key TEXT PRIMARY KEY, value TEXT NOT NULL);
+            CREATE TABLE audit(id INTEGER PRIMARY KEY, at TEXT, action TEXT, payload TEXT);
+        ''')
+
+    @contextmanager
+    def connect(self):
+        with self.connection:
+            yield self.connection
 
     def items(self, table):
         return deepcopy(self.tables[table])
@@ -21,6 +36,9 @@ class MemoryDB:
     def save_item(self, table, identifier, name, payload):
         self.tables[table].insert(0, {'id': identifier, 'name': name, 'payload': deepcopy(payload),
                                       'created_at': str(len(self.tables[table]))})
+        if table == 'parameter_versions':
+            with self.connect() as connection:
+                connection.execute('INSERT INTO parameter_versions VALUES(?)', (identifier,))
 
     def task(self, identifier):
         if identifier not in self.tasks:
@@ -28,10 +46,12 @@ class MemoryDB:
         return deepcopy(self.tasks[identifier])
 
     def setting(self, key, default=None):
-        return self.settings.get(key, default)
+        value = self.connection.execute('SELECT value FROM settings WHERE key=?', (key,)).fetchone()
+        return json.loads(value[0]) if value else default
 
     def set_setting(self, key, value):
-        self.settings[key] = value
+        with self.connect() as connection:
+            connection.execute('INSERT OR REPLACE INTO settings VALUES(?,?)', (key, json.dumps(value)))
 
     def rows(self, sql, args=()):
         if "SELECT id,request FROM tasks" in sql:
@@ -54,8 +74,18 @@ class SchemeWorkflowTests(unittest.TestCase):
         self.spatial['forcingGridVersion'] = digest(self.spatial['grids'])
         for identifier, end in [('old', '2025-01-01T00:00:00'), ('new', '2026-01-01T00:00:00')]:
             self.db.tables['input_products'].append({'id': identifier, 'name': identifier, 'created_at': end,
-                'manifest': {'spatialVersion': 'SOURCE', 'start': '2022-01-01T00:00:00', 'end': end,
+                'manifest': {'spatialVersion': 'SOURCE', 'start': '2020-01-01T00:00:00', 'end': end,
                              'transformationSHA256': 'corrected'}})
+        self.db.set_setting('current-model-forcing', {'inputId': 'new'})
+        def verified(db, product, spatial=None):
+            if spatial is not None and spatial['forcingGridVersion'] != digest(self.spatial['grids']):
+                raise ValueError('格网不兼容')
+            m = product['manifest']
+            return {'start': m['start'], 'end': m['end'], 'firstCompleteDay': m['start'][:10],
+                    'lastCompleteDay': '2025-12-31'}
+        self.forcing_patch = patch('backend.model_forcing.verify_product', side_effect=verified)
+        self.forcing_patch.start()
+        self.addCleanup(self.forcing_patch.stop)
         self.load_patch = patch.object(schemes.grid_spatial, 'load', return_value=self.spatial)
         self.builtin_patch = patch.object(schemes, 'builtin', return_value=None)
         self.result_patch = patch.object(business_context, 'result_task', side_effect=lambda db, identifier: db.task(identifier))
@@ -112,6 +142,71 @@ class SchemeWorkflowTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, '不一致'):
             schemes.prepare_request(self.db, {'researchSchemeId': adopted['id'], 'candidateParameterId': group['id']})
 
+    def test_parameter_recycle_restores_selection_without_changing_history(self):
+        original = schemes.save(self.db, self.config)
+        self.completed()
+        group = schemes.save_parameters_from_task(self.db, 'job', '参数')
+        adopted = schemes.adopt_parameters(self.db, original['id'], group['id'])
+        saved_bytes = deepcopy(self.db.items('parameter_versions'))
+        saved_result = deepcopy(self.db.task('job'))
+        # Recycling a source task does not hide an independently saved parameter.
+        self.db.tasks['job']['trashed'] = 1
+        self.assertEqual([row['id'] for row in schemes.list_parameters(self.db)], [group['id']])
+        schemes.parameter_metadata(self.db, group['id'], True)
+        self.assertEqual(schemes.list_parameters(self.db), [])
+        self.assertTrue(schemes.list_parameters(self.db, include_trashed=True)[0]['trashed'])
+        self.assertEqual(self.db.items('parameter_versions'), saved_bytes)
+        self.assertEqual(self.db.task('job')['result'], saved_result['result'])
+        self.assertEqual(schemes.prepare_request(self.db, {'researchSchemeId': adopted['id']})['parameters']['WM'], 210)
+        resaved = schemes.save(self.db, adopted['payload'], adopted['id'])
+        self.assertEqual(resaved['payload']['adoptedParameterId'], group['id'])
+        with self.assertRaisesRegex(ValueError, '请先恢复'):
+            schemes.prepare_request(self.db, {'researchSchemeId': resaved['id'], 'candidateParameterId': group['id']})
+        with self.assertRaisesRegex(ValueError, '请先恢复'):
+            schemes.adopt_parameters(self.db, resaved['id'], group['id'])
+        with self.assertRaisesRegex(ValueError, '参数组不存在'):
+            schemes.parameter_metadata(self.db, 'missing', True)
+        schemes.parameter_metadata(self.db, group['id'], False)
+        self.assertEqual([row['id'] for row in schemes.list_parameters(self.db)], [group['id']])
+        self.assertEqual(schemes.prepare_request(self.db, {'researchSchemeId': resaved['id'],
+            'candidateParameterId': group['id']})['parameters']['WM'], 210)
+        audit = self.db.connection.execute("SELECT action,payload FROM audit ORDER BY id").fetchall()
+        self.assertEqual([json.loads(payload)['trashed'] for action, payload in audit], [True, False])
+        self.assertTrue(all(action == 'parameters.visibility' for action, payload in audit))
+
+    def test_parameter_recycle_rolls_back_if_audit_write_fails(self):
+        self.completed()
+        group = schemes.save_parameters_from_task(self.db, 'job', '参数')
+        with self.db.connect() as connection:
+            connection.execute("CREATE TRIGGER audit_failure BEFORE INSERT ON audit BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END")
+        with self.assertRaisesRegex(sqlite3.IntegrityError, 'audit unavailable'):
+            schemes.parameter_metadata(self.db, group['id'], True)
+        self.assertFalse(self.db.setting('parameter-hidden:' + group['id'], False))
+        self.assertEqual([row['id'] for row in schemes.list_parameters(self.db)], [group['id']])
+
+    def test_parameter_recycle_routes_list_and_restore(self):
+        from backend.server import Handler
+        self.completed()
+        group = schemes.save_parameters_from_task(self.db, 'job', '参数')
+        handler = object.__new__(Handler)
+        handler.server = SimpleNamespace(db=self.db, jobs=SimpleNamespace(lock=RLock()))
+        handler.send_json = lambda value, status=200: value
+        handler.path = '/api/model/parameters/' + group['id'] + '/metadata'
+        handler.document = lambda: {'trashed': True}
+        self.assertTrue(handler.post()['trashed'])
+        handler.path = '/api/model/parameters'
+        self.assertEqual(handler.get()['parameters'], [])
+        handler.path += '?includeTrashed=true'
+        self.assertTrue(handler.get()['parameters'][0]['trashed'])
+        handler.path = '/api/model/parameters/' + group['id'] + '/metadata'
+        handler.document = lambda: {'trashed': 'false'}
+        with self.assertRaisesRegex(ValueError, '指定是否移入回收站'):
+            handler.post()
+        handler.document = lambda: {'trashed': False}
+        self.assertFalse(handler.post()['trashed'])
+        handler.path = '/api/model/parameters'
+        self.assertEqual(handler.get()['parameters'][0]['id'], group['id'])
+
     def test_updated_input_is_used_and_user_display_dates_do_not_move_warmup(self):
         row = schemes.save(self.db, self.config)
         request = schemes.prepare_request(self.db, {'researchSchemeId': row['id'],
@@ -119,13 +214,13 @@ class SchemeWorkflowTests(unittest.TestCase):
         self.assertEqual(request['inputId'], 'new')
         self.assertEqual(request['start'], '2022-01-01T00:00:00')
         self.assertEqual(request['evaluationStart'], '2023-07-01T00:00:00')
-        self.assertEqual(row['payload']['inputId'], 'old')
-        with self.assertRaisesRegex(ValueError, '未覆盖'):
+        self.assertNotIn('inputId', row['payload'])
+        with self.assertRaisesRegex(ValueError, '气象资料已更新'):
             schemes.prepare_request(self.db, {'researchSchemeId': row['id'], 'inputId': 'old',
                 'start': '2023-07-01T00:00:00', 'end': '2025-06-01T00:00:00'})
-        with self.assertRaisesRegex(ValueError, '开始和结束'):
+        with self.assertRaisesRegex(ValueError, '预热起点'):
             schemes.prepare_request(self.db, {'researchSchemeId': row['id'],
-                'start': '2021-07-01T00:00:00', 'end': '2024-06-01T00:00:00'})
+                'start': '2020-07-01T00:00:00', 'end': '2024-06-01T00:00:00'})
 
     def test_revisions_hidden_as_one_recoverable_scheme_and_active_protected(self):
         first = schemes.save(self.db, self.config)
@@ -174,7 +269,7 @@ class SchemeWorkflowTests(unittest.TestCase):
             self.assertFalse(restored['trashed'])
 
     def test_lake_anchor_defines_first_complete_day(self):
-        self.config['initialization'] = {'initialLakeTime': '2022-04-20T12:00:00',
+        self.config['initialization'] = {'mode': 'manual', 'initialLakeTime': '2022-04-20T12:00:00',
                                          'initialLakeLevel': 4544.03, 'initialLakeSource': '日值代表锚点'}
         row = schemes.save(self.db, self.config)
         with self.assertRaisesRegex(ValueError, '完整湖位从2022-04-21起'):
@@ -198,21 +293,49 @@ class SchemeWorkflowTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, '全湖参数'):
             schemes.save(self.db, bad)
 
+    def test_automatic_earlier_request_and_no_evaluation_period_anchor_leak(self):
+        self.config['initialization'] = {'mode': 'automatic', 'initialLakeTime': '2022-04-20T12:00:00',
+                                         'initialLakeLevel': 4544.03, 'initialLakeSource': '旧锚点'}
+        row = schemes.save(self.db, self.config)
+        early = schemes.prepare_request(self.db, {'researchSchemeId': row['id'],
+            'start': '2021-06-01T00:00:00', 'end': '2021-07-01T00:00:00',
+            'initialLakeTime': '2023-01-01T12:00:00', 'initialLakeLevel': 4550, 'initialLakeSource': 'old'})
+        self.assertEqual(early['start'], '2020-06-01T00:00:00')
+        self.assertNotIn('initialLakeTime', early)
+        obs = {'profile': 'test', 'level': {'2021-04-23T00:00:00': 4543.66}, 'flow': {}}
+        initial, first = schemes.resolved_initialization(early, obs)
+        self.assertEqual((initial['time'], initial['level'], first),
+                         ('2021-04-23T12:00:00', 4543.66, '2021-04-24'))
+        calibration = schemes.prepare_request(self.db, {'researchSchemeId': row['id']}, kind='calibration')
+        later = {'profile': 'test', 'level': {'2024-01-01T00:00:00': 4544.0}, 'flow': {}}
+        with self.assertRaisesRegex(ValueError, '没有可用的主站湖位'):
+            schemes.resolved_initialization(calibration, later, 'calibration')
+
+    def test_plan_token_changes_with_input_or_observation(self):
+        row = schemes.save(self.db, self.config)
+        request = schemes.prepare_request(self.db, {'researchSchemeId': row['id']})
+        observed = {'profile': 'test', 'level': {'2022-04-20T00:00:00': 4544.03}, 'flow': {}}
+        initial, _ = schemes.resolved_initialization(request, observed)
+        token = schemes.plan_token(request, initial, observed)
+        self.assertNotEqual(token, schemes.plan_token({**request, 'inputId': 'other'}, initial, observed))
+        self.assertNotEqual(token, schemes.plan_token(request, initial, {**observed, 'flow': {'2023-01-01T00:00:00': 1}}))
+
     def test_reuse_requires_complete_input_parameter_anchor_and_observation_identity(self):
         row = schemes.save(self.db, self.config)
         query = {'researchSchemeId': row['id'], 'start': '2023-01-01T00:00:00', 'end': '2024-01-01T00:00:00'}
         request = schemes.prepare_request(self.db, query)
-        obs = {'profile': 'test', 'level': {}, 'flow': {}, 'sourceDigests': []}
+        obs = {'profile': 'test', 'level': {'2022-04-20T00:00:00': 4544.03}, 'flow': {}, 'sourceDigests': []}
+        initial = {'time': '2022-04-20T12:00:00', 'level': 4544.03, 'method': 'first-quality-daily-level-at-noon',
+                   'source': 'test', 'reference': 'SLC-working-datum'}
         identity = {'modelImplementation': 'code', 'spatialVersion': 'AGG-1',
                     'parameterSHA256': digest(request['parameters']),
                     'partitionParameterSHA256': digest(request['partitionParameters']),
-                    'initializationSHA256': digest(None), 'observationSnapshotSHA256': digest(obs),
+                    'initializationSHA256': digest(initial), 'observationSnapshotSHA256': digest(obs),
                     'routingMode': 'source-separated'}
         self.db.tasks['complete'] = {'id': 'complete', 'status': 'succeeded', 'trashed': 0,
             'result': {'inputId': request['inputId'], 'identity': identity, 'start': request['start'], 'end': request['end']}, 'request': {}}
         with patch('backend.grid_simulation.model_identity', return_value='code'), \
-             patch('backend.grid_simulation.observations', return_value={'profile': 'test', 'level': {}, 'flow': {}}), \
-             patch('backend.grid_simulation.anchor', return_value=None), \
+             patch('backend.grid_simulation.observations', return_value={k:v for k,v in obs.items() if k!='sourceDigests'}), \
              patch('backend.result_query.metadata', return_value={}):
             self.assertEqual(business_context.simulation_plan(self.db, query)['action'], 'reuse')
             self.db.tasks['complete']['result']['identity']['parameterSHA256'] = 'changed'

@@ -5,6 +5,7 @@ hydrological accuracy or execute production-size numerical experiments.
 """
 import json
 import tempfile
+from contextlib import nullcontext
 import time
 import unittest
 from pathlib import Path
@@ -22,7 +23,7 @@ from backend import release_runtime as runtime,business_context
 
 class ReleaseRuntimeJobTests(unittest.TestCase):
     def check_family(self,grid):
-        with tempfile.TemporaryDirectory() as tmp:
+        with nullcontext(tempfile.mkdtemp(prefix='selinco-release-job-check-')) as tmp:
             db=Database(tmp);folder=db.workspace/'inputs/products/frozen';folder.mkdir(parents=True)
             np.savez_compressed(folder/'forcing.npz',time=np.arange(2,dtype='i8'),precipitation=np.zeros((2,1)),temperature=np.ones((2,1)),evaporation=np.ones((2,1)))
             manifest={'id':'frozen','data':'forcing.npz','dataSHA256':sha_file(folder/'forcing.npz'),'spatialVersion':'space','start':'2022-12-01T00:00:00','end':'2026-01-01T07:00:00','transformationSHA256':'transform'}
@@ -77,12 +78,13 @@ class ReleaseRuntimeJobTests(unittest.TestCase):
     def test_legacy_release_adapter_keeps_frozen_request_and_uses_legacy_runner(self):self.check_family(False)
 
     def test_grid_continuation_captures_current_observations_not_parent_snapshot(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with nullcontext(tempfile.mkdtemp(prefix='selinco-release-continuation-')) as tmp:
             db = Database(tmp)
             manifest = {'id': 'input', 'spatialVersion': 'space', 'start': '2023-01-01T00:00:00',
                         'end': '2026-01-01T00:00:00', 'sources': []}
-            checkpoint = {'schemaVersion': 3, 'identity': {'spatialVersion': 'space'},
-                          'partitionParameters': {}, 'validAt': '2024-12-31T23:00:00'}
+            checkpoint = {'schemaVersion': 3, 'inputId':'input', 'identity': {'spatialVersion': 'space',
+                          'modelImplementation':'current-model','routingMode':'source-separated'},
+                          'parameters':parameters({}), 'partitionParameters': {}, 'validAt': '2024-12-31T23:00:00'}
             old = {'profile': 'old', 'level': {}, 'flow': {}}
             fresh = {'profile': 'new', 'level': {'2025-01-01T00:00:00': 4544.2}, 'flow': {}}
             with db.connect() as conn:
@@ -100,6 +102,10 @@ class ReleaseRuntimeJobTests(unittest.TestCase):
             try:
                 with patch('backend.grid_simulation.observations', return_value=fresh), \
                      patch('backend.grid_simulation.model_identity', return_value='current-model'), \
+                     patch('backend.grid_spatial.load', return_value={'version':'space'}), \
+                     patch('backend.model_forcing.resolve', return_value=({'id':'input','manifest':manifest},{})), \
+                     patch('backend.grid_simulation.prepare', return_value={}), \
+                     patch('backend.grid_simulation.verify_parent_forcing'), \
                      patch('backend.grid_simulation.run', side_effect=runner):
                     submitted = jobs.submit('continuation', {'stateId': 'state', 'inputId': 'input',
                         'parameters': parameters({}), 'start': '2025-01-01T00:00:00', 'end': '2025-02-01T00:00:00'})

@@ -5,7 +5,7 @@ import uuid
 import numpy as np
 import pandas as pd
 
-from .common import ROOT, digest, read_json
+from .common import ROOT, canonical, digest, now, read_json
 from .model_core import parameters, PARAMETER_DEFINITIONS, PARAMETER_NAMES
 from .calibration_config import RUNOFF_KEYS, ROUTING_KEYS
 from .operational_scheme import definition, catalog
@@ -112,6 +112,31 @@ def scheme_metadata(db, identifier, trashed):
     return {'id': identifier, 'trashed': bool(trashed)}
 
 
+def list_parameters(db, include_trashed=False):
+    """Keep saved parameter bytes and expose their recoverable visibility."""
+    result = []
+    for row in db.items('parameter_versions'):
+        row['trashed'] = bool(db.setting('parameter-hidden:' + row['id'], False))
+        if include_trashed or not row['trashed']:
+            result.append(row)
+    return result
+
+
+def parameter_metadata(db, identifier, trashed):
+    if not isinstance(identifier, str) or not identifier or not isinstance(trashed, bool):
+        raise ValueError('请选择参数并指定是否移入回收站')
+    # Visibility and audit are committed together; parameter/result bytes and
+    # already captured task requests are left unchanged.
+    with db.connect() as connection:
+        if not connection.execute('SELECT 1 FROM parameter_versions WHERE id=?', (identifier,)).fetchone():
+            raise ValueError('参数组不存在')
+        connection.execute('INSERT OR REPLACE INTO settings VALUES(?,?)',
+                           ('parameter-hidden:' + identifier, canonical(trashed)))
+        connection.execute('INSERT INTO audit(at,action,payload) VALUES(?,?,?)',
+                           (now(), 'parameters.visibility', canonical({'id': identifier, 'trashed': trashed})))
+    return {'id': identifier, 'trashed': trashed}
+
+
 def _compatible_input(value, product, spatial, end):
     manifest = product['manifest']
     try:
@@ -128,18 +153,14 @@ def _compatible_input(value, product, spatial, end):
 
 
 def _input(db, value, spatial, end, identifier=None):
-    products = db.items('input_products')
-    if identifier:
-        product = next((r for r in products if r['id'] == identifier), None)
-        if not product:
-            raise ValueError('所选气象资料不存在，请更新或选择已有资料')
-        if not _compatible_input(value, product, spatial, end):
-            raise ValueError('所选气象资料未覆盖预热起点至计算结束，或格网、湖面降水处理与方案不兼容')
-        return product
-    compatible = [r for r in products if _compatible_input(value, r, spatial, end)]
-    if not compatible:
-        raise ValueError('没有兼容气象资料完整覆盖预热起点至计算结束，请补充资料')
-    return max(compatible, key=lambda r: (r['manifest']['end'], r.get('created_at', ''), r['id']))
+    from .model_forcing import resolve
+    product, _ = resolve(db, value['periods']['warmupStart'], end, spatial)
+    if identifier and identifier != product['id']:
+        raise ValueError('气象资料已更新，请重新检查所选时期')
+    required = value.get('inputRequirement', {}).get('transformationSHA256')
+    if required and required != product['manifest'].get('transformationSHA256'):
+        raise ValueError('方案与当前气象资料的湖面降水处理不兼容')
+    return product
 
 
 def validate(db, payload, coverage_end=None):
@@ -167,7 +188,7 @@ def validate(db, payload, coverage_end=None):
         raise ValueError('预热、率定、评价须按顺序且不重叠')
     if dates['trainingStart'] - dates['warmupStart'] < pd.Timedelta(days=365):
         raise ValueError('率定前至少保留365天统一预热')
-    _input(db, value, spatial, coverage_end or periods['evaluationEnd'], value.get('inputId'))
+    _input(db, value, spatial, coverage_end or periods['evaluationEnd'])
     search = value['search']
     defs = {d['key']: d for d in PARAMETER_DEFINITIONS}
     keys = search['keys']
@@ -216,6 +237,8 @@ def save(db, payload, parent_id=None):
     value = validate(db, payload)
     for key in ('configurationSHA256', 'revision', 'familyId', 'parentRevisionId', 'id', 'created_at', 'builtin', 'resultId'):
         value.pop(key, None)
+    # Input identity belongs to a run, not to a mutable user scheme.
+    value.pop('inputId', None)
     if parent and not parent.get('builtin'):
         latest_revision = max((r['payload'].get('revision', 1) for r in db.items('schemes')
                                if _family(r) == _family(parent)), default=1)
@@ -296,6 +319,8 @@ def _verified_parameter(db, identifier, scheme):
 def adopt_parameters(db, scheme_id, parameter_id):
     row = _scheme(db, scheme_id)
     value = deepcopy(row['payload'])
+    if db.setting('parameter-hidden:' + str(parameter_id), False):
+        raise ValueError('参数已移入回收站，请先恢复')
     chosen = _verified_parameter(db, parameter_id, value)
     # Adoption never changes the independent starting point used by calibration.
     value.setdefault('calibrationInitialParameters', deepcopy(value['parameters']))
@@ -314,6 +339,15 @@ def prepare_request(db, request, kind='simulation'):
     value = deepcopy(row['payload'])
     p = value['periods']
     requested_end = p['evaluationEnd'] if kind == 'calibration' else request.get('end') or p['evaluationEnd']
+    start = pd.Timestamp(request.get('start') or p['trainingStart'])
+    end = pd.Timestamp(requested_end)
+    if any(pd.isna(t) or t.tzinfo or t != t.normalize() for t in (start, end)) or start >= end:
+        raise ValueError('开始和结束须为完整北京时间日，且结束晚于开始')
+    configured_warmup = pd.Timestamp(p['warmupStart'])
+    # Earlier requested periods need a full year of forcing before the requested
+    # start. The saved scheme and any older result remain unchanged.
+    warmup = min(configured_warmup, start - pd.Timedelta(days=365)) if kind == 'simulation' else configured_warmup
+    p['warmupStart'] = warmup.isoformat()
     spatial = grid_spatial.load(value['spatialVersion'])
     if 'inputRequirement' not in value:
         original = next((r for r in db.items('input_products') if r['id'] == value.get('inputId')), None)
@@ -322,11 +356,8 @@ def prepare_request(db, request, kind='simulation'):
     product = _input(db, value, spatial, requested_end, request.get('inputId'))
     value['inputId'] = product['id']
     value = validate(db, value, requested_end)
-    start = pd.Timestamp(request.get('start') or p['trainingStart'])
-    end = pd.Timestamp(requested_end)
-    warmup = pd.Timestamp(p['warmupStart'])
-    if any(pd.isna(t) or t.tzinfo or t != t.normalize() for t in (start, end)) or start < warmup or start >= end:
-        raise ValueError('开始和结束须为预热起点之后的完整北京时间日，且结束晚于开始')
+    if start < warmup:
+        raise ValueError('开始日期早于可用预热起点')
     if kind == 'calibration':
         run_parameters = deepcopy(value.get('calibrationInitialParameters', value['parameters']))
         run_regions = deepcopy(value.get('calibrationInitialPartitionParameters', value['partitionParameters']))
@@ -334,20 +365,41 @@ def prepare_request(db, request, kind='simulation'):
         run_parameters = deepcopy(value['parameters'])
         run_regions = deepcopy(value['partitionParameters'])
     if request.get('candidateParameterId'):
+        if db.setting('parameter-hidden:' + str(request['candidateParameterId']), False):
+            raise ValueError('参数已移入回收站，请先恢复')
         chosen = _verified_parameter(db, request['candidateParameterId'], value)
         run_parameters, run_regions = deepcopy(chosen['parameters']), deepcopy(chosen['partitionParameters'])
     initial = deepcopy(value.get('initialization') or {})
     for key in ('initialLakeLevel', 'initialLakeTime', 'initialLakeSource'):
         if key in request:
             initial[key] = request[key]
+    mode = initial.get('mode', 'legacy')
+    if mode not in ('automatic', 'manual', 'legacy'):
+        raise ValueError('湖位起算方式无效')
+    anchor_limit = pd.Timestamp(p['trainingEnd']) if kind == 'calibration' else end
+    anchor_time = pd.Timestamp(initial['initialLakeTime']) if initial.get('initialLakeTime') else None
+    # Older built-in copies may contain a 2023 anchor. It remains fixed for its
+    # original period, but cannot initialize a requested earlier trajectory.
+    if mode == 'automatic' or (mode == 'legacy' and anchor_time is not None and
+                                (anchor_time >= anchor_limit or start < anchor_time.normalize())):
+        for key in ('initialLakeLevel', 'initialLakeTime', 'initialLakeSource'):
+            initial.pop(key, None)
+    elif mode == 'manual' and any(initial.get(k) in (None, '') for k in ('initialLakeLevel', 'initialLakeTime', 'initialLakeSource')):
+        raise ValueError('自定湖位起算需要时刻、水位及依据来源')
     earliest_lake_day = None
     if initial.get('initialLakeLevel') is not None and initial.get('initialLakeTime'):
         anchor_time = pd.Timestamp(initial['initialLakeTime'])
+        if kind == 'calibration' and anchor_time >= anchor_limit:
+            raise ValueError('率定起算不能使用评价时期的湖位，请调整起算条件')
         earliest_lake_day = (anchor_time.normalize() +
                              (pd.Timedelta(days=1) if anchor_time != anchor_time.normalize() else pd.Timedelta(0)))
         if end <= earliest_lake_day:
             raise ValueError(f'该方案湖位初始化为{anchor_time:%Y-%m-%d %H:%M}，完整湖位从{earliest_lake_day:%Y-%m-%d}起，请调整结束日期或计算设置')
-    return {**request, **{k: v for k, v in initial.items() if k in ('initialLakeLevel', 'initialLakeTime', 'initialLakeSource')},
+    # An automatic/legacy fallback must not retain manual values from the
+    # request after the effective initialization has been cleared above.
+    fields = ('initialLakeLevel', 'initialLakeTime', 'initialLakeSource')
+    base_request = {k: v for k, v in request.items() if k not in fields}
+    return {**base_request, **{k: v for k, v in initial.items() if k in fields},
             'modelFamily': 'grid-continuous-v1', 'spatialVersion': value['spatialVersion'],
             'inputId': product['id'], 'parameters': run_parameters, 'partitionParameters': run_regions,
             'routingMode': value['routingMode'], 'start': warmup.isoformat(), 'end': end.isoformat(),
@@ -355,3 +407,31 @@ def prepare_request(db, request, kind='simulation'):
             'earliestCompleteLakeDay': earliest_lake_day.date().isoformat() if earliest_lake_day is not None else None,
             'schemeSnapshot': deepcopy({'id': identifier, **row['payload']}), 'researchConfiguration': value,
             'target': value['target'], 'periods': deepcopy(p), 'search': deepcopy(value['search']), 'origin': 'user-research'}
+
+
+def resolved_initialization(request, observation, kind='simulation'):
+    """Use only information available before the end of training for calibration."""
+    from .grid_simulation import anchor
+    end = pd.Timestamp(request['periods']['trainingEnd']) if kind == 'calibration' else pd.Timestamp(request['end'])
+    available = observation
+    if kind == 'calibration':
+        available = {**observation, 'level': {t: v for t, v in observation.get('level', {}).items()
+                                               if pd.Timestamp(t) < end}}
+    initial = anchor(request, available, pd.Timestamp(request['start']), end)
+    if initial is None:
+        raise ValueError('所选时期没有可用的主站湖位起算依据，请补充观测或在高级设置中填写有依据的起算条件')
+    at = pd.Timestamp(initial['time'])
+    first_day = at.normalize() + (pd.Timedelta(days=1) if at != at.normalize() else pd.Timedelta(0))
+    if first_day >= pd.Timestamp(request['end']):
+        raise ValueError(f'湖位从{at:%Y-%m-%d %H:%M}起算，首个完整湖位日为{first_day:%Y-%m-%d}；所选时期没有完整湖位日')
+    if kind == 'calibration' and at >= end:
+        raise ValueError('率定不能使用评价期的湖位作为起算依据')
+    return initial, first_day.date().isoformat()
+
+
+def plan_token(request, initialization, observation):
+    return digest({'scheme': request['schemeSnapshot'], 'inputId': request['inputId'],
+                   'start': request['start'], 'end': request['end'],
+                   'evaluationStart': request['evaluationStart'],
+                   'parameters': request['parameters'], 'partitionParameters': request['partitionParameters'],
+                   'initialization': initialization, 'observation': digest(observation)})

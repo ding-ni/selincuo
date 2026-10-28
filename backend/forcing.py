@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 from pathlib import Path
 
@@ -41,7 +42,21 @@ def register_lake_correction(db, baseline_id, correction):
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / 'forcing.npz'
     if not path.exists():
-        shutil.copy2(db.workspace / 'inputs/products' / baseline_id / parent['data'], path)
+        source = db.workspace / 'inputs/products' / baseline_id / parent['data']
+        try:
+            # The derived manifest carries the lake-only rule; the immutable
+            # raw arrays are identical, so same-volume products can share bytes.
+            os.link(source, path)
+        except FileExistsError:
+            pass
+        except OSError:
+            # Cross-volume or unsupported filesystems keep a byte-identical,
+            # exclusively created copy. Existing targets are never overwritten.
+            try:
+                with source.open('rb') as src, path.open('xb') as dst:
+                    shutil.copyfileobj(src, dst)
+            except FileExistsError:
+                pass
     if sha_file(path) != parent['dataSHA256']:
         raise ValueError('派生输入数据与原始驱动摘要不一致')
     manifest = {**parent, 'id': identifier, 'name': '标准历史驱动 · 湖面降水校正',
