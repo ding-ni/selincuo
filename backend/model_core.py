@@ -60,7 +60,7 @@ PARAMETER_DEFINITIONS += [
 ]
 CALIBRATION_ROLE = {key: stage for stage, keys in (
     ('land-runoff', ['KC', 'WM', 'B', 'SM', 'KI', 'KG']),
-    ('routing', ['tauHours', 'interflowTauHours', 'baseflowTauHours']),
+    ('routing', ['tauHours', 'lagHours', 'interflowTauHours', 'baseflowTauHours']),
     ('lake', ['lakeCoefficient']),
 ) for key in keys}
 for definition in PARAMETER_DEFINITIONS:
@@ -73,6 +73,24 @@ for definition in PARAMETER_DEFINITIONS:
         definition['parameterBasis'] = '候选路由参数；冻结产流过程后由杜加日流量约束，需检验边界与初始状态影响'
     else:
         definition['parameterBasis'] = '候选湖面转换参数；仅由条件湖位窗口约束，缺湖面蒸发实测'
+
+# A parameter's presence in the physical model is distinct from whether a
+# Duja discharge series can identify it. Metadata does not change the kernel.
+from .calibration_config import LAND_KEYS, SNOW_KEYS, ROUTING_KEYS, RUNOFF_KEYS
+for definition in PARAMETER_DEFINITIONS:
+    key = definition['key']
+    stage = 'runoff' if key in LAND_KEYS else 'snow' if key in SNOW_KEYS else 'routing' if key in ROUTING_KEYS else None
+    if key in ('iceSublimationFraction', 'iceSublimationMaxMmHour'):
+        reason = '当前模型的裸冰升华不改变径流，不能用杜加流量率定。'
+    elif key == 'lakeCoefficient':
+        reason = '湖面蒸发系数不改变杜加流量，应按湖位资料独立评价。'
+    elif key in SNOW_KEYS:
+        reason = '作用取决于积雪、冰川和气温条件；缺少独立冰雪观测时，流量只能提供间接约束。'
+    else:
+        reason = '作用及可辨识性取决于本期气象、下垫面与流量资料。'
+    definition['flowCalibration'] = {'allowed': stage is not None, 'stage': stage,
+                                     'defaultSelected': key in RUNOFF_KEYS or key in ROUTING_KEYS,
+                                     'condition': reason}
 STATE_NAMES = ['swe', 'snow_liquid', 'WU', 'WL', 'WD', 'S', 'FR', 'glacier_storage']
 DIAGNOSTIC_NAMES = ['RS', 'RI', 'RG', 'glacier_runoff', 'snowmelt', 'icemelt', 'et_actual', 'water_balance_error', 'ice_sublimation']
 

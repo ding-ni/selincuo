@@ -42,6 +42,8 @@ class Database:
         with self.connect() as db:
             db.execute('PRAGMA journal_mode=WAL')
             db.executescript(SCHEMA)
+            if 'user_saved' not in {r[1] for r in db.execute('PRAGMA table_info(tasks)')}:
+                db.execute('ALTER TABLE tasks ADD COLUMN user_saved INTEGER NOT NULL DEFAULT 0')
             db.execute('INSERT OR IGNORE INTO schema_version VALUES(1,?)', (now(),))
         from .stations import sync_locations, sync_datums
         sync_locations(self)

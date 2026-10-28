@@ -3,7 +3,7 @@ import {ref,reactive,computed,onMounted,onBeforeUnmount,watch} from 'vue'
 import ScreenMap from './ScreenMap.vue'
 import ScreenChart from './ScreenChart.vue'
 import LakeMark from './LakeMark.vue'
-import {rivers,layers,exactValue,timelineDates,defaultReplayDay,balanceTerms,basinRain,observationDay,timelineTicks} from './dashboard.mjs'
+import {rivers,layers,exactValue,timelineDates,defaultReplayDay,balanceTerms,basinRain,observationDay,timelineTicks,screenResults,replayResultName,hasDashboardCapabilities,replayRows} from './dashboard.mjs'
 import {api,number} from './api.mjs'
 import {scaledLayer} from './map-scale.mjs'
 import {createFrameCache} from './frame-cache.mjs'
@@ -12,13 +12,32 @@ const mode=ref('model'),task=ref(null),monitor=ref(null),meta=ref(null),shown=re
 const dark=ref(localStorage.getItem('selinco:screen-theme')!=='light'),show=reactive({ice:false,rivers:true,stations:true,names:true,boundaries:true,grid:false,units:false})
 const viewport=ref({width:1600,height:900})
 const density=computed(()=>viewport.value.height<700?'compact':viewport.value.height<900||viewport.value.width<1400?'tight':'regular')
-const currentId=ref(props.selectedId||props.boot.homeResultId||(props.boot.builtinResultAvailable===false?'':props.boot.standardResultId))
-const frames=createFrameCache(),ranges=new Map();let sequence=0,timer,sliderTimer,disposed=false,resizeObserver
-const choices=computed(()=>[...(props.boot.publishedResults||[]),...(props.tasks||[]).filter(t=>!t.trashed&&t.status==='succeeded'&&['simulation','continuation','trial','calibration'].includes(t.kind))])
+const currentId=ref(''),choices=ref([]),candidates=computed(()=>screenResults(props.boot.publishedResults||[],props.tasks||[],props.boot.homeResultId))
+const frames=createFrameCache(),ranges=new Map(),choiceChecks=new Map();let sequence=0,choiceTicket=0,choicesReady=false,timer,sliderTimer,disposed=false,resizeObserver
+async function refreshChoices(){
+ const ticket=++choiceTicket,homeId=props.boot.homeResultId,values=candidates.value
+ const checks=values.map(async record=>{
+  if(record.id===homeId)return record
+  const key=[record.id,record.updated_at,record.userSaved,(props.boot.inputs||[]).map(i=>i.id).join(',')].join('|')
+  if(!choiceChecks.has(key)){
+   const promise=Promise.all([api('tasks/'+encodeURIComponent(record.id)),api('result-capabilities?resultId='+encodeURIComponent(record.id))])
+    .then(([task,metadata])=>hasDashboardCapabilities(task,metadata,props.boot.inputs||[])).catch(()=>{choiceChecks.delete(key);return false})
+   choiceChecks.set(key,promise)
+  }
+  return await choiceChecks.get(key)?record:null
+ })
+ const verified=(await Promise.all(checks)).filter(Boolean)
+ if(ticket!==choiceTicket||disposed)return
+ choices.value=verified
+ if(choicesReady&&mode.value==='model'&&!verified.some(item=>item.id===currentId.value)){
+  currentId.value=verified.find(item=>item.id===homeId)?.id||''
+  if(currentId.value)await selectResult();else{mode.value='observation';await requestView(defaultDay('observation'))}
+ }
+}
 const result=computed(()=>mode.value==='model'?task.value?.result:null),stations=computed(()=>monitor.value?.stations||[]),main=computed(()=>stations.value.find(s=>s.id==='SLC'))
 const day=computed(()=>shown.value?.day||''),shownVariable=computed(()=>shown.value?.variable||'basin'),dates=computed(()=>timelineDates(mode.value,monitor.value,result.value)),index=computed(()=>Math.max(0,dates.value.indexOf(day.value)))
 const current=computed(()=>result.value?.daily?.find(r=>r.date.slice(0,10)===day.value)),observed=computed(()=>mode.value==='model'?current.value?.observedLevel:exactValue(main.value,day.value)),level=computed(()=>mode.value==='model'?current.value?.lakeLevel:observed.value)
-const lakeRows=computed(()=>result.value?.daily||main.value?.daily||[]),flowRows=computed(()=>result.value?.daily||stations.value.find(s=>s.id==='DUJA')?.daily||[])
+const lakeRows=computed(()=>mode.value==='model'?replayRows(result.value):main.value?.daily||[]),flowRows=computed(()=>mode.value==='model'?replayRows(result.value):stations.value.find(s=>s.id==='DUJA')?.daily||[])
 const shores=computed(()=>stations.value.filter(s=>s.kind==='lake'&&s.id!=='SLC')),rain=computed(()=>shown.value?.rain)
 const rainObserved=computed(()=>main.value?.rainDaily?.find(r=>r.date===day.value)?.value)
 const flowValue=computed(()=>mode.value==='model'?current.value?.total:exactValue(stations.value.find(s=>s.id==='DUJA'),day.value))
@@ -32,6 +51,7 @@ const selectedFlow=computed(()=>rivers.map(r=>({...r,value:current.value?.[r.id]
 const rainfall=computed(()=>[...basinRain(rain.value,result.value?.units),{id:'lake',name:'湖面',value:rain.value?.complete?rain.value.lakeMean:null}])
 const rainPeak=computed(()=>Math.max(1,...rainfall.value.map(r=>r.value||0))),flowPeak=computed(()=>Math.max(1,...selectedFlow.value.map(r=>r.value||0)))
 const duja=computed(()=>stations.value.find(s=>s.id==='DUJA'))
+function shoreValue(station,date){const value=observationDay(station,date);return value.value==null?({outside:'无记录',missing:'当日缺测',failed:'读取失败'}[value.status]||value.label):number(value.value,3)+' m'}
 function defaultDay(m=mode.value,t=task.value){const a=timelineDates(m,monitor.value,t?.result);return a.includes(props.viewDay)?props.viewDay:m==='observation'?(main.value?.latest?.date||a.at(-1)||''):defaultReplayDay(a,t?.result)}
 function stop(){playing.value=false;clearTimeout(timer)}
 function schedule(){clearTimeout(timer);if(playing.value)timer=setTimeout(async()=>{if(index.value>=dates.value.length-1){stop();return}await requestView(dates.value[index.value+1]);schedule()},Number(speed.value))}
@@ -82,16 +102,17 @@ function close(){if(document.fullscreenElement)document.exitFullscreen();expande
 function sync(){if(!document.fullscreenElement)expanded.value=false}
 function keys(e){if(e.key==='Escape')close()}
 function unit(id){const u=result.value?.units?.find(u=>u.id===id);feature.value={id,name:'计算单元',...u}}
-watch(()=>props.selectedId,id=>{if(id&&id!==currentId.value&&mode.value==='model'){currentId.value=id;selectResult()}})
+watch(()=>candidates.value.map(t=>[t.id,t.updated_at,t.userSaved,t.trashed].join(':')).join('|')+';'+(props.boot.inputs||[]).map(i=>i.id).join(','),()=>{if(choicesReady)refreshChoices()})
+watch(()=>props.selectedId,id=>{if(id&&id!==currentId.value&&mode.value==='model'&&choices.value.some(item=>item.id===id)){currentId.value=id;selectResult()}})
 watch(()=>props.viewDay,value=>{if(value&&value!==day.value&&value!==requestedDay.value&&dates.value.includes(value))requestView(value)})
 watch(dark,v=>localStorage.setItem('selinco:screen-theme',v?'dark':'light'))
-onMounted(async()=>{resizeObserver=new ResizeObserver(([entry])=>{viewport.value={width:entry.contentRect.width,height:entry.contentRect.height}});resizeObserver.observe(host.value);document.addEventListener('fullscreenchange',sync);document.addEventListener('keydown',keys);try{monitor.value=await api('dashboard');if(currentId.value)await selectResult();else{mode.value='observation';await requestView(defaultDay('observation'))}}catch(e){error.value=e.message}finally{loading.value=false}})
-onBeforeUnmount(()=>{disposed=true;sequence++;stop();clearTimeout(sliderTimer);frames.clear();resizeObserver?.disconnect();document.removeEventListener('fullscreenchange',sync);document.removeEventListener('keydown',keys)})
+onMounted(async()=>{resizeObserver=new ResizeObserver(([entry])=>{viewport.value={width:entry.contentRect.width,height:entry.contentRect.height}});resizeObserver.observe(host.value);document.addEventListener('fullscreenchange',sync);document.addEventListener('keydown',keys);try{const [,data]=await Promise.all([refreshChoices(),api('dashboard')]);monitor.value=data;choicesReady=true;currentId.value=choices.value.some(item=>item.id===props.selectedId)?props.selectedId:(choices.value.find(item=>item.id===props.boot.homeResultId)?.id||'');if(currentId.value)await selectResult();else{mode.value='observation';await requestView(defaultDay('observation'))}refreshChoices()}catch(e){error.value=e.message}finally{loading.value=false}})
+onBeforeUnmount(()=>{disposed=true;sequence++;choiceTicket++;stop();clearTimeout(sliderTimer);frames.clear();resizeObserver?.disconnect();document.removeEventListener('fullscreenchange',sync);document.removeEventListener('keydown',keys)})
 </script>
 <template>
 <section ref="host" class="lake-screen" :class="['screen-density-'+density,{'screen-dark':dark,'screen-expanded':expanded}]" :style="{'--screen-height':viewport.height+'px'}" :aria-busy="pending">
  <div class="screen-masthead"><div class="screen-wordmark"><LakeMark/><h2>色林错流域湖情总览</h2></div><div class="screen-header-actions"><button @click="emit('navigate','simulation')">历史模拟</button><button @click="dark=!dark">{{dark?'日常浅色':'汇报深色'}}</button><button @click="expanded?close():fullscreen()">{{expanded?'退出全屏':'全屏展示'}}</button></div></div>
- <div class="screen-context"><div class="screen-modes"><button :class="{on:mode==='model'}" :disabled="!currentId" @click="changeMode('model')">模拟回放</button><button :class="{on:mode==='observation'}" @click="changeMode('observation')">站点监测</button></div><label v-if="mode==='model'" class="screen-result-choice"><span>成果</span><select v-model="currentId" aria-label="当前成果" @change="selectResult"><option v-for="t in choices" :key="t.id" :value="t.id">{{t.displayName||t.name||t.id}}</option></select></label><span v-else class="monitor-clock">{{boot.builtinResultAvailable===false?boot.builtinResultMessage:'主站最近有效观测 '+(main?.latest?.date||'暂无')+' · 北京时间'}}</span><button v-if="task&&mode==='model'" class="link" @click="emit('result',task.id)">成果详情 →</button><span class="business-date">北京时间 <b>{{day||'—'}}</b></span></div>
+ <div class="screen-context"><div class="screen-modes"><button :class="{on:mode==='model'}" :disabled="!currentId" @click="changeMode('model')">模拟回放</button><button :class="{on:mode==='observation'}" @click="changeMode('observation')">站点监测</button></div><label v-if="mode==='model'" class="screen-result-choice"><span>成果</span><select v-model="currentId" aria-label="当前成果" @change="selectResult"><option v-for="t in choices" :key="t.id" :value="t.id">{{replayResultName(t,boot.homeResultId,task)}}</option></select></label><span v-else class="monitor-clock">{{boot.builtinResultAvailable===false?boot.builtinResultMessage:'主站最近有效观测 '+(main?.latest?.date||'暂无')+' · 北京时间'}}</span><button v-if="task&&mode==='model'" class="link" @click="emit('result',task.id)">成果详情 →</button><span class="business-date">北京时间 <b>{{day||'—'}}</b></span></div>
  <div v-if="loading&&!shown" class="screen-initial" role="status">正在读取湖情资料…</div>
  <template v-else>
  <div class="screen-metrics">
@@ -102,9 +123,9 @@ onBeforeUnmount(()=>{disposed=true;sequence++;stop();clearTimeout(sliderTimer);f
  </div>
  <div class="screen-main">
   <aside class="screen-panel hydrology-stack">
-   <section v-if="mode==='model'" class="rain-summary"><div class="screen-panel-heading"><h3>流域雨情</h3><span>日降水 · mm</span></div><div v-for="r in rainfall" :key="r.id" class="rain-summary-row"><span>{{r.name}}</span><b>{{number(r.value,2)}}</b><div class="hydrology-bar"><i :style="{width:((r.value||0)/rainPeak*100)+'%'}"></i></div></div><p class="screen-note">{{rain?.complete?'流域面雨量 · 湖面采用订正值':'当日气象资料不完整'}}</p></section>
-   <section class="observation-summary"><div class="screen-panel-heading"><h3>当日实测</h3></div><div><span>主站湖位</span><b>{{number(exactValue(main,day),3)}} <small>m</small></b><small v-if="exactValue(main,day)==null">{{observationDay(main,day).label}}</small></div><div><span>杜加流量</span><b>{{number(exactValue(duja,day),2)}} <small>m³/s</small></b><small v-if="exactValue(duja,day)==null">{{observationDay(duja,day).label}}</small></div></section>
-   <section class="shore-summary"><div class="screen-panel-heading"><h3>四岸观测</h3><span>原基准 · m</span></div><div class="shore-list"><button v-for="s in shores" :key="s.id" class="shore-row" :data-shore="s.id" :data-status="observationDay(s,day).status" @click="emit('station',s.id,day)"><span>{{s.name.replace('色林错','')}}</span><b>{{observationDay(s,day).value==null?observationDay(s,day).label:number(observationDay(s,day).value,3)+' m'}}</b></button></div></section>
+   <section v-if="mode==='model'" class="rain-summary"><div class="screen-panel-heading"><h3>流域雨情</h3><span>日降水 · mm</span></div><div class="rain-list"><div v-for="r in rainfall" :key="r.id" class="rain-summary-row"><span>{{r.name}}</span><b>{{number(r.value,2)}}</b><div class="hydrology-bar"><i :style="{width:((r.value||0)/rainPeak*100)+'%'}"></i></div></div></div><p class="screen-note">{{rain?.complete?'流域面雨量 · 湖面采用订正值':'当日气象资料不完整'}}</p></section>
+   <section class="observation-summary"><div class="screen-panel-heading"><h3>当日实测</h3></div><div><span>主站湖位</span><b v-if="exactValue(main,day)!=null">{{number(exactValue(main,day),3)}} <small>m</small></b><small v-else>{{observationDay(main,day).label}}</small></div><div><span>杜加流量</span><b v-if="exactValue(duja,day)!=null">{{number(exactValue(duja,day),2)}} <small>m³/s</small></b><small v-else>{{observationDay(duja,day).label}}</small></div></section>
+   <section class="shore-summary"><div class="screen-panel-heading"><h3>四岸观测</h3><span>原基准 · m</span></div><div class="shore-list"><button v-for="s in shores" :key="s.id" class="shore-row" :data-shore="s.id" :data-status="observationDay(s,day).status" :title="s.name+' · '+observationDay(s,day).label" @click="emit('station',s.id,day)"><span>{{s.name.replace('色林错','')}}</span><b>{{shoreValue(s,day)}}</b></button></div></section>
   </aside>
   <section class="screen-panel map-panel"><div class="screen-map-heading"><h3>{{mode==='model'?'流域水情':'站点分布'}}</h3><select v-model="variable" aria-label="地图主题" @change="changeLayer"><option value="basin">流域分区</option><option value="terrain">地形高程</option><template v-if="mode==='model'"><option v-for="l in layers.filter(l=>!['basin','terrain','evaporation'].includes(l.id))" :key="l.id" :value="l.id">{{l.label}}</option></template></select><details><summary>叠加要素</summary><div class="map-overlay-options"><label v-for="(label,key) in {boundaries:'流域边界',rivers:'河网',ice:'冰川边界',stations:'测站',names:'名称',grid:'气象格网',units:'计算单元'}" :key="key"><input type="checkbox" v-model="show[key]">{{label}}</label></div></details></div>
    <div class="map-stage"><ScreenMap :spatial-base="mode==='model'?(meta?.spatialBase||'/spatial/'):'/spatial/'" :show-grid="mode==='model'&&show.grid" :show-units="mode==='model'&&show.units" :show-boundaries="show.boundaries" :range-layer="mapLayer" :stations="stations" :focus="feature?.id" :selected-unit="feature?.id" :frame="shown?.frame" :grid-frame="shown?.rain" :snow="shown?.snow" :variable="shownVariable" :show-ice="show.ice" :show-rivers="show.rivers" :show-terrain="shownVariable==='terrain'" :show-stations="show.stations" :show-names="show.names" @unit="unit" @select="emit('station',$event,day)" @feature="feature=$event" @failure="error=$event"/><div v-if="mapMissing" class="map-status">{{shownVariable==='snow'?'无日末状态':'气象资料缺少完整日'}}</div><div v-if="feature" class="feature-summary"><b>{{feature.name}}</b><span v-if="feature.areaKm2!=null">{{number(feature.areaKm2,2)}} km²</span><span v-if="feature.value!=null">{{number(feature.value,2)}} {{feature.unit}}</span><button aria-label="关闭区域信息" @click="feature=null">×</button></div></div>

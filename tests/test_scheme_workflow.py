@@ -70,7 +70,7 @@ class SchemeWorkflowTests(unittest.TestCase):
     def setUp(self):
         self.db = MemoryDB()
         self.spatial = {'version': 'AGG-1', 'unitStrategy': 'partition-elevation-surface-area-weighted-v1',
-                        'units': [{'id': 'u', 'partition': 'duja'}], 'grids': [{'id': 'g'}]}
+                        'units': [{'id': 'u', 'partition': 'duja', 'kind': 'land', 'areaKm2': 12.}], 'grids': [{'id': 'g'}]}
         self.spatial['forcingGridVersion'] = digest(self.spatial['grids'])
         for identifier, end in [('old', '2025-01-01T00:00:00'), ('new', '2026-01-01T00:00:00')]:
             self.db.tables['input_products'].append({'id': identifier, 'name': identifier, 'created_at': end,
@@ -272,15 +272,53 @@ class SchemeWorkflowTests(unittest.TestCase):
         self.config['initialization'] = {'mode': 'manual', 'initialLakeTime': '2022-04-20T12:00:00',
                                          'initialLakeLevel': 4544.03, 'initialLakeSource': '日值代表锚点'}
         row = schemes.save(self.db, self.config)
-        with self.assertRaisesRegex(ValueError, '完整湖位从2022-04-21起'):
-            schemes.prepare_request(self.db, {'researchSchemeId': row['id'],
+        before = schemes.prepare_request(self.db, {'researchSchemeId': row['id'],
                 'start': '2022-01-01T00:00:00', 'end': '2022-02-01T00:00:00'})
-        with self.assertRaisesRegex(ValueError, '完整湖位从2022-04-21起'):
-            schemes.prepare_request(self.db, {'researchSchemeId': row['id'],
+        self.assertTrue(before['_noAutomaticLakeAnchor'])
+        self.assertEqual(schemes.resolved_initialization(before, {'profile':'test',
+            'level':{'2022-01-15T00:00:00':4500.}, 'flow':{}}, 'simulation'), (None, None))
+        partial = schemes.prepare_request(self.db, {'researchSchemeId': row['id'],
                 'start': '2022-04-20T00:00:00', 'end': '2022-04-21T00:00:00'})
+        self.assertIsNone(partial['earliestCompleteLakeDay'])
         request = schemes.prepare_request(self.db, {'researchSchemeId': row['id'],
             'start': '2022-01-01T00:00:00', 'end': '2022-06-01T00:00:00'})
         self.assertEqual(request['earliestCompleteLakeDay'], '2022-04-21')
+
+    def test_automatic_2021_anchor_uses_same_2020_start_across_windows(self):
+        self.config['periods']['warmupStart'] = '2020-01-01T00:00:00'
+        self.config['initialization'] = {'mode': 'automatic'}
+        row = schemes.save(self.db, self.config)
+        observed = {'profile':'test','level':{'2021-04-23T00:00:00':4543.66,
+                                              '2022-05-02T00:00:00':4545.},'flow':{}}
+        early = schemes.prepare_request(self.db, {'researchSchemeId': row['id'],
+            'start':'2021-04-23T00:00:00','end':'2022-06-01T00:00:00'})
+        later = schemes.prepare_request(self.db, {'researchSchemeId': row['id'],
+            'start':'2022-05-01T00:00:00','end':'2024-06-01T00:00:00'})
+        self.assertEqual(early['start'], '2020-01-01T00:00:00')
+        self.assertEqual(later['start'], early['start'])
+        a, day = schemes.resolved_initialization(early, observed)
+        b, _ = schemes.resolved_initialization(later, observed)
+        self.assertEqual(a,b)
+        self.assertEqual((a['time'], a['level'], day),('2021-04-23T12:00:00',4543.66,'2021-04-24'))
+
+    def test_explicit_anchor_preheats_prior_calendar_year_and_never_reselects_by_window(self):
+        self.config['initialization'] = {'mode':'manual','initialLakeTime':'2021-04-23T12:00:00',
+                                         'initialLakeLevel':4543.66,'initialLakeSource':'日值代表'}
+        row = schemes.save(self.db, self.config)
+        observed = {'profile':'test','level':{'2021-02-01T00:00:00':4530.,
+                                              '2021-04-23T00:00:00':4543.66},'flow':{}}
+        before = schemes.prepare_request(self.db, {'researchSchemeId': row['id'],
+            'start':'2021-02-01T00:00:00','end':'2021-03-01T00:00:00'})
+        early = schemes.prepare_request(self.db, {'researchSchemeId': row['id'],
+            'start':'2021-03-01T00:00:00','end':'2022-06-01T00:00:00'})
+        later = schemes.prepare_request(self.db, {'researchSchemeId': row['id'],
+            'start':'2022-05-01T00:00:00','end':'2024-06-01T00:00:00'})
+        self.assertEqual({r['start'] for r in (before,early,later)}, {'2020-01-01T00:00:00'})
+        self.assertEqual(schemes.resolved_initialization(before, observed), (None,None))
+        first, _ = schemes.resolved_initialization(early, observed)
+        last, _ = schemes.resolved_initialization(later, observed)
+        self.assertEqual(first,last)
+        self.assertEqual((first['time'], first['level']), ('2021-04-23T12:00:00',4543.66))
 
     def test_calibration_target_must_change_the_parameters_it_scores(self):
         bad = deepcopy(self.config)
@@ -292,6 +330,22 @@ class SchemeWorkflowTests(unittest.TestCase):
         bad['search']['keys'] = ['lakeCoefficient']
         with self.assertRaisesRegex(ValueError, '全湖参数'):
             schemes.save(self.db, bad)
+
+    def test_joint_scheme_freezes_objective_and_limits_supported_parameters(self):
+        config = deepcopy(self.config)
+        config['target'] = 'integrated'
+        config['search']['keys'] = ['WM', 'lakeCoefficient']
+        row = schemes.save(self.db, config)
+        self.assertEqual(row['payload']['search']['joint'], schemes.INTEGRATED_OBJECTIVE)
+        self.assertEqual(row['payload']['search']['budgets']['integrated'], 120)
+        config['search']['joint'] = deepcopy(schemes.INTEGRATED_OBJECTIVE)
+        config['search']['joint']['weights']['lake'] = .9
+        with self.assertRaisesRegex(ValueError, '评价方法与权重'):
+            schemes.save(self.db, config)
+        config['search']['joint'] = deepcopy(schemes.INTEGRATED_OBJECTIVE)
+        config['search']['keys'] = ['snowDdf', 'lakeCoefficient']
+        with self.assertRaisesRegex(ValueError, '仅调整杜加上游'):
+            schemes.save(self.db, config)
 
     def test_automatic_earlier_request_and_no_evaluation_period_anchor_leak(self):
         self.config['initialization'] = {'mode': 'automatic', 'initialLakeTime': '2022-04-20T12:00:00',
@@ -308,8 +362,7 @@ class SchemeWorkflowTests(unittest.TestCase):
                          ('2021-04-23T12:00:00', 4543.66, '2021-04-24'))
         calibration = schemes.prepare_request(self.db, {'researchSchemeId': row['id']}, kind='calibration')
         later = {'profile': 'test', 'level': {'2024-01-01T00:00:00': 4544.0}, 'flow': {}}
-        with self.assertRaisesRegex(ValueError, '没有可用的主站湖位'):
-            schemes.resolved_initialization(calibration, later, 'calibration')
+        self.assertEqual(schemes.resolved_initialization(calibration, later, 'calibration'), (None, None))
 
     def test_plan_token_changes_with_input_or_observation(self):
         row = schemes.save(self.db, self.config)
@@ -332,6 +385,8 @@ class SchemeWorkflowTests(unittest.TestCase):
                     'partitionParameterSHA256': digest(request['partitionParameters']),
                     'initializationSHA256': digest(initial), 'observationSnapshotSHA256': digest(obs),
                     'routingMode': 'source-separated'}
+        from backend.grid_simulation import parameter_configuration
+        identity.update(parameter_configuration(self.spatial, request)[-1])
         self.db.tasks['complete'] = {'id': 'complete', 'status': 'succeeded', 'trashed': 0,
             'result': {'inputId': request['inputId'], 'identity': identity, 'start': request['start'], 'end': request['end']}, 'request': {}}
         with patch('backend.grid_simulation.model_identity', return_value='code'), \
@@ -340,6 +395,53 @@ class SchemeWorkflowTests(unittest.TestCase):
             self.assertEqual(business_context.simulation_plan(self.db, query)['action'], 'reuse')
             self.db.tasks['complete']['result']['identity']['parameterSHA256'] = 'changed'
             self.assertEqual(business_context.simulation_plan(self.db, query)['action'], 'rerun')
+
+    def test_new_draft_flow_only_lifts_donor_without_changing_original(self):
+        original = deepcopy(self.config)
+        value = schemes._new_scheme_defaults(deepcopy(original))
+        self.assertEqual(self.config, original)
+        self.assertEqual(value['target'], 'duja')
+        self.assertEqual(value['parameterTransfer']['mode'], 'duja-shared')
+        self.assertEqual(value['partitionParameters'], {})
+        for key, number in original['partitionParameters']['duja'].items():
+            self.assertEqual(value['parameters'][key], number)
+        self.assertEqual(value['parameters']['lakeCoefficient'], 1.)
+        self.assertNotIn('lakeCoefficient', value['search']['keys'])
+        self.assertFalse(value['lakeParameterSource']['calibratedToLakeLevel'])
+
+    def test_shared_scheme_refuses_even_empty_regional_overrides_before_normalizing(self):
+        for overrides in ({'duja': {}}, {'duja': {'WM': 250}}):
+            value = deepcopy(self.config)
+            value['parameterTransfer'] = {'mode': 'duja-shared'}
+            value['partitionParameters'] = overrides
+            with self.assertRaisesRegex(ValueError, '清除覆盖'):
+                schemes.validate(self.db, value)
+
+    def test_flow_scheme_rejects_nonresponsive_or_lake_keys_and_bad_seeds(self):
+        for key in ('iceSublimationFraction', 'iceSublimationMaxMmHour', 'lakeCoefficient'):
+            value = deepcopy(self.config)
+            value['target'] = 'duja'
+            value['search']['scope'] = 'duja'
+            value['search']['keys'] = [key]
+            with self.assertRaises(ValueError):
+                schemes.validate(self.db, value)
+        value = deepcopy(self.config)
+        value['search']['seeds'] = [[42]]
+        with self.assertRaisesRegex(ValueError, '多起点'):
+            schemes.validate(self.db, value)
+
+    def test_plan_token_includes_transfer_policy(self):
+        row = schemes.save(self.db, self.config)
+        request = schemes.prepare_request(self.db, {'researchSchemeId': row['id']})
+        observed = {'profile': 'test', 'level': {}, 'flow': {}}
+        self.assertNotEqual(schemes.plan_token(request, None, observed),
+                            schemes.plan_token({**request, 'parameterTransfer': {'mode': 'duja-shared'}}, None, observed))
+
+    def test_request_cannot_silently_override_scheme_transfer_policy(self):
+        row = schemes.save(self.db, self.config)
+        with self.assertRaisesRegex(ValueError, '策略与已保存方案不一致'):
+            schemes.prepare_request(self.db, {'researchSchemeId': row['id'],
+                'parameterTransfer': {'mode': 'duja-shared'}})
 
 
 class ForcingWindowTests(unittest.TestCase):

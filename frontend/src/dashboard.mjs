@@ -28,8 +28,14 @@ export function basinRain(frame,units=[]){
   return {...r,value:missing||!area?null:total/area}
  })
 }
+export function replayRows(result){
+ const rows=result?.daily||[],coverage=result?.displayCoverage
+ if(!coverage)return rows
+ const start=(coverage.start||'').slice(0,10),end=(coverage.endExclusive||'').slice(0,10)
+ return rows.filter(row=>{const day=(row.date||'').slice(0,10);return day&&(!start||day>=start)&&(!end||day<end)})
+}
 export function timelineDates(mode,monitor,result){
- if(mode==='model')return (result?.daily||[]).map(r=>r.date.slice(0,10))
+ if(mode==='model')return replayRows(result).map(r=>r.date.slice(0,10))
  const all=(monitor?.stations||[]).flatMap(s=>s.daily||[]).map(r=>r.date).sort()
  if(!all.length)return []
  const start=Date.parse(all[0]+'T00:00:00Z'),end=Date.parse(all.at(-1)+'T00:00:00Z'),dates=[]
@@ -37,5 +43,24 @@ export function timelineDates(mode,monitor,result){
  return dates
 }
 export function balanceTerms(row){return [{key:'lakeInflowM3',label:'入湖来水',sign:1},{key:'lakePrecipitationM3',label:'湖面降水',sign:1},{key:'lakeEvaporationM3',label:'湖面蒸发',sign:-1},{key:'lakeDeltaVolumeM3',label:'蓄水变化',sign:1}].map(t=>({...t,value:row?.[t.key]==null?null:row[t.key]/1e6}))}
-export function defaultReplayDay(dates,result){const latest=(result?.daily||[]).filter(r=>r.lakeLevel!=null).at(-1);return latest?.date.slice(0,10)||dates.at(-1)||''}
-export function screenResults(published=[],tasks=[]){return [...published.map(r=>({...r,builtin:true,collection:'历史模拟'})),...tasks.filter(t=>t.status==='succeeded'&&!t.trashed&&t.kind==='simulation'&&t.collection==='历史模拟')]}
+export function defaultReplayDay(dates,result){const latest=replayRows(result).filter(r=>r.lakeLevel!=null).at(-1);return latest?.date.slice(0,10)||dates.at(-1)||''}
+// Only the adopted result and results the user explicitly saved belong on the overview.
+// Callers verify the latter's full display capabilities before offering them.
+export function screenResults(published=[],tasks=[],homeId=''){
+ const home=published.find(r=>r.id===homeId)||tasks.find(r=>r.id===homeId)
+ const adopted=home&&!home.trashed?[{...home,builtin:published.some(r=>r.id===homeId)}]:homeId?[{id:homeId}]:[]
+ const saved=tasks.filter(t=>t.id!==homeId&&t.status==='succeeded'&&!t.trashed&&['simulation','continuation'].includes(t.kind)&&!!t.userSaved)
+ return [...adopted,...saved]
+}
+export function replayResultName(t,homeId,loaded){
+ if(t.id!==homeId)return t.name||t.displayName||'已保存模拟'
+ const result=loaded?.id===t.id?loaded.result:null,rows=result?replayRows(result):null
+ const start=(rows?.[0]?.date||result?.displayCoverage?.start||t.request?.start||'').slice(0,4)
+ const end=(rows?.at(-1)?.date||result?.displayCoverage?.endExclusive||t.request?.end||'').slice(0,4)
+ return start&&end?'历史模拟 · '+start+(start===end?'':'—'+end):'历史模拟'
+}
+export function hasDashboardCapabilities(task,metadata,inputs=[]){
+ const result=task?.result
+ return !!(task?.status==='succeeded'&&replayRows(result).some(day=>day.date&&Number.isFinite(day.lakeLevel)&&Number.isFinite(day.total))&&result?.units?.length&&result?.inputId&&
+  inputs.some(input=>input.id===result.inputId)&&metadata?.spatialBase&&metadata?.units?.length&&metadata?.hours>0)
+}

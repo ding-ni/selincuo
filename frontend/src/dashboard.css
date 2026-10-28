@@ -23,7 +23,6 @@
 
 .screen-density-tight{grid-template-rows:36px 30px 68px minmax(0,1fr) clamp(140px,calc(var(--screen-height,740px)*.21),210px) 48px;gap:7px}
 .screen-density-tight .summary-stack,.screen-density-tight .hydrology-stack{gap:8px;padding:9px 11px}
-.screen-density-tight .observation-summary{display:none}
 .screen-density-tight .rain-summary-row{padding:3px 0;gap:2px 6px;line-height:1.25}
 .screen-density-tight .inflow-summary .hydrology-bar{display:none}
 .screen-density-tight .river-row{padding:3px 0;gap:0 6px;line-height:1.25}
@@ -44,7 +43,6 @@
 .screen-density-compact .metric-card>span{font-size:12px}
 .screen-density-compact .metric-card>p{font-size:10px}
 .screen-density-compact .summary-stack,.screen-density-compact .hydrology-stack{gap:6px;padding:7px 10px}
-.screen-density-compact .observation-summary,.screen-density-compact .hydrology-bar,.screen-density-compact .rain-summary .screen-note{display:none}
 .screen-density-compact .rain-summary-row{padding:2px 0;gap:0 6px;line-height:1.25}
 .screen-density-compact .rain-summary-row>b{font-size:13px;line-height:1.25}
 .screen-density-compact .river-row{padding:1px 0;gap:0 6px;line-height:1.2;font-size:11px}
@@ -68,3 +66,60 @@
 @media(max-width:1500px) and (min-width:1001px){.screen-main{grid-template-columns:minmax(190px,.8fr) minmax(0,1.9fr) minmax(215px,.8fr)}.screen-map-legends{width:185px}.screen-map-heading{padding:5px 8px;gap:6px}.screen-map-heading select{width:132px}.screen-masthead h2{font-size:19px}.metric-card{padding:8px 11px}.metric-card>b{font-size:27px}.metric-card>p{font-size:10px}.screen-context{gap:10px}.screen-result-choice{max-width:380px}.frame-progress{width:125px;font-size:10px}.screen-replay{gap:5px;padding:7px 9px}.screen-panel-heading>span{font-size:10px}}
 @media(max-width:1000px) and (min-width:761px){.screen-main{grid-template-columns:minmax(165px,.8fr) minmax(0,1.8fr) minmax(200px,.8fr);gap:7px}.screen-map-heading{height:auto;min-height:34px;flex-wrap:wrap;padding:4px 7px;gap:4px}.screen-map-heading select{width:120px}.screen-map-heading h3{font-size:12px}.screen-map-legends{width:160px}.screen-map-tools{gap:2px}.screen-map-tools button{padding:3px 5px}.screen-wordmark h2{font-size:17px}.screen-header-actions{gap:4px}.screen-header-actions button{font-size:11px;padding:4px 6px}.screen-result-choice{max-width:320px}.screen-replay input[type=date]{width:128px}.frame-progress{width:116px;font-size:10px}}
 @media(max-width:760px){.lake-screen{height:auto;min-height:calc(100dvh - 28px);grid-template-rows:auto auto auto auto auto auto;gap:8px}.screen-masthead{flex-wrap:wrap;gap:8px}.screen-header-actions{margin-left:auto}.screen-context{flex-wrap:wrap}.screen-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.metric-card{min-height:70px}.screen-main{grid-template-columns:1fr;min-height:0}.screen-main>.map-panel{grid-column:1;grid-row:1;height:390px}.screen-main>.hydrology-stack{grid-column:1;grid-row:2}.screen-main>.summary-stack{grid-column:1;grid-row:3}.hydrology-stack{display:grid;grid-template-columns:1fr 1fr}.hydrology-stack>section+section{border:0;padding:0}.screen-processes{grid-template-columns:1fr;height:420px}.screen-result-choice{max-width:none;order:3;flex-basis:100%}.business-date{margin-left:auto}.screen-replay{flex-wrap:wrap;min-height:65px}.frame-progress{width:auto}.timeline-track{flex-basis:150px}.screen-expanded{overflow:auto}.screen-map-legends{width:180px}.screen-map-source{font-size:9px;max-width:65%}.screen-wordmark h2{font-size:17px}.screen-wordmark .lake-mark{width:35px}.shore-row b{font-size:12px}}
+
+/* The ordinary and presentation views keep the same information hierarchy. */
+.lake-screen{--sc-body-size:14px;--sc-caption-size:12px;--sc-heading-size:15px;font-size:var(--sc-body-size)}
+.lake-screen .screen-panel h3,.lake-screen .summary-stack h3,.lake-screen .hydrology-stack h3{font-size:var(--sc-heading-size)}
+.lake-screen .screen-panel-heading>span,.lake-screen .screen-note,.lake-screen .shore-row small,.lake-screen .observation-summary small,.lake-screen .station-recency small,.lake-screen .metric-card>p,.lake-screen .metric-card>span>small,.lake-screen .timeline-ticks,.lake-screen .frame-progress,.lake-screen .frame-error,.lake-screen .frame-error button{font-size:var(--sc-caption-size)}
+.lake-screen .rain-summary-row,.lake-screen .river-row,.lake-screen .observation-summary>div:not(.screen-panel-heading),.lake-screen .shore-row,.lake-screen .station-recency>button,.lake-screen .inflow-total,.lake-screen .balance-grid>div{font-size:var(--sc-body-size)}
+.lake-screen .rain-summary-row>b,.lake-screen .river-row>b,.lake-screen .observation-summary b{font-size:15px}
+.lake-screen .shore-row{white-space:normal;line-height:1.25}.lake-screen .shore-row b{font-size:13px;line-height:1.25}
+.lake-screen .metric-card>span{font-size:14px}.lake-screen .metric-card>b{font-size:30px}.lake-screen .metric-card>b>small{font-size:12px}
+.basin-map-label text,.screen-station text{stroke-width:var(--map-label-stroke,2px)}
+.screen-station .station-halo{stroke-width:var(--map-station-stroke,1px)}
+.lake-screen .basin-map-label text,.lake-screen .screen-station text{font-size:13px;stroke-width:var(--map-label-stroke,2px)}
+.lake-screen .basin-map-label .label-area,.lake-screen .north-label,.lake-screen .scale-bar text,.lake-screen .screen-map-source,.lake-screen .screen-map-tools button,.lake-screen .basin-map-key button,.lake-screen .screen-map-legend,.lake-screen .screen-map-legend>b,.lake-screen .screen-map-legend small,.lake-screen .screen-map-legend p{font-size:12px}
+
+@media(min-width:1001px){
+ .lake-screen,.lake-screen.screen-density-tight,.lake-screen.screen-density-compact{min-height:740px;grid-template-rows:36px 30px 68px minmax(308px,1fr) clamp(220px,calc(var(--screen-height,900px)*.27),290px) 48px;gap:6px}
+ .lake-screen.screen-expanded{min-height:0;overflow:auto}
+ .lake-screen .screen-main{grid-template-columns:minmax(220px,.9fr) minmax(340px,2fr) minmax(250px,.95fr)}
+ .lake-screen .summary-stack,.lake-screen .hydrology-stack{gap:7px;padding:9px 11px;overflow-y:auto}
+ .lake-screen .summary-stack>section+section,.lake-screen .hydrology-stack>section+section{padding-top:6px}
+ .lake-screen .summary-stack .screen-panel-heading,.lake-screen .hydrology-stack .screen-panel-heading{margin-bottom:3px}
+ .lake-screen .rain-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 12px}
+ .lake-screen .rain-summary-row,.lake-screen .river-row{padding:2px 0;gap:1px 7px;line-height:1.25}
+ .lake-screen .rain-summary-row,.lake-screen .river-row{position:relative;padding-bottom:3px}
+ .lake-screen .rain-summary-row .hydrology-bar,.lake-screen .river-row .hydrology-bar{position:absolute;left:0;right:0;bottom:0}
+ .lake-screen .inflow-summary .hydrology-bar{display:block}
+ .lake-screen .hydrology-bar{height:3px}
+ .lake-screen .observation-summary>div:not(.screen-panel-heading){padding:2px 0;line-height:1.25}
+ .lake-screen .observation-summary>div>small{grid-column:auto;text-align:right}
+ .lake-screen .inflow-total{padding-top:5px;margin-top:5px;line-height:1.25}.lake-screen .inflow-total b{font-size:20px}
+ .lake-screen .balance-grid{gap:5px}.lake-screen .balance-grid>div{display:grid;grid-template-columns:1fr auto;align-items:baseline;padding:4px 3px;gap:3px;line-height:1.2}.lake-screen .balance-grid>div span{white-space:nowrap}.lake-screen .balance-grid b{font-size:15px;line-height:1.2;white-space:nowrap}
+ .lake-screen .shore-list{gap:4px 10px}.lake-screen .shore-row{padding:0;gap:4px;grid-template-columns:auto 1fr;align-items:center}.lake-screen .shore-row b{white-space:nowrap;text-align:right;font-size:12px}
+ .lake-screen .metric-card{padding:6px 10px}.lake-screen .metric-card>span{white-space:nowrap;font-size:13px}.lake-screen .metric-card>b{font-size:clamp(24px,2vw,28px)}
+ .lake-screen .screen-processes>.screen-panel{padding:8px 12px 0}
+ .lake-screen.screen-density-regular .summary-stack,.lake-screen.screen-density-regular .hydrology-stack{padding:14px 16px;gap:13px}
+ .lake-screen.screen-density-regular .rain-list{grid-template-columns:1fr;gap:2px}
+ .lake-screen.screen-density-regular .rain-summary-row,.lake-screen.screen-density-regular .river-row{padding:5px 0 6px}
+ .lake-screen.screen-density-regular .observation-summary>div:not(.screen-panel-heading){padding:5px 0}
+ .lake-screen.screen-density-regular .shore-list{gap:10px 16px}.lake-screen.screen-density-regular .shore-row{padding:4px 0}
+ .lake-screen.screen-density-regular .balance-grid{gap:8px}.lake-screen.screen-density-regular .balance-grid>div{display:flex;padding:8px 10px;gap:5px}.lake-screen.screen-density-regular .balance-grid b{font-size:21px}
+ .lake-screen.screen-density-regular .metric-card>b{font-size:32px}
+}
+
+@media(max-width:1000px){
+ .lake-screen,.lake-screen.screen-density-tight,.lake-screen.screen-density-compact{height:auto;min-height:calc(100dvh - 28px);grid-template-rows:auto auto auto auto auto auto;gap:8px}
+ .lake-screen .screen-masthead,.lake-screen .screen-context{flex-wrap:wrap}
+ .lake-screen .screen-main{grid-template-columns:1fr 1fr;min-height:0}
+ .lake-screen .screen-main>.map-panel{grid-column:1/-1;grid-row:1;height:390px}
+ .lake-screen .screen-main>.hydrology-stack{grid-column:1;grid-row:2}.lake-screen .screen-main>.summary-stack{grid-column:2;grid-row:2}
+ .lake-screen .hydrology-stack{display:flex}.lake-screen .hydrology-stack>section+section{border-top:1px solid var(--sc-line);padding-top:8px}
+ .lake-screen .screen-processes{height:230px}.lake-screen .screen-replay{flex-wrap:wrap}
+ .lake-screen.screen-expanded{height:100dvh;overflow:auto}
+}
+@media(max-width:760px){
+ .lake-screen .screen-main{grid-template-columns:1fr}.lake-screen .screen-main>.summary-stack{grid-column:1;grid-row:3}
+ .lake-screen .screen-processes{height:460px}.lake-screen .screen-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

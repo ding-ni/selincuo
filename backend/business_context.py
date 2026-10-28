@@ -108,8 +108,10 @@ def result_summary(db, identifier):
         'inputId': result.get('inputId') or request.get('inputId'),
         'spatialVersion': result.get('spatialVersion'), 'unitCount': len(result.get('units') or []),
         'calculationCoverage': {'start': result.get('start'), 'end': result.get('end')},
-        'displayCoverage': {'start': daily[0]['date'] if daily else None,
+        'displayCoverage': result.get('displayCoverage') or {'start': daily[0]['date'] if daily else None,
                             'end': daily[-1]['date'] if daily else None},
+        'parameterTransfer': result.get('parameterTransfer'),
+        'parameterTransferAudit': result.get('parameterTransferAudit'),
         'evaluation': {'mode': mode,
                        'label': {'continuous': '固定锚点连续评价', 'window': '窗口初始化评价',
                                  'unverified': '初始化口径待核验'}[mode],
@@ -212,15 +214,16 @@ def simulation_plan(db, query):
 def _scheme_simulation_plan(db, query):
     """Reuse only a complete result with the same actual numerical identity."""
     from .research_schemes import builtin, prepare_request, resolved_initialization, plan_token
-    from .grid_simulation import model_identity, observations
+    from .grid_simulation import model_identity, observations, parameter_configuration
+    from .grid_spatial import load
     request = prepare_request(db, dict(query), kind='simulation')
     observed = observations(db)
     observed['sourceDigests'] = db.rows("SELECT DISTINCT s.id,s.sha256 FROM sources s JOIN observations o ON o.source_id=s.id WHERE s.rowid IN (SELECT MAX(rowid) FROM sources GROUP BY path) AND ((o.station_id='SLC' AND o.variable='level') OR (o.station_id='DUJA' AND o.variable='flow')) ORDER BY s.id")
     initialization, first_lake_day = resolved_initialization(request, observed, 'simulation')
     signature = plan_token(request, initialization, observed)
+    _, _, _, _, transfer_audit, transfer_identity = parameter_configuration(load(request['spatialVersion']), request)
     expected = {'modelImplementation': model_identity(), 'spatialVersion': request['spatialVersion'],
-                'parameterSHA256': digest(request['parameters']),
-                'partitionParameterSHA256': digest(request['partitionParameters']),
+                **transfer_identity,
                 'initializationSHA256': digest(initialization), 'observationSnapshotSHA256': digest(observed),
                 'routingMode': request['routingMode']}
     rows = db.rows("SELECT id FROM tasks WHERE status='succeeded' AND trashed=0 AND kind IN ('simulation','trial','calibration') ORDER BY created_at DESC")
@@ -244,10 +247,12 @@ def _scheme_simulation_plan(db, query):
             return {'action': 'reuse', 'resultId': identifier, 'reasons': ['已保存成果覆盖所选时段且计算条件一致。'],
                     'requestedCoverage': {'start': request['evaluationStart'], 'endExclusive': request['end']},
                     'calculationStart': request['start'], 'inputId': request['inputId'], 'createsTask': False,
-                    'earliestCompleteLakeDay': first_lake_day, 'initialization': initialization, 'planToken': signature}
+                    'earliestCompleteLakeDay': first_lake_day, 'initialization': initialization, 'planToken': signature,
+                    'parameterTransferAudit': transfer_audit}
         except (ValueError, OSError, KeyError, TypeError):
             continue
     return {'action': 'rerun', 'resultId': None, 'reasons': ['将从方案预热起点按所选资料和参数连续计算。'],
             'requestedCoverage': {'start': request['evaluationStart'], 'endExclusive': request['end']},
             'calculationStart': request['start'], 'inputId': request['inputId'], 'createsTask': True,
-            'earliestCompleteLakeDay': first_lake_day, 'initialization': initialization, 'planToken': signature}
+            'earliestCompleteLakeDay': first_lake_day, 'initialization': initialization, 'planToken': signature,
+            'parameterTransferAudit': transfer_audit}

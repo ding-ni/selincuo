@@ -3,9 +3,10 @@ import {ref,computed,watch} from 'vue'
 import HistoricalResult from './HistoricalResult.vue'
 import ResearchSchemes from './ResearchSchemes.vue'
 import CalibrationTrace from './CalibrationTrace.vue'
+import ParameterTransferAudit from './ParameterTransferAudit.vue'
 import {api,number,parameterCompatible} from './api.mjs'
 const props=defineProps({boot:Object,tasks:Array,detail:Object,busy:Boolean,active:Array})
-const emit=defineEmits(['submit','stop','select','state','refresh','simulate','export'])
+const emit=defineEmits(['submit','stop','select','state','refresh','simulate','export','deleted'])
 const tab=ref('schemes'),schemeId=ref(''),parameterId=ref(''),resultRegion=ref('background'),working=ref(false),error=ref(''),message=ref('')
 const locked=computed(()=>props.busy||working.value||props.active.length>0)
 const records=computed(()=>(props.tasks||[]).filter(t=>!t.trashed&&['calibration-workflow','calibration','trial'].includes(t.kind)))
@@ -36,7 +37,7 @@ watch(parameters,rows=>{if(parameterId.value&&!rows.some(p=>p.id===parameterId.v
  <section class="panel">
   <div class="panel-title"><h3>模型方案与率定</h3></div>
   <nav class="workspace-tabs"><button :class="{active:tab==='schemes'}" @click="tab='schemes'">方案与参数</button><button :class="{active:tab==='records'}" @click="tab='records'">试算与率定结果</button></nav>
-  <ResearchSchemes v-show="tab==='schemes'" :boot="boot" :locked="locked" :busy="busy" :selected-id="schemeId" @selected="schemeId=$event" @refresh="emit('refresh')" @submit="run" @simulate="emit('simulate',$event)"/>
+  <ResearchSchemes v-show="tab==='schemes'" :boot="boot" :locked="locked" :busy="busy" :selected-id="schemeId" @selected="schemeId=$event" @refresh="emit('refresh')" @submit="run" @simulate="emit('simulate',$event)" @deleted="emit('deleted',$event)"/>
   <template v-if="tab==='records'">
    <p class="muted">选择一次计算结果，查看过程和指标，再保存实际使用的参数。</p>
    <div class="table-wrap"><table><thead><tr><th>名称</th><th>类型</th><th>时间</th><th>状态</th></tr></thead><tbody><tr v-for="t in records" :key="t.id" :class="{selected:t.id===detail?.id}"><td><button class="link" @click="emit('select',t.id)">{{t.name||'计算结果'}}</button></td><td>{{t.kind==='trial'?'试算':'率定'}}</td><td>{{(t.created_at||'').slice(0,16).replace('T',' ')}}</td><td>{{status(t)}}</td></tr></tbody></table></div>
@@ -45,13 +46,14 @@ watch(parameters,rows=>{if(parameterId.value&&!rows.some(p=>p.id===parameterId.v
  </section>
  <template v-if="tab==='records'&&detail">
   <p v-if="error" class="message error" role="alert">{{error}}</p><p v-if="message" class="message success" role="status">{{message}}</p>
-  <CalibrationTrace v-if="detail.result?.calibration" :task="detail" :definitions="boot.parameterDefinitions"/>
+  <CalibrationTrace v-if="detail.kind==='calibration'||detail.result?.calibration" :task="detail" :definitions="boot.parameterDefinitions"/>
   <section v-if="detail.status==='succeeded'&&detail.result?.parameters" class="panel">
    <div class="panel-title"><h3>结果参数</h3><button :disabled="locked" @click="saveParameters">保存参数</button></div>
    <p class="muted">参数从这次已完成的计算结果读取，不使用页面中尚未运行的编辑值。</p>
-   <div class="result-toolbar"><label class="grow">方案<select v-model="schemeId"><option value="">选择方案</option><option v-for="s in boot.schemes" :key="s.id" :value="s.id">{{s.name}}{{s.builtin||s.payload?.builtin?' · 内置':''}}</option></select></label><label class="grow">已保存参数<select v-model="parameterId"><option value="">选择参数组</option><option v-for="p in parameters" :key="p.id" :value="p.id">{{p.name}}</option></select></label><button :disabled="locked||!schemeId||!parameterId" @click="adopt">方案采用此参数</button><button class="primary" :disabled="!schemeId||!parameterId" @click="emit('simulate',{schemeId,parameterId})">用此参数模拟 →</button></div>
+   <div class="result-toolbar"><label class="grow">方案<select v-model="schemeId"><option value="">选择方案</option><option v-for="s in boot.schemes" :key="s.id" :value="s.id">{{s.name}}{{s.builtin||s.payload?.builtin?' · 内置':''}}</option></select></label><label class="grow">已保存参数<select v-model="parameterId"><option value="">选择参数组</option><option v-for="p in parameters" :key="p.id" :value="p.id">{{p.name}}</option></select></label><button :disabled="locked||!schemeId||!parameterId" @click="adopt">采用参数</button><button class="primary" :disabled="!schemeId||!parameterId" @click="emit('simulate',{schemeId,parameterId})">运行模拟</button></div>
    <p v-if="selectedScheme" class="note">当前方案：{{selectedScheme.name}}。采用参数不会改写已有成果，也不会改变率定初值。</p>
-   <details><summary>查看本次完整参数</summary><div class="result-toolbar"><label>参数适用范围<select v-model="resultRegion"><option value="background">其他分区共用</option><option v-for="r in resultRegions" :key="r" :value="r">{{regionNames[r]||r}}</option></select></label></div><div class="table-wrap"><table><thead><tr><th>参数</th><th>本次计算值</th><th>单位</th></tr></thead><tbody><tr v-for="d in boot.parameterDefinitions" :key="d.key"><td>{{d.label}}</td><td>{{number(resultValues[d.key],6)}}</td><td>{{d.unit||'无量纲'}}</td></tr></tbody></table></div></details>
+   <details><summary>查看本次输入参数</summary><div class="result-toolbar"><label>参数适用范围<select v-model="resultRegion"><option value="background">流域共用基准</option><option v-for="r in resultRegions" :key="r" :value="r">{{regionNames[r]||r}}</option></select></label></div><p class="note">这里显示保存的输入参数；传递方式形成的分区实际值见下方参数来源。</p><div class="table-wrap"><table><thead><tr><th>参数</th><th>输入值</th><th>单位</th></tr></thead><tbody><tr v-for="d in boot.parameterDefinitions" :key="d.key"><td>{{d.label}}</td><td>{{number(resultValues[d.key],6)}}</td><td>{{d.unit||'无量纲'}}</td></tr></tbody></table></div></details>
+   <details v-if="detail.result?.parameterTransferAudit"><summary>查看各区与计算单元的参数来源</summary><ParameterTransferAudit :audit="detail.result.parameterTransferAudit" :definitions="boot.parameterDefinitions"/></details>
   </section>
   <HistoricalResult :detail="detail" :busy="busy" @stop="emit('stop',$event)" @state="emit('state')" @export="(id,format)=>emit('export',id,format)" @retry="tab='schemes'"/>
  </template>

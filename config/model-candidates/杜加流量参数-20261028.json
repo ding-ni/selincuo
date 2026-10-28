@@ -1,0 +1,421 @@
+{
+  "status": "research-flow-constrained",
+  "operationalAdoptionChanged": false,
+  "schemeId": "SCHEME-e81ff879c55d4c2e99ec",
+  "parameterId": "PARAM-be5451d49a9b4a38ba74",
+  "sourceTaskId": "JOB-76eb10db6e7f42848809",
+  "parameters": {
+    "B": 0.8,
+    "C": 0.15,
+    "EX": 1.2,
+    "IM": 0.01,
+    "KC": 0.8241616045688176,
+    "KG": 0.1,
+    "KI": 0.061073804049647545,
+    "SM": 100.0,
+    "WM": 96.76085511834073,
+    "baseflowTauHours": 2160.0,
+    "glacierRecessionDay": 0.5,
+    "iceDdf": 7.0,
+    "iceSublimationFraction": 0.25,
+    "iceSublimationMaxMmHour": 0.08,
+    "interflowTauHours": 123.4066595475932,
+    "lagHours": 0.0,
+    "lakeCoefficient": 1.0,
+    "lapseRate": -0.0065,
+    "liquidCapacity": 0.05,
+    "rainTemperature": 2.0,
+    "refreezeFactor": 1.0,
+    "snowDdf": 4.0,
+    "snowSublimation": 0.35,
+    "snowTemperature": -1.0,
+    "tauHours": 71.40081518816966
+  },
+  "partitionParameters": {},
+  "parameterTransfer": {
+    "areaExponent": 0.5,
+    "donor": "duja",
+    "mode": "duja-shared",
+    "version": 1
+  },
+  "identity": {
+    "effectiveParameterSHA256": "9e101b65a1336821501a5f3bcb849e06612bb5f37d09dff17ba5b6c857473153",
+    "forcingGridSHA256": "e0ea22478c85fc3c8c87fe868c15de68516a220632e6d0b11ac943941f63ca3e",
+    "forcingTransformationSHA256": "a28542996c03152f4bc7fcdbec1510a7cabbb4843c3fa51e928b49b5f135d458",
+    "initializationSHA256": "705924d16e79c5261a76d152ce772c2f6f219402fcedbcc4158ce48e058ed28d",
+    "modelFamily": "grid-continuous-v1",
+    "modelImplementation": "df8315c280efb52a58c465256ac51d2b73f6e7e33cfad68406976cf067704874",
+    "observationProfile": "time-weighted-level-v2-gap6h-cover18h",
+    "observationSnapshotSHA256": "d5871d988ca451820df0508982ce2646b7cb071f0e32ae678d779effb91f2dd9",
+    "parameterSHA256": "3f950e02f820652c01dc3330bd855f4f2855c32907360f35e56158b4602b0b94",
+    "parameterTransferSHA256": "eb5ba8d49a3966eed999017023c92795c35b5dd2abb4717cf188db8b3b254dd4",
+    "partitionParameterSHA256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "projectId": "selinco",
+    "routingMode": "source-separated",
+    "spatialVersion": "AGG-SPATIAL-dbb6e03518db589dc16f"
+  },
+  "calibration": {
+    "algorithm": "staged-multistart-differential-evolution",
+    "seeds": [
+      42,
+      142
+    ],
+    "stages": [
+      {
+        "baselineMetrics": {
+          "bias": -8.84979438220393,
+          "count": 229,
+          "kge": 0.5257947909666606,
+          "logNse": -0.1277442417431398,
+          "mae": 35.9191917483524,
+          "nse": 0.5148100647072046,
+          "observedMean": 80.89737991266375,
+          "pbias": -10.939531529646704,
+          "rmse": 60.26036935118411,
+          "simulatedMean": 72.04758553045983
+        },
+        "bestObjective": 0.40623830589322957,
+        "bestParameters": {
+          "KC": 0.8241616045688176,
+          "KI": 0.061073804049647545,
+          "WM": 96.76085511834073
+        },
+        "boundaryParameters": [],
+        "bounds": {
+          "KC": [
+            0.2,
+            1.5
+          ],
+          "KI": [
+            0.001,
+            0.15
+          ],
+          "WM": [
+            40,
+            300
+          ]
+        },
+        "converged": false,
+        "diagnostics": {
+          "countByYear": {
+            "2024": 229
+          },
+          "parameters": {
+            "KC": {
+              "maxFlowChange": 28.0687850141,
+              "perturbation": 0.8364797672529676,
+              "status": "responsive",
+              "tolerance": 1.902707861571e-08
+            },
+            "KI": {
+              "maxFlowChange": 1.6149108868000042,
+              "perturbation": 0.13192649497308606,
+              "status": "responsive",
+              "tolerance": 1.902707861571e-08
+            },
+            "WM": {
+              "maxFlowChange": 0.8549274945999912,
+              "perturbation": 287.0,
+              "status": "responsive",
+              "tolerance": 1.902707861571e-08
+            }
+          },
+          "perturbationFractionOfRange": 0.05,
+          "svd": {
+            "correlation": [
+              [
+                0.9999999999999998,
+                0.3696136837500313,
+                -0.7434234996532952
+              ],
+              [
+                0.3696136837500313,
+                1.0,
+                0.017953986130043943
+              ],
+              [
+                -0.7434234996532952,
+                0.017953986130043946,
+                1.0
+              ]
+            ],
+            "interpretation": "固定率定日期的一次局部扰动诊断，不证明全局可辨识性。",
+            "keys": [
+              "KC",
+              "WM",
+              "KI"
+            ],
+            "rank": 3,
+            "singularValues": [
+              54.18520651107921,
+              2.023160770285815,
+              0.813972667290671
+            ]
+          },
+          "trainingPairs": 229
+        },
+        "evaluations": 120,
+        "fixedParameters": [],
+        "initialParameters": {
+          "KC": 0.7714797672529675,
+          "KI": 0.12447649497308605,
+          "WM": 300.0
+        },
+        "keys": [
+          "KC",
+          "WM",
+          "KI"
+        ],
+        "maxEvaluations": 120,
+        "nearBoundaryParameters": [],
+        "selectedParameters": [
+          "KC",
+          "WM",
+          "KI"
+        ],
+        "stage": "runoff",
+        "starts": [
+          {
+            "baselineReused": true,
+            "bestObjective": 0.46895651336516636,
+            "bestParameters": {
+              "KC": 0.7855017192642373,
+              "KI": 0.13908798333844166,
+              "WM": 136.40748630047113
+            },
+            "converged": false,
+            "evaluations": 58,
+            "maxEvaluations": 58,
+            "seed": 42,
+            "termination": "budget-exhausted"
+          },
+          {
+            "baselineReused": true,
+            "bestObjective": 0.40623830589322957,
+            "bestParameters": {
+              "KC": 0.8241616045688176,
+              "KI": 0.061073804049647545,
+              "WM": 96.76085511834073
+            },
+            "converged": false,
+            "evaluations": 58,
+            "maxEvaluations": 58,
+            "seed": 142,
+            "termination": "budget-exhausted"
+          }
+        ],
+        "termination": "budget-exhausted"
+      },
+      {
+        "baselineMetrics": {
+          "bias": -1.9180126620965052,
+          "count": 229,
+          "kge": 0.5554959999492126,
+          "logNse": 0.3494506484007226,
+          "mae": 36.32165987521615,
+          "nse": 0.5246526671175519,
+          "observedMean": 80.89737991266375,
+          "pbias": -2.3709206208744686,
+          "rmse": 59.6460143013347,
+          "simulatedMean": 78.97936725056724
+        },
+        "bestObjective": 0.40623830589322957,
+        "bestParameters": {
+          "lagHours": 0.0
+        },
+        "boundaryParameters": [
+          "lagHours"
+        ],
+        "bounds": {
+          "lagHours": [
+            0,
+            72
+          ]
+        },
+        "converged": true,
+        "diagnostics": {
+          "countByYear": {
+            "2024": 229
+          },
+          "parameters": {
+            "lagHours": {
+              "maxFlowChange": 2.1228616609,
+              "perturbation": 3.6,
+              "status": "responsive",
+              "tolerance": 2.085206848696e-08
+            }
+          },
+          "perturbationFractionOfRange": 0.05,
+          "svd": {
+            "correlation": [
+              [
+                0.9999999999999998
+              ]
+            ],
+            "interpretation": "固定率定日期的一次局部扰动诊断，不证明全局可辨识性。",
+            "keys": [
+              "lagHours"
+            ],
+            "rank": 1,
+            "singularValues": [
+              1.9782606169053987
+            ]
+          },
+          "trainingPairs": 229
+        },
+        "evaluations": 38,
+        "fixedParameters": [],
+        "initialParameters": {
+          "lagHours": 0.0
+        },
+        "keys": [
+          "lagHours"
+        ],
+        "maxEvaluations": 60,
+        "nearBoundaryParameters": [
+          "lagHours"
+        ],
+        "selectedParameters": [
+          "lagHours"
+        ],
+        "stage": "routing",
+        "starts": [
+          {
+            "baselineReused": true,
+            "bestObjective": 0.40623830589322957,
+            "bestParameters": {
+              "lagHours": 0.0
+            },
+            "converged": true,
+            "evaluations": 18,
+            "maxEvaluations": 29,
+            "seed": 42,
+            "termination": "converged"
+          },
+          {
+            "baselineReused": true,
+            "bestObjective": 0.40623830589322957,
+            "bestParameters": {
+              "lagHours": 0.0
+            },
+            "converged": true,
+            "evaluations": 18,
+            "maxEvaluations": 40,
+            "seed": 142,
+            "termination": "converged"
+          }
+        ],
+        "termination": "converged"
+      }
+    ],
+    "targets": {
+      "flow": {
+        "available": true,
+        "count": 229,
+        "countByYear": {
+          "2024": 229
+        },
+        "usedForObjective": true
+      },
+      "lake": {
+        "available": true,
+        "count": 232,
+        "countByYear": {
+          "2024": 232
+        },
+        "reason": "湖位仅作独立评价，不参与杜加流量目标",
+        "usedForObjective": false
+      }
+    },
+    "assessments": {
+      "training": {
+        "flow": {
+          "bias": -1.9180126620965052,
+          "count": 229,
+          "countByYear": {
+            "2024": 229
+          },
+          "kge": 0.5554959999492126,
+          "logNse": 0.3494506484007226,
+          "mae": 36.32165987521615,
+          "nse": 0.5246526671175519,
+          "observedMean": 80.89737991266375,
+          "pbias": -2.3709206208744686,
+          "rmse": 59.6460143013347,
+          "simulatedMean": 78.97936725056724
+        },
+        "lake": {
+          "bias": 3.436018219365102,
+          "count": 232,
+          "countByYear": {
+            "2024": 232
+          },
+          "firstToLastErrorChangeM": 0.8642512962996989,
+          "kge": -0.8885226131695623,
+          "logNse": -706.0454610967873,
+          "mae": 3.436018219365102,
+          "nse": -706.5889049204336,
+          "observedMean": 4544.520301724137,
+          "pbias": 0.07560794079985773,
+          "rmse": 3.449274420476975,
+          "simulatedMean": 4547.956319943503
+        }
+      },
+      "validation": {
+        "flow": {
+          "bias": 11.582828038634597,
+          "count": 211,
+          "countByYear": {
+            "2025": 211
+          },
+          "kge": 0.6172514995649614,
+          "logNse": 0.3847662210944677,
+          "mae": 19.895379179139812,
+          "nse": 0.480771947399274,
+          "observedMean": 49.027630331753564,
+          "pbias": 23.625102743611055,
+          "rmse": 27.341132273850537,
+          "simulatedMean": 60.61045837038815
+        },
+        "lake": {
+          "bias": 4.662502945881199,
+          "count": 335,
+          "countByYear": {
+            "2025": 255,
+            "2026": 80
+          },
+          "firstToLastErrorChangeM": 1.3148685492005825,
+          "kge": -1.240604036408104,
+          "logNse": -1244.752301238522,
+          "mae": 4.662502945881199,
+          "nse": -1246.054888297272,
+          "observedMean": 4544.142404811523,
+          "pbias": 0.10260468380005767,
+          "rmse": 4.6826925300376185,
+          "simulatedMean": 4548.804907757404
+        }
+      }
+    },
+    "periods": {
+      "evaluationEnd": "2026-10-21T00:00:00",
+      "evaluationStart": "2025-01-01T00:00:00",
+      "trainingEnd": "2025-01-01T00:00:00",
+      "trainingStart": "2024-01-01T00:00:00",
+      "warmupStart": "2020-01-01T00:00:00"
+    },
+    "evaluations": 158,
+    "converged": false,
+    "boundaryParameters": [
+      "lagHours"
+    ],
+    "nearBoundaryParameters": [
+      "lagHours"
+    ],
+    "bestObjective": 0.40623830589322957
+  },
+  "limitations": [
+    "2025/26 previously used in development; not untouched external validation.",
+    "Lake evaporation is a fixed potential-water proxy, not a measured actual lake flux.",
+    "Single-station transfer, initial states and unresolved drainage remain uncertain."
+  ]
+}

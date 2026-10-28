@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
-import {projector,fitViewport,placeLabels} from '../frontend/src/map-view.mjs'
+import {projector,fitViewport,placeLabels,detailMapUrl} from '../frontend/src/map-view.mjs'
 import {preferredHistoricalInput,historicalPeriod} from '../frontend/src/workflow.mjs'
 const context=JSON.parse(fs.readFileSync(new URL('../data/derived/spatial/display-context.json',import.meta.url)))
 test('whole drainage domain fits desktop, portrait and report canvases without distortion or clipping',()=>{
@@ -24,6 +24,29 @@ test('nearby basin label boxes avoid overlap and keep true geographic anchors',(
  const [a,b]=rows.map(r=>r.box)
  assert.ok(a.y+a.h<=b.y||b.y+b.h<=a.y||a.x+a.w<=b.x||b.x+b.w<=a.x)
  assert.equal(rows[1].x,185)
+})
+test('legend and map controls are avoided as reserved areas without changing label anchors',()=>{
+ const legend={x:345,y:175,w:145,h:110},controls={x:330,y:5,w:160,h:32}
+ const rows=placeLabels([{id:'boqu',x:365,y:210,width:130,height:24},{id:'main',x:365,y:20,width:65,height:22,priority:100}],{width:500,height:300},[legend,controls])
+ for(const {box} of rows)for(const b of [legend,controls])assert.ok(box.x+box.w<=b.x||b.x+b.w<=box.x||box.y+box.h<=b.y||b.y+b.h<=box.y)
+ assert.equal(rows.find(x=>x.id==='boqu').x,365)
+})
+test('shared label priority and preferred offsets are stable across input order',()=>{
+ const input=[{id:'minor',x:180,y:150,priority:1,preferredOffset:[0,0]},
+  {id:'main',x:185,y:150,priority:100,preferredOffset:[35,-18]},
+  {id:'shore',x:185,y:150,priority:95,preferredOffset:[-35,18]}]
+ const size={width:500,height:300},first=placeLabels(input,size),again=placeLabels([...input].reverse(),size)
+ assert.deepEqual(first.map(x=>x.id),['main','shore','minor'])
+ assert.deepEqual(first.map(x=>x.box),again.map(x=>x.box))
+ assert.equal(first[0].cx,220);assert.equal(first[0].cy,132)
+ assert.equal(first[0].x,185);assert.equal(first[0].y,150)
+})
+test('fine boundary detail is selected only from the matching recorded spatial parent',()=>{
+ const manifest={unitStrategy:'partition-elevation-surface-area-weighted-v1',parentSpatialVersion:'GRID-SPATIAL-abc',sourceAssetsSHA256:{'display.geojson':'a'.repeat(64)}}
+ assert.equal(detailMapUrl('/spatial/versions/AGG-SPATIAL-xyz/',manifest),'/spatial/versions/GRID-SPATIAL-abc/map.geojson')
+ assert.equal(detailMapUrl('/spatial/versions/AGG-SPATIAL-xyz/',{...manifest,sourceAssetsSHA256:{}}),null)
+ assert.equal(detailMapUrl('/spatial/versions/AGG-SPATIAL-xyz/',{...manifest,parentSpatialVersion:'../other'}),null)
+ assert.equal(detailMapUrl('/spatial/versions/GRID-SPATIAL-abc/',{}),'/spatial/versions/GRID-SPATIAL-abc/map.geojson')
 })
 test('complete real historical input takes precedence over earlier fragments with complete end-hour days',()=>{
  const full={id:'full',manifest:{start:'2022-12-01T09:00:00',end:'2026-01-01T07:00:00',hours:27047}}

@@ -73,7 +73,8 @@ async function run(force=false){
    </div>
   </form>
   <div class="simulation-input-status" v-if="coverage?.complete"><span>气象完整日：{{coverage.firstCompleteDay}} 至 {{lastDay}}</span><span>最早可选择 {{firstDay}}（含一年预热，湖位起算另行核查）</span><button class="link" @click="emit('navigate','model')">更新资料 →</button></div>
-  <p v-if="plan?.initialization" class="note">陆面从 {{plan.calculationStart.slice(0,10)}} 开始预热；湖位从 {{plan.initialization.time.replace('T',' ').slice(0,16)}}、{{plan.initialization.level}} m 起算<template v-if="plan.initialization.method==='first-quality-daily-level-at-noon'||plan.initialization.source?.includes('日值')">（日值按12时代表，并非已核实的瞬时观测）</template>，首个完整湖位日为 {{plan.earliestCompleteLakeDay}}。</p>
+  <p v-if="plan?.initialization" class="note">陆面从 {{plan.calculationStart.slice(0,10)}} 开始预热；湖位从 {{plan.initialization.time.replace('T',' ').slice(0,16)}}、{{plan.initialization.level}} m 起算<template v-if="plan.initialization.method==='first-quality-daily-level-at-noon'||plan.initialization.source?.includes('日值')">（日值按12时代表，并非已核实的瞬时观测）</template>；<template v-if="plan.earliestCompleteLakeDay">首个完整湖位日为 {{plan.earliestCompleteLakeDay}}。</template><template v-else>所选时段没有完整湖位日。</template></p>
+  <p v-else-if="plan" class="note">陆面从 {{plan.calculationStart.slice(0,10)}} 开始预热。当前时段没有可用湖位起算资料，可计算流量；绝对湖位需要明确的起算依据。</p>
   <p v-if="issue" class="note warning" role="status">{{issue}}</p>
   <p v-if="planNotice" class="note warning" role="status">{{planNotice}}</p>
   <p v-if="planError" class="note warning" role="alert">计算前检查失败：{{planError}}</p><p v-if="plan?.action==='blocked'" class="note warning">{{plan.reasons?.join('；')||'当前资料或起算条件不满足计算要求。'}}</p><p v-else-if="plan?.action==='reuse'" class="note">已有条件一致的完整成果，可直接查看，也可选择重新计算。</p>

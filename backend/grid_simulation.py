@@ -18,7 +18,7 @@ _cache={};_prefixes={}
 def model_identity():
     # Reuse and continuation also depend on forcing interpretation, spatial
     # loading and the shared evaluation routines used below.
-    files = ('model_core.py', 'routing.py', 'parameter_regions.py',
+    files = ('model_core.py', 'routing.py', 'parameter_regions.py', 'parameter_transfer.py',
              'grid_simulation.py', 'forcing.py', 'grid_spatial.py', 'simulation.py')
     return digest({'format': 'grid-continuous-v1',
                    'files': {name: sha_file(ROOT / 'backend' / name) for name in files}})
@@ -28,6 +28,22 @@ def observations(db):
     for key,station,variable in [('level','SLC','level'),('flow','DUJA','flow')]:
         series=quality_series(db,station,variable).dropna();result[key]={t.isoformat():float(v) for t,v in series.items()}
     return result
+
+
+def parameter_configuration(spatial, request):
+    """Keep declared parameters separate from their actual spatial application."""
+    from .parameter_transfer import resolve_transfer
+    declared = parameters(request.get('parameters'))
+    effective, effective_patches, audit = resolve_transfer(
+        spatial['units'], request.get('parameters'), request.get('partitionParameters'), request.get('parameterTransfer'))
+    patches, _ = resolve_regions(spatial['units'], declared, request.get('partitionParameters'))
+    _, regions = resolve_regions(spatial['units'], effective, effective_patches)
+    identity = {'parameterSHA256': digest(declared),
+                'partitionParameterSHA256': digest(patches),
+                'parameterTransferSHA256': digest(audit['policy']),
+                'effectiveParameterSHA256': digest({'parameters': effective,
+                                                   'partitionParameters': effective_patches})}
+    return declared, patches, effective, regions, audit, identity
 
 def prepare(db,input_id,spatial_version):
     key=(str(db.workspace),input_id,spatial_version)
@@ -118,14 +134,19 @@ def unit_forcing(spatial,arrays,ids,base,regions):
 def run(db,request,folder=None,progress=None,cancelled=None,prepared=None):
     source=prepared or prepare(db,request['inputId'],request['spatialVersion'])
     spatial=source['spatial'];arrays=source['arrays'];all_times=source['times'];units=spatial['units']
-    p=parameters(request.get('parameters'));regions_patch,regions=resolve_regions(units,p,request.get('partitionParameters'))
+    declared,regions_patch,p,regions,transfer_audit,parameter_identity=parameter_configuration(spatial,request)
     start=pd.Timestamp(request.get('start') or '2023-01-01');end=pd.Timestamp(request.get('end') or all_times[-1])
     if start.tzinfo or end.tzinfo or start.minute or end.minute or start.second or end.second or start>end or start<all_times[0] or end>all_times[-1]:raise ValueError('计算起止必须是驱动覆盖内的北京时间整小时')
     indexes=np.flatnonzero((all_times>=start)&(all_times<=end));times=all_times[indexes]
     if not len(times) or times[0]!=start or times[-1]!=end or not np.all(np.diff(times.asi8)==3600*10**9):raise ValueError('计算时段缺少连续小时')
     parent=request.get('_parentState');observation=request.get('_observations') or observations(db)
-    initial=(parent or {}).get('initialization') if parent else anchor(request,observation,start,end)
-    identity={'projectId':'selinco','modelFamily':'grid-continuous-v1','modelImplementation':request.get('_modelIdentity') or model_identity(),'spatialVersion':spatial['version'],'parameterSHA256':digest(p),'partitionParameterSHA256':digest(regions_patch),
+    # A calibration may deliberately have no training-period lake anchor.
+    # In that case None is physical information, not permission to use a
+    # later evaluation-period observation.
+    initial=(parent or {}).get('initialization') if parent else (
+        request['_fixedInitialization'] if '_fixedInitialization' in request
+        else anchor(request,observation,start,end))
+    identity={'projectId':'selinco','modelFamily':'grid-continuous-v1','modelImplementation':request.get('_modelIdentity') or model_identity(),'spatialVersion':spatial['version'],**parameter_identity,
               'initializationSHA256':digest(initial),'observationProfile':observation['profile'],'observationSnapshotSHA256':digest(observation),'forcingGridSHA256':spatial['forcingGridVersion'],'forcingTransformationSHA256':source['manifest'].get('transformationSHA256'),'routingMode':request.get('routingMode','source-separated')}
     if parent:
         # Observations are evaluation inputs, not physical state. Keep both
@@ -153,7 +174,7 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None):
     areas=np.array([u['areaKm2'] for u in units]);glaciers=np.array([u['kind']=='glacier' for u in units])
     lake_weights=np.array(spatial['lakeWeights']);lake_area=spatial['lakeAreaKm2']*1e6;lake_factor=lake_precipitation_factor(source['manifest'])
     old_routing=deepcopy((parent or {}).get('routing',{}));lake=deepcopy((parent or {}).get('lake',{}));continuous=float((parent or {}).get('continuousLakeVolume',0.))
-    total_hours=len(times);output={k:np.full(total_hours,np.nan) for k in [*RIVERS,'lakeLevel','volumeChange','continuousLakeVolumeChange','lakeFlux','lakeRainMm','lakeEvaporationMm','excludedRunoff','snowmeltMm','icemeltMm','etMm','RS M3','RI M3','RG M3','glacierRunoffM3']}
+    total_hours=len(times);output={k:np.full(total_hours,np.nan) for k in [*RIVERS,'lakeLevel','volumeChange','continuousLakeVolumeChange','lakeFlux','lakeRainMm','lakeEvaporationMm','excludedRunoff','externalRunoffM3','unresolvedRunoffM3','snowmeltMm','icemeltMm','etMm','RS M3','RI M3','RG M3','glacierRunoffM3']}
     writer=None
     if folder is not None and not request.get('_metricsOnly'):
         from .grid_storage import Writer
@@ -190,16 +211,18 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None):
                     if pd.Timestamp(lake['validAt'])+pd.Timedelta(hours=1)!=t:raise ValueError('连续湖泊状态时次不连续')
                     lake['level']+=float(flux[j]/lake_area);lake['volumeChange']+=float(flux[j]);lake['validAt']=t.isoformat()
                 levels[j]=lake['level'];lake_vol[j]=lake['volumeChange']
-        local={**q,'lakeLevel':levels,'volumeChange':lake_vol,'continuousLakeVolumeChange':cv,'lakeFlux':flux,'lakeRainMm':lake_rain,'lakeEvaporationMm':lake_evap,'excludedRunoff':(routed['unresolved']+routed['external'])*3600}
+        local={**q,'lakeLevel':levels,'volumeChange':lake_vol,'continuousLakeVolumeChange':cv,'lakeFlux':flux,'lakeRainMm':lake_rain,'lakeEvaporationMm':lake_evap,
+               'externalRunoffM3':routed['external']*3600,'unresolvedRunoffM3':routed['unresolved']*3600,
+               'excludedRunoff':(routed['unresolved']+routed['external'])*3600}
         for key,col in [('snowmeltMm',4),('icemeltMm',5),('etMm',6)]:local[key]=(diagnostic[:,:,col]*areas).sum(axis=1)/areas.sum()
         for key,col in [('RS M3',0),('RI M3',1),('RG M3',2),('glacierRunoffM3',3)]:local[key]=(diagnostic[:,:,col]*areas*1000).sum(axis=1)
         for key,value in local.items():output[key][offset:stop]=value
-        if writer:writer.put(offset,stop,{'time':local_times.asi8,'flow':np.stack([q[k] for k in RIVERS],axis=1),'unitStates':history,'unitDiagnostics':diagnostic,'routingStorage':np.stack(stores,axis=1),'sourceRoutingStorage':np.stack(source_stores,axis=1),**{k:local[k] for k in ('lakeLevel','volumeChange','continuousLakeVolumeChange','lakeFlux','excludedRunoff')}})
+        if writer:writer.put(offset,stop,{'time':local_times.asi8,'flow':np.stack([q[k] for k in RIVERS],axis=1),'unitStates':history,'unitDiagnostics':diagnostic,'routingStorage':np.stack(stores,axis=1),'sourceRoutingStorage':np.stack(source_stores,axis=1),**{k:local[k] for k in ('lakeLevel','volumeChange','continuousLakeVolumeChange','lakeFlux','excludedRunoff','externalRunoffM3','unresolvedRunoffM3')}})
         if progress:progress(5+90*stop/total_hours,f'连续计算 {local_times[-1]} · {len(units)}单元')
     hourly=pd.DataFrame(output,index=times);counts=hourly.total.resample('D',closed='right',label='left').count()
     daily=hourly[list(RIVERS)+['lakeLevel']].resample('D',closed='right',label='left').mean().where(counts.eq(24),axis=0)
     daily['lakeLevel']=hourly.lakeLevel.resample('D',closed='right',label='left').mean().where(hourly.lakeLevel.resample('D',closed='right',label='left').count().eq(24))
-    for key in ('lakeRainMm','lakeEvaporationMm','snowmeltMm','icemeltMm','etMm','excludedRunoff','RS M3','RI M3','RG M3','glacierRunoffM3'):
+    for key in ('lakeRainMm','lakeEvaporationMm','snowmeltMm','icemeltMm','etMm','excludedRunoff','externalRunoffM3','unresolvedRunoffM3','RS M3','RI M3','RG M3','glacierRunoffM3'):
         daily[key.replace(' ','')]=hourly[key].resample('D',closed='right',label='left').sum(min_count=24)
     daily['forcingHours']=counts
     daily['volumeChange']=hourly.volumeChange.resample('D',closed='right',label='left').last()
@@ -210,10 +233,19 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None):
     daily=daily.loc[(daily.index>=start.normalize())&(daily.index<end.ceil('D'))]
     scored=daily.lakeLevel.copy()
     if anchor_time is not None:scored.loc[scored.index==anchor_time.normalize()]=np.nan
-    yearly={str(y):{'purpose':'预热' if y==2023 else '研究评价','flow':metrics(g.observedFlow,g.duja),'lake':metrics(g.observedLevel,scored.reindex(g.index))} for y,g in daily.groupby(daily.index.year)}
-    checkpoint={'schemaVersion':3,'identity':identity,'validAt':times[-1].isoformat(),'unitStates':state.tolist(),'unitIds':[u['id'] for u in units],'routing':old_routing,'lake':lake,'initialization':initial,'continuousLakeVolume':continuous,'parameters':p,'partitionParameters':regions_patch,'inputId':source['manifest']['id'],'forcingPrefixSHA256':prefix_identity(source,end),'observationSnapshot':observation}
-    result={'projectId':'selinco','resultSource':'grid-continuous-model','identity':identity,'modelFamily':'grid-continuous-v1','start':times[0].isoformat(),'end':times[-1].isoformat(),'hours':len(times),'parameters':p,'partitionParameters':regions_patch,'inputId':source['manifest']['id'],'spatialVersion':spatial['version'],'units':units,'rivers':RIVERS,'partitions':PARTITIONS,'routingMode':identity['routingMode'],'metrics':yearly,'daily':__import__('json').loads(daily.reset_index(names='date').to_json(orient='records',date_format='iso')),
-            'initialization':initial,'observationProfile':QUALITY_VERSION,'inflowComplete':spatial['drainage']['inflowComplete'],'drainage':spatial['drainage'],'scheme':request.get('schemeSnapshot'),
+    periods=request.get('periods') or {}
+    def purpose(day):
+        if periods.get('trainingStart') and day < pd.Timestamp(periods['trainingStart']):return '预热'
+        if periods.get('trainingStart') and periods.get('trainingEnd') and pd.Timestamp(periods['trainingStart'])<=day<pd.Timestamp(periods['trainingEnd']):return '率定'
+        if periods.get('evaluationStart') and periods.get('evaluationEnd') and pd.Timestamp(periods['evaluationStart'])<=day<pd.Timestamp(periods['evaluationEnd']):return '检验'
+        return '历史模拟'
+    daily['purpose']=[purpose(day) for day in daily.index]
+    yearly={str(y):{'purpose':'、'.join(dict.fromkeys(g.purpose)),
+                   'periodDays':{str(k):int(v) for k,v in g.purpose.value_counts().items()},
+                   'flow':metrics(g.observedFlow,g.duja),'lake':metrics(g.observedLevel,scored.reindex(g.index))} for y,g in daily.groupby(daily.index.year)}
+    checkpoint={'schemaVersion':3,'identity':identity,'validAt':times[-1].isoformat(),'unitStates':state.tolist(),'unitIds':[u['id'] for u in units],'routing':old_routing,'lake':lake,'initialization':initial,'continuousLakeVolume':continuous,'parameters':declared,'partitionParameters':regions_patch,'parameterTransfer':transfer_audit['policy'],'inputId':source['manifest']['id'],'forcingPrefixSHA256':prefix_identity(source,end),'observationSnapshot':observation}
+    result={'projectId':'selinco','resultSource':'grid-continuous-model','identity':identity,'modelFamily':'grid-continuous-v1','start':times[0].isoformat(),'end':times[-1].isoformat(),'hours':len(times),'parameters':declared,'partitionParameters':regions_patch,'parameterTransfer':transfer_audit['policy'],'parameterTransferAudit':transfer_audit,'inputId':source['manifest']['id'],'spatialVersion':spatial['version'],'units':units,'rivers':RIVERS,'partitions':PARTITIONS,'routingMode':identity['routingMode'],'metrics':yearly,'daily':__import__('json').loads(daily.reset_index(names='date').to_json(orient='records',date_format='iso')),
+            'initialization':initial,'observationProfile':QUALITY_VERSION,'inflowComplete':grid_spatial.topology_complete(spatial),'drainage':spatial['drainage'],'scheme':request.get('schemeSnapshot'),
             'diagnostics':{'landGlacierMaxBalanceErrorMm':balance_max,'routingMaxBalanceErrorM3':routing_error_max,'lakeAreaKm2':spatial['lakeAreaKm2'],'partitions':partition_totals,'lakeWindows':[] if initial is None else [{'start':initial['time'],'initialization':initial['method']}]},'checkpoint':checkpoint,'storageFormat':'zarr-v2' if writer else 'metrics-only'}
     if writer:
         result['hourlyArtifact']=writer.finish();daily.to_csv(folder/'daily.csv',index_label='date',encoding='utf-8-sig');write_json(folder/'checkpoint.json',checkpoint);write_json(folder/'result.json',result)

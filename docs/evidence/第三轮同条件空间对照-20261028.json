@@ -1,0 +1,566 @@
+{
+  "comparison": "only spatial source and receiver areas change; same model code, forcing, parameters, initial state recipe and anchor",
+  "modelImplementation": "701d966b842362cf0ced37e9e14fe01cf12f65631814830220dbc9fd1473c66e",
+  "parametersSHA256": "d4c46990d931f2a8e321ea3a14a516e72df4f66bf73325ba22c236211958a90b",
+  "partitionParametersSHA256": "6d1a7cd7402073c79eb9f5ba7a213bb3d46205b111def511d34ad67c5868d666",
+  "forcingId": "INPUT-fc731ba1bf2b5e79d3e03d92",
+  "start": "2020-01-01T00:00:00",
+  "end": "2026-10-21T00:00:00",
+  "lakeAnchor": {
+    "time": "2021-04-23T12:00:00",
+    "level": 4543.66,
+    "method": "first-quality-daily-level-at-noon",
+    "source": "time-weighted-level-v2-gap6h-cover18h",
+    "reference": "SLC-working-datum"
+  },
+  "results": {
+    "previous": {
+      "spatialVersion": "AGG-SPATIAL-dbb6e03518db589dc16f",
+      "metricsByYear": {
+        "2020": {
+          "purpose": "预热",
+          "periodDays": {
+            "预热": 366
+          },
+          "flow": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          },
+          "lake": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          }
+        },
+        "2021": {
+          "purpose": "预热、率定",
+          "periodDays": {
+            "率定": 252,
+            "预热": 113
+          },
+          "flow": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          },
+          "lake": {
+            "logNse": 0.8331025740666697,
+            "count": 246,
+            "nse": 0.8330985663739237,
+            "kge": 0.7042594412313228,
+            "rmse": 0.07483766848753322,
+            "mae": 0.06597123549663297,
+            "bias": 0.02688833582569566,
+            "pbias": 0.0005917452252452304,
+            "observedMean": 4543.904146341464,
+            "simulatedMean": 4543.931034677289
+          }
+        },
+        "2022": {
+          "purpose": "率定",
+          "periodDays": {
+            "率定": 365
+          },
+          "flow": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          },
+          "lake": {
+            "logNse": -36.62377542552667,
+            "count": 269,
+            "nse": -36.62132834328132,
+            "kge": -0.11076727976287559,
+            "rmse": 0.28601642909610553,
+            "mae": 0.2758676791753001,
+            "bias": -0.2757637992984954,
+            "pbias": -0.006068485136982991,
+            "observedMean": 4544.19501858736,
+            "simulatedMean": 4543.919254788063
+          }
+        },
+        "2023": {
+          "purpose": "率定",
+          "periodDays": {
+            "率定": 365
+          },
+          "flow": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          },
+          "lake": {
+            "logNse": -2.9089934856415534,
+            "count": 222,
+            "nse": -2.9085833450222336,
+            "kge": 0.8749836946636026,
+            "rmse": 0.5252355537657509,
+            "mae": 0.521707205858068,
+            "bias": -0.521707205858068,
+            "pbias": -0.011480577900179516,
+            "observedMean": 4544.259099099098,
+            "simulatedMean": 4543.737391893241
+          }
+        },
+        "2024": {
+          "purpose": "率定",
+          "periodDays": {
+            "率定": 366
+          },
+          "flow": {
+            "logNse": -0.1277442417430248,
+            "count": 229,
+            "nse": 0.5148100647072194,
+            "kge": 0.5257947909666887,
+            "rmse": 60.26036935118319,
+            "mae": 35.91919174835253,
+            "bias": -8.849794382202186,
+            "pbias": -10.939531529644547,
+            "observedMean": 80.89737991266375,
+            "simulatedMean": 72.04758553046157
+          },
+          "lake": {
+            "logNse": -22.96055032396985,
+            "count": 232,
+            "nse": -22.957201820182817,
+            "kge": 0.8789104868169777,
+            "rmse": 0.6346806914659321,
+            "mae": 0.6327028015715149,
+            "bias": -0.6327028015715149,
+            "pbias": -0.013922323140056717,
+            "observedMean": 4544.520301724137,
+            "simulatedMean": 4543.887598922566
+          }
+        },
+        "2025": {
+          "purpose": "检验",
+          "periodDays": {
+            "检验": 365
+          },
+          "flow": {
+            "logNse": 0.4003370759982037,
+            "count": 211,
+            "nse": 0.7211530897299541,
+            "kge": 0.860744700637801,
+            "rmse": 20.036429848366268,
+            "mae": 14.206218509684334,
+            "bias": 0.6891753290472503,
+            "pbias": 1.4056876181529303,
+            "observedMean": 49.027630331753564,
+            "simulatedMean": 49.7168056608008
+          },
+          "lake": {
+            "logNse": -50.28106524148042,
+            "count": 255,
+            "nse": -50.273781072180824,
+            "kge": 0.7146431464872849,
+            "rmse": 0.6277524211921625,
+            "mae": 0.6265268551192111,
+            "bias": -0.6265268551192111,
+            "pbias": -0.013787394241560804,
+            "observedMean": 4544.200623716154,
+            "simulatedMean": 4543.574096861034
+          }
+        },
+        "2026": {
+          "purpose": "检验",
+          "periodDays": {
+            "检验": 293
+          },
+          "flow": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          },
+          "lake": {
+            "logNse": -132.82684915992215,
+            "count": 80,
+            "nse": -132.80570613130894,
+            "kge": 0.5348239333408528,
+            "rmse": 0.7216288863846084,
+            "mae": 0.7199973778184358,
+            "bias": -0.7199973778184358,
+            "pbias": -0.015845163244940695,
+            "observedMean": 4543.956832053014,
+            "simulatedMean": 4543.2368346751955
+          }
+        }
+      },
+      "diagnostics": {
+        "landGlacierMaxBalanceErrorMm": 7.830180958918326e-11,
+        "routingMaxBalanceErrorM3": 8.344650268554688e-07,
+        "lakeAreaKm2": 2422.199823361506,
+        "partitions": {
+          "duja": {
+            "generatedM3": 11658913868.564228,
+            "routedM3": 11517895795.529968
+          },
+          "zajia_rest": {
+            "generatedM3": 133858678.24855165,
+            "routedM3": 133779303.40079074
+          },
+          "zagen": {
+            "generatedM3": 4265376617.1998215,
+            "routedM3": 4262535045.289483
+          },
+          "boqu": {
+            "generatedM3": 165693245.37574914,
+            "routedM3": 165497717.47732857
+          },
+          "ali": {
+            "generatedM3": 649609257.9656407,
+            "routedM3": 648748781.6016558
+          },
+          "fringe": {
+            "generatedM3": 110167690.48658401,
+            "routedM3": 110057693.11754197
+          },
+          "external": {
+            "generatedM3": 0.0,
+            "routedM3": 0.0
+          },
+          "unresolved": {
+            "generatedM3": 227657126.5227772,
+            "routedM3": 227392492.02250007
+          }
+        },
+        "lakeWindows": [
+          {
+            "start": "2021-04-23T12:00:00",
+            "initialization": "first-quality-daily-level-at-noon"
+          }
+        ]
+      },
+      "identity": {
+        "projectId": "selinco",
+        "modelFamily": "grid-continuous-v1",
+        "modelImplementation": "701d966b842362cf0ced37e9e14fe01cf12f65631814830220dbc9fd1473c66e",
+        "spatialVersion": "AGG-SPATIAL-dbb6e03518db589dc16f",
+        "parameterSHA256": "d4c46990d931f2a8e321ea3a14a516e72df4f66bf73325ba22c236211958a90b",
+        "partitionParameterSHA256": "6d1a7cd7402073c79eb9f5ba7a213bb3d46205b111def511d34ad67c5868d666",
+        "initializationSHA256": "705924d16e79c5261a76d152ce772c2f6f219402fcedbcc4158ce48e058ed28d",
+        "observationProfile": "time-weighted-level-v2-gap6h-cover18h",
+        "observationSnapshotSHA256": "a9a49990a15603b9aed1fdb0cc1830b4a2caa55d4e92ecf3967e1c5c9ec18032",
+        "forcingGridSHA256": "e0ea22478c85fc3c8c87fe868c15de68516a220632e6d0b11ac943941f63ca3e",
+        "forcingTransformationSHA256": "a28542996c03152f4bc7fcdbec1510a7cabbb4843c3fa51e928b49b5f135d458",
+        "routingMode": "source-separated"
+      },
+      "initialization": {
+        "time": "2021-04-23T12:00:00",
+        "level": 4543.66,
+        "method": "first-quality-daily-level-at-noon",
+        "source": "time-weighted-level-v2-gap6h-cover18h",
+        "reference": "SLC-working-datum"
+      },
+      "units": 31
+    },
+    "candidate": {
+      "spatialVersion": "AGG-SPATIAL-dc21f45a0f12c9ec379c",
+      "metricsByYear": {
+        "2020": {
+          "purpose": "预热",
+          "periodDays": {
+            "预热": 366
+          },
+          "flow": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          },
+          "lake": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          }
+        },
+        "2021": {
+          "purpose": "预热、率定",
+          "periodDays": {
+            "率定": 252,
+            "预热": 113
+          },
+          "flow": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          },
+          "lake": {
+            "logNse": 0.8041091888320022,
+            "count": 246,
+            "nse": 0.804102221072571,
+            "kge": 0.6771928296177911,
+            "rmse": 0.08107836296365635,
+            "mae": 0.07195457605964138,
+            "bias": 0.03324170171898862,
+            "pbias": 0.0007315669663884362,
+            "observedMean": 4543.904146341464,
+            "simulatedMean": 4543.937388043182
+          }
+        },
+        "2022": {
+          "purpose": "率定",
+          "periodDays": {
+            "率定": 365
+          },
+          "flow": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          },
+          "lake": {
+            "logNse": -32.925753942701654,
+            "count": 269,
+            "nse": -32.923661153594324,
+            "kge": -0.09211024564680481,
+            "rmse": 0.27159719208606603,
+            "mae": 0.26137494032776154,
+            "bias": -0.2611771980351768,
+            "pbias": -0.005747490963016991,
+            "observedMean": 4544.19501858736,
+            "simulatedMean": 4543.933841389326
+          }
+        },
+        "2023": {
+          "purpose": "率定",
+          "periodDays": {
+            "率定": 365
+          },
+          "flow": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          },
+          "lake": {
+            "logNse": -2.5799173831150366,
+            "count": 222,
+            "nse": -2.579554572738422,
+            "kge": 0.8932198045861044,
+            "rmse": 0.5026421700472905,
+            "mae": 0.49921525409932277,
+            "bias": -0.49921525409932277,
+            "pbias": -0.010985624789710878,
+            "observedMean": 4544.259099099098,
+            "simulatedMean": 4543.759883845
+          }
+        },
+        "2024": {
+          "purpose": "率定",
+          "periodDays": {
+            "率定": 366
+          },
+          "flow": {
+            "logNse": -0.12719689419062385,
+            "count": 229,
+            "nse": 0.5154602472240343,
+            "kge": 0.5267869973568897,
+            "rmse": 60.21997962902964,
+            "mae": 35.925490894612665,
+            "bias": -8.767940578058198,
+            "pbias": -10.838349261155313,
+            "observedMean": 80.89737991266375,
+            "simulatedMean": 72.12943933460554
+          },
+          "lake": {
+            "logNse": -20.566853371993385,
+            "count": 232,
+            "nse": -20.56398738935551,
+            "kge": 0.891423949225868,
+            "rmse": 0.6021459575067727,
+            "mae": 0.5999769764060555,
+            "bias": -0.5999769764060555,
+            "pbias": -0.013202206978334572,
+            "observedMean": 4544.520301724137,
+            "simulatedMean": 4543.920324747732
+          }
+        },
+        "2025": {
+          "purpose": "检验",
+          "periodDays": {
+            "检验": 365
+          },
+          "flow": {
+            "logNse": 0.40091179771234176,
+            "count": 211,
+            "nse": 0.7208355009049041,
+            "kge": 0.8605977866407113,
+            "rmse": 20.047836708455534,
+            "mae": 14.210666568081868,
+            "bias": 0.7424792639438779,
+            "pbias": 1.5144098519952305,
+            "observedMean": 49.027630331753564,
+            "simulatedMean": 49.770109595697434
+          },
+          "lake": {
+            "logNse": -44.210739317183126,
+            "count": 255,
+            "nse": -44.20470665520461,
+            "kge": 0.7156986827946344,
+            "rmse": 0.5894304282567269,
+            "mae": 0.5881808231492993,
+            "bias": -0.5881808231492993,
+            "pbias": -0.012943548752658221,
+            "observedMean": 4544.200623716154,
+            "simulatedMean": 4543.612442893003
+          }
+        },
+        "2026": {
+          "purpose": "检验",
+          "periodDays": {
+            "检验": 293
+          },
+          "flow": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          },
+          "lake": {
+            "logNse": -117.95032637217228,
+            "count": 80,
+            "nse": -117.93262126501456,
+            "kge": 0.5485085003985173,
+            "rmse": 0.6803416950367731,
+            "mae": 0.6786592295132777,
+            "bias": -0.6786592295132777,
+            "pbias": -0.014935424225996695,
+            "observedMean": 4543.956832053014,
+            "simulatedMean": 4543.2781728235
+          }
+        }
+      },
+      "diagnostics": {
+        "landGlacierMaxBalanceErrorMm": 9.279688432603517e-11,
+        "routingMaxBalanceErrorM3": 1.3113021850585938e-06,
+        "lakeAreaKm2": 2422.199823361506,
+        "partitions": {
+          "duja": {
+            "generatedM3": 11670446214.853085,
+            "routedM3": 11529246927.211258
+          },
+          "zajia_rest": {
+            "generatedM3": 145191211.6327554,
+            "routedM3": 145103766.6813982
+          },
+          "zagen": {
+            "generatedM3": 4268593778.1644835,
+            "routedM3": 4265748588.0650496
+          },
+          "boqu": {
+            "generatedM3": 166685672.0675924,
+            "routedM3": 166489079.3572648
+          },
+          "ali": {
+            "generatedM3": 746197713.6395024,
+            "routedM3": 745273918.5596628
+          },
+          "fringe": {
+            "generatedM3": 122584066.79482326,
+            "routedM3": 122464759.94980147
+          },
+          "external": {
+            "generatedM3": 0.0,
+            "routedM3": 0.0
+          },
+          "unresolved": {
+            "generatedM3": 69721413.62022035,
+            "routedM3": 69642757.94799343
+          }
+        },
+        "lakeWindows": [
+          {
+            "start": "2021-04-23T12:00:00",
+            "initialization": "first-quality-daily-level-at-noon"
+          }
+        ]
+      },
+      "identity": {
+        "projectId": "selinco",
+        "modelFamily": "grid-continuous-v1",
+        "modelImplementation": "701d966b842362cf0ced37e9e14fe01cf12f65631814830220dbc9fd1473c66e",
+        "spatialVersion": "AGG-SPATIAL-dc21f45a0f12c9ec379c",
+        "parameterSHA256": "d4c46990d931f2a8e321ea3a14a516e72df4f66bf73325ba22c236211958a90b",
+        "partitionParameterSHA256": "6d1a7cd7402073c79eb9f5ba7a213bb3d46205b111def511d34ad67c5868d666",
+        "initializationSHA256": "705924d16e79c5261a76d152ce772c2f6f219402fcedbcc4158ce48e058ed28d",
+        "observationProfile": "time-weighted-level-v2-gap6h-cover18h",
+        "observationSnapshotSHA256": "a9a49990a15603b9aed1fdb0cc1830b4a2caa55d4e92ecf3967e1c5c9ec18032",
+        "forcingGridSHA256": "e0ea22478c85fc3c8c87fe868c15de68516a220632e6d0b11ac943941f63ca3e",
+        "forcingTransformationSHA256": "a28542996c03152f4bc7fcdbec1510a7cabbb4843c3fa51e928b49b5f135d458",
+        "routingMode": "source-separated"
+      },
+      "initialization": {
+        "time": "2021-04-23T12:00:00",
+        "level": 4543.66,
+        "method": "first-quality-daily-level-at-noon",
+        "source": "time-weighted-level-v2-gap6h-cover18h",
+        "reference": "SLC-working-datum"
+      },
+      "units": 32
+    }
+  },
+  "commonDays": 2485,
+  "lakeDeltaMeanM": 0.02601301840733255,
+  "lakeDeltaMaximumAbsM": 0.04437213460005296,
+  "flowDeltaMeanM3s": 0.6325578629527966,
+  "flowDeltaMaximumAbsM3s": 6.640127301800021,
+  "interpretation": "Conditional two-metre non-water terrain conditioning is being compared; preserved water/deep-pit receivers remain unresolved. This is not proof of topology or independent skill."
+}

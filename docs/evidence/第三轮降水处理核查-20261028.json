@@ -1,0 +1,287 @@
+{
+  "title": "色林错第三轮降水资料与处理核查",
+  "date": "2026-10-28",
+  "inputId": "INPUT-fc731ba1bf2b5e79d3e03d92",
+  "dataSHA256": "d3a195f9eef5e9cc22c1f601752dd12eebf87c525766386c1673c1f41931f3e2",
+  "timeZone": "Asia/Shanghai",
+  "timeMeaning": "end of hourly accumulation interval",
+  "dayMeaning": "hourly intervals ending after 00:00 through next 00:00 Beijing; station source labels not independently verified",
+  "rules": [
+    "只比较原表明确日值或确认覆盖的日；未知和停测不补零。",
+    "按每站位置选择对应0.1度格点；站点日界、雨雪捕获和空间代表性尚待核实。",
+    "不完整年份只表示配对日期统计，不称全年或独立验证。",
+    "湖面沿用2024主站年度比例，模型仅湖面使用一次；陆域不乘。",
+    "保留原始站表及原观测，杜加2025-01-01原表847.1 mm待核，不用于拟合或证明陆域比例。"
+  ],
+  "currentLakeCorrection": {
+    "method": "station-point-annual-ratio-v1",
+    "scope": "lake-only",
+    "factor": 0.5336700706945834,
+    "station": "SLC",
+    "gridId": "89.4,31.8",
+    "developmentYear": 2024,
+    "pairedDays": 366,
+    "gaugeMm": 226.5,
+    "gridMm": 424.41952891456936,
+    "gaugeSeriesSHA256": "e0abfd77539b3aaf758a6a8ca85c601ecf1716f069683357d34107bc53e59832",
+    "limitations": [
+      "One shore gauge represents the lake only as a provisional spatial transfer.",
+      "Source daily labels used; station reporting day boundary not independently verified.",
+      "Gauge catch bias and snowfall undercatch not corrected."
+    ]
+  },
+  "stations": {
+    "SLC": {
+      "location": {
+        "id": "SLC",
+        "lon": 89.35702225,
+        "lat": 31.84329578
+      },
+      "closestGrid": {
+        "id": "89.4,31.8",
+        "lon": 89.4,
+        "lat": 31.8,
+        "lonDifference": 0.0429777500000057,
+        "latDifference": 0.04329577999999756
+      },
+      "withinNearestGridCell": true,
+      "recordsByStepAndQuality": {
+        "day:valid": 516,
+        "irregular:valid": 547,
+        "day:missing": 215
+      },
+      "eligibleDailyCount": 516,
+      "eligibleDailyStart": "2024-01-01",
+      "eligibleDailyEnd": "2025-05-30",
+      "pairedYearStatistics": [
+        {
+          "year": 2024,
+          "pairedDays": 366,
+          "expectedDays": 366,
+          "sourceGaugeMmOnPairedDays": 226.5,
+          "eraMmOnPairedDays": 424.41952891456936,
+          "pairedRatio": 0.5336700706945834,
+          "calendarYearComplete": true
+        },
+        {
+          "year": 2025,
+          "pairedDays": 150,
+          "expectedDays": 365,
+          "sourceGaugeMmOnPairedDays": 5.5,
+          "eraMmOnPairedDays": 41.334466206279785,
+          "pairedRatio": 0.13306086916792956,
+          "calendarYearComplete": false
+        }
+      ],
+      "januaryToMay30": [
+        {
+          "year": 2024,
+          "start": "2024-01-01",
+          "end": "2024-05-30",
+          "pairedDays": 151,
+          "gaugeMm": 8.0,
+          "eraMm": 41.705304027999546,
+          "pairedRatio": 0.19182212398281687
+        },
+        {
+          "year": 2025,
+          "start": "2025-01-01",
+          "end": "2025-05-30",
+          "pairedDays": 150,
+          "gaugeMm": 5.5,
+          "eraMm": 41.334466206279785,
+          "pairedRatio": 0.13306086916792956
+        }
+      ]
+    },
+    "DUJA": {
+      "location": {
+        "id": "DUJA",
+        "lon": 89.15997904,
+        "lat": 32.03057137
+      },
+      "closestGrid": {
+        "id": "89.2,32.0",
+        "lon": 89.2,
+        "lat": 32.0,
+        "lonDifference": 0.04002096000000677,
+        "latDifference": 0.03057136999999699
+      },
+      "withinNearestGridCell": true,
+      "recordsByStepAndQuality": {
+        "day:valid": 150,
+        "irregular:valid": 775,
+        "day:missing": 215
+      },
+      "eligibleDailyCount": 150,
+      "eligibleDailyStart": "2025-01-01",
+      "eligibleDailyEnd": "2025-05-30",
+      "pairedYearStatistics": [
+        {
+          "year": 2025,
+          "pairedDays": 150,
+          "expectedDays": 365,
+          "sourceGaugeMmOnPairedDays": 852.4,
+          "eraMmOnPairedDays": 38.16224755163944,
+          "pairedRatio": 22.336210644998584,
+          "calendarYearComplete": false
+        }
+      ],
+      "januaryToMay30": [
+        {
+          "year": 2024,
+          "start": "2024-01-01",
+          "end": "2024-05-30",
+          "pairedDays": 0,
+          "gaugeMm": 0.0,
+          "eraMm": 0.0,
+          "pairedRatio": null
+        },
+        {
+          "year": 2025,
+          "start": "2025-01-01",
+          "end": "2025-05-30",
+          "pairedDays": 150,
+          "gaugeMm": 852.4,
+          "eraMm": 38.16224755163944,
+          "pairedRatio": 22.336210644998584
+        }
+      ],
+      "suspectSourceRecord": {
+        "time": "2025-01-01T00:00:00",
+        "value": 847.1,
+        "raw_text": "847.1",
+        "quality": "valid",
+        "sheet": "雨量报表",
+        "cell": "R5C2",
+        "source": "dj/雨量/2025_杜加雨量报表.xls"
+      }
+    },
+    "BLQ": {
+      "location": {
+        "id": "BLQ",
+        "lon": 91.87776607,
+        "lat": 32.6916721
+      },
+      "closestGrid": {
+        "id": "91.9,32.7",
+        "lon": 91.9,
+        "lat": 32.7,
+        "lonDifference": 0.022233929999998736,
+        "latDifference": 0.008327900000004718
+      },
+      "withinNearestGridCell": true,
+      "recordsByStepAndQuality": {
+        "day:missing": 288,
+        "day:valid": 443,
+        "irregular:valid": 453
+      },
+      "eligibleDailyCount": 443,
+      "eligibleDailyStart": "2024-01-08",
+      "eligibleDailyEnd": "2025-05-30",
+      "pairedYearStatistics": [
+        {
+          "year": 2024,
+          "pairedDays": 308,
+          "expectedDays": 366,
+          "sourceGaugeMmOnPairedDays": 425.80000000000007,
+          "eraMmOnPairedDays": 660.0679074750815,
+          "pairedRatio": 0.6450851422678425,
+          "calendarYearComplete": false
+        },
+        {
+          "year": 2025,
+          "pairedDays": 135,
+          "expectedDays": 365,
+          "sourceGaugeMmOnPairedDays": 48.6,
+          "eraMmOnPairedDays": 121.62185314193152,
+          "pairedRatio": 0.3995992393183178,
+          "calendarYearComplete": false
+        }
+      ],
+      "januaryToMay30": [
+        {
+          "year": 2024,
+          "start": "2024-01-01",
+          "end": "2024-05-30",
+          "pairedDays": 128,
+          "gaugeMm": 64.2,
+          "eraMm": 162.21166975657297,
+          "pairedRatio": 0.395779169873187
+        },
+        {
+          "year": 2025,
+          "start": "2025-01-01",
+          "end": "2025-05-30",
+          "pairedDays": 135,
+          "gaugeMm": 48.6,
+          "eraMm": 121.62185314193152,
+          "pairedRatio": 0.3995992393183178
+        }
+      ]
+    },
+    "115DB": {
+      "location": {
+        "id": "115DB",
+        "lon": 91.83398992,
+        "lat": 32.51681861
+      },
+      "closestGrid": {
+        "id": "91.8,32.5",
+        "lon": 91.8,
+        "lat": 32.5,
+        "lonDifference": 0.03398991999999623,
+        "latDifference": 0.0168186100000014
+      },
+      "withinNearestGridCell": true,
+      "recordsByStepAndQuality": {
+        "day:missing": 286,
+        "day:valid": 445
+      },
+      "eligibleDailyCount": 445,
+      "eligibleDailyStart": "2024-01-08",
+      "eligibleDailyEnd": "2025-05-22",
+      "pairedYearStatistics": [
+        {
+          "year": 2024,
+          "pairedDays": 314,
+          "expectedDays": 366,
+          "sourceGaugeMmOnPairedDays": 458.80000000000007,
+          "eraMmOnPairedDays": 694.4140986107072,
+          "pairedRatio": 0.6607008713070587,
+          "calendarYearComplete": false
+        },
+        {
+          "year": 2025,
+          "pairedDays": 131,
+          "expectedDays": 365,
+          "sourceGaugeMmOnPairedDays": 43.60000000000001,
+          "eraMmOnPairedDays": 93.64355445509887,
+          "pairedRatio": 0.4655953124985849,
+          "calendarYearComplete": false
+        }
+      ],
+      "januaryToMay30": [
+        {
+          "year": 2024,
+          "start": "2024-01-01",
+          "end": "2024-05-30",
+          "pairedDays": 129,
+          "gaugeMm": 51.199999999999996,
+          "eraMm": 162.25989392108886,
+          "pairedRatio": 0.3155431620391658
+        },
+        {
+          "year": 2025,
+          "start": "2025-01-01",
+          "end": "2025-05-30",
+          "pairedDays": 131,
+          "gaugeMm": 43.60000000000001,
+          "eraMm": 93.64355445509887,
+          "pairedRatio": 0.4655953124985849
+        }
+      ]
+    }
+  },
+  "conclusion": "2024主站完整年比值可复现；2025只有前150日主站日值，暂不足以证明跨年最优。保持现有湖面订正及其限制。"
+}

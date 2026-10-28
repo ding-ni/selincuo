@@ -1,6 +1,12 @@
 """Public search definitions shared by the service, diagnostics and UI."""
 RUNOFF_KEYS = ['KC', 'WM', 'B', 'SM', 'KI', 'KG']
-ROUTING_KEYS = ['tauHours', 'interflowTauHours', 'baseflowTauHours']
+ROUTING_KEYS = ['tauHours', 'lagHours', 'interflowTauHours', 'baseflowTauHours']
+LAND_KEYS = ['KC', 'WM', 'B', 'C', 'SM', 'EX', 'KI', 'KG', 'IM']
+SNOW_KEYS = ['snowDdf', 'iceDdf', 'snowTemperature', 'rainTemperature',
+             'liquidCapacity', 'refreezeFactor', 'snowSublimation',
+             'glacierRecessionDay', 'lapseRate']
+FLOW_FORBIDDEN_KEYS = ['iceSublimationFraction', 'iceSublimationMaxMmHour', 'lakeCoefficient']
+FLOW_SELECTABLE_KEYS = LAND_KEYS + SNOW_KEYS + ROUTING_KEYS
 PROFILES = {
     'balanced': {'label': '洪峰、低流量与水量平衡', 'weights': {'nse': .5, 'logNse': .25, 'volume': .25}},
     'peaks': {'label': '原方案：洪峰优先', 'weights': {'nse': 1., 'logNse': 0., 'volume': .1}},
@@ -21,7 +27,10 @@ def flow_objective(metric, profile='balanced'):
 
 
 def public_config():
-    return {'runoffKeys': RUNOFF_KEYS, 'routingKeys': ROUTING_KEYS, 'lakeKeys': ['lakeCoefficient'], 'profiles': PROFILES,
+    return {'runoffKeys': RUNOFF_KEYS, 'routingKeys': ROUTING_KEYS, 'landKeys': LAND_KEYS,
+            'snowKeys': SNOW_KEYS, 'flowSelectableKeys': FLOW_SELECTABLE_KEYS,
+            'flowForbiddenKeys': FLOW_FORBIDDEN_KEYS, 'lakeKeys': ['lakeCoefficient'], 'profiles': PROFILES,
+            'defaultSeeds': [42],
             'defaultProfile': 'balanced', 'calibrationYear': 2024, 'warmupYear': 2023,
             'excludedYears': [2025, 2026], 'sensitivity': {'fraction': .2, 'method': 'one-at-a-time',
             'keys': ['KC', 'snowDdf', 'iceDdf', 'snowTemperature', 'rainTemperature', 'refreezeFactor',

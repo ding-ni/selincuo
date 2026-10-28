@@ -8,13 +8,13 @@ import {chartState,saveChartState} from './chart-state.mjs'
 echarts.use([LineChart,BarChart,GridComponent,TooltipComponent,LegendComponent,DataZoomComponent,MarkLineComponent,CanvasRenderer])
 const props=defineProps({rows:{default:()=>[]},series:{default:()=>[]},unit:{default:''},context:{default:''},compact:Boolean,dark:Boolean,day:String,zero:Boolean,hourly:Boolean})
 const emit=defineEmits(['day'])
-const root=ref();let chart,observer,memory
+const root=ref();let chart,observer,memory,pixelRatio=1,ratioMedia,resizeFrame=0
 const memoryKey=()=>props.context||props.series.map(s=>s.key+':'+s.label).join('|')
 function render(){
  if(!chart)return
  memory=chartState(props.context||props.series.map(s=>s.key+':'+s.label).join('|'))
  const ink=props.dark?'#bdd0dc':'#516e7b',grid=props.dark?'#294450':'#e0e9ed'
- const short=props.compact&&chart.getHeight()<140,tickFont=short?10:12
+ const short=props.compact&&chart.getHeight()<140,tickFont=12
  const selected=Object.fromEntries(props.series.map(s=>[s.label,memory.selected[s.label]!==false]))
  chart.setOption({animation:false,color:['#208c96','#ce9041','#6486bd','#8da873','#ae81a6'],textStyle:{fontFamily:'Microsoft YaHei UI, Microsoft YaHei, sans-serif',fontSize:12,color:ink},
  tooltip:{trigger:'axis',confine:true,backgroundColor:props.dark?'#132d3a':'#fff',borderColor:grid,textStyle:{color:ink,fontSize:13},valueFormatter:v=>v==null?'缺测':Number(v).toLocaleString('zh-CN',{maximumFractionDigits:3})},
@@ -26,8 +26,31 @@ function render(){
  series:props.series.map((s,i)=>({id:s.id||s.key,name:s.label,type:s.type||'line',data:props.rows.map(r=>r[s.key]??null),showSymbol:false,connectNulls:false,lineStyle:{width:2,type:s.observed||s.key.startsWith('observed')?'dashed':'solid'},barMaxWidth:16,...s.options,...(i===0&&props.day?{markLine:{symbol:'none',silent:true,label:{show:false},lineStyle:{color:'#bc9251',type:'dashed'},data:[{xAxis:props.day}]}}:{})}))
  },{replaceMerge:['series','dataZoom','legend']})
 }
-onMounted(()=>{chart=echarts.init(root.value);const remember=e=>{Object.assign(memory.selected,e.selected);saveChartState(memoryKey(),memory)};for(const event of ['legendselectchanged','legendselected','legendunselected'])chart.on(event,remember);chart.on('datazoom',()=>{const z=chart.getOption().dataZoom?.[0];if(z)memory.zoom=[z.start,z.end];saveChartState(memoryKey(),memory)});chart.on('click',e=>{if(e.name)emit('day',e.name.slice(0,props.hourly?16:10))});observer=new ResizeObserver(()=>{chart.resize();render()});observer.observe(root.value);render()})
+function initialise(){
+ pixelRatio=window.devicePixelRatio||1
+ chart=echarts.init(root.value,null,{renderer:'canvas',devicePixelRatio:pixelRatio})
+ const remember=e=>{Object.assign(memory.selected,e.selected);saveChartState(memoryKey(),memory)}
+ for(const event of ['legendselectchanged','legendselected','legendunselected'])chart.on(event,remember)
+ chart.on('datazoom',()=>{const z=chart.getOption().dataZoom?.[0];if(z)memory.zoom=[z.start,z.end];saveChartState(memoryKey(),memory)})
+ chart.on('click',e=>{if(e.name)emit('day',e.name.slice(0,props.hourly?16:10))})
+ render()
+}
+function watchRatio(){
+ ratioMedia?.removeEventListener('change',ratioChanged)
+ ratioMedia=window.matchMedia(`(resolution: ${window.devicePixelRatio||1}dppx)`)
+ ratioMedia.addEventListener('change',ratioChanged)
+}
+function ratioChanged(){
+ if(!chart)return
+ if((window.devicePixelRatio||1)!==pixelRatio){chart.dispose();initialise()}
+ watchRatio()
+}
+function resize(){
+ cancelAnimationFrame(resizeFrame)
+ resizeFrame=requestAnimationFrame(()=>{if(!chart)return;if((window.devicePixelRatio||1)!==pixelRatio)ratioChanged();else{chart.resize();render()}})
+}
+onMounted(()=>{initialise();watchRatio();window.addEventListener('resize',resize);observer=new ResizeObserver(resize);observer.observe(root.value)})
 watch(()=>[props.rows,props.series,props.unit,props.context,props.day,props.dark,props.hourly],render,{deep:true})
-onBeforeUnmount(()=>{observer?.disconnect();chart?.dispose()})
+onBeforeUnmount(()=>{observer?.disconnect();window.removeEventListener('resize',resize);ratioMedia?.removeEventListener('change',ratioChanged);cancelAnimationFrame(resizeFrame);chart?.dispose()})
 </script>
 <template><div class="chart-container" :class="{compact}"><div ref="root" class="chart" role="img" :data-day="day||undefined" :aria-label="series.map(s=>s.label).join('、')+'过程图'+(day?' · '+day:'')"></div><span v-if="!rows.length" class="chart-empty">该时段无资料</span></div></template>

@@ -1,0 +1,806 @@
+{
+  "calibration": {
+    "taskId": "JOB-76eb10db6e7f42848809",
+    "schemeId": "SCHEME-6ad5579cdcce423ebf4e",
+    "familyId": "FAMILY-a6928336f3b3443a",
+    "configurationSHA256": "dbe9978390ef24028c8675043c70991f36d5873d33c003329f2d6a012903a4fe"
+  },
+  "savedAndAdoptedIntoNewScheme": {
+    "parameterId": "PARAM-be5451d49a9b4a38ba74",
+    "schemeId": "SCHEME-e81ff879c55d4c2e99ec",
+    "parameterSHA256": "744970fa3cbd6b4c3e4b32599f622e628d7f979fb44f8175ff4342c6eaad8f36",
+    "effectiveParameterSHA256": "9e101b65a1336821501a5f3bcb849e06612bb5f37d09dff17ba5b6c857473153",
+    "reopenedConfigurationSHA256": "650842f378b93d39d0d2376d28128d82d1e8f2abfaeed8ff1b35532dc123ce29"
+  },
+  "simulation": {
+    "taskId": "JOB-f6990d85d9554d7db5c8",
+    "schemeId": "SCHEME-e81ff879c55d4c2e99ec"
+  },
+  "continuation": {
+    "taskId": "JOB-d2a5f3f8371b4b059987",
+    "parentTaskId": "JOB-f6990d85d9554d7db5c8",
+    "parentStateId": "STATE-f6990d85d9554d7db5c8",
+    "note": "Seven available hours only; this is not a complete daily result or a new complete driver library."
+  },
+  "numericalIdentity": {
+    "projectId": "selinco",
+    "modelFamily": "grid-continuous-v1",
+    "modelImplementation": "df8315c280efb52a58c465256ac51d2b73f6e7e33cfad68406976cf067704874",
+    "spatialVersion": "AGG-SPATIAL-dbb6e03518db589dc16f",
+    "parameterSHA256": "3f950e02f820652c01dc3330bd855f4f2855c32907360f35e56158b4602b0b94",
+    "partitionParameterSHA256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "parameterTransferSHA256": "eb5ba8d49a3966eed999017023c92795c35b5dd2abb4717cf188db8b3b254dd4",
+    "effectiveParameterSHA256": "9e101b65a1336821501a5f3bcb849e06612bb5f37d09dff17ba5b6c857473153",
+    "initializationSHA256": "705924d16e79c5261a76d152ce772c2f6f219402fcedbcc4158ce48e058ed28d",
+    "observationProfile": "time-weighted-level-v2-gap6h-cover18h",
+    "observationSnapshotSHA256": "d5871d988ca451820df0508982ce2646b7cb071f0e32ae678d779effb91f2dd9",
+    "forcingGridSHA256": "e0ea22478c85fc3c8c87fe868c15de68516a220632e6d0b11ac943941f63ca3e",
+    "forcingTransformationSHA256": "a28542996c03152f4bc7fcdbec1510a7cabbb4843c3fa51e928b49b5f135d458",
+    "routingMode": "source-separated"
+  },
+  "parameterTransfer": {
+    "version": 1,
+    "mode": "duja-shared",
+    "donor": "duja",
+    "areaExponent": 0.5
+  },
+  "trainingDateCount": 229,
+  "trainingDatesSHA256": "4593942cf6fcb504bb6346b5ac0a54bd474369ee526b9b4264b2134afff70bce",
+  "calibrationSummary": {
+    "algorithm": "staged-multistart-differential-evolution",
+    "seed": 42,
+    "seeds": [
+      42,
+      142
+    ],
+    "evaluations": 158,
+    "stages": [
+      {
+        "stage": "runoff",
+        "evaluations": 120,
+        "maxEvaluations": 120,
+        "keys": [
+          "KC",
+          "WM",
+          "KI"
+        ],
+        "selectedParameters": [
+          "KC",
+          "WM",
+          "KI"
+        ],
+        "fixedParameters": [],
+        "bounds": {
+          "KC": [
+            0.2,
+            1.5
+          ],
+          "WM": [
+            40,
+            300
+          ],
+          "KI": [
+            0.001,
+            0.15
+          ]
+        },
+        "initialParameters": {
+          "KC": 0.7714797672529675,
+          "WM": 300.0,
+          "KI": 0.12447649497308605
+        },
+        "bestParameters": {
+          "KC": 0.8241616045688176,
+          "WM": 96.76085511834073,
+          "KI": 0.061073804049647545
+        },
+        "baselineMetrics": {
+          "logNse": -0.1277442417431398,
+          "count": 229,
+          "nse": 0.5148100647072046,
+          "kge": 0.5257947909666606,
+          "rmse": 60.26036935118411,
+          "mae": 35.9191917483524,
+          "bias": -8.84979438220393,
+          "pbias": -10.939531529646704,
+          "observedMean": 80.89737991266375,
+          "simulatedMean": 72.04758553045983
+        },
+        "bestObjective": 0.40623830589322957,
+        "converged": false,
+        "termination": "budget-exhausted",
+        "boundaryParameters": [],
+        "nearBoundaryParameters": [],
+        "diagnostics": {
+          "trainingPairs": 229,
+          "countByYear": {
+            "2024": 229
+          },
+          "perturbationFractionOfRange": 0.05,
+          "parameters": {
+            "KC": {
+              "status": "responsive",
+              "perturbation": 0.8364797672529676,
+              "maxFlowChange": 28.0687850141,
+              "tolerance": 1.902707861571e-08
+            },
+            "WM": {
+              "status": "responsive",
+              "perturbation": 287.0,
+              "maxFlowChange": 0.8549274945999912,
+              "tolerance": 1.902707861571e-08
+            },
+            "KI": {
+              "status": "responsive",
+              "perturbation": 0.13192649497308606,
+              "maxFlowChange": 1.6149108868000042,
+              "tolerance": 1.902707861571e-08
+            }
+          },
+          "svd": {
+            "keys": [
+              "KC",
+              "WM",
+              "KI"
+            ],
+            "singularValues": [
+              54.18520651107921,
+              2.023160770285815,
+              0.813972667290671
+            ],
+            "rank": 3,
+            "correlation": [
+              [
+                0.9999999999999998,
+                0.3696136837500313,
+                -0.7434234996532952
+              ],
+              [
+                0.3696136837500313,
+                1.0,
+                0.017953986130043943
+              ],
+              [
+                -0.7434234996532952,
+                0.017953986130043946,
+                1.0
+              ]
+            ],
+            "interpretation": "固定率定日期的一次局部扰动诊断，不证明全局可辨识性。"
+          }
+        },
+        "starts": [
+          {
+            "seed": 42,
+            "maxEvaluations": 58,
+            "evaluations": 58,
+            "baselineReused": true,
+            "converged": false,
+            "bestObjective": 0.46895651336516636,
+            "bestParameters": {
+              "KC": 0.7855017192642373,
+              "WM": 136.40748630047113,
+              "KI": 0.13908798333844166
+            },
+            "termination": "budget-exhausted"
+          },
+          {
+            "seed": 142,
+            "maxEvaluations": 58,
+            "evaluations": 58,
+            "baselineReused": true,
+            "converged": false,
+            "bestObjective": 0.40623830589322957,
+            "bestParameters": {
+              "KC": 0.8241616045688176,
+              "WM": 96.76085511834073,
+              "KI": 0.061073804049647545
+            },
+            "termination": "budget-exhausted"
+          }
+        ]
+      },
+      {
+        "stage": "routing",
+        "evaluations": 38,
+        "maxEvaluations": 60,
+        "keys": [
+          "lagHours"
+        ],
+        "selectedParameters": [
+          "lagHours"
+        ],
+        "fixedParameters": [],
+        "bounds": {
+          "lagHours": [
+            0,
+            72
+          ]
+        },
+        "initialParameters": {
+          "lagHours": 0.0
+        },
+        "bestParameters": {
+          "lagHours": 0.0
+        },
+        "baselineMetrics": {
+          "logNse": 0.3494506484007226,
+          "count": 229,
+          "nse": 0.5246526671175519,
+          "kge": 0.5554959999492126,
+          "rmse": 59.6460143013347,
+          "mae": 36.32165987521615,
+          "bias": -1.9180126620965052,
+          "pbias": -2.3709206208744686,
+          "observedMean": 80.89737991266375,
+          "simulatedMean": 78.97936725056724
+        },
+        "bestObjective": 0.40623830589322957,
+        "converged": true,
+        "termination": "converged",
+        "boundaryParameters": [
+          "lagHours"
+        ],
+        "nearBoundaryParameters": [
+          "lagHours"
+        ],
+        "diagnostics": {
+          "trainingPairs": 229,
+          "countByYear": {
+            "2024": 229
+          },
+          "perturbationFractionOfRange": 0.05,
+          "parameters": {
+            "lagHours": {
+              "status": "responsive",
+              "perturbation": 3.6,
+              "maxFlowChange": 2.1228616609,
+              "tolerance": 2.085206848696e-08
+            }
+          },
+          "svd": {
+            "keys": [
+              "lagHours"
+            ],
+            "singularValues": [
+              1.9782606169053987
+            ],
+            "rank": 1,
+            "correlation": [
+              [
+                0.9999999999999998
+              ]
+            ],
+            "interpretation": "固定率定日期的一次局部扰动诊断，不证明全局可辨识性。"
+          }
+        },
+        "starts": [
+          {
+            "seed": 42,
+            "maxEvaluations": 29,
+            "evaluations": 18,
+            "baselineReused": true,
+            "converged": true,
+            "bestObjective": 0.40623830589322957,
+            "bestParameters": {
+              "lagHours": 0.0
+            },
+            "termination": "converged"
+          },
+          {
+            "seed": 142,
+            "maxEvaluations": 40,
+            "evaluations": 18,
+            "baselineReused": true,
+            "converged": true,
+            "bestObjective": 0.40623830589322957,
+            "bestParameters": {
+              "lagHours": 0.0
+            },
+            "termination": "converged"
+          }
+        ]
+      }
+    ],
+    "objectiveProfile": "balanced",
+    "periods": {
+      "evaluationEnd": "2026-10-21T00:00:00",
+      "evaluationStart": "2025-01-01T00:00:00",
+      "trainingEnd": "2025-01-01T00:00:00",
+      "trainingStart": "2024-01-01T00:00:00",
+      "warmupStart": "2020-01-01T00:00:00"
+    },
+    "targets": {
+      "flow": {
+        "count": 229,
+        "countByYear": {
+          "2024": 229
+        },
+        "available": true,
+        "usedForObjective": true
+      },
+      "lake": {
+        "available": true,
+        "count": 232,
+        "countByYear": {
+          "2024": 232
+        },
+        "usedForObjective": false,
+        "reason": "湖位仅作独立评价，不参与杜加流量目标"
+      }
+    },
+    "assessments": {
+      "training": {
+        "flow": {
+          "logNse": 0.3494506484007226,
+          "count": 229,
+          "nse": 0.5246526671175519,
+          "kge": 0.5554959999492126,
+          "rmse": 59.6460143013347,
+          "mae": 36.32165987521615,
+          "bias": -1.9180126620965052,
+          "pbias": -2.3709206208744686,
+          "observedMean": 80.89737991266375,
+          "simulatedMean": 78.97936725056724,
+          "countByYear": {
+            "2024": 229
+          }
+        },
+        "lake": {
+          "logNse": -706.0454610967873,
+          "count": 232,
+          "nse": -706.5889049204336,
+          "kge": -0.8885226131695623,
+          "rmse": 3.449274420476975,
+          "mae": 3.436018219365102,
+          "bias": 3.436018219365102,
+          "pbias": 0.07560794079985773,
+          "observedMean": 4544.520301724137,
+          "simulatedMean": 4547.956319943503,
+          "countByYear": {
+            "2024": 232
+          },
+          "firstToLastErrorChangeM": 0.8642512962996989
+        }
+      },
+      "validation": {
+        "flow": {
+          "logNse": 0.3847662210944677,
+          "count": 211,
+          "nse": 0.480771947399274,
+          "kge": 0.6172514995649614,
+          "rmse": 27.341132273850537,
+          "mae": 19.895379179139812,
+          "bias": 11.582828038634597,
+          "pbias": 23.625102743611055,
+          "observedMean": 49.027630331753564,
+          "simulatedMean": 60.61045837038815,
+          "countByYear": {
+            "2025": 211
+          }
+        },
+        "lake": {
+          "logNse": -1244.752301238522,
+          "count": 335,
+          "nse": -1246.054888297272,
+          "kge": -1.240604036408104,
+          "rmse": 4.6826925300376185,
+          "mae": 4.662502945881199,
+          "bias": 4.662502945881199,
+          "pbias": 0.10260468380005767,
+          "observedMean": 4544.142404811523,
+          "simulatedMean": 4548.804907757404,
+          "countByYear": {
+            "2025": 255,
+            "2026": 80
+          },
+          "firstToLastErrorChangeM": 1.3148685492005825
+        }
+      }
+    },
+    "validationExcludedFromSearch": true,
+    "decision": "candidate-only",
+    "converged": false,
+    "boundaryParameters": [
+      "lagHours"
+    ],
+    "nearBoundaryParameters": [
+      "lagHours"
+    ],
+    "termination": "all-stages-completed",
+    "bestObjective": 0.40623830589322957,
+    "baselineMetrics": {
+      "logNse": -0.1277442417431398,
+      "count": 229,
+      "nse": 0.5148100647072046,
+      "kge": 0.5257947909666606,
+      "rmse": 60.26036935118411,
+      "mae": 35.9191917483524,
+      "bias": -8.84979438220393,
+      "pbias": -10.939531529646704,
+      "observedMean": 80.89737991266375,
+      "simulatedMean": 72.04758553045983
+    },
+    "fixedTrainingDates": [
+      "2024-04-02T00:00:00",
+      "2024-04-03T00:00:00",
+      "2024-04-04T00:00:00",
+      "2024-04-05T00:00:00",
+      "2024-04-06T00:00:00",
+      "2024-04-07T00:00:00",
+      "2024-04-08T00:00:00",
+      "2024-04-09T00:00:00",
+      "2024-04-10T00:00:00",
+      "2024-04-11T00:00:00",
+      "2024-04-12T00:00:00",
+      "2024-04-13T00:00:00",
+      "2024-04-14T00:00:00",
+      "2024-04-15T00:00:00",
+      "2024-04-16T00:00:00",
+      "2024-04-17T00:00:00",
+      "2024-04-18T00:00:00",
+      "2024-04-19T00:00:00",
+      "2024-04-20T00:00:00",
+      "2024-04-21T00:00:00",
+      "2024-04-22T00:00:00",
+      "2024-04-23T00:00:00",
+      "2024-04-24T00:00:00",
+      "2024-04-25T00:00:00",
+      "2024-04-26T00:00:00",
+      "2024-04-27T00:00:00",
+      "2024-04-28T00:00:00",
+      "2024-04-29T00:00:00",
+      "2024-04-30T00:00:00",
+      "2024-05-01T00:00:00",
+      "2024-05-02T00:00:00",
+      "2024-05-03T00:00:00",
+      "2024-05-04T00:00:00",
+      "2024-05-05T00:00:00",
+      "2024-05-06T00:00:00",
+      "2024-05-07T00:00:00",
+      "2024-05-08T00:00:00",
+      "2024-05-09T00:00:00",
+      "2024-05-10T00:00:00",
+      "2024-05-11T00:00:00",
+      "2024-05-12T00:00:00",
+      "2024-05-13T00:00:00",
+      "2024-05-14T00:00:00",
+      "2024-05-15T00:00:00",
+      "2024-05-16T00:00:00",
+      "2024-05-17T00:00:00",
+      "2024-05-18T00:00:00",
+      "2024-05-19T00:00:00",
+      "2024-05-20T00:00:00",
+      "2024-05-21T00:00:00",
+      "2024-05-22T00:00:00",
+      "2024-05-23T00:00:00",
+      "2024-05-24T00:00:00",
+      "2024-05-25T00:00:00",
+      "2024-05-26T00:00:00",
+      "2024-05-27T00:00:00",
+      "2024-05-28T00:00:00",
+      "2024-05-29T00:00:00",
+      "2024-05-30T00:00:00",
+      "2024-05-31T00:00:00",
+      "2024-06-01T00:00:00",
+      "2024-06-02T00:00:00",
+      "2024-06-03T00:00:00",
+      "2024-06-04T00:00:00",
+      "2024-06-05T00:00:00",
+      "2024-06-06T00:00:00",
+      "2024-06-07T00:00:00",
+      "2024-06-08T00:00:00",
+      "2024-06-09T00:00:00",
+      "2024-06-10T00:00:00",
+      "2024-06-11T00:00:00",
+      "2024-06-12T00:00:00",
+      "2024-06-13T00:00:00",
+      "2024-06-14T00:00:00",
+      "2024-06-15T00:00:00",
+      "2024-06-16T00:00:00",
+      "2024-06-17T00:00:00",
+      "2024-06-18T00:00:00",
+      "2024-06-19T00:00:00",
+      "2024-06-20T00:00:00",
+      "2024-06-21T00:00:00",
+      "2024-06-22T00:00:00",
+      "2024-06-23T00:00:00",
+      "2024-06-24T00:00:00",
+      "2024-06-25T00:00:00",
+      "2024-06-26T00:00:00",
+      "2024-06-27T00:00:00",
+      "2024-06-28T00:00:00",
+      "2024-06-29T00:00:00",
+      "2024-06-30T00:00:00",
+      "2024-07-01T00:00:00",
+      "2024-07-02T00:00:00",
+      "2024-07-03T00:00:00",
+      "2024-07-04T00:00:00",
+      "2024-07-05T00:00:00",
+      "2024-07-06T00:00:00",
+      "2024-07-07T00:00:00",
+      "2024-07-08T00:00:00",
+      "2024-07-09T00:00:00",
+      "2024-07-10T00:00:00",
+      "2024-07-11T00:00:00",
+      "2024-07-12T00:00:00",
+      "2024-07-13T00:00:00",
+      "2024-07-14T00:00:00",
+      "2024-07-15T00:00:00",
+      "2024-07-16T00:00:00",
+      "2024-07-17T00:00:00",
+      "2024-07-18T00:00:00",
+      "2024-07-19T00:00:00",
+      "2024-07-20T00:00:00",
+      "2024-07-21T00:00:00",
+      "2024-07-22T00:00:00",
+      "2024-07-23T00:00:00",
+      "2024-07-24T00:00:00",
+      "2024-07-25T00:00:00",
+      "2024-07-26T00:00:00",
+      "2024-07-27T00:00:00",
+      "2024-07-28T00:00:00",
+      "2024-07-29T00:00:00",
+      "2024-07-30T00:00:00",
+      "2024-07-31T00:00:00",
+      "2024-08-01T00:00:00",
+      "2024-08-02T00:00:00",
+      "2024-08-03T00:00:00",
+      "2024-08-04T00:00:00",
+      "2024-08-05T00:00:00",
+      "2024-08-06T00:00:00",
+      "2024-08-07T00:00:00",
+      "2024-08-08T00:00:00",
+      "2024-08-09T00:00:00",
+      "2024-08-10T00:00:00",
+      "2024-08-11T00:00:00",
+      "2024-08-12T00:00:00",
+      "2024-08-13T00:00:00",
+      "2024-08-14T00:00:00",
+      "2024-08-15T00:00:00",
+      "2024-08-16T00:00:00",
+      "2024-08-17T00:00:00",
+      "2024-08-18T00:00:00",
+      "2024-08-19T00:00:00",
+      "2024-08-20T00:00:00",
+      "2024-08-21T00:00:00",
+      "2024-08-22T00:00:00",
+      "2024-08-23T00:00:00",
+      "2024-08-24T00:00:00",
+      "2024-08-25T00:00:00",
+      "2024-08-26T00:00:00",
+      "2024-08-27T00:00:00",
+      "2024-08-28T00:00:00",
+      "2024-08-29T00:00:00",
+      "2024-08-30T00:00:00",
+      "2024-08-31T00:00:00",
+      "2024-09-01T00:00:00",
+      "2024-09-02T00:00:00",
+      "2024-09-03T00:00:00",
+      "2024-09-04T00:00:00",
+      "2024-09-05T00:00:00",
+      "2024-09-06T00:00:00",
+      "2024-09-07T00:00:00",
+      "2024-09-08T00:00:00",
+      "2024-09-09T00:00:00",
+      "2024-09-10T00:00:00",
+      "2024-09-11T00:00:00",
+      "2024-09-12T00:00:00",
+      "2024-09-13T00:00:00",
+      "2024-09-14T00:00:00",
+      "2024-09-15T00:00:00",
+      "2024-09-16T00:00:00",
+      "2024-09-17T00:00:00",
+      "2024-09-18T00:00:00",
+      "2024-09-19T00:00:00",
+      "2024-09-20T00:00:00",
+      "2024-09-21T00:00:00",
+      "2024-09-22T00:00:00",
+      "2024-09-23T00:00:00",
+      "2024-09-24T00:00:00",
+      "2024-09-25T00:00:00",
+      "2024-09-26T00:00:00",
+      "2024-09-27T00:00:00",
+      "2024-09-28T00:00:00",
+      "2024-09-29T00:00:00",
+      "2024-09-30T00:00:00",
+      "2024-10-01T00:00:00",
+      "2024-10-02T00:00:00",
+      "2024-10-03T00:00:00",
+      "2024-10-04T00:00:00",
+      "2024-10-05T00:00:00",
+      "2024-10-06T00:00:00",
+      "2024-10-07T00:00:00",
+      "2024-10-08T00:00:00",
+      "2024-10-09T00:00:00",
+      "2024-10-10T00:00:00",
+      "2024-10-11T00:00:00",
+      "2024-10-12T00:00:00",
+      "2024-10-13T00:00:00",
+      "2024-10-14T00:00:00",
+      "2024-10-15T00:00:00",
+      "2024-10-16T00:00:00",
+      "2024-10-17T00:00:00",
+      "2024-10-18T00:00:00",
+      "2024-10-19T00:00:00",
+      "2024-10-20T00:00:00",
+      "2024-10-21T00:00:00",
+      "2024-10-22T00:00:00",
+      "2024-10-23T00:00:00",
+      "2024-10-24T00:00:00",
+      "2024-10-25T00:00:00",
+      "2024-10-26T00:00:00",
+      "2024-10-27T00:00:00",
+      "2024-10-28T00:00:00",
+      "2024-10-29T00:00:00",
+      "2024-10-30T00:00:00",
+      "2024-10-31T00:00:00",
+      "2024-11-01T00:00:00",
+      "2024-11-02T00:00:00",
+      "2024-11-03T00:00:00",
+      "2024-11-04T00:00:00",
+      "2024-11-05T00:00:00",
+      "2024-11-06T00:00:00",
+      "2024-11-07T00:00:00",
+      "2024-11-08T00:00:00",
+      "2024-11-09T00:00:00",
+      "2024-11-10T00:00:00",
+      "2024-11-11T00:00:00",
+      "2024-11-12T00:00:00",
+      "2024-11-13T00:00:00",
+      "2024-11-14T00:00:00",
+      "2024-11-15T00:00:00",
+      "2024-11-16T00:00:00"
+    ],
+    "fixedTrainingObservationSHA256": "92f371f44220cf2d7031b7fbef0fcc6ea0806755f8751ca6d35dbb36655d120d",
+    "objectiveWeights": {
+      "nse": 0.5,
+      "logNse": 0.25,
+      "volume": 0.25
+    },
+    "calibrationImplementationSHA256": "04f4c143fddaef4a59a1dc48494505dfbd0e34e73da260a91157827706d373e6"
+  },
+  "traceSHA256": "dcd70365a3294e9c7b7ba719252912abe3df8b94ece5ec76cc1879ed781a185e",
+  "optimizerImplementationSHA256": "04f4c143fddaef4a59a1dc48494505dfbd0e34e73da260a91157827706d373e6",
+  "objectiveConfiguration": {
+    "profile": "balanced",
+    "weights": {
+      "nse": 0.5,
+      "logNse": 0.25,
+      "volume": 0.25
+    }
+  },
+  "objectiveConfigurationSHA256": "5f4b180579af8c54f66f553ba400fe0369d0da6310328dc9fb29e31d50dc65b7",
+  "verificationBackendSourceSHA256": "59a2d8713f61ac7650bae857847ce16bbab933ae9b682c38e930117fddba424b",
+  "training2024": {
+    "flow": {
+      "logNse": 0.3494506484007226,
+      "count": 229,
+      "nse": 0.5246526671175519,
+      "kge": 0.5554959999492126,
+      "rmse": 59.6460143013347,
+      "mae": 36.32165987521615,
+      "bias": -1.9180126620965052,
+      "pbias": -2.3709206208744686,
+      "observedMean": 80.89737991266375,
+      "simulatedMean": 78.97936725056724,
+      "observedVolumeM3": 1600603200.0,
+      "simulatedVolumeM3OnObservedDays": 1562654168.6728232,
+      "volumeErrorM3": -37949031.32717681,
+      "volumeErrorPercent": -2.370920620874481,
+      "volumeCoverage": "paired observed days only; not complete annual runoff"
+    },
+    "lake": {
+      "logNse": -706.0454610967873,
+      "count": 232,
+      "nse": -706.5889049204336,
+      "kge": -0.8885226131695623,
+      "rmse": 3.449274420476975,
+      "mae": 3.436018219365102,
+      "bias": 3.436018219365102,
+      "pbias": 0.07560794079985773,
+      "observedMean": 4544.520301724137,
+      "simulatedMean": 4547.956319943503,
+      "observedTrendMPerYear": 0.36812720310024283,
+      "simulatedTrendMPerYear": 1.9436870378386906
+    }
+  },
+  "evaluation2025_2026": {
+    "flow": {
+      "logNse": 0.3847662210944677,
+      "count": 211,
+      "nse": 0.480771947399274,
+      "kge": 0.6172514995649614,
+      "rmse": 27.341132273850537,
+      "mae": 19.895379179139812,
+      "bias": 11.582828038634597,
+      "pbias": 23.625102743611055,
+      "observedMean": 49.027630331753564,
+      "simulatedMean": 60.61045837038815,
+      "observedVolumeM3": 893793312.0000001,
+      "simulatedVolumeM3OnObservedDays": 1104952900.2755241,
+      "volumeErrorM3": 211159588.27552402,
+      "volumeErrorPercent": 23.62510274361104,
+      "volumeCoverage": "paired observed days only; not complete annual runoff"
+    },
+    "lake": {
+      "logNse": -1244.752301238522,
+      "count": 335,
+      "nse": -1246.054888297272,
+      "kge": -1.240604036408104,
+      "rmse": 4.6826925300376185,
+      "mae": 4.662502945881199,
+      "bias": 4.662502945881199,
+      "pbias": 0.10260468380005767,
+      "observedMean": 4544.142404811523,
+      "simulatedMean": 4548.804907757404,
+      "observedTrendMPerYear": -0.20511694792908228,
+      "simulatedTrendMPerYear": 0.7497347779470668
+    }
+  },
+  "continuationUnitStateMaxError": 0.0,
+  "continuationLakeLevelErrorM": 0.0,
+  "compositionMaxErrorM3s": 0.0,
+  "downloadSHA256": {
+    "daily.csv": "b760f24799265352aed5bb7c777af1ed14dd4ca593e44c680a758df89661499f",
+    "checkpoint.json": "5ee02050dd4b5710b56be0ea0d77145224ff6e773d5d75fa38c14c53b69ad141",
+    "result.json": "b0f86784c455347e9084328a3f7dc1f356d615f483ef12487e7618cac710debc"
+  },
+  "lakeCumulativeBalanceErrorM3": -0.0001087188720703125,
+  "maximumDailyLakeBalanceErrorM3": 7.5e-09,
+  "hourlyFilesVerified": {
+    "simulation": 4643,
+    "continuation": 28
+  },
+  "originalOperationalConfigurationUnchanged": true,
+  "operationalAdoptionChanged": false,
+  "displayCoverage": {
+    "start": "2021-04-23T00:00:00",
+    "endExclusive": "2026-10-21T00:00:00"
+  },
+  "diagnostics": {
+    "landGlacierMaxBalanceErrorMm": 9.66196010460281e-11,
+    "routingMaxBalanceErrorM3": 1.1920928955078125e-06,
+    "lakeAreaKm2": 2422.199823361506,
+    "partitions": {
+      "duja": {
+        "generatedM3": 14531342815.82762,
+        "routedM3": 14217461786.874012
+      },
+      "zajia_rest": {
+        "generatedM3": 167287455.4067543,
+        "routedM3": 164220860.5716593
+      },
+      "zagen": {
+        "generatedM3": 10371707391.18369,
+        "routedM3": 9970336671.74521
+      },
+      "boqu": {
+        "generatedM3": 647352069.1230638,
+        "routedM3": 615223606.4648482
+      },
+      "ali": {
+        "generatedM3": 2707923417.8901386,
+        "routedM3": 2568562522.4638844
+      },
+      "fringe": {
+        "generatedM3": 542813757.2086605,
+        "routedM3": 518469881.2332634
+      },
+      "external": {
+        "generatedM3": 0.0,
+        "routedM3": 0.0
+      },
+      "unresolved": {
+        "generatedM3": 967768744.8195009,
+        "routedM3": 926350273.0535473
+      }
+    },
+    "lakeWindows": [
+      {
+        "start": "2021-04-23T12:00:00",
+        "initialization": "first-quality-daily-level-at-noon"
+      }
+    ]
+  }
+}

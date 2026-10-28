@@ -1,0 +1,261 @@
+{
+  "title": "第三轮前后端与参数审计集中验收",
+  "createdAt": "2026-10-28T23:41:30.190987+08:00",
+  "scope": "本轮实际工具运行与独立分工复核汇总；程序单元测试含明确合成夹具，真实科研对照另有收据，不表示科学门槛升级。",
+  "backendTests": [
+    {
+      "path": "tests/test_calibration_diagnostics.py",
+      "bytes": 9562,
+      "sha256": "dd78366b5cc750cc9a4807da068ecc6283792e4eb1a59de3298552fbe39a57d4",
+      "tests": 9,
+      "passed": true
+    },
+    {
+      "path": "tests/test_parameter_transfer.py",
+      "bytes": 10180,
+      "sha256": "8e0c1de0847f2427b442eb57727f941da15486fecb93574de5fc672b155ed021",
+      "tests": 8,
+      "passed": true
+    },
+    {
+      "path": "tests/test_parameter_transfer_integration.py",
+      "bytes": 17674,
+      "sha256": "3a350a4cd146cb987072581604066f8000f3ea6287630344c7840ae3e2e7fcbc",
+      "tests": 8,
+      "passed": true
+    },
+    {
+      "path": "tests/test_parameter_transfer_lineage.py",
+      "bytes": 15417,
+      "sha256": "d2370edf93b6100e04f757b789ba6432bcb67a84fcfde02ac2224d6f17116ff5",
+      "tests": 8,
+      "passed": true
+    },
+    {
+      "path": "tests/test_scheme_workflow.py",
+      "bytes": 31641,
+      "sha256": "df02498607250ffba4f082ec6720e436f5e36da6b46db450d2f19952f4ac7208",
+      "tests": 22,
+      "passed": true
+    },
+    {
+      "path": "tests/test_grid_revision.py",
+      "bytes": 13107,
+      "sha256": "f44bd4602bc06a8cc333bbe3388a6343412ab1c724e4e0313be3d56eb2c93444",
+      "tests": 14,
+      "passed": true
+    },
+    {
+      "path": "tests/test_integrated_calibration.py",
+      "bytes": 11564,
+      "sha256": "8e9791e52801da354d58c7d7bae84b01c5f61754956cbd7d4ff9b9a42f096910",
+      "tests": 9,
+      "passed": true
+    },
+    {
+      "path": "tests/test_permanent_deletion.py",
+      "bytes": 24337,
+      "sha256": "f317103e3c7670f16ec0804cb2c431c762afd891fd5d3ea4a4452b9219a41f14",
+      "tests": 14,
+      "passed": true
+    },
+    {
+      "path": "tests/test_round3_numerical_contract.py",
+      "bytes": 3342,
+      "sha256": "597bd484c59673b115e0f017e230acc822c612ba2b0751906fa67cefbfa59ecd",
+      "tests": 2,
+      "passed": true
+    },
+    {
+      "path": "tests/test_spatial_resource_http.py",
+      "bytes": 2255,
+      "sha256": "b1b8eb7a1086516a0b54dd647c38b36cdbc42c03e4165cd1cb1d4a4d6c9555d1",
+      "tests": 1,
+      "passed": true
+    },
+    {
+      "path": "tests/test_aggregate_continuous.py",
+      "bytes": 7326,
+      "sha256": "cc8661d4215be9348635535ddda308896e61383e0fc92a4eccfb188da3a92977",
+      "tests": 4,
+      "passed": true
+    },
+    {
+      "path": "tests/test_third_round_spatial.py",
+      "bytes": 2868,
+      "sha256": "db2a8f8bed6c0231bece346a5862b33e29d89b8aa000f308e1f5fa9629926164",
+      "tests": 3,
+      "passed": true
+    }
+  ],
+  "backendTestsPassed": 102,
+  "frontendTests": [
+    {
+      "path": "tests/dashboard.test.mjs",
+      "bytes": 5172,
+      "sha256": "a5a77ff9d18ba990cfd6f0f8a0e559df67c8664c1ad87b3b91375c60cd67c857",
+      "tests": 6,
+      "passed": true
+    },
+    {
+      "path": "tests/map-view.test.mjs",
+      "bytes": 3954,
+      "sha256": "2a1fa34847c87ed5a743e76cc1a2535ca8b807b8cb3554eede76b15c32139eea",
+      "tests": 6,
+      "passed": true
+    },
+    {
+      "path": "tests/parameter-transfer-ui.test.mjs",
+      "bytes": 2370,
+      "sha256": "8dc40418639eb80d934a77ac6d4a208ef0c3b63f3590da7d5533024555d3cc47",
+      "tests": 3,
+      "passed": true
+    },
+    {
+      "path": "tests/calibration-trace-loader.test.mjs",
+      "bytes": 1343,
+      "sha256": "e8925b6c8da261cf0d0d18def62c07ebd9be9773724a94851add50ea4dc22494",
+      "tests": 1,
+      "passed": true
+    }
+  ],
+  "frontendTestsPassed": 16,
+  "frontendLaunchNote": "最终4文件16项Node测试首次被沙箱spawn EPERM阻断，未执行测试；正规升级权限后同命令16项全部通过。",
+  "productionBuild": {
+    "passed": true,
+    "emptyOutDir": false,
+    "assets": {
+      "/assets/index-Ns4W_LYB.js": "420f0065438e0fb422c92f45d7638c4976567c429de51f7029a50a445e2ac359",
+      "/assets/index-D9sCHcwZ.css": "5fea3619125ad4bc5747e5a93596e8180b44cbca24f3f21f856b55bfae667ef3"
+    }
+  },
+  "service": {
+    "backendSourceSHA256": "59a2d8713f61ac7650bae857847ce16bbab933ae9b682c38e930117fddba424b",
+    "instanceId": "130bae2cba9a441f9faf5a6310fa1db7",
+    "projectId": "selinco",
+    "version": "0.12.0",
+    "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+  },
+  "numericalIdentity": "df8315c280efb52a58c465256ac51d2b73f6e7e33cfad68406976cf067704874",
+  "configuration": {
+    "originalOperationalNumericsAndBindingsUnchanged": true,
+    "allowedMetadataAdditions": [
+      "inputRequirement.precipitationEvidence",
+      "inputRequirement.stationUsage"
+    ],
+    "originalAdoptedResultId": "JOB-f671b2a7af4d472cb70b",
+    "operationalConfigurationSHA256": "55046f9d77ead1ee076ba958834b0ceb1e6a2de9123bfda3ff8a9be308c22e8e"
+  },
+  "browser": {
+    "layoutCapture": {
+      "path": "build/第三轮整改-20261028/大屏核验/图例与参数核验-3bbf0972d3/证据.json",
+      "bytes": 22427,
+      "sha256": "67e3fd1d85dd0c92951d4a332a08b43c55669c6e64aefc716410929eede4e13f"
+    },
+    "layoutCapturedBundle": "/assets/index-8ApdPImj.js",
+    "layoutCaptureNote": "总览截图在最终率定文案及轨迹修复前完成；之后未修改布局/地图。保留各次实际bundle，不伪改截图身份。",
+    "actualChromeZoom": {
+      "evidence": {
+        "path": "build/第三轮整改-20261028/大屏核验/真实图表缩放-f78264f80b/证据.json",
+        "bytes": 1664,
+        "sha256": "363d04a5eef914f8d74effe7f1fc025aa7a1d4482cc71037ba3f6d96d9c0f11f"
+      },
+      "zoomAPI": 1.25,
+      "beforeDPR": 1.0000000298023224,
+      "afterDPR": 1.250000037252903,
+      "beforeCanvas": [
+        {
+          "w": 535,
+          "h": 187,
+          "cssW": 535,
+          "cssH": 187
+        },
+        {
+          "w": 535,
+          "h": 187,
+          "cssW": 535,
+          "cssH": 187
+        }
+      ],
+      "afterCanvas": [
+        {
+          "w": 578,
+          "h": 233,
+          "cssW": 463.0000305175781,
+          "cssH": 187.00001525878906
+        },
+        {
+          "w": 578,
+          "h": 233,
+          "cssW": 463.0000305175781,
+          "cssH": 187.00001525878906
+        }
+      ],
+      "datePreserved": true,
+      "legendStatePreserved": true
+    },
+    "traceRead": {
+      "result": "JOB-76eb10db6e7f42848809",
+      "bundle": "/assets/index-Ns4W_LYB.js",
+      "failedRead": "率定过程读取失败：模拟读取失败\n重试",
+      "traceCount": "158",
+      "canvas": [
+        {
+          "width": 1134,
+          "height": 345
+        }
+      ],
+      "requests": [
+        "http://127.0.0.1:8882/api/model/search-progress?taskId=JOB-76eb10db6e7f42848809&after=0",
+        "http://127.0.0.1:8882/api/model/search-progress?taskId=JOB-76eb10db6e7f42848809&after=0"
+      ],
+      "errors": [],
+      "posts": [],
+      "source": {
+        "path": "build/第三轮整改-20261028/大屏核验/率定轨迹核验-ae34163af4/证据.json",
+        "bytes": 509,
+        "sha256": "9c70ce04735688590b041ae828719002e0878393f1138e0c8086f25e5a798138"
+      },
+      "failureInjection": "仅在隔离浏览器拦截首次GET返回503，以核验错误和重试；正式服务和文件未修改。"
+    },
+    "noBrowserPOSTs": true,
+    "javascriptErrors": []
+  },
+  "screenshots": [
+    {
+      "path": "docs/evidence/第三轮湖情总览-20261028.png",
+      "bytes": 185428,
+      "sha256": "072c8b1a0633af6a26a091aa437f5f8f7116f6d5c7ab0eed685486937b9f47d9",
+      "width": 1366,
+      "height": 768
+    },
+    {
+      "path": "docs/evidence/第三轮率定轨迹-20261028.png",
+      "bytes": 311258,
+      "sha256": "dc63d04c3eab9b5b072b5fc2c655ad0523df17f226c27803948c025e9b10a72b",
+      "width": 1440,
+      "height": 4032
+    }
+  ],
+  "numericalEvidence": {
+    "docs/evidence/杜加参数传递真实对照-20261028.json": "9d2e6e4c709b0e22f91b1048cf83b4b3f5a0f77690f75743829b4c7ea2650830",
+    "docs/evidence/流量率定参数采用与续算-20261028.json": "d0b86ab7b6e18bf2d2214c5b63b0104a0d24cb7385bbc957bc24cdff3eaa6ceb",
+    "docs/evidence/第三轮参数作用与率定审计-20261028.json": "d3837aa2ffde63ad5b7312585d04e8f2d9967f31c0405276535395e0325ca1d6",
+    "docs/evidence/第三轮参数遮蔽自动回归-20261028.json": "4ee8455865e22a2afc33a5252df2aa256b47200b6e171a9e8c0af026e19c895c",
+    "docs/evidence/第三轮外置空间资源清单-20261028.json": "a86c36db3fe25f42eb904d7823773a22566ece8b5353f4749e5d7452aeb30ec8",
+    "docs/evidence/第三轮降水处理核查-20261028.json": "b60335a06cec7d4907375a9d1e1aa901e7545fbbc3479b22ea3b7f753443a48a",
+    "docs/evidence/第三轮同条件空间对照-20261028.json": "591c0cbf001ce770b8da3faa5fd986aab04308c34ab303e1cff6caa6c0350c06"
+  },
+  "readOnlyDeliveryChecks": {
+    "pythonFilesParsed": 53,
+    "currentDocumentLinksChecked": 48
+  },
+  "limits": [
+    "A2面积尺度未经独立多流域流量验证。",
+    "真实率定整体未收敛且留出变差，只保留研究候选。",
+    "2025/26已参与开发，不称未触碰外部验证；2026无合格流量配对。",
+    "当前采用空间剩余2247.523850km²不变；严格候选仍2061.2896675934157km²未核实，动态闭流/湖间溢流未完成。",
+    "数值守恒和程序检查不证明参数唯一或物理通量准确。",
+    "完整运行库、原件及大型数组外置；未构建EXE。"
+  ]
+}

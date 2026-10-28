@@ -17,7 +17,8 @@ class Writer:
         self.root.attrs.update(format=FORMAT,complete=False)
         compressor=Blosc(cname='zstd',clevel=3,shuffle=Blosc.BITSHUFFLE)
         shapes={'time':(hours,),'flow':(hours,7),'lakeLevel':(hours,),'volumeChange':(hours,),'continuousLakeVolumeChange':(hours,),'lakeFlux':(hours,),
-                'unitStates':(hours,units,8),'unitDiagnostics':(hours,units,9),'routingStorage':(hours,partitions),'sourceRoutingStorage':(hours,partitions,2),'excludedRunoff':(hours,)}
+                'unitStates':(hours,units,8),'unitDiagnostics':(hours,units,9),'routingStorage':(hours,partitions),'sourceRoutingStorage':(hours,partitions,2),'excludedRunoff':(hours,),
+                'externalRunoffM3':(hours,),'unresolvedRunoffM3':(hours,)}
         for key,shape in shapes.items():
             chunks=(min(168,max(1,hours)),)+tuple(min(64,n) if i==0 else n for i,n in enumerate(shape[1:]))
             self.root.create_dataset(key,shape=shape,chunks=chunks,dtype='i8' if key=='time' else 'f8',compressor=compressor,fill_value=0 if key=='time' else np.nan)

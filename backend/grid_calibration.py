@@ -9,7 +9,25 @@ from .calibration_config import ROUTING_KEYS,flow_objective
 from .simulation import metrics
 from .grid_simulation import run as simulate,prepare
 
+
+class _UnavailableTarget(ValueError):
+    """A diagnostic target cannot be evaluated with the available data."""
+
+
 def run(db,request,folder,progress,cancelled):
+    if request['target'] == 'integrated':
+        from .integrated_calibration import run as run_integrated
+        return run_integrated(db, request, folder, progress, cancelled)
+    if request['target'] == 'duja':
+        from .calibration_diagnostics import run as run_duja
+        return run_duja(db, request, folder, progress, cancelled,
+                        prepare=prepare, simulate=simulate, write_json=write_json)
+    # Legacy diagnostic runs also keep the training-derived initialization in
+    # their final evaluation; later observations cannot silently become anchors.
+    if '_fixedInitialization' not in request:
+        from .research_schemes import resolved_initialization
+        request = deepcopy(request)
+        request['_fixedInitialization'] = resolved_initialization(request, request['_observations'], 'calibration')[0]
     search=request['search'];periods=request['periods'];target=request['target'];scope=search['scope'];selected=search['keys']
     stages=[('lake',selected)] if target=='lake' else [(stage,[k for k in selected if (k in ROUTING_KEYS)==(stage=='routing')]) for stage in ('runoff','routing')]
     stages=[(stage,keys) for stage,keys in stages if keys]
@@ -41,9 +59,19 @@ def run(db,request,folder,progress,cancelled):
             if target=='lake':
                 initial=result.get('initialization')
                 if initial:frame=frame.loc[frame.index!=pd.Timestamp(initial['time']).normalize()]
-                metric=metrics(frame.observedLevel,frame.lakeLevel);objective=metric['rmse']
-            else:metric=metrics(frame.observedFlow,frame.duja);objective,_=flow_objective(metric,search['objectiveProfile'])
-            if metric['count']<30 or objective is None or not np.isfinite(objective):raise ValueError('训练期可靠配对不足30日或目标无效')
+                metric=metrics(frame.observedLevel,frame.lakeLevel)
+            else:metric=metrics(frame.observedFlow,frame.duja)
+            if metric['count']<30:
+                if not trace:raise _UnavailableTarget('率定期可靠配对不足30日，保持原参数')
+                raise ValueError('候选结果缺少既定评价资料，无法比较')
+            try:
+                objective=metric['rmse'] if target=='lake' else flow_objective(metric,search['objectiveProfile'])[0]
+            except ValueError as error:
+                if not trace:raise _UnavailableTarget(str(error)) from error
+                raise
+            if objective is None or not np.isfinite(objective):
+                if not trace:raise _UnavailableTarget('率定期目标不可评价，保持原参数')
+                raise ValueError('候选结果目标无效，无法比较')
             if baseline_metric is None:baseline_metric=metric
             if objective<best:best=float(objective);best_parameters=candidate.copy()
             item={'stage':stage,'evaluation':len(trace)+1,'objective':float(objective),'bestObjective':best,'parameters':{k:candidate[k] for k in keys},'metrics':metric}
@@ -54,7 +82,23 @@ def run(db,request,folder,progress,cancelled):
         def feasible(vector):
             try:parameters({**baseline,**dict(zip(keys,map(float,vector)))});return True
             except ValueError:return False
-        initial=np.array([baseline[k] for k in keys]);evaluate(initial)
+        initial=np.array([baseline[k] for k in keys])
+        try:
+            evaluate(initial)
+        except _UnavailableTarget as error:
+            stage_records.append({'stage':stage,'evaluations':0,'maxEvaluations':budget,'keys':[],
+                                  'fixedParameters':keys,'bestObjective':None,'converged':False,
+                                  'termination':'no-evaluable-target','reason':str(error),'boundaryParameters':[]})
+            write_json(folder/'search-progress.json',{'stages':stage_records,'trace':all_trace,
+                       'evaluationExcluded':True,'configurationSHA256':request['schemeSnapshot']['configurationSHA256']})
+            final=simulate(db,{**working,'_metricsOnly':False},folder,lambda p,m:progress(90+p*.09,m),cancelled,source)
+            final['calibration']={'algorithm':'differential-evolution','seed':search['seed'],'evaluations':len(all_trace),
+                                  'trace':all_trace,'stages':stage_records,'periods':periods,
+                                  'validationExcludedFromSearch':True,'decision':'candidate-only','converged':False,
+                                  'boundaryParameters':[],'termination':'no-evaluable-target','bestObjective':None,
+                                  'reason':str(error)}
+            final['calibrationWorkflow']={'target':target,'stages':stage_records};write_json(folder/'result.json',final)
+            return final
         size=min(max(0,budget-1),max(6,len(keys)*2));population=[];scores=[]
         while len(population)<size and len(trace)<budget and proposals<budget*50:
             vector=bounds[:,0]+rng.random(len(keys))*(bounds[:,1]-bounds[:,0]);proposals+=1

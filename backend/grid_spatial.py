@@ -36,6 +36,27 @@ def load(version):
 
 
 AGGREGATE_STRATEGY = 'partition-elevation-surface-area-weighted-v1'
+
+
+def topology_complete(spatial):
+    """Completeness requires a receiver for every unit, never an area cutoff.
+
+    Historical manifests without explicit topology retain their recorded flag
+    only when they contain no unresolved source unit or positive unknown area.
+    New topology manifests must also declare all internal exchanges paired.
+    """
+    drainage=spatial.get('drainage') or {}
+    if any(u.get('partition')=='unresolved' and u.get('areaKm2',0)>0 for u in spatial.get('units',[])):
+        return False
+    if drainage.get('unresolvedAreaKm2',0)>0:return False
+    topology=drainage.get('topology')
+    if topology is None:return bool(drainage.get('inflowComplete',False))
+    receivers=topology.get('unitReceivers') or {}
+    allowed=set(topology.get('nodes',[]))|set(topology.get('boundaries',[]))
+    return (bool(topology.get('internalExchangesPaired')) and
+            set(receivers)=={u['id'] for u in spatial.get('units',[])} and
+            all(value in allowed for value in receivers.values()) and
+            not topology.get('unresolvedReceivers'))
 _AGGREGATE_SOURCE_FILES = ('units.geojson', 'units-display.geojson', 'display.geojson',
                            'rivers-display.geojson', 'display-context.json', 'grid.geojson',
                            'terrain-display.png')

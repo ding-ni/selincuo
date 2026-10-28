@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {timelineDates,exactValue,balanceTerms,defaultReplayDay,colorFor,layers,screenResults,basinRain,observationDay,timelineTicks} from '../frontend/src/dashboard.mjs'
+import {timelineDates,exactValue,balanceTerms,defaultReplayDay,colorFor,layers,screenResults,replayResultName,hasDashboardCapabilities,replayRows,basinRain,observationDay,timelineTicks} from '../frontend/src/dashboard.mjs'
 test('monitoring replay includes missing days but never borrows the latest observation',()=>{
  const monitor={stations:[{id:'SLC',daily:[{date:'2024-01-01',value:4540},{date:'2024-01-03',value:4541}]}]}
  const dates=timelineDates('observation',monitor,null)
@@ -17,12 +17,31 @@ test('replay reaches latest simulated lake date despite missing observation and 
  assert.equal(colorFor(null,layers[0]),'transparent')
  assert.notEqual(colorFor(0,layers[0]),'transparent')
 })
-test('dashboard defaults to the final publication and excludes research tasks',()=>{
- const rows=screenResults([{id:'final'}],[{id:'trial',kind:'trial',status:'succeeded'},
-  {id:'user',kind:'simulation',collection:'历史模拟',status:'succeeded'},
-  {id:'deleted',kind:'simulation',collection:'历史模拟',status:'succeeded',trashed:1}])
- assert.deepEqual(rows.map(r=>r.id),['final','user'])
+test('overview excludes internal warmup by declared display coverage, without changing stored daily records',()=>{
+ const result={displayCoverage:{start:'2021-04-23T00:00:00',endExclusive:'2021-04-25T00:00:00'},daily:[
+  {date:'2020-01-01',lakeLevel:null},{date:'2021-04-23',lakeLevel:null,observedLevel:4540},
+  {date:'2021-04-24',lakeLevel:4540.1},{date:'2021-04-25',lakeLevel:4540.2}]}
+ assert.deepEqual(timelineDates('model',null,result),['2021-04-23','2021-04-24'])
+ assert.deepEqual(replayRows(result).map(r=>r.date),['2021-04-23','2021-04-24'])
+ assert.equal(result.daily.length,4)
+ assert.equal(defaultReplayDay(timelineDates('model',null,result),result),'2021-04-24')
+ assert.equal(timelineDates('model',null,{daily:result.daily}).length,4)
+})
+test('dashboard offers the adopted result and explicitly saved simulations only',()=>{
+ const rows=screenResults([{id:'old-publication'},{id:'final'}],[{id:'trial',kind:'trial',status:'succeeded',userSaved:1},
+  {id:'automatic',kind:'simulation',collection:'历史模拟',favorite:1,status:'succeeded'},
+  {id:'user',kind:'simulation',userSaved:1,status:'succeeded'},
+  {id:'continued',kind:'continuation',userSaved:1,status:'succeeded'},
+  {id:'deleted',kind:'simulation',userSaved:1,status:'succeeded',trashed:1}], 'final')
+ assert.deepEqual(rows.map(r=>r.id),['final','user','continued'])
  assert.equal(rows[0].builtin,true)
+ assert.equal(replayResultName(rows[0],'final',{id:'final',result:{daily:[{date:'2021-04-23'},{date:'2026-10-20'}]}}),'历史模拟 · 2021—2026')
+ const task={status:'succeeded',result:{daily:[{date:'2025-01-01',lakeLevel:4540,total:5}],units:[{id:'unit'}],inputId:'input'}}
+ const meta={units:[{id:'unit'}],spatialBase:'/spatial/version/',hours:24}
+ assert.equal(hasDashboardCapabilities(task,meta,[{id:'input'}]),true)
+ assert.equal(hasDashboardCapabilities(task,meta,[]),false)
+ assert.equal(hasDashboardCapabilities(task,{...meta,spatialBase:null},[{id:'input'}]),false)
+ assert.equal(hasDashboardCapabilities({...task,result:{...task.result,daily:[{date:'2025-01-01',lakeLevel:null,total:5}]}},meta,[{id:'input'}]),false)
 })
 test('basin rain weights the Duja and lower Zajia areas once and retains missing values',()=>{
  const units=[{id:'duja',partition:'duja',areaKm2:2},{id:'lower',partition:'zajia_rest',areaKm2:1},

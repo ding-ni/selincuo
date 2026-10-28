@@ -174,6 +174,12 @@ class Jobs:
                 if payload.get(field) is not None and payload[field] != saved:
                     raise ValueError('续算参数与父状态不一致，请重新模拟')
                 payload[field] = saved
+            from .parameter_transfer import normalize_transfer_policy
+            transfer = normalize_transfer_policy(checkpoint.get('parameterTransfer'))
+            if (payload.get('parameterTransfer') is not None and
+                    normalize_transfer_policy(payload['parameterTransfer']) != transfer):
+                raise ValueError('续算参数传递策略与父状态不一致，请重新模拟')
+            payload['parameterTransfer'] = transfer
             payload['routingMode'] = checkpoint['identity']['routingMode']
             start, end = pd.Timestamp(payload.get('start')), pd.Timestamp(payload.get('end'))
             if (pd.isna(start) or pd.isna(end) or start.tzinfo or end.tzinfo or
@@ -224,6 +230,9 @@ class Jobs:
                 payload['_observations'] = grid_observation_snapshot(self.db)
                 payload['_modelIdentity'] = grid_identity()
                 initial, first_lake_day = resolved_initialization(payload, payload['_observations'], kind)
+                # Fix the server-resolved anchor once, including an explicit
+                # absence. Search and its final run must not use future data.
+                payload['_fixedInitialization'] = initial
                 payload['earliestCompleteLakeDay'] = first_lake_day
                 expected_plan = payload.pop('expectedPlanToken', None)
                 if expected_plan and expected_plan != plan_token(payload, initial, payload['_observations']):
@@ -270,6 +279,7 @@ class Jobs:
     @staticmethod
     def public(task):
         task = dict(task)
+        task['userSaved']=bool(task.get('user_saved', False))
         task['heartbeatAt']=task.get('updated_at')
         task['phase']=task.get('message','').split(' · ')[0]
         task['termination']=({'cancelled':'user-stopped','interrupted':'service-restarted','failed':'failed','succeeded':'completed'}).get(task.get('status'))
@@ -473,6 +483,8 @@ class Jobs:
                 result = run_simulation(self.db, request, folder, progress, is_cancelled)
             if is_cancelled():
                 raise InterruptedError('用户停止任务')
+            from .result_coverage import attach
+            attach(result,request)
             result['taskId'] = identifier
             if kind=='restore-workspace':
                 # No later task may write the old workspace after the pointer

@@ -12,7 +12,7 @@ import uuid
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
 
 from .common import ROOT, VERSION, WORKSPACE, CONTEXT_KEY, canonical, digest, now, read_json, within, write_json
 from .database import Database
@@ -146,7 +146,12 @@ class Handler(SimpleHTTPRequestHandler):
                                    'workspace': str(self.db.workspace)})
         if not url.path.startswith('/api/'):
             if url.path.startswith('/spatial/'):
-                return self.file(within(ROOT / 'data/derived/spatial', url.path.removeprefix('/spatial/')))
+                relative = unquote(url.path.removeprefix('/spatial/'), errors='strict')
+                # Decode exactly once. Do not accept a second encoded path
+                # separator or traversal sequence as an apparent filename.
+                if re.search(r'%(?:2e|2f|5c|3a)', relative, re.IGNORECASE):
+                    raise ValueError('空间资源路径编码不合法')
+                return self.file(within(ROOT / 'data/derived/spatial', relative))
             if not (ROOT / 'frontend/dist/index.html').is_file():
                 return self.send_json({'error': '网页尚未构建，请执行安装平台脚本'}, 503)
             return super().do_GET()
@@ -357,8 +362,14 @@ class Handler(SimpleHTTPRequestHandler):
             rows=self.db.rows('SELECT payload FROM evaluation_records WHERE id=?',(query.get('id'),))
             if not rows:raise FileNotFoundError('评价归档不存在')
             return self.send_json(json.loads(rows[0]['payload']))
-        if path == 'tasks':
-            rows = self.db.rows('''SELECT id,kind,status,created_at,updated_at,progress,message,trashed,favorite,name,notes,collection,
+        if path in ('tasks', 'trashed-results'):
+            # Normal task polling stays bounded. The recycle bin needs its
+            # full set so "clear" does not silently omit older results.
+            selection = ("WHERE trashed=1 AND status NOT IN ('queued','running','stopping') AND kind IN "
+                         "('simulation','continuation','trial','calibration','calibration-workflow','sensitivity') "
+                         "ORDER BY created_at DESC" if path == 'trashed-results'
+                         else 'ORDER BY created_at DESC LIMIT 500')
+            rows = self.db.rows('''SELECT id,kind,status,created_at,updated_at,progress,message,trashed,favorite,user_saved AS userSaved,name,notes,collection,
                 json_object('researchSchemeId',json_extract(request,'$.researchSchemeId'),
                             'researchSchemeRevision',json_extract(request,'$.researchSchemeRevision'),
                             'schemeName',json_extract(request,'$.schemeSnapshot.name'),
@@ -392,7 +403,7 @@ class Handler(SimpleHTTPRequestHandler):
                                  'artifacts',json_extract(result,'$.artifacts'))
                 WHEN kind IN ('export-result','backup') AND status='succeeded' THEN
                      json_object('artifacts',json_extract(result,'$.artifacts')) ELSE NULL END AS compact_result
-                FROM tasks ORDER BY created_at DESC LIMIT 500''')
+                FROM tasks ''' + selection)
             for row in rows:
                 row['request']={k:v for k,v in json.loads(row.pop('compact_request')).items() if v is not None}
                 compact=row.pop('compact_result')
@@ -425,17 +436,27 @@ class Handler(SimpleHTTPRequestHandler):
         if path == 'process':
             return self.process(query)
         if path == 'export':
-            task = self.db.task(query['taskId'])
-            filename = query.get('format', 'daily.csv')
-            if filename not in ('daily.csv', 'checkpoint.json', 'result.json', 'hourly.npz', 'request.json'):
-                raise ValueError('不支持的导出类型')
-            if filename=='hourly.npz' and task.get('result',{}).get('storageFormat')=='zarr-v2':
-                from .grid_storage import export_npz
-                return self.file(export_npz(within(self.db.workspace/'tasks',task['id'])),download=True)
-            return self.file(within(self.db.workspace / 'tasks', task['id']) / filename, download=True)
+            from .permanent_deletion import guard_pending
+            with self.server.jobs.lock:
+                task = self.db.task(query['taskId'])
+                guard_pending(self.db,'task',task['id'])
+                filename = query.get('format', 'daily.csv')
+                if filename not in ('daily.csv', 'checkpoint.json', 'result.json', 'hourly.npz', 'request.json'):
+                    raise ValueError('不支持的导出类型')
+                if filename=='hourly.npz' and task.get('result',{}).get('storageFormat')=='zarr-v2':
+                    from .grid_storage import export_npz
+                    return self.file(export_npz(within(self.db.workspace/'tasks',task['id'])),download=True)
+                return self.file(within(self.db.workspace / 'tasks', task['id']) / filename, download=True)
         if path=='task-artifact':
             from .maintenance import artifact_file
-            return self.file(artifact_file(self.db,self.db.task(query['taskId']),query['name']),download=True)
+            from .permanent_deletion import guard_pending
+            with self.server.jobs.lock:
+                task=self.db.task(query['taskId'])
+                guard_pending(self.db,'task',task['id'])
+                artifact=next((item for item in (task.get('result') or {}).get('artifacts',[]) if item.get('name')==query['name']),None)
+                if artifact and artifact.get('storage')=='task':
+                    guard_pending(self.db,'task',artifact.get('ownerTaskId'))
+                return self.file(artifact_file(self.db,task,query['name']),download=True)
         if path == 'download':
             if query['filename'].endswith(('.partial','.sqlite3','.complete.json')):
                 raise ValueError('中间文件不可下载')
@@ -488,9 +509,17 @@ class Handler(SimpleHTTPRequestHandler):
         path = urlsplit(self.path).path.removeprefix('/api/model/')
         guard_restore_writes(self.server.jobs,path)
         value = self.document()
+        if path in ('permanent-delete/preview','permanent-delete/execute'):
+            from .permanent_deletion import preview, execute
+            with self.server.jobs.lock:
+                return self.send_json(preview(self.db,value.get('objects')) if path.endswith('preview')
+                                      else execute(self.db,value.get('objects'),value.get('token')))
         if path == 'operational-release':
             from .release_registry import publish
-            return self.send_json(publish(self.db, value))
+            from .permanent_deletion import guard_no_pending
+            with self.server.jobs.lock:
+                guard_no_pending(self.db)
+                return self.send_json(publish(self.db, value))
         if path == 'data-import-preview':
             from .data_exchange import preview_file
             return self.send_json(preview_file(self.db, value))
@@ -503,10 +532,20 @@ class Handler(SimpleHTTPRequestHandler):
             from .observations import confirm_coverage
             return self.send_json(confirm_coverage(self.db, value))
         if path == 'tasks':
-            return self.send_json(self.server.jobs.submit(value.pop('kind'), value), 202)
+            from .permanent_deletion import guard_no_pending, guard_parameter_source, guard_pending, guard_state
+            with self.server.jobs.lock:
+                if value.get('kind')=='backup':guard_no_pending(self.db)
+                for field,kind in (('researchSchemeId','scheme'),('taskId','task'),('parentTaskId','task'),('baseTaskId','task'),('baselineResultId','task'),('candidateResultId','task')):
+                    if value.get(field):guard_pending(self.db,kind,value[field])
+                if value.get('candidateParameterId'):guard_parameter_source(self.db,value['candidateParameterId'])
+                if value.get('stateId'):guard_state(self.db,value['stateId'])
+                return self.send_json(self.server.jobs.submit(value.pop('kind'), value), 202)
         if path == 'parameters/from-task':
             from .research_schemes import save_parameters_from_task
-            return self.send_json(save_parameters_from_task(self.db, value.get('taskId'), value.get('name')))
+            from .permanent_deletion import guard_pending
+            with self.server.jobs.lock:
+                guard_pending(self.db,'task',value.get('taskId'))
+                return self.send_json(save_parameters_from_task(self.db, value.get('taskId'), value.get('name')))
         if path.startswith('parameters/'):
             parts = path.split('/')
             if len(parts) != 3 or parts[2] != 'metadata':
@@ -514,7 +553,9 @@ class Handler(SimpleHTTPRequestHandler):
             if not isinstance(value.get('trashed'), bool):
                 raise ValueError('请指定是否移入回收站')
             from .research_schemes import parameter_metadata
+            from .permanent_deletion import guard_pending
             with self.server.jobs.lock:
+                guard_pending(self.db,'parameter',parts[1])
                 return self.send_json(parameter_metadata(self.db, parts[1], value['trashed']))
         if path.startswith('schemes/'):
             parts = path.split('/')
@@ -523,13 +564,18 @@ class Handler(SimpleHTTPRequestHandler):
             _, identifier, action = parts
             if action == 'adopt-parameters':
                 from .research_schemes import adopt_parameters
+                from .permanent_deletion import guard_parameter_source, guard_pending
                 with self.server.jobs.lock:
+                    guard_pending(self.db,'scheme',identifier)
+                    guard_parameter_source(self.db,value.get('parameterId'))
                     return self.send_json(adopt_parameters(self.db, identifier, value.get('parameterId')))
             if action == 'metadata':
                 if not isinstance(value.get('trashed'), bool):
                     raise ValueError('请指定是否移入回收站')
                 from .research_schemes import scheme_metadata
+                from .permanent_deletion import guard_pending
                 with self.server.jobs.lock:
+                    guard_pending(self.db,'scheme',identifier)
                     return self.send_json(scheme_metadata(self.db, identifier, value['trashed']))
             raise FileNotFoundError('接口不存在')
         if path.startswith('tasks/'):
@@ -538,32 +584,47 @@ class Handler(SimpleHTTPRequestHandler):
             if action == 'stop':
                 return self.send_json(self.server.jobs.stop(identifier))
             if action == 'metadata':
-                allowed = {k: v for k, v in value.items() if k in ('name', 'notes', 'collection', 'favorite', 'trashed')}
-                if task['status'] in ('queued', 'running', 'stopping') and allowed.get('trashed'):
-                    raise ValueError('活动任务不能移入回收站')
-                if allowed.get('trashed'):
-                    from .research_schemes import builtin
-                    standard = builtin(self.db)
-                    if standard and standard['payload'].get('resultId') == identifier:
-                        raise ValueError('内置方案成果受到保护，不能移入回收站')
-                if any(len(str(v)) > 4000 for v in allowed.values()):
-                    raise ValueError('备注过长')
-                with self.db.connect() as conn:
-                    for key, item in allowed.items():
-                        conn.execute(f'UPDATE tasks SET {key}=? WHERE id=?', (int(bool(item)) if key in ('favorite', 'trashed') else str(item), identifier))
-                return self.send_json({'status': 'saved'})
+                from .permanent_deletion import guard_pending
+                with self.server.jobs.lock:
+                    guard_pending(self.db,'task',identifier)
+                    task=self.db.task(identifier)
+                    allowed = {k: v for k, v in value.items() if k in ('name', 'notes', 'collection', 'favorite', 'trashed')}
+                    if task['status'] in ('queued', 'running', 'stopping') and allowed.get('trashed'):
+                        raise ValueError('活动任务不能移入回收站')
+                    if allowed.get('trashed'):
+                        from .research_schemes import builtin
+                        standard = builtin(self.db)
+                        if standard and standard['payload'].get('resultId') == identifier:
+                            raise ValueError('内置方案成果受到保护，不能移入回收站')
+                    if any(len(str(v)) > 4000 for v in allowed.values()):
+                        raise ValueError('备注过长')
+                    with self.db.connect() as conn:
+                        for key, item in allowed.items():
+                            conn.execute(f'UPDATE tasks SET {key}=? WHERE id=?', (int(bool(item)) if key in ('favorite', 'trashed') else str(item), identifier))
+                        if 'favorite' in allowed:
+                            conn.execute('UPDATE tasks SET user_saved=? WHERE id=?',(int(bool(allowed['favorite'])),identifier))
+                    return self.send_json({'status': 'saved'})
             if action == 'cleanup-preview':
                 from .maintenance import cleanup_preview
-                return self.send_json(cleanup_preview(self.db, identifier))
+                from .permanent_deletion import guard_pending
+                with self.server.jobs.lock:
+                    guard_pending(self.db,'task',identifier)
+                    return self.send_json(cleanup_preview(self.db, identifier))
             if action == 'cleanup-execute':
-                if self.server.jobs.active():
-                    raise ValueError('清理前请等待所有计算任务结束')
                 from .maintenance import cleanup_execute
-                return self.send_json(cleanup_execute(self.db, identifier, value['token']))
+                from .permanent_deletion import guard_pending
+                with self.server.jobs.lock:
+                    guard_pending(self.db,'task',identifier)
+                    if self.server.jobs.active():
+                        raise ValueError('清理前请等待所有计算任务结束')
+                    return self.send_json(cleanup_execute(self.db, identifier, value['token']))
         if path in ('parameters', 'schemes'):
             if path=='schemes' and value.get('payload',{}).get('schemaVersion')==2:
                 from .research_schemes import save
+                from .permanent_deletion import guard_parameter_source, guard_pending
                 with self.server.jobs.lock:
+                    if value.get('parentId'):guard_pending(self.db,'scheme',value['parentId'])
+                    guard_parameter_source(self.db,value.get('payload',{}).get('adoptedParameterId'))
                     return self.send_json(save(self.db,value['payload'],value.get('parentId')))
             if path == 'parameters':
                 from .research_schemes import save_parameters_from_task, _result_parameters
@@ -571,28 +632,45 @@ class Handler(SimpleHTTPRequestHandler):
                 task_id = requested.get('sourceTaskId') or value.get('sourceTaskId')
                 if not task_id:
                     raise ValueError('参数组必须从成功成果保存')
-                actual = _result_parameters(self.db, task_id)
-                for field in ('parameters', 'partitionParameters'):
-                    if field in requested and requested[field] != actual[field]:
-                        raise ValueError('参数必须与来源成果实际计算值一致')
-                return self.send_json(save_parameters_from_task(self.db, task_id, value.get('name')))
+                from .permanent_deletion import guard_pending
+                with self.server.jobs.lock:
+                    guard_pending(self.db,'task',task_id)
+                    actual = _result_parameters(self.db, task_id)
+                    for field in ('parameters', 'partitionParameters'):
+                        if field in requested and requested[field] != actual[field]:
+                            raise ValueError('参数必须与来源成果实际计算值一致')
+                    if 'parameterTransfer' in requested:
+                        from .parameter_transfer import normalize_transfer_policy
+                        if normalize_transfer_policy(requested['parameterTransfer']) != actual['parameterTransfer']:
+                            raise ValueError('参数传递策略必须与来源成果实际策略一致')
+                    return self.send_json(save_parameters_from_task(self.db, task_id, value.get('name')))
             table = 'parameter_versions' if path == 'parameters' else 'schemes'
             item = dict(value['payload'])
-            identifier = ('PARAM-' if path == 'parameters' else 'SCHEME-') + uuid.uuid4().hex[:16]
-            self.db.save_item(table, identifier, value['name'], item)
-            return self.send_json({'id': identifier})
+            from .permanent_deletion import guard_parameter_source, guard_pending
+            with self.server.jobs.lock:
+                guard_parameter_source(self.db,item.get('adoptedParameterId'))
+                guard_pending(self.db,'task',item.get('sourceTaskId'))
+                identifier = ('PARAM-' if path == 'parameters' else 'SCHEME-') + uuid.uuid4().hex[:16]
+                self.db.save_item(table, identifier, value['name'], item)
+                return self.send_json({'id': identifier})
         if path.startswith('states/'):
             identifier = path.split('/')[1]
-            with self.db.connect() as conn:
-                if not conn.execute('SELECT id FROM states WHERE id=?', (identifier,)).fetchone():
-                    raise FileNotFoundError('状态不存在')
-                conn.execute('UPDATE states SET name=?,favorite=? WHERE id=?', (str(value.get('name', ''))[:120], int(bool(value.get('favorite'))), identifier))
+            from .permanent_deletion import guard_state
+            with self.server.jobs.lock:
+                guard_state(self.db,identifier)
+                with self.db.connect() as conn:
+                    if not conn.execute('SELECT id FROM states WHERE id=?', (identifier,)).fetchone():
+                        raise FileNotFoundError('状态不存在')
+                    conn.execute('UPDATE states SET name=?,favorite=? WHERE id=?', (str(value.get('name', ''))[:120], int(bool(value.get('favorite'))), identifier))
             return self.send_json({'status': 'saved'})
         if path == 'backup':
-            if self.server.jobs.active():
-                raise ValueError('请在任务结束后备份，确保成果与状态一致')
             from .maintenance import backup_workspace
-            return self.send_json(backup_workspace(self.db))
+            from .permanent_deletion import guard_no_pending
+            with self.server.jobs.lock:
+                guard_no_pending(self.db)
+                if self.server.jobs.active():
+                    raise ValueError('请在任务结束后备份，确保成果与状态一致')
+                return self.send_json(backup_workspace(self.db))
         if path in ('restore-preview', 'restore'):
             from .maintenance import restore_request_preview
             if path == 'restore-preview':

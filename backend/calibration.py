@@ -46,6 +46,8 @@ def calibrate(db, request, folder, progress=None, cancelled=None):
         raise ValueError('分水源汇流率定须采用分水源调蓄结构')
     keys = {'runoff': RUNOFF_KEYS, 'routing': ROUTING_KEYS, 'lake': ['lakeCoefficient']}[stage]
     flow_stage = stage != 'lake'
+    if flow_stage and target is None and any(k in region_overrides.get('duja', {}) for k in keys):
+        raise ValueError('全域率定的搜索参数被杜加分区覆盖，目标不能响应；请明确选择杜加分区率定')
     definitions = {d['key']: d for d in PARAMETER_DEFINITIONS}
     bounds = np.array([[definitions[k]['min'], definitions[k]['max']] for k in keys])
     maximum = min(2000, max(10, int(request.get('maxEvaluations', 120 if flow_stage else 30))))

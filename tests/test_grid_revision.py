@@ -91,6 +91,25 @@ class ContinuousGridTests(unittest.TestCase):
         self.assertEqual(full['checkpoint']['routing'],second['checkpoint']['routing'])
         self.assertGreater(full['daily'][-1]['excludedRunoff'],0)
 
+    def test_overlapping_output_windows_keep_same_continuous_trajectory(self):
+        early=run(self.db,{**self.request,'end':self.source['times'][120].isoformat(),
+                           'evaluationStart':'2024-12-30T00:00:00'},prepared=self.source)
+        later=run(self.db,{**self.request,'evaluationStart':'2025-01-01T00:00:00'},prepared=self.source)
+        self.assertEqual(early['initialization'],later['initialization'])
+        overlap={r['date']:r for r in later['daily']}
+        for row in early['daily']:
+            if row['date'] not in overlap or row['forcingHours'] != 24:
+                continue
+            for key in ('duja','zajia','lakeLevel'):
+                if row[key] is not None:
+                    self.assertAlmostEqual(row[key],overlap[row['date']][key],places=10)
+
+    def test_explicitly_absent_lake_anchor_does_not_use_later_observations(self):
+        result=run(self.db,{**self.request,'_fixedInitialization':None},prepared=self.source)
+        self.assertIsNone(result['initialization'])
+        self.assertTrue(all(row['lakeLevel'] is None for row in result['daily']))
+        self.assertTrue(any(row['duja'] is not None for row in result['daily']))
+
     def test_changed_prefix_parameters_unit_order_and_missing_queue_rejected(self):
         first=run(self.db,{**self.request,'end':self.source['times'][72].isoformat()},prepared=self.source)
         request={**self.request,'start':self.source['times'][73].isoformat(),'_parentState':first['checkpoint']}
@@ -126,6 +145,20 @@ class ContinuousGridTests(unittest.TestCase):
         np.testing.assert_array_equal(baseline['checkpoint']['unitStates'],result['checkpoint']['unitStates'])
         self.assertAlmostEqual(result['daily'][1]['lakeRainMm'],baseline['daily'][1]['lakeRainMm']*0.5)
         self.assertAlmostEqual(baseline['daily'][1]['lakeRainMm'],7.2)
+
+    def test_duja_and_lake_parameters_follow_coupled_water_path(self):
+        baseline=run(self.db,self.request,prepared=self.source)
+        lake_request=deepcopy(self.request)
+        lake_request['parameters']['lakeCoefficient']=1.4
+        lake=run(self.db,lake_request,prepared=self.source)
+        self.assertEqual([r['duja'] for r in baseline['daily']],[r['duja'] for r in lake['daily']])
+        self.assertNotEqual(baseline['checkpoint']['lake']['level'],lake['checkpoint']['lake']['level'])
+        duja_request=deepcopy(self.request)
+        duja_request['partitionParameters']={'duja':{'WM':250.}}
+        duja=run(self.db,duja_request,prepared=self.source)
+        self.assertNotEqual(baseline['daily'][-1]['duja'],duja['daily'][-1]['duja'])
+        self.assertNotEqual(baseline['daily'][-1]['zajia'],duja['daily'][-1]['zajia'])
+        self.assertNotEqual(baseline['checkpoint']['lake']['level'],duja['checkpoint']['lake']['level'])
 
     def test_zarr_query_and_npz_export_preserve_float64(self):
         from backend.grid_storage import open_arrays,export_npz

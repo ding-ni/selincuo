@@ -199,6 +199,13 @@
   },
   "inputRequirement": {
     "transformationSHA256": "a28542996c03152f4bc7fcdbec1510a7cabbb4843c3fa51e928b49b5f135d458",
+    "precipitationEvidence": "docs/evidence/第三轮降水处理核查-20261028.json",
+    "stationUsage": {
+      "SLC": "2024年完整日值用于湖面站点与同格点比例；其他年份仅作覆盖核查，不视为跨年独立验证。",
+      "DUJA": "点雨展示与格网对照；2025-01-01原表847.1毫米为待核异常，不用于计算订正。",
+      "BLQ": "点雨展示与格网对照；不直接用于湖面或陆域订正。",
+      "115DB": "点雨展示与格网对照；不直接用于湖面或陆域订正。"
+    },
     "lakePrecipitationCorrection": {
       "method": "station-point-annual-ratio-v1",
       "scope": "lake-only",
