@@ -160,6 +160,8 @@ def _snapshot(conn):
         json_extract(request,'$.parentTaskId') parent_task_id,
         json_extract(request,'$.baseTaskId') base_task_id,
         json_extract(request,'$.lakeOnlyBaseTaskId') lake_base_task_id,
+        json_extract(request,'$.twoStage.candidateSourceTaskId') candidate_source_task_id,
+        json_extract(request,'$.twoStage.baselineTaskId') selection_baseline_task_id,
         json_extract(request,'$.baselineResultId') baseline_result_id,
         json_extract(request,'$.candidateResultId') candidate_result_id,
         json_extract(request,'$.researchSchemeId') scheme_id,
@@ -257,7 +259,8 @@ def _build_plan(db, conn, requested, include_files=True):
                 item['blocked'].append(_blocked('工作区备份“' + active_name + '”正在运行', action))
             continue
         referenced_tasks = {active[field] for field in ('source_task_id', 'parent_task_id', 'base_task_id', 'lake_base_task_id',
-                                                        'baseline_result_id', 'candidate_result_id') if active[field]}
+                                                        'baseline_result_id', 'candidate_result_id',
+                                                        'candidate_source_task_id', 'selection_baseline_task_id') if active[field]}
         if active['state_id'] in state_owners:
             referenced_tasks.add(state_owners[active['state_id']])
         for identifier in referenced_tasks:
@@ -311,6 +314,15 @@ def _build_plan(db, conn, requested, include_files=True):
                        {'kind': 'scheme', 'id': row['id'], 'name': row['name'],
                         'trashed': bool(snapshot['settings'].get('scheme-hidden:' + family, False))})
     for row in tasks.values():
+        if row['kind'] == 'two-stage-calibration':
+            for field in ('candidate_source_task_id', 'selection_baseline_task_id'):
+                reference = row[field]
+                if reference in task_keys and row['id'] != reference:
+                    dependency(task_keys[reference], _key('task', row['id']),
+                               '率定“' + (row['name'] or row['id']) + '”保留对此参考成果的引用',
+                               '先回收引用的率定成果并选择一同删除',
+                               {'kind': 'task', 'id': row['id'], 'name': row['name'] or '率定成果',
+                                'trashed': bool(row['trashed'])})
         source = state_owners.get(row['state_id'])
         if source in task_keys and row['id'] != source and row['status'] == 'succeeded':
             dependency(task_keys[source], _key('task', row['id']),

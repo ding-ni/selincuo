@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from .common import ROOT, canonical, digest, now, read_json
-from .model_core import parameters, PARAMETER_DEFINITIONS, PARAMETER_NAMES
+from .model_core import parameters, PARAMETER_DEFINITIONS, PARAMETER_NAMES, normalize_initial_hydrology
 from .calibration_config import RUNOFF_KEYS, ROUTING_KEYS, public_config
 from .operational_scheme import definition, catalog
 from .parameter_regions import resolve_regions
@@ -23,6 +23,21 @@ INTEGRATED_KEYS = RUNOFF_KEYS + ROUTING_KEYS + ['lakeCoefficient']
 INTEGRATED_OBJECTIVE = {'method': 'rmse-over-training-std-v1',
                         'weights': {'flow': .5, 'lake': .5},
                         'minimumPairs': 30, 'minimumScale': 1e-10}
+
+
+def _current_workflow_defaults(db, value):
+    """Only new drafts opt into lake selection; saved revisions stay intact."""
+    from .two_stage_calibration import defaults
+    from .model_forcing import current_summary
+    options = {**defaults(), **deepcopy(value.get('twoStage') or {})}
+    options.update(selectionMode='flow-constrained-lake', candidateLimit=256, jointBudget=2000,
+                   flowConstraints={'minNse': .70, 'maxAbsPbias': 5.0})
+    options.setdefault('candidateSourceTaskId', 'JOB-4934a5d35c9344a59353')
+    value['twoStage'] = options
+    coverage = current_summary(db) or {}
+    if (coverage.get('firstCompleteDay') or '9999') <= '2019-01-01':
+        value['periods']['warmupStart'] = min(value['periods']['warmupStart'], '2019-01-01T00:00:00')
+    return value
 
 
 def _new_scheme_defaults(value):
@@ -89,7 +104,7 @@ def template(db):
         source=db.task(selection['resultId']).get('result') or {}
         value['parameterSources']={**deepcopy(source.get('parameterSources',{})),
                                    'sourceTaskId':selection['resultId']}
-        return value
+        return _current_workflow_defaults(db, value)
     standard = builtin(db)
     if standard:
         value = deepcopy(standard['payload'])
@@ -97,11 +112,11 @@ def template(db):
             value.pop(key, None)
         value['name'] = '我的色林错方案'
         value['origin'] = 'user'
-        return _new_scheme_defaults(value)
+        return _current_workflow_defaults(db, _new_scheme_defaults(value))
     fixed = definition()
     spatial = grid_spatial.current()
     choice = catalog(db)[0]
-    return _new_scheme_defaults({'schemaVersion': 2, 'name': '我的色林错方案', 'modelFamily': 'grid-continuous-v1',
+    return _current_workflow_defaults(db, _new_scheme_defaults({'schemaVersion': 2, 'name': '我的色林错方案', 'modelFamily': 'grid-continuous-v1',
             'spatialVersion': spatial['version'] if spatial else '', 'inputId': choice['inputId'],
             'parameters': deepcopy(fixed['parameters']), 'partitionParameters': deepcopy(fixed['partitionParameters']),
             'routingMode': fixed['routingMode'], 'target': 'duja',
@@ -112,7 +127,7 @@ def template(db):
             'search': {'scope': 'duja', 'keys': RUNOFF_KEYS + ROUTING_KEYS,
                        'bounds': {d['key']: [d['min'], d['max']] for d in PARAMETER_DEFINITIONS},
                        'budgets': {'runoff': 120, 'routing': 120, 'lake': 30}, 'seed': 42,
-                       'objectiveProfile': 'balanced'}, 'origin': 'user'})
+                       'objectiveProfile': 'balanced'}, 'origin': 'user'}))
 
 
 def _family(row):
@@ -246,6 +261,8 @@ def validate(db, payload, coverage_end=None):
     if spatial.get('unitStrategy') not in SUPPORTED_UNITS:
         raise ValueError('方案空间资料不受支持')
     value['parameters'] = parameters(value.get('parameters'))
+    if 'initialHydrology' in value:
+        value['initialHydrology'] = normalize_initial_hydrology(value['initialHydrology'])
     resolve_transfer(spatial['units'], value['parameters'], value.get('partitionParameters'), value.get('parameterTransfer'))
     value['partitionParameters'], _ = resolve_regions(spatial['units'], value['parameters'], value.get('partitionParameters'))
     if 'parameterTransfer' in value:
@@ -464,6 +481,10 @@ def prepare_request(db, request, kind='simulation'):
     if db.setting('scheme-hidden:' + _family(row), False):
         raise ValueError('方案已移入回收站，请先恢复')
     value = deepcopy(row['payload'])
+    hydrology_initial = normalize_initial_hydrology(value.get('initialHydrology'))
+    if ('initialHydrology' in request and
+            normalize_initial_hydrology(request['initialHydrology']) != hydrology_initial):
+        raise ValueError('陆域初始蓄水条件与方案不一致，请先保存方案')
     if ('parameterTransfer' in request and
             normalize_transfer_policy(request['parameterTransfer']) != normalize_transfer_policy(value.get('parameterTransfer'))):
         raise ValueError('请求的参数传递策略与已保存方案不一致，请先保存新的方案')
@@ -534,6 +555,7 @@ def prepare_request(db, request, kind='simulation'):
     return {**base_request, **{k: v for k, v in initial.items() if k in fields},
             'modelFamily': 'grid-continuous-v1', 'spatialVersion': value['spatialVersion'],
             'inputId': product['id'], 'parameters': run_parameters, 'partitionParameters': run_regions,
+            'initialHydrology': hydrology_initial,
             'parameterTransfer': normalize_transfer_policy(value.get('parameterTransfer')),
             'routingMode': value['routingMode'], 'start': warmup.isoformat(), 'end': end.isoformat(),
             'evaluationStart': start.isoformat(), 'evaluationEnd': end.isoformat(),
@@ -571,4 +593,5 @@ def plan_token(request, initialization, observation):
                    'evaluationStart': request['evaluationStart'],
                    'parameters': request['parameters'], 'partitionParameters': request['partitionParameters'],
                    'parameterTransfer': normalize_transfer_policy(request.get('parameterTransfer')),
+                   'initialHydrology': normalize_initial_hydrology(request.get('initialHydrology')),
                    'initialization': initialization, 'observation': digest(observation)})

@@ -48,7 +48,7 @@ PARAMETER_DEFINITIONS = [
     {'key': 'snowSublimation', 'label': '升华分配比例', 'min': 0, 'max': 1, 'step': .05, 'unit': '', 'group': 'snow'},
     {'key': 'iceSublimationFraction', 'label': '裸冰升华潜在蒸发比例', 'min': 0, 'max': 1, 'step': .05, 'unit': '', 'group': 'snow'},
     {'key': 'iceSublimationMaxMmHour', 'label': '裸冰升华小时上限', 'min': 0, 'max': .4, 'step': .01, 'unit': 'mm/h', 'group': 'snow'},
-    {'key': 'glacierRecessionDay', 'label': '冰川日调蓄常数', 'min': .05, 'max': 3, 'step': .05, 'unit': 'd⁻¹', 'group': 'snow'},
+    {'key': 'glacierRecessionDay', 'label': '冰川融水日调蓄常数', 'min': .05, 'max': 3, 'step': .05, 'unit': 'd⁻¹', 'group': 'snow'},
     {'key': 'tauHours', 'label': '子流域调蓄时间', 'min': 1, 'max': 168, 'step': 1, 'unit': 'h', 'group': 'routing'},
     {'key': 'lagHours', 'label': '传播滞时', 'min': 0, 'max': 72, 'step': 1, 'unit': 'h', 'group': 'routing'},
     {'key': 'lakeCoefficient', 'label': '湖面蒸发转换系数', 'min': .2, 'max': 1.5, 'step': .01, 'unit': '', 'group': 'lake'},
@@ -114,11 +114,25 @@ def parameters(values=None):
     return result
 
 
-def initial_states(units, params):
+def normalize_initial_hydrology(value=None):
+    """Normalize the soil wetness used only at the start of a run."""
+    if value is None:
+        value = {}
+    if not isinstance(value, dict) or set(value) - {'soilFraction'}:
+        raise ValueError('初始水文状态只能设置土壤含水比例')
+    fraction = value.get('soilFraction', .5)
+    if (isinstance(fraction, bool) or not isinstance(fraction, (int, float))
+            or not math.isfinite(fraction) or not 0 <= fraction <= 1):
+        raise ValueError('初始土壤含水比例须在0到1之间')
+    return {'soilFraction': float(fraction)}
+
+
+def initial_states(units, params, initial_hydrology=None):
+    fraction = normalize_initial_hydrology(initial_hydrology)['soilFraction']
     states = np.zeros((len(units), len(STATE_NAMES)), dtype=np.float64)
     for i, unit in enumerate(units):
         if unit['kind'] == 'land':
-            states[i, 2:5] = np.array([params['WM'] * 2 / 15, params['WM'] * 8 / 15, params['WM'] / 3]) * .5
+            states[i, 2:5] = np.array([params['WM'] * 2 / 15, params['WM'] * 8 / 15, params['WM'] / 3]) * fraction
     return states
 
 

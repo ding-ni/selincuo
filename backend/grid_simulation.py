@@ -4,7 +4,7 @@ import hashlib
 import numpy as np
 import pandas as pd
 from .common import ROOT,digest,sha_file,read_json,write_json,within
-from .model_core import parameters,PARAMETER_NAMES,STATE_NAMES,initial_states
+from .model_core import parameters,PARAMETER_NAMES,STATE_NAMES,initial_states,normalize_initial_hydrology
 from .parameter_regions import resolve_regions,region_initial_states,run_region_kernel
 from .routing import route_partition
 from .forcing import load_input,lake_precipitation_factor
@@ -131,6 +131,26 @@ def unit_forcing(spatial,arrays,ids,base,regions):
             np.ascontiguousarray(arrays['temperature'][ids][:,grid_ids]+dz[None,:]*lapse[None,:]),
             np.ascontiguousarray(arrays['evaporation'][ids][:,grid_ids]))
 
+
+def lake_balance_hourly(times,total,lake_rain,lake_evap,lake_area,initial,parent_lake=None,parent_continuous=0.):
+    """Single lake water balance shared by full and rapid basin calculations."""
+    lake=deepcopy(parent_lake or {})
+    continuous=float(parent_continuous)
+    flux=np.asarray(total)*3600+(np.asarray(lake_rain)-np.asarray(lake_evap))/1000*lake_area
+    levels=np.full(len(times),np.nan);lake_vol=np.full(len(times),np.nan);cv=np.empty(len(times))
+    anchor_time=pd.Timestamp(initial['time']) if initial else None
+    for j,t in enumerate(times):
+        continuous+=float(flux[j]);cv[j]=continuous
+        if anchor_time is not None and t>=anchor_time:
+            if not lake:
+                if t!=anchor_time:raise ValueError('缺少连续湖位锚点状态，不能在窗口中途伪造湖位')
+                lake={'level':float(initial['level']),'volumeChange':0.,'validAt':t.isoformat()}
+            else:
+                if pd.Timestamp(lake['validAt'])+pd.Timedelta(hours=1)!=t:raise ValueError('连续湖泊状态时次不连续')
+                lake['level']+=float(flux[j]/lake_area);lake['volumeChange']+=float(flux[j]);lake['validAt']=t.isoformat()
+            levels[j]=lake['level'];lake_vol[j]=lake['volumeChange']
+    return levels,lake_vol,cv,flux,lake,continuous
+
 def run(db,request,folder=None,progress=None,cancelled=None,prepared=None,land_reuse=None):
     source=prepared or prepare(db,request['inputId'],request['spatialVersion'])
     spatial=source['spatial'];arrays=source['arrays'];all_times=source['times'];units=spatial['units']
@@ -140,6 +160,7 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None,land_r
     indexes=np.flatnonzero((all_times>=start)&(all_times<=end));times=all_times[indexes]
     if not len(times) or times[0]!=start or times[-1]!=end or not np.all(np.diff(times.asi8)==3600*10**9):raise ValueError('计算时段缺少连续小时')
     parent=request.get('_parentState');observation=request.get('_observations') or observations(db)
+    initial_hydrology=normalize_initial_hydrology(request.get('initialHydrology', (parent or {}).get('initialHydrology')))
     # A calibration may deliberately have no training-period lake anchor.
     # In that case None is physical information, not permission to use a
     # later evaluation-period observation.
@@ -147,7 +168,7 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None,land_r
         request['_fixedInitialization'] if '_fixedInitialization' in request
         else anchor(request,observation,start,end))
     identity={'projectId':'selinco','modelFamily':'grid-continuous-v1','modelImplementation':request.get('_modelIdentity') or model_identity(),'spatialVersion':spatial['version'],**parameter_identity,
-              'initializationSHA256':digest(initial),'observationProfile':observation['profile'],'observationSnapshotSHA256':digest(observation),'forcingGridSHA256':spatial['forcingGridVersion'],'forcingTransformationSHA256':source['manifest'].get('transformationSHA256'),'routingMode':request.get('routingMode','source-separated')}
+              'initializationSHA256':digest(initial),'initialHydrologySHA256':digest(initial_hydrology),'observationProfile':observation['profile'],'observationSnapshotSHA256':digest(observation),'forcingGridSHA256':spatial['forcingGridVersion'],'forcingTransformationSHA256':source['manifest'].get('transformationSHA256'),'routingMode':request.get('routingMode','source-separated')}
     reused_arrays=None
     if land_reuse is not None:
         from .grid_storage import open_arrays
@@ -157,6 +178,7 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None,land_r
                 or comparable(reuse_result.get('parameters',{}))!=comparable(declared)
                 or reuse_result.get('partitionParameters',{})!=regions_patch
                 or reuse_result.get('parameterTransfer')!=transfer_audit['policy']
+                or normalize_initial_hydrology(reuse_result.get('initialHydrology'))!=initial_hydrology
                 or reuse_result.get('start')!=start.isoformat() or reuse_result.get('end')!=end.isoformat()
                 or reuse_result['identity']['modelImplementation']!=identity['modelImplementation']
                 or reuse_result.get('routingMode')!=identity['routingMode'] or request.get('_parentState')):
@@ -184,7 +206,7 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None,land_r
             if not np.isfinite(numbers).all() or np.min(numbers)<-1e-8:raise ValueError('父汇流状态数值无效')
         state=np.asarray(parent['unitStates'],dtype=float)
         if state.shape!=(len(units),8) or not np.isfinite(state).all() or np.min(state)<-1e-8:raise ValueError('父状态单元形状或数值错误')
-    else:state=region_initial_states(units,p,regions)
+    else:state=region_initial_states(units,p,regions,initial_hydrology)
     areas=np.array([u['areaKm2'] for u in units]);glaciers=np.array([u['kind']=='glacier' for u in units])
     lake_weights=np.array(spatial['lakeWeights']);lake_area=spatial['lakeAreaKm2']*1e6;lake_factor=lake_precipitation_factor(source['manifest'])
     old_routing=deepcopy((parent or {}).get('routing',{}));lake=deepcopy((parent or {}).get('lake',{}));continuous=float((parent or {}).get('continuousLakeVolume',0.))
@@ -218,18 +240,8 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None,land_r
         q={'duja':routed['duja'],'zajia':routed['duja']+routed['zajia_rest'],**{k:routed[k] for k in ('zagen','boqu','ali','fringe')}}
         q['total']=sum(q[k] for k in ('zajia','zagen','boqu','ali','fringe'))
         lake_rain=arrays['precipitation'][ids]@lake_weights*lake_factor;lake_evap=arrays['evaporation'][ids]@lake_weights*p['lakeCoefficient']
-        flux=q['total']*3600+(lake_rain-lake_evap)/1000*lake_area
-        levels=np.full(len(ids),np.nan);lake_vol=np.full(len(ids),np.nan);cv=np.empty(len(ids))
-        for j,t in enumerate(local_times):
-            continuous+=float(flux[j]);cv[j]=continuous
-            if anchor_time is not None and t>=anchor_time:
-                if not lake:
-                    if t!=anchor_time:raise ValueError('缺少连续湖位锚点状态，不能在窗口中途伪造湖位')
-                    lake={'level':float(initial['level']),'volumeChange':0.,'validAt':t.isoformat()}
-                else:
-                    if pd.Timestamp(lake['validAt'])+pd.Timedelta(hours=1)!=t:raise ValueError('连续湖泊状态时次不连续')
-                    lake['level']+=float(flux[j]/lake_area);lake['volumeChange']+=float(flux[j]);lake['validAt']=t.isoformat()
-                levels[j]=lake['level'];lake_vol[j]=lake['volumeChange']
+        levels,lake_vol,cv,flux,lake,continuous=lake_balance_hourly(
+            local_times,q['total'],lake_rain,lake_evap,lake_area,initial,lake,continuous)
         local={**q,'lakeLevel':levels,'volumeChange':lake_vol,'continuousLakeVolumeChange':cv,'lakeFlux':flux,'lakeRainMm':lake_rain,'lakeEvaporationMm':lake_evap,
                'externalRunoffM3':routed['external']*3600,'unresolvedRunoffM3':routed['unresolved']*3600,
                'excludedRunoff':(routed['unresolved']+routed['external'])*3600}
@@ -262,9 +274,9 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None,land_r
     yearly={str(y):{'purpose':'、'.join(dict.fromkeys(g.purpose)),
                    'periodDays':{str(k):int(v) for k,v in g.purpose.value_counts().items()},
                    'flow':metrics(g.observedFlow,g.duja),'lake':metrics(g.observedLevel,scored.reindex(g.index))} for y,g in daily.groupby(daily.index.year)}
-    checkpoint={'schemaVersion':3,'identity':identity,'validAt':times[-1].isoformat(),'unitStates':state.tolist(),'unitIds':[u['id'] for u in units],'routing':old_routing,'lake':lake,'initialization':initial,'continuousLakeVolume':continuous,'parameters':declared,'partitionParameters':regions_patch,'parameterTransfer':transfer_audit['policy'],'inputId':source['manifest']['id'],'forcingPrefixSHA256':prefix_identity(source,end),'observationSnapshot':observation}
+    checkpoint={'schemaVersion':3,'identity':identity,'validAt':times[-1].isoformat(),'unitStates':state.tolist(),'unitIds':[u['id'] for u in units],'routing':old_routing,'lake':lake,'initialization':initial,'initialHydrology':initial_hydrology,'continuousLakeVolume':continuous,'parameters':declared,'partitionParameters':regions_patch,'parameterTransfer':transfer_audit['policy'],'inputId':source['manifest']['id'],'forcingPrefixSHA256':prefix_identity(source,end),'observationSnapshot':observation}
     result={'projectId':'selinco','resultSource':'grid-continuous-model','identity':identity,'modelFamily':'grid-continuous-v1','start':times[0].isoformat(),'end':times[-1].isoformat(),'hours':len(times),'parameters':declared,'partitionParameters':regions_patch,'parameterTransfer':transfer_audit['policy'],'parameterTransferAudit':transfer_audit,'inputId':source['manifest']['id'],'spatialVersion':spatial['version'],'units':units,'rivers':RIVERS,'partitions':PARTITIONS,'routingMode':identity['routingMode'],'metrics':yearly,'daily':__import__('json').loads(daily.reset_index(names='date').to_json(orient='records',date_format='iso')),
-            'initialization':initial,'observationProfile':QUALITY_VERSION,'inflowComplete':grid_spatial.topology_complete(spatial),'drainage':spatial['drainage'],'scheme':request.get('schemeSnapshot'),
+            'initialization':initial,'initialHydrology':initial_hydrology,'observationProfile':QUALITY_VERSION,'inflowComplete':grid_spatial.topology_complete(spatial),'drainage':spatial['drainage'],'scheme':request.get('schemeSnapshot'),
             'diagnostics':{'landGlacierMaxBalanceErrorMm':balance_max,'routingMaxBalanceErrorM3':routing_error_max,'lakeAreaKm2':spatial['lakeAreaKm2'],'partitions':partition_totals,'lakeWindows':[] if initial is None else [{'start':initial['time'],'initialization':initial['method']}]},'checkpoint':checkpoint,'storageFormat':'zarr-v2' if writer else 'metrics-only'}
     if land_reuse is not None:result['landReuse']={'sourceIdentitySHA256':digest(land_reuse[1]['identity']),'method':'frozen-hourly-runoff-and-states; same-routing; new-lake-balance'}
     if writer:

@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-29",
+  "frontend": "8882 源码服务，index-CTu9wmeI.js，index-BHwey8Tt.css",
+  "serviceInstance": "9ab9e05e54024d1fb53fb454a8ee379d",
+  "serviceInstanceBasis": "核验后只读查询 /api/health，并与17:49启动记录核对；原自动核验脚本未记录实例，先前手工摘录误写为更早实例，现予更正。",
+  "browser": "Chromium，设备像素比 1；仅执行 GET，不发送保存、采用或计算请求",
+  "monitoringChecks": {
+    "sizesAndModes": ["1920×1080 普通", "1920×1080 全屏", "1366×768 普通", "1366×768 全屏"],
+    "result": "通过",
+    "panels": "主站与四岸曲线显示，侧栏无内容溢出；30、90、180 日可切换",
+    "map": "五个主体名称中心位于所属几何内；名称互不遮挡，站名避开名称、图例和工具；测站开关不改变主体名称位置",
+    "history": "2026-09-13 西岸显示当日缺测及最近实测日期 2026-04-22；2025-04-09 不引用未来观测",
+    "replay": "切回模拟回放后雨情和来水组成可见",
+    "browserErrors": "无"
+  },
+  "calibrationChecks": {
+    "researchTemplateGet": "通过",
+    "warmupStart": "2019-01-01T00:00:00",
+    "selectionMode": "flow-constrained-lake",
+    "flowConstraints": {"minNse": 0.7, "maxAbsPbias": 5.0},
+    "candidateLimit": 256,
+    "jointBudget": 2000,
+    "note": "本次核验时后台资料任务运行，新建控件按现有规则锁定；以上值为正式服务新建模板的 GET 响应，并非已经完成的新率定结果。"
+  },
+  "screenshots": [
+    {"file": "湖位监测生产普通1366-20261029.png", "bytes": 162145, "sha256": "97a1dc16ed9c2818c29c0dfd491a813a24b3ce46b913478b7b6f05f7b9d2f50f"},
+    {"file": "湖位监测生产全屏1366-20261029.png", "bytes": 148592, "sha256": "f2b5b1ab47a27ef7e75c2f422ddf17c6d6c587cfa9537cdf29dc70398230d834"},
+    {"file": "湖位监测生产普通1920-20261029.png", "bytes": 230782, "sha256": "1cb0f1add34348ead0a039a6b30949d2e0a26b820d5f7714e734d1ea2927ab21"}
+  ],
+  "fullRun": "build/监测湖位改进-20261029/生产8882-180506-414114/核验.json",
+  "sourceCheck": "build/监测湖位改进-20261029/生产入口只读核验.py"
+}

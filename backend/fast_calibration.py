@@ -9,7 +9,7 @@ import pandas as pd
 from .calibration_config import ROUTING_KEYS, flow_objective
 from .common import digest
 from .grid_simulation import unit_forcing
-from .model_core import PARAMETER_NAMES, initial_states, njit, parameters, unit_step
+from .model_core import PARAMETER_NAMES, initial_states, normalize_initial_hydrology, njit, parameters, unit_step
 from .routing import route_partition
 
 try:
@@ -91,6 +91,7 @@ class DujaEvaluator:
         values = request['_observations']['flow']
         self.observed = np.array([values.get(t.isoformat(), np.nan) for t in self.days])
         self.mode = request.get('routingMode','source-separated')
+        self.initial_hydrology = normalize_initial_hydrology(request.get('initialHydrology'))
         self.profile = request['search'].get('objectiveProfile','balanced')
         self._sources_cache = OrderedDict()
         self.source_evaluations = 0
@@ -100,7 +101,7 @@ class DujaEvaluator:
         key = tuple(candidate[k] for k in PARAMETER_NAMES if k not in ROUTING_KEYS+['lakeCoefficient'])
         if key not in self._sources_cache:
             values = _sources(self.rain, self.temperature, self.evaporation, self.offsets,
-                              self.glaciers, self.areas, initial_states(self.units, candidate),
+                              self.glaciers, self.areas, initial_states(self.units, candidate, self.initial_hydrology),
                               np.array([candidate[k] for k in PARAMETER_NAMES]))
             if values[1]>1e-6:
                 raise ValueError('杜加产流水量不闭合')

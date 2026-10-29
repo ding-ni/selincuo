@@ -2,13 +2,15 @@
 import {ref,reactive,computed,onMounted,onBeforeUnmount,watch} from 'vue'
 import ScreenMap from './ScreenMap.vue'
 import ScreenChart from './ScreenChart.vue'
+import MonitoringTrend from './MonitoringTrend.vue'
 import LakeMark from './LakeMark.vue'
-import {rivers,layers,exactValue,timelineDates,defaultReplayDay,balanceTerms,basinRain,observationDay,timelineTicks,screenResults,replayResultName,hasDashboardCapabilities,replayRows} from './dashboard.mjs'
+import {rivers,layers,exactValue,timelineDates,defaultReplayDay,balanceTerms,basinRain,observationDay,timelineTicks,screenResults,replayResultName,hasDashboardCapabilities,replayRows,latestObservation,monitoringWindow,recentObservations} from './dashboard.mjs'
 import {api,number} from './api.mjs'
 import {scaledLayer} from './map-scale.mjs'
 import {createFrameCache} from './frame-cache.mjs'
 const props=defineProps({boot:Object,tasks:Array,active:Array,selectedId:String,viewDay:String,summary:Object}),emit=defineEmits(['navigate','result','station','context'])
 const mode=ref('model'),task=ref(null),monitor=ref(null),meta=ref(null),shown=ref(null),requestedDay=ref(''),variable=ref('basin'),error=ref(''),loading=ref(true),pending=ref(false),playing=ref(false),speed=ref(1200),host=ref(),expanded=ref(false),feature=ref(null)
+const monitoringDays=ref(90)
 const dark=ref(localStorage.getItem('selinco:screen-theme')!=='light'),show=reactive({ice:false,rivers:true,stations:true,names:true,boundaries:true,grid:false,units:false})
 const viewport=ref({width:1600,height:900})
 const density=computed(()=>viewport.value.height<700?'compact':viewport.value.height<900||viewport.value.width<1400?'tight':'regular')
@@ -39,6 +41,9 @@ const day=computed(()=>shown.value?.day||''),shownVariable=computed(()=>shown.va
 const current=computed(()=>result.value?.daily?.find(r=>r.date.slice(0,10)===day.value)),observed=computed(()=>mode.value==='model'?current.value?.observedLevel:exactValue(main.value,day.value)),level=computed(()=>mode.value==='model'?current.value?.lakeLevel:observed.value)
 const lakeRows=computed(()=>mode.value==='model'?replayRows(result.value):main.value?.daily||[]),flowRows=computed(()=>mode.value==='model'?replayRows(result.value):stations.value.find(s=>s.id==='DUJA')?.daily||[])
 const shores=computed(()=>stations.value.filter(s=>s.kind==='lake'&&s.id!=='SLC')),rain=computed(()=>shown.value?.rain)
+const mainRecent=computed(()=>recentObservations(main.value,day.value))
+const mainWindow=computed(()=>monitoringWindow(main.value,day.value,monitoringDays.value).filter(r=>r.value!=null))
+const mainWindowChange=computed(()=>mainWindow.value.length>1?mainWindow.value.at(-1).value-mainWindow.value[0].value:null)
 const rainObserved=computed(()=>main.value?.rainDaily?.find(r=>r.date===day.value)?.value)
 const flowValue=computed(()=>mode.value==='model'?current.value?.total:exactValue(stations.value.find(s=>s.id==='DUJA'),day.value))
 const lakeSeries=computed(()=>mode.value==='model'?[{key:'lakeLevel',label:'模拟湖位'},{key:'observedLevel',label:'主站实测',observed:true}]:[{key:'value',label:'主站实测',observed:true}])
@@ -51,7 +56,7 @@ const selectedFlow=computed(()=>rivers.map(r=>({...r,value:current.value?.[r.id]
 const rainfall=computed(()=>[...basinRain(rain.value,result.value?.units),{id:'lake',name:'湖面',value:rain.value?.complete?rain.value.lakeMean:null}])
 const rainPeak=computed(()=>Math.max(1,...rainfall.value.map(r=>r.value||0))),flowPeak=computed(()=>Math.max(1,...selectedFlow.value.map(r=>r.value||0)))
 const duja=computed(()=>stations.value.find(s=>s.id==='DUJA'))
-function shoreValue(station,date){const value=observationDay(station,date);return value.value==null?({outside:'无记录',missing:'当日缺测',failed:'读取失败'}[value.status]||value.label):number(value.value,3)+' m'}
+function shoreValue(station,date){const value=observationDay(station,date);return value.value==null?({outside:'当日缺测',missing:'当日缺测',failed:'读取失败'}[value.status]||value.label):number(value.value,3)+' m'}
 function defaultDay(m=mode.value,t=task.value){const a=timelineDates(m,monitor.value,t?.result);return a.includes(props.viewDay)?props.viewDay:m==='observation'?(main.value?.latest?.date||a.at(-1)||''):defaultReplayDay(a,t?.result)}
 function stop(){playing.value=false;clearTimeout(timer)}
 function schedule(){clearTimeout(timer);if(playing.value)timer=setTimeout(async()=>{if(index.value>=dates.value.length-1){stop();return}await requestView(dates.value[index.value+1]);schedule()},Number(speed.value))}
@@ -122,20 +127,29 @@ onBeforeUnmount(()=>{disposed=true;sequence++;choiceTicket++;stop();clearTimeout
   <section class="screen-panel metric-card"><span>{{mode==='model'?'流域日降水':'主站日降水'}}</span><b v-if="mode==='model'">{{rain?.complete?number(rain.domainMean,2):'无完整日'}}<small v-if="rain?.complete">mm</small></b><b v-else>{{number(rainObserved,2)}}<small>mm</small></b><p>{{mode==='model'?'模型采用 · 面积加权含湖面':'站点实测 · 无记录保持空白'}}</p></section>
  </div>
  <div class="screen-main">
-  <aside class="screen-panel hydrology-stack">
-   <section v-if="mode==='model'" class="rain-summary"><div class="screen-panel-heading"><h3>流域雨情</h3><span>日降水 · mm</span></div><div class="rain-list"><div v-for="r in rainfall" :key="r.id" class="rain-summary-row"><span>{{r.name}}</span><b>{{number(r.value,2)}}</b><div class="hydrology-bar"><i :style="{width:((r.value||0)/rainPeak*100)+'%'}"></i></div></div></div><p class="screen-note">{{rain?.complete?'流域面雨量 · 湖面采用订正值':'当日气象资料不完整'}}</p></section>
+  <aside class="screen-panel hydrology-stack" :class="{'monitoring-main':mode==='observation'}">
+   <template v-if="mode==='model'">
+   <section class="rain-summary"><div class="screen-panel-heading"><h3>流域雨情</h3><span>日降水 · mm</span></div><div class="rain-list"><div v-for="r in rainfall" :key="r.id" class="rain-summary-row"><span>{{r.name}}</span><b>{{number(r.value,2)}}</b><div class="hydrology-bar"><i :style="{width:((r.value||0)/rainPeak*100)+'%'}"></i></div></div></div><p class="screen-note">{{rain?.complete?'流域面雨量 · 湖面采用订正值':'当日气象资料不完整'}}</p></section>
    <section class="observation-summary"><div class="screen-panel-heading"><h3>当日实测</h3></div><div><span>主站湖位</span><b v-if="exactValue(main,day)!=null">{{number(exactValue(main,day),3)}} <small>m</small></b><small v-else>{{observationDay(main,day).label}}</small></div><div><span>杜加流量</span><b v-if="exactValue(duja,day)!=null">{{number(exactValue(duja,day),2)}} <small>m³/s</small></b><small v-else>{{observationDay(duja,day).label}}</small></div></section>
    <section class="shore-summary"><div class="screen-panel-heading"><h3>四岸观测</h3><span>原基准 · m</span></div><div class="shore-list"><button v-for="s in shores" :key="s.id" class="shore-row" :data-shore="s.id" :data-status="observationDay(s,day).status" :title="s.name+' · '+observationDay(s,day).label" @click="emit('station',s.id,day)"><span>{{s.name.replace('色林错','')}}</span><b>{{shoreValue(s,day)}}</b></button></div></section>
+   </template>
+   <section v-else class="monitoring-lake-summary">
+    <div class="monitoring-lake-heading"><h3>主站近期湖位</h3><label><select v-model.number="monitoringDays" aria-label="湖位近期过程时长"><option :value="30">近30日</option><option :value="90">近90日</option><option :value="180">近180日</option></select></label></div>
+    <div class="monitoring-lake-change"><span>时段涨落 <small>m · 主站工作基准</small></span><b>{{mainWindowChange>0?'+':''}}{{number(mainWindowChange==null?null:mainWindowChange*100,1)}} <small>cm</small></b><small v-if="mainWindowChange!=null">{{mainWindow[0].date}} 至 {{mainWindow.at(-1).date}}</small><small v-else>该时段有效记录不足</small></div>
+    <MonitoringTrend :station="main" :day="day" :days="monitoringDays"/>
+    <div class="monitoring-period"><span>{{monitoringWindow(main,day,monitoringDays)[0]?.date?.slice(5)}}</span><span>{{day?.slice(5)}}</span></div>
+    <div class="monitoring-recent"><div class="screen-panel-heading"><h3>近期读数</h3><span>实测 · m</span></div><div v-for="r in mainRecent" :key="r.date" class="monitoring-reading"><span>{{r.date}}</span><b>{{number(r.value,3)}}</b></div><small v-if="!mainRecent.length">该日期前无有效观测</small></div>
+   </section>
   </aside>
   <section class="screen-panel map-panel"><div class="screen-map-heading"><h3>{{mode==='model'?'流域水情':'站点分布'}}</h3><select v-model="variable" aria-label="地图主题" @change="changeLayer"><option value="basin">流域分区</option><option value="terrain">地形高程</option><template v-if="mode==='model'"><option v-for="l in layers.filter(l=>!['basin','terrain','evaporation'].includes(l.id))" :key="l.id" :value="l.id">{{l.label}}</option></template></select><details><summary>叠加要素</summary><div class="map-overlay-options"><label v-for="(label,key) in {boundaries:'流域边界',rivers:'河网',ice:'冰川边界',stations:'测站',names:'名称',grid:'气象格网',units:'计算单元'}" :key="key"><input type="checkbox" v-model="show[key]">{{label}}</label></div></details></div>
    <div class="map-stage"><ScreenMap :spatial-base="mode==='model'?(meta?.spatialBase||'/spatial/'):'/spatial/'" :show-grid="mode==='model'&&show.grid" :show-units="mode==='model'&&show.units" :show-boundaries="show.boundaries" :range-layer="mapLayer" :stations="stations" :focus="feature?.id" :selected-unit="feature?.id" :frame="shown?.frame" :grid-frame="shown?.rain" :snow="shown?.snow" :variable="shownVariable" :show-ice="show.ice" :show-rivers="show.rivers" :show-terrain="shownVariable==='terrain'" :show-stations="show.stations" :show-names="show.names" @unit="unit" @select="emit('station',$event,day)" @feature="feature=$event" @failure="error=$event"/><div v-if="mapMissing" class="map-status">{{shownVariable==='snow'?'无日末状态':'气象资料缺少完整日'}}</div><div v-if="feature" class="feature-summary"><b>{{feature.name}}</b><span v-if="feature.areaKm2!=null">{{number(feature.areaKm2,2)}} km²</span><span v-if="feature.value!=null">{{number(feature.value,2)}} {{feature.unit}}</span><button aria-label="关闭区域信息" @click="feature=null">×</button></div></div>
   </section>
-  <aside class="screen-panel summary-stack">
+  <aside class="screen-panel summary-stack" :class="{'monitoring-side':mode==='observation'}">
    <template v-if="mode==='model'">
     <section class="inflow-summary"><div class="screen-panel-heading"><h3>入湖来水组成</h3><span>{{result?.inflowComplete===false?'已判定范围 · ':''}}m³/s</span></div><div v-for="r in selectedFlow" :key="r.id" :data-inflow="r.id" class="river-row"><i :class="r.id"></i><span>{{r.name}}</span><b>{{number(r.value,2)}}</b><div class="hydrology-bar"><i :style="{width:((r.value||0)/flowPeak*100)+'%'}"></i></div></div><div class="inflow-total"><span>{{result?.inflowComplete===false?'已判定入湖合计':'入湖合计'}}</span><b>{{number(current?.total,2)}} <small>m³/s</small></b></div></section>
     <section class="balance-summary"><div class="screen-panel-heading"><h3>当日湖泊收支</h3><span>百万 m³</span></div><div class="balance-grid"><div v-for="b in balance" :key="b.key"><span>{{b.label}}</span><b>{{number(b.value,2)}}</b></div></div></section>
    </template>
-   <section v-else class="station-recency"><div class="screen-panel-heading"><h3>最近记录</h3><span>实际观测日期</span></div><button v-for="s in stations.filter(s=>s.kind!=='lake')" :key="s.id" @click="emit('station',s.id,s.latest?.date)"><span>{{s.name}}</span><b>{{number(s.latest?.value,2)}} {{s.kind==='rain'?'mm':'m³/s'}}</b><small>{{s.latest?.date||'暂无有效记录'}}</small></button></section>
+   <section v-else class="monitoring-shores"><div class="screen-panel-heading"><h3>四岸水位</h3><span>各站原基准 · m</span></div><div class="monitoring-shore-list"><button v-for="s in shores" :key="s.id" class="monitoring-shore" :data-shore="s.id" :data-status="observationDay(s,day).status" @click="emit('station',s.id,day)"><span class="monitoring-shore-name">{{s.name.replace('色林错','')}}</span><b>{{shoreValue(s,day)}}</b><small v-if="exactValue(s,day)==null&&latestObservation(s,day)">最近 {{latestObservation(s,day).date}} · {{number(latestObservation(s,day).value,3)}} m</small><small v-else>{{exactValue(s,day)!=null?day:'该日期前无有效观测'}}</small><MonitoringTrend :station="s" :day="day" :days="monitoringDays" compact/></button></div></section>
   </aside>
  </div>
  <div class="screen-processes"><section class="screen-panel"><div class="screen-panel-heading"><h3>湖位过程</h3><span>m · {{mode==='model'?'连续模拟 / 主站实测':'主站实测'}}</span></div><ScreenChart :rows="lakeRows" :series="lakeSeries" unit="m" :day="day" :dark="dark" :context="(task?.id||'monitor')+':'+mode+':lake'" @day="chooseDay"/></section><section class="screen-panel"><div class="screen-panel-heading"><h3>{{mode==='model'?'入湖与杜加过程':'杜加流量过程'}}</h3><span>m³/s</span></div><ScreenChart :rows="flowRows" :series="flowSeries" unit="m³/s" :day="day" :dark="dark" :context="(task?.id||'monitor')+':'+mode+':flow'" @day="chooseDay"/></section></div>

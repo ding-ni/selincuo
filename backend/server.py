@@ -205,6 +205,17 @@ class Handler(SimpleHTTPRequestHandler):
             builtin_scheme = builtin(self.db)
             from .business_selection import current as business_current
             selected_business=business_current(self.db)
+            scheme_rows = list_schemes(self.db)
+            active_scheme = next((row for row in scheme_rows if row['id'] == selected_business.get('schemeId')), builtin_scheme)
+            active_payload = (active_scheme or {}).get('payload', {})
+            active_periods = active_payload.get('periods') or {}
+            calibration_config = public_config()
+            if active_periods:
+                calibration_config.update(warmupYear=int(active_periods['warmupStart'][:4]),
+                                          calibrationYear=int(active_periods['trainingStart'][:4]),
+                                          warmupStart=active_periods['warmupStart'])
+                if active_payload.get('twoStage', {}).get('finalRefit'):
+                    calibration_config['excludedYears'] = []
             builtin_result = selected_business.get('resultId') or (builtin_scheme or {}).get('payload', {}).get('resultId')
             builtin_available = builtin_result_available(self.db, builtin_result)
             return self.send_json({'projectId': 'selinco', 'name': '色林错预警预报平台', 'version': VERSION, 'gridSpatial':grid_summary,
@@ -212,7 +223,7 @@ class Handler(SimpleHTTPRequestHandler):
                                    'contextKey': CONTEXT_KEY, 'spatial': summary, 'database': self.db.summary(),
                                    'stations': self.db.rows('SELECT * FROM stations ORDER BY id'),
                                    'inputs': inputs, 'parameters': list_parameters(self.db),
-                                   'schemes': list_schemes(self.db),
+                                   'schemes': scheme_rows,
                                    'operationalSchemes': operational_schemes,
                                    'publishedResults': published_catalog(), 'standardResultId': current_release(self.db)['resultId'],
                                    'homeResultId': builtin_result if builtin_available else None,
@@ -220,13 +231,13 @@ class Handler(SimpleHTTPRequestHandler):
                                    'currentBusiness':selected_business,
                                    'builtinResultAvailable': builtin_available,
                                    'builtinResultMessage': '' if builtin_available else '当前工作区缺少内置连续成果或其完整逐时资料，请接入对应成果资源。',
-                                   'calibrationConfig': public_config(), 'routingModes': [{'id':'source-separated','label':'分水源调蓄 + 河道汇流'},{'id':'lumped','label':'原方案：合并径流单库汇流'}],
+                                   'calibrationConfig': calibration_config, 'routingModes': [{'id':'source-separated','label':'分水源调蓄 + 河道汇流'},{'id':'lumped','label':'原方案：合并径流单库汇流'}],
                                    'parameterDefinitions': PARAMETER_DEFINITIONS, 'defaultParameters': DEFAULT_PARAMETERS,
                                    'forecast': {'enabled': False, 'reason': '本版完成历史计算，7—15天滚动预报在下一阶段接入'},
                                    'ready': bool(spatial and grid and inputs), 'missingInputs': [] if inputs else ['ERA5-Land真实逐小时降水、气温与蒸发能力输入'],
-                                   'historicalPlan': {'warmupYear': 2023, 'calibrationYear': 2024, 'validationYear': 2025, 'start': '2023-01-01T00:00:00', 'end': '2026-01-01T00:00:00', 'dailyConvention': '(day 00:00, next day 00:00] Asia/Shanghai', 'futureObservationsUsedInSearch': False},
+                                   'historicalPlan': {'warmupYear': calibration_config['warmupYear'], 'calibrationYear': calibration_config['calibrationYear'], 'validationYear': int(active_periods.get('evaluationStart', '2025')[:4]), 'start': active_periods.get('warmupStart', '2023-01-01T00:00:00'), 'end': active_periods.get('evaluationEnd', '2026-01-01T00:00:00'), 'dailyConvention': '(day 00:00, next day 00:00] Asia/Shanghai', 'futureObservationsUsedInSearch': bool(active_payload.get('twoStage', {}).get('finalRefit'))},
                                    'annualValidation': {'ready': annual_ready, 'message': '年度历史驱动完整' if annual_ready else '完整2023—2025年真实驱动尚未齐备，年度率定验证待开展'},
-                                   'periodDefaults': {'start': '2023-01-01T00:00', 'end': '2026-01-01T00:00'},
+                                   'periodDefaults': {'start': active_payload.get('historyPeriod', {}).get('start', active_periods.get('warmupStart', '2023-01-01T00:00'))[:16], 'end': active_payload.get('historyPeriod', {}).get('end', active_periods.get('evaluationEnd', '2026-01-01T00:00'))[:16]},
                                    'latestObservation': self.db.rows('SELECT MAX(time) time FROM observations WHERE value IS NOT NULL')[0]['time']})
         if path == 'cds-help':
             return self.file(ROOT/'docs/CDS账户恢复与继续下载.md',download=True)
@@ -271,7 +282,14 @@ class Handler(SimpleHTTPRequestHandler):
                     'end':values.index.max().isoformat() if len(values) else None,'days':len(values),
                     'years':[{'year':int(y),'days':len(g),'start':g.index.min().isoformat(),'end':g.index.max().isoformat()}
                              for y,g in values.groupby(values.index.year)]}
-            return self.send_json({**rows,'forcing':current_summary(self.db),'defaults':defaults()})
+            from .business_selection import current
+            choice = current(self.db)
+            adopted = self.db.task(choice['resultId']) if choice.get('resultId') else {}
+            adopted_request = adopted.get('request') or {}
+            return self.send_json({**rows,'forcing':current_summary(self.db),'defaults':defaults(),
+                'warmup': {'start': adopted_request.get('start'),
+                           'initialization': (adopted.get('result') or {}).get('initialization'),
+                           'diagnostics': (adopted.get('result') or {}).get('warmupDiagnostics')}})
         if path == 'parameters':
             from .research_schemes import list_parameters
             return self.send_json({'parameters': list_parameters(self.db, query.get('includeTrashed') == 'true')})

@@ -1,5 +1,6 @@
 """Persist the selected working scheme without changing scientific releases."""
 from copy import deepcopy
+import math
 
 from .common import canonical, now
 
@@ -8,6 +9,28 @@ CURRENT_SETTING='business-adopted-scheme-v1'
 
 def current(db):
     return db.setting(CURRENT_SETTING) or {} if hasattr(db,'setting') else {}
+
+
+def automatic_adoption_decision(db, result):
+    """Apply the agreed flow/lake improvement rule to automatic adoption."""
+    workflow = result.get('calibrationWorkflow') or {}
+    if workflow.get('selectionMode') != 'flow-constrained-lake':
+        return {'eligible': True, 'method': 'existing-workflow'}
+    selection = workflow.get('selection') or {}
+    comparison = selection.get('adoptionComparison') or {}
+    baseline = comparison.get('baselineTaskId')
+    if not baseline or current(db).get('resultId') != baseline:
+        return {'eligible': False, 'message': '当前采用已变更，本次成果已保存。',
+                'comparison': comparison}
+    limits = selection.get('flowConstraints') or {'minNse': .70, 'maxAbsPbias': 5.0}
+    nse, pbias = comparison.get('nse'), comparison.get('pbias')
+    flow_ok = (isinstance(nse, (int, float)) and isinstance(pbias, (int, float)) and
+               math.isfinite(nse) and math.isfinite(pbias) and
+               nse >= limits['minNse'] and abs(pbias) <= limits['maxAbsPbias'])
+    eligible = bool(flow_ok and comparison.get('eligible') and
+                    comparison.get('lakeRmseImproved') and comparison.get('lakeScoreImproved'))
+    return {'eligible': eligible, 'comparison': comparison,
+            'message': '流量与湖位均满足采用条件。' if eligible else '本次成果已保存，当前采用继续保留。'}
 
 
 def purpose(db, row):

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {timelineDates,exactValue,balanceTerms,defaultReplayDay,colorFor,layers,screenResults,replayResultName,hasDashboardCapabilities,replayRows,basinRain,observationDay,timelineTicks} from '../frontend/src/dashboard.mjs'
+import {timelineDates,exactValue,balanceTerms,defaultReplayDay,colorFor,layers,screenResults,replayResultName,hasDashboardCapabilities,replayRows,basinRain,observationDay,timelineTicks,latestObservation,monitoringWindow,recentObservations} from '../frontend/src/dashboard.mjs'
 test('monitoring replay includes missing days but never borrows the latest observation',()=>{
  const monitor={stations:[{id:'SLC',daily:[{date:'2024-01-01',value:4540},{date:'2024-01-03',value:4541}]}]}
  const dates=timelineDates('observation',monitor,null)
@@ -33,7 +33,7 @@ test('dashboard offers the adopted result and explicitly saved simulations only'
   {id:'user',kind:'simulation',userSaved:1,status:'succeeded'},
   {id:'continued',kind:'continuation',userSaved:1,status:'succeeded'},
   {id:'deleted',kind:'simulation',userSaved:1,status:'succeeded',trashed:1}], 'final')
- assert.deepEqual(rows.map(r=>r.id),['final','user','continued'])
+ assert.deepEqual(rows.map(r=>r.id),['final','trial','user','continued'])
  assert.equal(rows[0].builtin,true)
  assert.equal(replayResultName(rows[0],'final',{id:'final',result:{daily:[{date:'2021-04-23'},{date:'2026-10-20'}]}}),'历史模拟 · 2021—2026')
  const task={status:'succeeded',result:{daily:[{date:'2025-01-01',lakeLevel:4540,total:5}],units:[{id:'unit'}],inputId:'input'}}
@@ -64,4 +64,15 @@ test('selected-day observations distinguish record boundaries, missing days, zer
  const ticks=timelineTicks(['2023-04-20','2024-01-01','2025-01-01','2025-01-10'])
  assert.equal(ticks[0].position,0);assert.equal(ticks.at(-1).position,100)
  assert.ok(ticks.at(-2).position>95)
+})
+test('monitoring trends preserve missing dates and never show observations after the selected day',()=>{
+ const station={daily:[{date:'2026-04-22',value:4544.5},{date:'2026-09-11',value:4544.7},
+  {date:'2026-09-12',value:null},{date:'2026-09-14',value:4545}]}
+ assert.equal(latestObservation(station,'2026-09-13').date,'2026-09-11')
+ assert.equal(latestObservation(station,'2026-04-21'),null)
+ assert.deepEqual(monitoringWindow(station,'2026-09-13',4),[
+  {date:'2026-09-10',value:null},{date:'2026-09-11',value:4544.7},
+  {date:'2026-09-12',value:null},{date:'2026-09-13',value:null}])
+ assert.deepEqual(recentObservations(station,'2026-09-13').map(r=>r.date),['2026-09-11','2026-04-22'])
+ assert.equal(latestObservation({...station,error:'offline'},'2026-09-13'),null)
 })

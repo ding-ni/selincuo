@@ -13,11 +13,15 @@ from .common import digest, read_json, write_json, sha_file, within
 from .fast_calibration import DujaEvaluator
 from .grid_simulation import prepare as prepare_model, run as simulate, model_identity
 from .lake_calibration import response as lake_response, fit as lake_fit, assess as lake_assess
+from .model_core import normalize_initial_hydrology
 
 
 def defaults():
     return {'version':1,'mode':'both','reverseCheck':True,'finalRefit':True,
             'seeds':list(DEFAULT_SEEDS),'budgets':dict(DEFAULT_BUDGETS),'allowExtension':True,
+            'selectionMode':'flow-only','candidateSourceTaskId':'JOB-4934a5d35c9344a59353',
+            'baselineTaskId':None,'flowConstraints':{'minNse':.70,'maxAbsPbias':5.},
+            'candidateLimit':256,'jointBudget':2000,
             'lakePeriods':{'trainingStart':'2021-04-23T00:00:00','trainingEnd':'2025-01-01T00:00:00',
                            'evaluationStart':'2025-01-01T00:00:00','evaluationEnd':'2026-09-14T00:00:00'}}
 
@@ -37,6 +41,22 @@ def validate_options(options):
     for key in ('reverseCheck','finalRefit','allowExtension'):
         if type(value[key])!=bool:
             raise ValueError('率定流程选项无效')
+    if value['selectionMode'] not in ('flow-only','flow-constrained-lake'):
+        raise ValueError('请选择有效的共享参数筛选方式')
+    if not isinstance(value['candidateSourceTaskId'],str) or not value['candidateSourceTaskId'].strip():
+        raise ValueError('参考候选任务编号无效')
+    if value['baselineTaskId'] is not None and (not isinstance(value['baselineTaskId'],str) or not value['baselineTaskId'].strip()):
+        raise ValueError('基准成果编号无效')
+    constraints=value['flowConstraints']
+    if (not isinstance(constraints,dict) or set(constraints)!={'minNse','maxAbsPbias'} or
+            any(isinstance(constraints[k],bool) or not isinstance(constraints[k],(int,float)) or
+                not np.isfinite(constraints[k]) for k in constraints) or
+            not -1<=constraints['minNse']<=1 or not 0<=constraints['maxAbsPbias']<=100):
+        raise ValueError('杜加流量门限无效')
+    if type(value['candidateLimit'])!=int or not 1<=value['candidateLimit']<=256:
+        raise ValueError('候选数量须在1—256之间')
+    if type(value['jointBudget'])!=int or not 0<=value['jointBudget']<=2000:
+        raise ValueError('联合评价次数须在0—2000之间')
     dates={k:pd.Timestamp(value['lakePeriods'][k]) for k in ('trainingStart','trainingEnd','evaluationStart','evaluationEnd')}
     if any(pd.isna(t) or t.tzinfo or t!=t.normalize() for t in dates.values()):
         raise ValueError('湖位时段须为北京时间完整日')
@@ -67,6 +87,19 @@ def prepare(db,payload):
     prepared.update(twoStage=options,end=last.isoformat(),evaluationStart=options['lakePeriods']['trainingStart'],
                     evaluationEnd=last.isoformat(),purpose='business')
     prepared['parameters']=deepcopy(prepared['schemeSnapshot'].get('calibrationInitialParameters',prepared['parameters'])) if options['mode']!='lake' else prepared['parameters']
+    if options['mode']=='both' and options['selectionMode']=='flow-constrained-lake':
+        from .business_selection import current
+        from .lake_constrained_calibration import candidate_source
+        if not prepared['search']['keys']:
+            raise ValueError('湖位联合筛选需要选择水文参数')
+        _,path=candidate_source(db,options['candidateSourceTaskId'])
+        prepared['_candidateSourceTraceSHA256']=sha_file(path)
+        baseline=options.get('baselineTaskId') or current(db).get('resultId')
+        if baseline:
+            task=db.task(baseline)
+            if task.get('status')!='succeeded' or not (task.get('result') or {}).get('daily'):
+                raise ValueError('对照基准须是已有湖位过程的成功成果')
+        options['baselineTaskId']=baseline
     if options['mode']=='lake':
         from .business_selection import current
         base_id=payload.get('lakeOnlyBaseTaskId') or current(db).get('resultId')
@@ -79,6 +112,8 @@ def prepare(db,payload):
                 land(result.get('parameters',{}))==land(prepared['parameters']) and
                 result.get('partitionParameters',{})==prepared['partitionParameters'] and
                 result.get('parameterTransfer')==prepared['parameterTransfer'] and
+                normalize_initial_hydrology(result.get('initialHydrology'))==
+                    normalize_initial_hydrology(prepared.get('initialHydrology')) and
                 result.get('routingMode')==prepared['routingMode'])
             if compatible:
                 prepared['lakeOnlyBaseTaskId']=base_id
@@ -99,7 +134,34 @@ def run(db,request,folder,progress,cancelled):
     state=read_json(state_path,{'phase':'flow','completed':[]})
     fits=[]
     periods=request['periods']
-    if options['mode']!='lake':
+    joint=options['mode']=='both' and options.get('selectionMode')=='flow-constrained-lake'
+    selection=None
+    if joint:
+        from .lake_constrained_calibration import run_selection
+        state.update(phase='joint',fit='joint')
+        write_json(state_path,state)
+        selection=run_selection(db,request,source,folder/'joint',progress,cancelled)
+        selected=deepcopy(selection['parameters'])
+        fit={'fit':'共享参数 · 杜加全部资料',
+             'algorithm':'historic-candidates-rescored-and-lake-constrained',
+             'parameters':deepcopy(selected),
+             'initialParameters':deepcopy(initial),
+             'bounds':{key:deepcopy(request['search']['bounds'][key]) for key in request['search']['keys']},
+             'seeds':list(options['seeds']),
+             'trainingPeriod':{'start':min(periods['trainingStart'],periods['evaluationStart']),
+                               'end':max(periods['trainingEnd'],periods['evaluationEnd'])},
+             'validationPeriod':{'start':None,'end':None},
+             'training':selection['flowMetrics']['all'],'validation':None,
+             'yearlyEvaluation':selection['flowMetrics'],
+             'evaluations':selection['totalRescored']+selection['refinement']['evaluations'],
+             'bestObjective':selection['flowObjective'],
+             'converged':selection['refinement']['converged'],
+             'termination':selection['refinement']['termination'],
+             'validationExcludedFromSearch':False}
+        flow_records.append(fit)
+        state['completed']=['joint']
+        write_json(state_path,state)
+    elif options['mode']!='lake':
         def period_label(start,end):
             first=pd.Timestamp(start).year;last=(pd.Timestamp(end)-pd.Timedelta(days=1)).year
             return str(first) if first==last else '%d—%d'%(first,last)
@@ -161,23 +223,32 @@ def run(db,request,folder,progress,cancelled):
     else:
         if baseline['parameters']!=selected or baseline['identity']['modelImplementation']!=request['_modelIdentity']:
             raise ValueError('接续时全流域来水基准与率定参数不一致')
+    if joint:
+        from .lake_constrained_calibration import verify_formal_result
+        selection['formalParity']=verify_formal_result(selection,request,baseline,folder/'joint')
     lake_record=None
     if options['mode']!='flow':
         progress(88,'湖泊参数率定 · 固定入湖来水')
         state.update(phase='lake')
         write_json(state_path,state)
-        frame=lake_response(source,working,baseline)
-        lake_periods=options['lakePeriods']
-        bounds=request['search']['bounds']['lakeCoefficient']
-        coeff=selected['lakeCoefficient']
-        anchor=baseline['initialization']
-        split=lake_fit(frame,coeff,bounds,lake_periods['trainingStart'],lake_periods['trainingEnd'],anchor)
-        split['validation']=lake_assess(frame,split['value'],coeff,lake_periods['evaluationStart'],lake_periods['evaluationEnd'],anchor)
-        split['validationPeriod']={'start':lake_periods['evaluationStart'],'end':lake_periods['evaluationEnd']}
-        final=lake_fit(frame,coeff,bounds,lake_periods['trainingStart'],lake_periods['evaluationEnd'],anchor) if options['finalRefit'] else split
+        if joint:
+            split,final=selection['trainingFit'],selection['finalFit']
+        else:
+            frame=lake_response(source,working,baseline)
+            lake_periods=options['lakePeriods']
+            bounds=request['search']['bounds']['lakeCoefficient']
+            coeff=selected['lakeCoefficient']
+            anchor=baseline['initialization']
+            split=lake_fit(frame,coeff,bounds,lake_periods['trainingStart'],lake_periods['trainingEnd'],anchor)
+            split['validation']=lake_assess(frame,split['value'],coeff,lake_periods['evaluationStart'],lake_periods['evaluationEnd'],anchor)
+            split['validationPeriod']={'start':lake_periods['evaluationStart'],'end':lake_periods['evaluationEnd']}
+            final=lake_fit(frame,coeff,bounds,lake_periods['trainingStart'],lake_periods['evaluationEnd'],anchor) if options['finalRefit'] else split
         lake_record={'split':split,'final':final,'hydrologicalParametersFixed':True,
                      'hydrologicalParameterSHA256':digest({k:v for k,v in selected.items() if k!='lakeCoefficient'}),
-                     'usedForFlowSelection':False}
+                     'usedForFlowSelection':joint}
+        if joint:
+            lake_record['splitHydrologicalParameterSHA256']=digest({k:v for k,v in selection['trainingParameters'].items() if k!='lakeCoefficient'})
+            lake_record['splitAndFinalHydrologyMayDiffer']=True
         selected={**selected,'lakeCoefficient':final['value']}
         write_json(folder/'lake-fit.json',lake_record)
     if cancelled():
@@ -194,6 +265,12 @@ def run(db,request,folder,progress,cancelled):
         write_json(state_path,state)
         final=simulate(db,working,output_folder,lambda p,m:progress(90+p*.09,m),cancelled,source,
                        land_reuse=(baseline_folder,baseline))
+    if joint:
+        from .warmup_workflow import run as warmup_check
+        state.update(phase='warmup-diagnostics')
+        write_json(state_path,state)
+        progress(98.,'最终参数预热核验')
+        final['warmupDiagnostics']=warmup_check(db,request,source,final,folder/'warmup-diagnostics',progress,cancelled)
     # Completed artifacts are linked into the normal task layout. Unfinished
     # attempts stay in their own folders; Writer never clears an old output.
     for source_path in output_folder.rglob('*'):
@@ -207,21 +284,27 @@ def run(db,request,folder,progress,cancelled):
             os.link(source_path,target)
     final['calibrationWorkflow']={'version':1,'target':'two-stage','mode':options['mode'],
         'flowFits':flow_records,'lake':lake_record,'finalRefit':options['finalRefit'],
-        'parametersSharedAcrossLand':True,'trainingDataUse':'split-checks-then-all-data-refit',
-        'flowParameterSelectionUsesLakeLevel':False,'stationAfterRouting':'Duja included once within Zajia; existing partition routing retained'}
-    final['calibration']={'algorithm':'flow-then-lake-v1','evaluations':sum(r['evaluations'] for r in flow_records),
+        'parametersSharedAcrossLand':True,
+        'trainingDataUse':(('lake-training-selection-then-all-data-refit' if options['finalRefit'] else 'lake-training-selection-with-time-check')
+                           if joint else ('split-checks-then-all-data-refit' if options['finalRefit'] else 'time-split-checks')),
+        'flowParameterSelectionUsesLakeLevel':joint,'selectionMode':options.get('selectionMode','flow-only') if joint else 'flow-only',
+        'stationAfterRouting':'Duja included once within Zajia; existing partition routing retained'}
+    if joint:
+        final['calibrationWorkflow']['selection']=selection
+    final['calibration']={'algorithm':'flow-constrained-lake-v1' if joint else 'flow-then-lake-v1','evaluations':sum(r['evaluations'] for r in flow_records),
         'stages':[{'stage':r['fit'],'evaluations':r['evaluations'],'bestObjective':r['bestObjective'],
                    'converged':r['converged'],'termination':r['termination']} for r in flow_records],
         'seeds':options['seeds'],'trace':[],'traceExternal':True,'objectiveProfile':request['search']['objectiveProfile'],
         'converged':(not flow_records or flow_records[-1]['converged']) and (lake_record is None or lake_record['final']['converged']),
         'termination':'completed-with-recorded-search-status',
         'bestObjective':flow_records[-1]['bestObjective'] if flow_records else lake_record['final']['training']['rmse']}
-    hydrology_source=({'method':'Duja-flow-all-data-refit' if options['finalRefit'] else 'Duja-flow-split-fit',
+    hydrology_source=({'method':('Duja-flow-constrained-lake-selection' if joint else
+                                  'Duja-flow-all-data-refit' if options['finalRefit'] else 'Duja-flow-split-fit'),
                        'keys':request['search']['keys'],'periods':periods} if flow_records else
                       deepcopy(request.get('_fixedHydrologySource') or request['schemeSnapshot'].get('parameterSources',{}).get('hydrology',
                         {'method':'fixed-scheme-parameters','sourceSchemeId':request['researchSchemeId']})))
     final['parameterSources']={'hydrology':hydrology_source,
-                               'lake':{'method':'conditional-lake-level-fit' if lake_record else 'fixed','keys':['lakeCoefficient']},
+                               'lake':{'method':('conditional-lake-four-criterion-fit' if joint else 'conditional-lake-level-fit') if lake_record else 'fixed','keys':['lakeCoefficient']},
                                'fixed':['iceSublimationFraction','iceSublimationMaxMmHour']}
     final['diagnostics']['lakeCumulativeBalanceErrorM3']=float(sum(row.get('lakeBalanceErrorM3') or 0 for row in final['daily']))
     state.update(phase='completed')

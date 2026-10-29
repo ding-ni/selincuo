@@ -26,10 +26,10 @@ def resolve_regions(units, base, overrides=None):
     return normalized, resolved
 
 
-def region_initial_states(units, base, regions):
+def region_initial_states(units, base, regions, initial_hydrology=None):
     if not regions:
-        return initial_states(units, base)
-    return np.concatenate([initial_states([u], regions.get(u['partition'], base)) for u in units])
+        return initial_states(units, base, initial_hydrology)
+    return np.concatenate([initial_states([u], regions.get(u['partition'], base), initial_hydrology) for u in units])
 
 
 def run_region_kernel(rain, temperature, evaporation, glaciers, state, units, base, regions):

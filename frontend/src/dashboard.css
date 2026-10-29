@@ -166,3 +166,32 @@
  .lake-screen .screen-main{grid-template-columns:1fr}.lake-screen .screen-main>.summary-stack{grid-column:1;grid-row:3}
  .lake-screen .screen-processes{height:460px}.lake-screen .screen-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* Monitoring has its own layout; the model replay keeps its original proportions. */
+.lake-screen .hydrology-stack.monitoring-main,.lake-screen .summary-stack.monitoring-side{display:flex;flex-direction:column;gap:0;overflow:hidden}
+.lake-screen .monitoring-main>.monitoring-lake-summary,.lake-screen .monitoring-side>.monitoring-shores{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0}
+.monitoring-lake-heading{display:flex;align-items:center;justify-content:space-between;gap:5px;flex:0 0 auto}
+.lake-screen .monitoring-lake-heading h3{margin:0;font-size:15px;white-space:nowrap}
+.monitoring-lake-heading select{min-height:25px;padding:2px 5px;font-size:11px;background:var(--sc-panel);color:var(--sc-ink);border:1px solid var(--sc-line);border-radius:4px}
+.monitoring-lake-change{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:3px 5px;padding:12px 0 8px;color:var(--sc-muted)}
+.monitoring-lake-change>span{font-size:12px}.monitoring-lake-change>span small{display:block;font-size:10px}
+.monitoring-lake-change>b{color:var(--sc-accent,#65c2c6);font-size:clamp(18px,3.5cqh,27px);font-weight:600;white-space:nowrap}.monitoring-lake-change>b small{font-size:11px}
+.monitoring-lake-change>small{grid-column:1/-1;font-size:10px;white-space:nowrap}
+.monitoring-trend{position:relative;min-height:30px;min-width:0;display:flex;align-items:center;justify-content:center;color:var(--sc-muted);font-size:10px}
+.monitoring-lake-summary>.monitoring-trend{flex:1;border:1px solid var(--sc-line);border-radius:5px;padding:7px 5px;background:color-mix(in srgb,var(--sc-panel) 90%,var(--sc-accent,#65c2c6))}
+.monitoring-trend svg{position:absolute;inset:0;display:block;width:100%;height:100%;overflow:hidden}.monitoring-trend-grid{fill:none;stroke:var(--sc-line);stroke-width:.8;vector-effect:non-scaling-stroke}
+.monitoring-trend-line{fill:none;stroke:var(--sc-accent,#65c2c6);stroke-width:2;vector-effect:non-scaling-stroke}.monitoring-trend-point{fill:var(--sc-accent,#65c2c6)}
+.monitoring-period{display:flex;justify-content:space-between;padding-top:4px;color:var(--sc-muted);font-size:10px;line-height:1}
+.monitoring-recent{flex:0 0 auto;padding-top:9px}.monitoring-recent .screen-panel-heading{margin-bottom:4px}
+.monitoring-reading{display:flex;justify-content:space-between;align-items:baseline;gap:6px;padding:3px 0;border-top:1px solid var(--sc-line);font-size:12px;color:var(--sc-muted)}
+.monitoring-reading b{color:var(--sc-ink);font-size:13px;font-weight:500;white-space:nowrap}
+.monitoring-shores>.screen-panel-heading{flex:0 0 auto}.monitoring-shore-list{display:grid;grid-template-rows:repeat(4,minmax(0,1fr));flex:1;gap:5px;min-height:0}
+.lake-screen .monitoring-shore{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto minmax(14px,1fr);align-content:stretch;align-items:center;gap:2px 6px;min-height:0;width:100%;padding:5px 8px;text-align:left;border:1px solid var(--sc-line);border-radius:5px;background:color-mix(in srgb,var(--sc-panel) 93%,var(--sc-accent,#65c2c6));color:var(--sc-ink)}
+.monitoring-shore:hover{border-color:var(--sc-accent,#65c2c6)}.monitoring-shore-name{font-size:13px;font-weight:600;white-space:nowrap}.monitoring-shore>b{font-size:clamp(12px,2.8cqh,17px);font-weight:500;white-space:nowrap;color:var(--sc-accent,#65c2c6)}
+.monitoring-shore>small{grid-column:1/-1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sc-muted);font-size:10px;line-height:1.2}.monitoring-shore>.monitoring-trend{grid-column:1/-1;min-height:0;align-self:stretch;height:100%;overflow:hidden}
+@container water-side (max-height:380px){
+ .monitoring-lake-change{padding:4px 0}.monitoring-lake-change>b{font-size:18px}.monitoring-recent{padding-top:4px}.monitoring-reading{padding:1px 0;font-size:11px}.monitoring-reading b{font-size:12px}
+ .monitoring-shore-list{gap:3px}.lake-screen .monitoring-shore{padding:3px 6px;gap:1px 4px}.monitoring-shore-name{font-size:12px}.monitoring-shore>b{font-size:12px}
+}
+@media(max-width:1000px){.lake-screen .hydrology-stack.monitoring-main,.lake-screen .summary-stack.monitoring-side{min-height:320px}}
+.basin-map-label.lake text,.lake-screen .basin-map-label.lake text{font-size:16px;font-weight:700}

@@ -107,6 +107,19 @@ class SchemeWorkflowTests(unittest.TestCase):
                        'budgets': {'runoff': 1, 'routing': 1, 'lake': 1}, 'seed': 42,
                        'objectiveProfile': 'balanced'}}
 
+    def test_initial_hydrology_is_saved_and_cannot_be_silently_overridden(self):
+        value = deepcopy(self.config)
+        value['initialHydrology'] = {'soilFraction': .1}
+        row = schemes.save(self.db, value)
+        request = schemes.prepare_request(self.db, {'researchSchemeId': row['id']})
+        self.assertEqual(request['initialHydrology'], {'soilFraction': .1})
+        with self.assertRaisesRegex(ValueError, '初始蓄水'):
+            schemes.prepare_request(self.db, {'researchSchemeId': row['id'],
+                                             'initialHydrology': {'soilFraction': .9}})
+        value['initialHydrology']['soilFraction'] = True
+        with self.assertRaises(ValueError):
+            schemes.save(self.db, value)
+
     def completed(self, identifier='job', status='succeeded'):
         p = deepcopy(DEFAULT_PARAMETERS)
         p['WM'] = 210

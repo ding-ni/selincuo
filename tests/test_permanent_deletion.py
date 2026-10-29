@@ -74,6 +74,14 @@ class PermanentDeletionTests(unittest.TestCase):
     def objects(**groups):
         return [{'kind': kind, 'id': identifier} for kind, ids in groups.items() for identifier in ids]
 
+    def test_lake_selection_keeps_its_candidate_trace_and_comparison_source(self):
+        candidate = self.task('candidate-source')
+        baseline = self.task('selection-baseline')
+        self.task('joint-selection', trashed=False, kind='two-stage-calibration', request={
+            'twoStage': {'candidateSourceTaskId': candidate, 'baselineTaskId': baseline}})
+        plan = deletion.preview(self.db, self.objects(task=[candidate, baseline]))
+        self.assertEqual(plan['deletableCount'], 0)
+
     def test_deletes_only_owned_files_and_preserves_shared_hardlink(self):
         task = self.task('owned')
         self.state(task)

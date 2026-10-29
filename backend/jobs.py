@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from . import common
 from .common import CONTEXT_KEY, ROOT, canonical, digest, model_identity, now, read_json, write_json
-from .model_core import parameters
+from .model_core import parameters, normalize_initial_hydrology
 from .simulation import observation_snapshot, run_simulation
 
 
@@ -178,6 +178,11 @@ class Jobs:
                 if payload.get(field) is not None and payload[field] != saved:
                     raise ValueError('续算参数与父状态不一致，请重新模拟')
                 payload[field] = saved
+            initial_hydrology = normalize_initial_hydrology(checkpoint.get('initialHydrology'))
+            if ('initialHydrology' in payload and
+                    normalize_initial_hydrology(payload['initialHydrology']) != initial_hydrology):
+                raise ValueError('续算的陆域初始蓄水条件与父状态不一致')
+            payload['initialHydrology'] = initial_hydrology
             from .parameter_transfer import normalize_transfer_policy
             transfer = normalize_transfer_policy(checkpoint.get('parameterTransfer'))
             if (payload.get('parameterTransfer') is not None and
@@ -551,9 +556,12 @@ class Jobs:
             self.db.log('task.succeeded', {'id': identifier})
             if request.get('adoptOnSuccess') and kind=='two-stage-calibration':
                 try:
-                    from .business_selection import adopt_result
-                    selection=adopt_result(self.db,identifier)
-                    result['adoption']=selection
+                    from .business_selection import adopt_result, automatic_adoption_decision
+                    decision = automatic_adoption_decision(self.db, result)
+                    if decision['eligible']:
+                        result['adoption']=adopt_result(self.db,identifier)
+                    else:
+                        result['adoptionSkipped']=decision
                 except Exception as error:
                     result['adoptionError']=str(error)
                 write_json(folder/'result.json',result)

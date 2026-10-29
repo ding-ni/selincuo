@@ -17,16 +17,20 @@ def report(task):
         lake=workflow.get('lake')
         if lake:
             lake_periods=task['request']['twoStage']['lakePeriods']
-            for name,fit,key,period,label in [
+            lake_records = [
                 ('lake-training',lake['split'],'training',lake['split']['trainingPeriod'],'湖位率定'),
                 ('lake-time-check',lake['split'],'validation',
-                 {'start':lake_periods['evaluationStart'],'end':lake_periods['evaluationEnd']},'湖位时间检验'),
-                ('lake-all-data',lake['final'],'training',lake['final']['trainingPeriod'],'全部湖位资料拟合')]:
+                 {'start':lake_periods['evaluationStart'],'end':lake_periods['evaluationEnd']},'湖位时间检验')]
+            if workflow.get('finalRefit'):
+                lake_records.append(('lake-all-data',lake['final'],'training',lake['final']['trainingPeriod'],'全部湖位资料拟合'))
+            for name,fit,key,period,label in lake_records:
                 records[name]={'label':label,'start':period['start'],'endExclusive':period['end'],
                                'flow':None,'lake':fit[key]}
         return {'source':'frozen-two-stage-search-reports','periods':records,
                 'evaluationUsedForSearch':bool(workflow.get('finalRefit')),
-                'dataUse':'split-checks-then-all-data-refit' if workflow.get('finalRefit') else 'time-split-checks'}
+                'flowParameterSelectionUsesLakeLevel':bool(workflow.get('flowParameterSelectionUsesLakeLevel')),
+                'dataUse':workflow.get('trainingDataUse') or
+                    ('split-checks-then-all-data-refit' if workflow.get('finalRefit') else 'time-split-checks')}
     frame=pd.DataFrame(result['daily']);frame.index=pd.to_datetime(frame.date)
     anchor=result.get('initialization')
     if anchor:frame.loc[frame.index==pd.Timestamp(anchor['time']).normalize(),'lakeLevel']=float('nan')

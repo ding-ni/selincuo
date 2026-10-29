@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
-import {projector,fitViewport,placeLabels,detailMapUrl} from '../frontend/src/map-view.mjs'
+import {projector,fitViewport,placeLabels,placeGeographicLabels,leaderEnd,detailMapUrl} from '../frontend/src/map-view.mjs'
 import {preferredHistoricalInput,historicalPeriod} from '../frontend/src/workflow.mjs'
 const context=JSON.parse(fs.readFileSync(new URL('../data/derived/spatial/display-context.json',import.meta.url)))
 test('whole drainage domain fits desktop, portrait and report canvases without distortion or clipping',()=>{
@@ -40,6 +40,17 @@ test('shared label priority and preferred offsets are stable across input order'
  assert.deepEqual(first.map(x=>x.box),again.map(x=>x.box))
  assert.equal(first[0].cx,220);assert.equal(first[0].cy,132)
  assert.equal(first[0].x,185);assert.equal(first[0].y,150)
+})
+test('geographic names retain their anchor while nearby names wrap and station leaders stop at the label edge',()=>{
+ const names=[{id:'boqu',name:'波曲藏布',kind:'basin',x:290,y:160},
+  {id:'ali',name:'阿里藏布',kind:'basin',x:244,y:156}]
+ const result=placeGeographicLabels(names)
+ assert.deepEqual(result.map(r=>[r.cx,r.cy]),[[290,160],[244,156]])
+ assert.deepEqual(result.map(r=>r.lines.length),[2,2])
+ const [a,b]=result.map(r=>r.box)
+ assert.ok(a.x+a.w<=b.x||b.x+b.w<=a.x||a.y+a.h<=b.y||b.y+b.h<=a.y)
+ assert.deepEqual(leaderEnd([0,20],{x:20,y:10,w:40,h:20}),[20,20])
+ assert.deepEqual(leaderEnd([40,0],{x:20,y:10,w:40,h:20}),[40,10])
 })
 test('fine boundary detail is selected only from the matching recorded spatial parent',()=>{
  const manifest={unitStrategy:'partition-elevation-surface-area-weighted-v1',parentSpatialVersion:'GRID-SPATIAL-abc',sourceAssetsSHA256:{'display.geojson':'a'.repeat(64)}}

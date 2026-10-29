@@ -7,6 +7,29 @@ export const layers=[{id:'precipitation',label:'模型采用日降水',unit:'mm/
  {id:'basin',label:'流域分区',unit:'',colors:[],stops:[]}]
 export function colorFor(value,layer){if(value==null||!Number.isFinite(value))return 'transparent';let i=0;for(let j=0;j<layer.stops.length;j++)if(value>=layer.stops[j])i=j;return layer.colors[i]||'transparent'}
 export function exactValue(station,day){return station?.daily?.find(r=>r.date===day)?.value??null}
+// A monitoring date is a strict upper bound: never borrow a later reading.
+export function latestObservation(station,day){
+ if(!day||station?.error)return null
+ let latest=null
+ for(const row of station?.daily||[]){
+  if(row.date<=day&&row.value!=null&&Number.isFinite(row.value)&&(!latest||row.date>latest.date))latest=row
+ }
+ return latest
+}
+export function monitoringWindow(station,day,days=90){
+ if(!day||!Number.isInteger(days)||days<1)return []
+ const end=Date.parse(day+'T00:00:00Z');if(!Number.isFinite(end))return []
+ const values=new Map((station?.daily||[]).map(r=>[r.date,r.value]))
+ return Array.from({length:days},(_,i)=>{
+  const date=new Date(end-(days-1-i)*86400000).toISOString().slice(0,10),value=values.get(date)
+  return {date,value:value!=null&&Number.isFinite(value)?value:null}
+ })
+}
+export function recentObservations(station,day,limit=3){
+ if(!day||station?.error)return []
+ return (station?.daily||[]).filter(r=>r.date<=day&&r.value!=null&&Number.isFinite(r.value))
+  .sort((a,b)=>b.date.localeCompare(a.date)).slice(0,limit)
+}
 export function observationDay(station,day){
  if(station?.error)return {status:'failed',label:'读取失败',value:null}
  const row=station?.daily?.find(r=>r.date===day),value=row?.value

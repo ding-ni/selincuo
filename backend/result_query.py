@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from .common import ROOT,read_json,model_identity,within
 from .simulation import RIVERS,PARTITIONS
-STATE=[('swe','雪水当量','mm'),('snowLiquid','雪层液水','mm'),('WU','上层土壤含水量','mm'),('WL','下层土壤含水量','mm'),('WD','深层土壤含水量','mm'),('freeWater','自由水蓄量','mm'),('FR','产流面积比例',''),('glacierStorage','冰川调蓄','mm')]
+STATE=[('swe','雪水当量','mm'),('snowLiquid','雪层液水','mm'),('WU','上层土壤含水量','mm'),('WL','下层土壤含水量','mm'),('WD','深层土壤含水量','mm'),('freeWater','自由水蓄量','mm'),('FR','产流面积比例',''),('glacierStorage','冰川融水调蓄','mm')]
 DIAG=[('RS','地表产流','mm'),('RI','壤中产流','mm'),('RG','地下产流','mm'),('glacierRunoff','冰川出流','mm'),('snowmelt','融雪','mm'),('icemelt','融冰','mm'),('actualEt','实际蒸散发','mm'),('balanceError','水量平衡误差','mm'),('iceSublimation','冰面升华','mm')]
 _lock=RLock();_arrays=OrderedDict();_sources=OrderedDict();_source_cache_limit=8
 

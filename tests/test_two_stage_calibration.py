@@ -129,6 +129,15 @@ class TwoStageTests(unittest.TestCase):
             prepared=prepare(db,{'researchSchemeId':'scheme'})
             self.assertEqual(prepared['lakeOnlyBaseTaskId'],'approved')
             self.assertEqual(prepared['_fixedHydrologySource']['sourceTaskId'],'approved')
+            # Historical results with no explicit condition use the same 0.5 default.
+            value['initialHydrology']={'soilFraction':.5}
+            self.assertEqual(prepare(db,{'researchSchemeId':'scheme'})['lakeOnlyBaseTaskId'],'approved')
+            # Different initial stores require new land calculations.
+            value['initialHydrology']={'soilFraction':.9}
+            self.assertNotIn('lakeOnlyBaseTaskId',prepare(db,{'researchSchemeId':'scheme'}))
+            with self.assertRaisesRegex(ValueError,'来水成果'):
+                prepare(db,{'researchSchemeId':'scheme','lakeOnlyBaseTaskId':'approved'})
+            value['initialHydrology']={'soilFraction':.5}
             base['parameters']['WM']+=1
             self.assertNotIn('lakeOnlyBaseTaskId',prepare(db,{'researchSchemeId':'scheme'}))
 
