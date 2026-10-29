@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "beforeRestartInstanceId": "7f339c604d134517810ac761f454b49e",
+  "afterRestart": {
+    "backendSourceSHA256": "d209aa6b038b278e913aeffce300494de3c9556f76037c6115f191837b2bfd5f",
+    "instanceId": "17d2650bdc8041fba2d3405aef5419b4",
+    "projectId": "selinco",
+    "version": "0.12.0",
+    "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+  },
+  "currentBusiness": {
+    "adoptedAt": "2026-10-29T13:24:53+00:00",
+    "familyId": "FAMILY-08e7fc8c01364e88",
+    "inputId": "INPUT-c00df956d638351ebeb4e96e",
+    "name": "色林错流量与湖位联合优选",
+    "parameterId": "PARAM-bb4c92396eb04820adef",
+    "resultId": "JOB-88b35b44b27d4e15840c",
+    "schemeId": "SCHEME-1c4e16d578ee43aea372",
+    "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6"
+  },
+  "warmupStart": "2017-01-01T00:00:00",
+  "selectedWarmupPassed": true,
+  "newDraftWarmupStart": "2017-01-01T00:00:00",
+  "homeResultId": "JOB-88b35b44b27d4e15840c",
+  "homeSchemeId": "SCHEME-1c4e16d578ee43aea372",
+  "builtinResultAvailable": true,
+  "historicalPlan": {
+    "calibrationYear": 2024,
+    "dailyConvention": "(day 00:00, next day 00:00] Asia/Shanghai",
+    "end": "2026-01-01T00:00:00",
+    "futureObservationsUsedInSearch": true,
+    "start": "2017-01-01T00:00:00",
+    "validationYear": 2025,
+    "warmupYear": 2017
+  },
+  "periodDefaults": {
+    "end": "2026-10-21T00:00",
+    "start": "2021-04-23T00:00"
+  },
+  "activeTasks": [],
+  "frontendEntry": "index-CTu9wmeI.js",
+  "indexSHA256": "7a48985f0e4f3027eb5881d24508c568f5c82d95f377350f0cf3ab91b363361a",
+  "emptyOutDir": false,
+  "note": "标准关闭接口后由标准启动脚本重开8882；仅GET核对，不重新计算模型或改变采用。"
+}

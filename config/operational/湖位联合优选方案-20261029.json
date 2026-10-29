@@ -1,0 +1,2035 @@
+{
+  "schemaVersion": 1,
+  "adoption": {
+    "adoptedAt": "2026-10-29T13:24:53+00:00",
+    "familyId": "FAMILY-08e7fc8c01364e88",
+    "inputId": "INPUT-c00df956d638351ebeb4e96e",
+    "name": "色林错流量与湖位联合优选",
+    "parameterId": "PARAM-bb4c92396eb04820adef",
+    "resultId": "JOB-88b35b44b27d4e15840c",
+    "schemeId": "SCHEME-1c4e16d578ee43aea372",
+    "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6"
+  },
+  "payload": {
+    "adoptedParameterId": "PARAM-bb4c92396eb04820adef",
+    "calibrationInitialParameters": {
+      "B": 0.02706294682950719,
+      "C": 0.04295623600648161,
+      "EX": 0.2521151900118612,
+      "IM": 0.0503954549913151,
+      "KC": 0.720337228981353,
+      "KG": 0.006449423481093118,
+      "KI": 0.001,
+      "SM": 88.58813487944634,
+      "WM": 168.3271131439654,
+      "baseflowTauHours": 2160.0,
+      "glacierRecessionDay": 2.1964703205360663,
+      "iceDdf": 10.491198321961527,
+      "iceSublimationFraction": 0.25,
+      "iceSublimationMaxMmHour": 0.08,
+      "interflowTauHours": 6.0105774523024795,
+      "lagHours": 33.96151753396235,
+      "lakeCoefficient": 1.5,
+      "lapseRate": -0.009888678648497686,
+      "liquidCapacity": 0.055106981756182505,
+      "rainTemperature": 5.0,
+      "refreezeFactor": 2.9996048886186535,
+      "snowDdf": 8.268361544906824,
+      "snowSublimation": 0.3377805450877816,
+      "snowTemperature": -5.0,
+      "tauHours": 81.17211359023726
+    },
+    "calibrationInitialPartitionParameters": {},
+    "configurationSHA256": "d707ac2ff75f3496d6828da9f7bc3a8d2660c2978ee2bee6ddfd2bdc8d904a4a",
+    "evidence": {
+      "note": "沿用完整全局及杜加参数、原固定湖位起算和31组结构；90米DEM保守追踪使93.219146平方公里获得入湖归属，2247.523850平方公里仍单列。气象重叠期值未改、湖面订正一次；长期初态和出口资料仍有限制，2025和2026并非未触碰的独立验证。",
+      "numericalComparison": "docs/evidence/第二轮空间完整期对照-20261028-152049-2fca47.json",
+      "previousComparison": "docs/E3同新域聚合顺序受控诊断-20261027.md",
+      "shortComparison": "docs/evidence/第二轮空间短期对照-20261028-151648-b08348.json",
+      "spatialComparison": "docs/第二轮空间归属与剩余资料-20261028.md"
+    },
+    "familyId": "FAMILY-08e7fc8c01364e88",
+    "historyPeriod": {
+      "end": "2026-10-21T00:00:00",
+      "start": "2021-04-23T00:00:00"
+    },
+    "initialization": {
+      "mode": "automatic"
+    },
+    "inputRequirement": {
+      "lakePrecipitationCorrection": {
+        "developmentYear": 2024,
+        "factor": 0.5336700706945834,
+        "gaugeMm": 226.5,
+        "gaugeSeriesSHA256": "e0abfd77539b3aaf758a6a8ca85c601ecf1716f069683357d34107bc53e59832",
+        "gridId": "89.4,31.8",
+        "gridMm": 424.41952891456936,
+        "limitations": [
+          "One shore gauge represents the lake only as a provisional spatial transfer.",
+          "Source daily labels used; station reporting day boundary not independently verified.",
+          "Gauge catch bias and snowfall undercatch not corrected."
+        ],
+        "method": "station-point-annual-ratio-v1",
+        "pairedDays": 366,
+        "scope": "lake-only",
+        "station": "SLC"
+      },
+      "precipitationEvidence": "docs/evidence/第三轮降水处理核查-20261028.json",
+      "stationUsage": {
+        "115DB": "点雨展示与格网对照；不直接用于湖面或陆域订正。",
+        "BLQ": "点雨展示与格网对照；不直接用于湖面或陆域订正。",
+        "DUJA": "点雨展示与格网对照；2025-01-01原表847.1毫米为待核异常，不用于计算订正。",
+        "SLC": "2024年完整日值用于湖面站点与同格点比例；其他年份仅作覆盖核查，不视为跨年独立验证。"
+      },
+      "transformationSHA256": "a28542996c03152f4bc7fcdbec1510a7cabbb4843c3fa51e928b49b5f135d458"
+    },
+    "lakeParameterSource": {
+      "calibratedToLakeLevel": true,
+      "coefficient": 1.4969999999999999,
+      "method": "conditional-lake-level-calibration",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c"
+    },
+    "modelFamily": "grid-continuous-v1",
+    "name": "色林错流量与湖位联合优选",
+    "origin": "user",
+    "parameterSources": {
+      "fixed": [
+        "iceSublimationFraction",
+        "iceSublimationMaxMmHour"
+      ],
+      "hydrology": {
+        "keys": [
+          "KC",
+          "WM",
+          "B",
+          "C",
+          "SM",
+          "EX",
+          "KI",
+          "KG",
+          "IM",
+          "snowDdf",
+          "iceDdf",
+          "snowTemperature",
+          "rainTemperature",
+          "liquidCapacity",
+          "refreezeFactor",
+          "snowSublimation",
+          "glacierRecessionDay",
+          "lapseRate",
+          "tauHours",
+          "lagHours",
+          "interflowTauHours",
+          "baseflowTauHours"
+        ],
+        "method": "Duja-flow-constrained-lake-selection",
+        "periods": {
+          "evaluationEnd": "2026-01-01T00:00:00",
+          "evaluationStart": "2025-01-01T00:00:00",
+          "trainingEnd": "2025-01-01T00:00:00",
+          "trainingStart": "2024-01-01T00:00:00",
+          "warmupStart": "2017-01-01T00:00:00"
+        }
+      },
+      "lake": {
+        "keys": [
+          "lakeCoefficient"
+        ],
+        "method": "conditional-lake-four-criterion-fit"
+      },
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c"
+    },
+    "parameterTransfer": {
+      "areaExponent": 0.5,
+      "donor": "duja",
+      "mode": "duja-shared",
+      "version": 1
+    },
+    "parameters": {
+      "B": 0.12362853524917454,
+      "C": 0.26189116640935695,
+      "EX": 1.016782036689256,
+      "IM": 0.019203505157108544,
+      "KC": 0.7143539894250547,
+      "KG": 0.03597564102910988,
+      "KI": 0.05453408467128742,
+      "SM": 60.05529043123532,
+      "WM": 180.10725576074435,
+      "baseflowTauHours": 2159.2085189377794,
+      "glacierRecessionDay": 0.9367280321216869,
+      "iceDdf": 11.064146446235254,
+      "iceSublimationFraction": 0.25,
+      "iceSublimationMaxMmHour": 0.08,
+      "interflowTauHours": 6.0,
+      "lagHours": 30.79296214670429,
+      "lakeCoefficient": 1.4969999999999999,
+      "lapseRate": -0.01,
+      "liquidCapacity": 0.1166055718935576,
+      "rainTemperature": 5.0,
+      "refreezeFactor": 1.809162003816423,
+      "snowDdf": 8.21922005394951,
+      "snowSublimation": 0.38972750370326054,
+      "snowTemperature": 0.9925266183579309,
+      "tauHours": 103.16477670006633
+    },
+    "parentRevisionId": "SCHEME-c4c50fe247984c1cabcf",
+    "partitionParameters": {},
+    "periods": {
+      "evaluationEnd": "2026-01-01T00:00:00",
+      "evaluationStart": "2025-01-01T00:00:00",
+      "trainingEnd": "2025-01-01T00:00:00",
+      "trainingStart": "2024-01-01T00:00:00",
+      "warmupStart": "2017-01-01T00:00:00"
+    },
+    "purpose": "business",
+    "revision": 2,
+    "routingMode": "source-separated",
+    "schemaVersion": 2,
+    "search": {
+      "bounds": {
+        "B": [
+          0.02,
+          0.8
+        ],
+        "C": [
+          0.01,
+          0.5
+        ],
+        "EX": [
+          0.1,
+          2.5
+        ],
+        "IM": [
+          0,
+          0.2
+        ],
+        "KC": [
+          0.2,
+          1.5
+        ],
+        "KG": [
+          0.0001,
+          0.1
+        ],
+        "KI": [
+          0.001,
+          0.15
+        ],
+        "SM": [
+          5,
+          100
+        ],
+        "WM": [
+          40,
+          300
+        ],
+        "baseflowTauHours": [
+          168,
+          2160
+        ],
+        "glacierRecessionDay": [
+          0.05,
+          3
+        ],
+        "iceDdf": [
+          2,
+          14
+        ],
+        "iceSublimationFraction": [
+          0,
+          1
+        ],
+        "iceSublimationMaxMmHour": [
+          0,
+          0.4
+        ],
+        "interflowTauHours": [
+          6,
+          240
+        ],
+        "lagHours": [
+          0,
+          72
+        ],
+        "lakeCoefficient": [
+          0.2,
+          1.5
+        ],
+        "lapseRate": [
+          -0.01,
+          -0.002
+        ],
+        "liquidCapacity": [
+          0.01,
+          0.15
+        ],
+        "rainTemperature": [
+          0,
+          5
+        ],
+        "refreezeFactor": [
+          0,
+          3
+        ],
+        "snowDdf": [
+          1,
+          10
+        ],
+        "snowSublimation": [
+          0,
+          1
+        ],
+        "snowTemperature": [
+          -5,
+          1
+        ],
+        "tauHours": [
+          1,
+          168
+        ]
+      },
+      "budgets": {
+        "lake": 30,
+        "routing": 120,
+        "runoff": 120,
+        "snow": 120
+      },
+      "keys": [
+        "KC",
+        "WM",
+        "B",
+        "C",
+        "SM",
+        "EX",
+        "KI",
+        "KG",
+        "IM",
+        "snowDdf",
+        "iceDdf",
+        "snowTemperature",
+        "rainTemperature",
+        "liquidCapacity",
+        "refreezeFactor",
+        "snowSublimation",
+        "glacierRecessionDay",
+        "lapseRate",
+        "tauHours",
+        "lagHours",
+        "interflowTauHours",
+        "baseflowTauHours"
+      ],
+      "objectiveProfile": "balanced",
+      "scope": "duja",
+      "seed": 42,
+      "seeds": [
+        42
+      ]
+    },
+    "sourceTransferSnapshot": {
+      "method": "explicit-new-draft-duja-lift",
+      "parameters": {
+        "B": 0.08475148517233684,
+        "C": 0.15,
+        "EX": 1.2,
+        "IM": 0.01,
+        "KC": 0.7294530893648382,
+        "KG": 0.0001,
+        "KI": 0.0922935896415091,
+        "SM": 5.0,
+        "WM": 226.55679731833598,
+        "baseflowTauHours": 720.0,
+        "glacierRecessionDay": 0.5,
+        "iceDdf": 7.0,
+        "iceSublimationFraction": 0.25,
+        "iceSublimationMaxMmHour": 0.08,
+        "interflowTauHours": 48.0,
+        "lagHours": 0.0,
+        "lakeCoefficient": 1.5,
+        "lapseRate": -0.0065,
+        "liquidCapacity": 0.05,
+        "rainTemperature": 2.0,
+        "refreezeFactor": 1.0,
+        "snowDdf": 4.0,
+        "snowSublimation": 0.35,
+        "snowTemperature": -1.0,
+        "tauHours": 168.0
+      },
+      "partitionParameters": {
+        "duja": {
+          "B": 0.8,
+          "C": 0.15,
+          "EX": 1.2,
+          "IM": 0.01,
+          "KC": 0.7714797672529675,
+          "KG": 0.1,
+          "KI": 0.12447649497308605,
+          "SM": 100.0,
+          "WM": 300.0,
+          "baseflowTauHours": 2160.0,
+          "glacierRecessionDay": 0.5,
+          "iceDdf": 7.0,
+          "iceSublimationFraction": 0.25,
+          "iceSublimationMaxMmHour": 0.08,
+          "interflowTauHours": 123.4066595475932,
+          "lagHours": 0.0,
+          "lapseRate": -0.0065,
+          "liquidCapacity": 0.05,
+          "rainTemperature": 2.0,
+          "refreezeFactor": 1.0,
+          "snowDdf": 4.0,
+          "snowSublimation": 0.35,
+          "snowTemperature": -1.0,
+          "tauHours": 71.40081518816966
+        }
+      },
+      "source": "continuous-builtin-v1.json",
+      "verifiedCalibration": false
+    },
+    "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6",
+    "target": "duja",
+    "twoStage": {
+      "allowExtension": true,
+      "baselineTaskId": null,
+      "budgets": {
+        "joint": 3000,
+        "routing": 3000,
+        "runoff": 6000,
+        "snow": 6000
+      },
+      "candidateLimit": 256,
+      "candidateSourceTaskId": "JOB-4934a5d35c9344a59353",
+      "finalRefit": true,
+      "flowConstraints": {
+        "maxAbsPbias": 5.0,
+        "minNse": 0.7
+      },
+      "jointBudget": 2000,
+      "lakePeriods": {
+        "evaluationEnd": "2026-09-14T00:00:00",
+        "evaluationStart": "2025-01-01T00:00:00",
+        "trainingEnd": "2025-01-01T00:00:00",
+        "trainingStart": "2021-04-23T00:00:00"
+      },
+      "mode": "both",
+      "reverseCheck": true,
+      "seeds": [
+        42,
+        142,
+        242
+      ],
+      "selectionMode": "flow-constrained-lake",
+      "version": 1
+    }
+  },
+  "parameterSources": {
+    "hydrology": {
+      "method": "Duja-flow-constrained-lake-selection",
+      "keys": [
+        "KC",
+        "WM",
+        "B",
+        "C",
+        "SM",
+        "EX",
+        "KI",
+        "KG",
+        "IM",
+        "snowDdf",
+        "iceDdf",
+        "snowTemperature",
+        "rainTemperature",
+        "liquidCapacity",
+        "refreezeFactor",
+        "snowSublimation",
+        "glacierRecessionDay",
+        "lapseRate",
+        "tauHours",
+        "lagHours",
+        "interflowTauHours",
+        "baseflowTauHours"
+      ],
+      "periods": {
+        "evaluationEnd": "2026-01-01T00:00:00",
+        "evaluationStart": "2025-01-01T00:00:00",
+        "trainingEnd": "2025-01-01T00:00:00",
+        "trainingStart": "2024-01-01T00:00:00",
+        "warmupStart": "2017-01-01T00:00:00"
+      }
+    },
+    "lake": {
+      "method": "conditional-lake-four-criterion-fit",
+      "keys": [
+        "lakeCoefficient"
+      ]
+    },
+    "fixed": [
+      "iceSublimationFraction",
+      "iceSublimationMaxMmHour"
+    ]
+  },
+  "parameterInventory": [
+    {
+      "key": "KC",
+      "meaning": "陆面蒸发系数",
+      "unit": "",
+      "defaultValue": 0.8,
+      "initialValue": 0.720337228981353,
+      "value": 0.7143539894250547,
+      "physicalBounds": [
+        0.2,
+        1.5
+      ],
+      "searchBounds": [
+        0.2,
+        1.5
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "runoff",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "WM",
+      "meaning": "张力水容量",
+      "unit": "mm",
+      "defaultValue": 150.0,
+      "initialValue": 168.3271131439654,
+      "value": 180.10725576074435,
+      "physicalBounds": [
+        40,
+        300
+      ],
+      "searchBounds": [
+        40,
+        300
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "runoff",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "B",
+      "meaning": "蓄水容量曲线指数",
+      "unit": "",
+      "defaultValue": 0.3,
+      "initialValue": 0.02706294682950719,
+      "value": 0.12362853524917454,
+      "physicalBounds": [
+        0.02,
+        0.8
+      ],
+      "searchBounds": [
+        0.02,
+        0.8
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "runoff",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "C",
+      "meaning": "深层蒸发系数",
+      "unit": "",
+      "defaultValue": 0.15,
+      "initialValue": 0.04295623600648161,
+      "value": 0.26189116640935695,
+      "physicalBounds": [
+        0.01,
+        0.5
+      ],
+      "searchBounds": [
+        0.01,
+        0.5
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "runoff",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "SM",
+      "meaning": "自由水容量",
+      "unit": "mm",
+      "defaultValue": 30.0,
+      "initialValue": 88.58813487944634,
+      "value": 60.05529043123532,
+      "physicalBounds": [
+        5,
+        100
+      ],
+      "searchBounds": [
+        5,
+        100
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "runoff",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "EX",
+      "meaning": "自由水容量曲线指数",
+      "unit": "",
+      "defaultValue": 1.2,
+      "initialValue": 0.2521151900118612,
+      "value": 1.016782036689256,
+      "physicalBounds": [
+        0.1,
+        2.5
+      ],
+      "searchBounds": [
+        0.1,
+        2.5
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "runoff",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "KI",
+      "meaning": "小时壤中流出流系数",
+      "unit": "h⁻¹",
+      "defaultValue": 0.018,
+      "initialValue": 0.001,
+      "value": 0.05453408467128742,
+      "physicalBounds": [
+        0.001,
+        0.15
+      ],
+      "searchBounds": [
+        0.001,
+        0.15
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "runoff",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "KG",
+      "meaning": "小时地下出流系数",
+      "unit": "h⁻¹",
+      "defaultValue": 0.012,
+      "initialValue": 0.006449423481093118,
+      "value": 0.03597564102910988,
+      "physicalBounds": [
+        0.0001,
+        0.1
+      ],
+      "searchBounds": [
+        0.0001,
+        0.1
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "runoff",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "IM",
+      "meaning": "不透水比例",
+      "unit": "",
+      "defaultValue": 0.01,
+      "initialValue": 0.0503954549913151,
+      "value": 0.019203505157108544,
+      "physicalBounds": [
+        0,
+        0.2
+      ],
+      "searchBounds": [
+        0,
+        0.2
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "runoff",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "snowDdf",
+      "meaning": "融雪度日因子",
+      "unit": "mm/℃/d",
+      "defaultValue": 4.0,
+      "initialValue": 8.268361544906824,
+      "value": 8.21922005394951,
+      "physicalBounds": [
+        1,
+        10
+      ],
+      "searchBounds": [
+        1,
+        10
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "snow",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "iceDdf",
+      "meaning": "融冰度日因子",
+      "unit": "mm/℃/d",
+      "defaultValue": 7.0,
+      "initialValue": 10.491198321961527,
+      "value": 11.064146446235254,
+      "physicalBounds": [
+        2,
+        14
+      ],
+      "searchBounds": [
+        2,
+        14
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "snow",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "snowTemperature",
+      "meaning": "全雪温度",
+      "unit": "℃",
+      "defaultValue": -1.0,
+      "initialValue": -5.0,
+      "value": 0.9925266183579309,
+      "physicalBounds": [
+        -5,
+        1
+      ],
+      "searchBounds": [
+        -5,
+        1
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "snow",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "rainTemperature",
+      "meaning": "全雨温度",
+      "unit": "℃",
+      "defaultValue": 2.0,
+      "initialValue": 5.0,
+      "value": 5.0,
+      "physicalBounds": [
+        0,
+        5
+      ],
+      "searchBounds": [
+        0,
+        5
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "snow",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "liquidCapacity",
+      "meaning": "雪层持水比例",
+      "unit": "",
+      "defaultValue": 0.05,
+      "initialValue": 0.055106981756182505,
+      "value": 0.1166055718935576,
+      "physicalBounds": [
+        0.01,
+        0.15
+      ],
+      "searchBounds": [
+        0.01,
+        0.15
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "snow",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "refreezeFactor",
+      "meaning": "雪内再冻结因子",
+      "unit": "mm/℃/d",
+      "defaultValue": 1.0,
+      "initialValue": 2.9996048886186535,
+      "value": 1.809162003816423,
+      "physicalBounds": [
+        0,
+        3
+      ],
+      "searchBounds": [
+        0,
+        3
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "snow",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "snowSublimation",
+      "meaning": "升华分配比例",
+      "unit": "",
+      "defaultValue": 0.35,
+      "initialValue": 0.3377805450877816,
+      "value": 0.38972750370326054,
+      "physicalBounds": [
+        0,
+        1
+      ],
+      "searchBounds": [
+        0,
+        1
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "snow",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "iceSublimationFraction",
+      "meaning": "裸冰升华潜在蒸发比例",
+      "unit": "",
+      "defaultValue": 0.25,
+      "initialValue": 0.25,
+      "value": 0.25,
+      "physicalBounds": [
+        0,
+        1
+      ],
+      "searchBounds": null,
+      "optimizationStage": "manual-fixed",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": null,
+      "source": "retained-manual-setting; not optimized in this task",
+      "group": null,
+      "participatesInHydrologySelection": false,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "iceSublimationMaxMmHour",
+      "meaning": "裸冰升华小时上限",
+      "unit": "mm/h",
+      "defaultValue": 0.08,
+      "initialValue": 0.08,
+      "value": 0.08,
+      "physicalBounds": [
+        0,
+        0.4
+      ],
+      "searchBounds": null,
+      "optimizationStage": "manual-fixed",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": null,
+      "source": "retained-manual-setting; not optimized in this task",
+      "group": null,
+      "participatesInHydrologySelection": false,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "glacierRecessionDay",
+      "meaning": "冰川日调蓄常数",
+      "unit": "d⁻¹",
+      "defaultValue": 0.5,
+      "initialValue": 2.1964703205360663,
+      "value": 0.9367280321216869,
+      "physicalBounds": [
+        0.05,
+        3
+      ],
+      "searchBounds": [
+        0.05,
+        3
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "snow",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "tauHours",
+      "meaning": "子流域调蓄时间",
+      "unit": "h",
+      "defaultValue": 24.0,
+      "initialValue": 81.17211359023726,
+      "value": 103.16477670006633,
+      "physicalBounds": [
+        1,
+        168
+      ],
+      "searchBounds": [
+        1,
+        168
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "routing",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "lagHours",
+      "meaning": "传播滞时",
+      "unit": "h",
+      "defaultValue": 0.0,
+      "initialValue": 33.96151753396235,
+      "value": 30.79296214670429,
+      "physicalBounds": [
+        0,
+        72
+      ],
+      "searchBounds": [
+        0,
+        72
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "routing",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "lakeCoefficient",
+      "meaning": "湖面蒸发转换系数",
+      "unit": "",
+      "defaultValue": 0.8,
+      "initialValue": 1.5,
+      "value": 1.4969999999999999,
+      "physicalBounds": [
+        0.2,
+        1.5
+      ],
+      "searchBounds": [
+        0.2,
+        1.5
+      ],
+      "optimizationStage": "fixed-inflow-lake-fit",
+      "applicableRegion": "lake",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "conditional-lake-four-criterion-fit",
+      "group": "lake",
+      "participatesInHydrologySelection": false,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "lapseRate",
+      "meaning": "气温高程递减率",
+      "unit": "℃/m",
+      "defaultValue": -0.0065,
+      "initialValue": -0.009888678648497686,
+      "value": -0.01,
+      "physicalBounds": [
+        -0.01,
+        -0.002
+      ],
+      "searchBounds": [
+        -0.01,
+        -0.002
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "snow",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "interflowTauHours",
+      "meaning": "壤中调蓄时间",
+      "unit": "h",
+      "defaultValue": 48.0,
+      "initialValue": 6.0105774523024795,
+      "value": 6.0,
+      "physicalBounds": [
+        6,
+        240
+      ],
+      "searchBounds": [
+        6,
+        240
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "routing",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    },
+    {
+      "key": "baseflowTauHours",
+      "meaning": "地下退水时间",
+      "unit": "h",
+      "defaultValue": 720.0,
+      "initialValue": 2160.0,
+      "value": 2159.2085189377794,
+      "physicalBounds": [
+        168,
+        2160
+      ],
+      "searchBounds": [
+        168,
+        2160
+      ],
+      "optimizationStage": "Duja-flow-constrained-lake-selection",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "source": "Duja-flow-constrained-lake-selection",
+      "group": "routing",
+      "participatesInHydrologySelection": true,
+      "independentlyCalibratedInOtherBasins": false
+    }
+  ],
+  "forcingReference": {
+    "inputId": "INPUT-c00df956d638351ebeb4e96e",
+    "dataSHA256": "ec25016799f8d2585f1569d5710b56c0ae40d5017a743660cb6ed258ec1f0574",
+    "start": "2016-12-30T09:00:00",
+    "end": "2026-10-21T07:00:00",
+    "hours": 85967,
+    "gridCount": 535,
+    "timeZone": "Asia/Shanghai",
+    "timeMeaning": "end of hourly accumulation interval",
+    "conversionVersion": "era5land-utc01-reset-mm-celsius-local-end-hour-v1",
+    "transformationSHA256": "a28542996c03152f4bc7fcdbec1510a7cabbb4843c3fa51e928b49b5f135d458",
+    "lakePrecipitationCorrection": {
+      "developmentYear": 2024,
+      "factor": 0.5336700706945834,
+      "gaugeMm": 226.5,
+      "gaugeSeriesSHA256": "e0abfd77539b3aaf758a6a8ca85c601ecf1716f069683357d34107bc53e59832",
+      "gridId": "89.4,31.8",
+      "gridMm": 424.41952891456936,
+      "limitations": [
+        "One shore gauge represents the lake only as a provisional spatial transfer.",
+        "Source daily labels used; station reporting day boundary not independently verified.",
+        "Gauge catch bias and snowfall undercatch not corrected."
+      ],
+      "method": "station-point-annual-ratio-v1",
+      "pairedDays": 366,
+      "scope": "lake-only",
+      "station": "SLC"
+    },
+    "firstCompleteDay": "2016-12-31",
+    "lastCompleteDay": "2026-10-20",
+    "overlapModifiedHours": 0,
+    "supplementationTaskIds": [
+      "JOB-24f70d19c54c48e597e7",
+      "JOB-ab04b822b3904237b965",
+      "JOB-eabaddda389a45d897bc"
+    ]
+  },
+  "spatialReference": {
+    "version": "AGG-SPATIAL-90fbdd73db960fdda4a6",
+    "manifestSHA256": "1386f7269381dce3384e5b72968f74d90bf781bdb587ab00317a28237e08c540",
+    "policy": "four-original-shp-basins-and-strict-direct-fringe; unknown-and-external-display-only-v1",
+    "calculationLandAreaKm2": 39535.2938096823,
+    "displayOnlyAreaKm2": 2061.2888235577575,
+    "unchangedFrom": "config/operational/两阶段采用方案-20261029.json"
+  },
+  "resultReference": {
+    "taskId": "JOB-88b35b44b27d4e15840c",
+    "resultFile": "build\\grid-revision-20261026\\workspace\\tasks\\JOB-88b35b44b27d4e15840c\\result.json",
+    "resultSHA256": "4af2c70536f3a6f8e6f056190a92427ac4167d5dcf3ce44cba64a50a80cd78ec",
+    "requestFile": "build\\grid-revision-20261026\\workspace\\tasks\\JOB-88b35b44b27d4e15840c\\request.json",
+    "requestSHA256": "b3acc5a7ae1d80ce0725d86389c62edb3ba13138e1b473703f1cc921bfea8581",
+    "numericalModelIdentity": "6abbc3e802baa94c00c3f4489e72847086eac3123ba1ead576d8379cdee2ee7d",
+    "backendSourceSHA256": "d209aa6b038b278e913aeffce300494de3c9556f76037c6115f191837b2bfd5f",
+    "hourlyManifestSHA256": "5a1dd1a827e3f9165171b9940ba956c2f7f0241a2ae431e01110775f17009fdd",
+    "hourlyFiles": 6671,
+    "hourlyHours": 85921,
+    "initialization": {
+      "level": 4543.66,
+      "method": "first-quality-daily-level-at-noon",
+      "reference": "SLC-working-datum",
+      "source": "time-weighted-level-v2-gap6h-cover18h",
+      "time": "2021-04-23T12:00:00"
+    },
+    "displayCoverage": {
+      "start": "2021-04-23T00:00:00",
+      "endExclusive": "2026-10-21T00:00:00"
+    },
+    "initialHydrology": {
+      "soilFraction": 0.5
+    },
+    "parameterIdentity": {
+      "effectiveAuditSHA256": "96b9f2dd8d4c2167160fdb299cf677a5405eb12dafdf9ba04ff80bbb1ff594be",
+      "effectiveParameterSHA256": "9f037118c7e9c7cc4268b70e7c7ca9d7c2b120a21dff7c1fca09a1c92da362ce",
+      "parameterSHA256": "6ae4ab0fb408899daac5ce9afef30711d82c518411e65a0bad86b13eeca408a7",
+      "resultIdentitySHA256": "3381a6248bf073ea9bd6d86e909b10cba0b469e6909e99820e41ce4d07f6658a"
+    }
+  },
+  "search": {
+    "candidateSourceTaskId": "JOB-4934a5d35c9344a59353",
+    "candidateSourceTraceSHA256": "d12fa8d700d24b8fd5fda0d7dbce54922463959e0dc6807eb81e014cc3a2a563",
+    "flowConstraints": {
+      "maxAbsPbias": 5.0,
+      "minNse": 0.7
+    },
+    "candidateLimit": 256,
+    "totalRescored": 32569,
+    "eligibleRescored": 9861,
+    "selectedForBasin": 256,
+    "basinCandidatesEvaluated": 773,
+    "jointBudget": 2000,
+    "seeds": [
+      42,
+      142,
+      242
+    ],
+    "traceFiles": {
+      "rescore": {
+        "file": "build/grid-revision-20261026/workspace/tasks/JOB-88b35b44b27d4e15840c/joint/duja-rescore.jsonl",
+        "lines": 32569,
+        "uniqueEvaluations": 0,
+        "sha256": "4f8964bb7b090637434253d4f4c7de19815a4781cd553266c8735d002eb3e9b8"
+      },
+      "lakeCandidates": {
+        "file": "build/grid-revision-20261026/workspace/tasks/JOB-88b35b44b27d4e15840c/joint/lake-candidates.jsonl",
+        "lines": 773,
+        "uniqueEvaluations": 0,
+        "sha256": "1da6a4bee8f4fc17939fc2a275d21c00efc9d4f58d9673663d15cfa496d91add"
+      },
+      "refinement": {
+        "file": "build/grid-revision-20261026/workspace/tasks/JOB-88b35b44b27d4e15840c/joint/search-trace.jsonl",
+        "lines": 2000,
+        "uniqueEvaluations": 2000,
+        "sha256": "90f15cd81d25f1ae6e98e661b419d3bd8ca81727df74e9709c39a8a992767809"
+      },
+      "allLakeFits": {
+        "file": "build/grid-revision-20261026/workspace/tasks/JOB-88b35b44b27d4e15840c/joint/all-lake-fits.jsonl",
+        "lines": 773,
+        "uniqueEvaluations": 0,
+        "sha256": "0a00faf1ecc3aa4a4146f93f07ac0259327c3e3249b672daad40d7e1903fa380"
+      }
+    },
+    "initialParameters": {
+      "B": 0.02706294682950719,
+      "C": 0.04295623600648161,
+      "EX": 0.2521151900118612,
+      "IM": 0.0503954549913151,
+      "KC": 0.720337228981353,
+      "KG": 0.006449423481093118,
+      "KI": 0.001,
+      "SM": 88.58813487944634,
+      "WM": 168.3271131439654,
+      "baseflowTauHours": 2160.0,
+      "glacierRecessionDay": 2.1964703205360663,
+      "iceDdf": 10.491198321961527,
+      "iceSublimationFraction": 0.25,
+      "iceSublimationMaxMmHour": 0.08,
+      "interflowTauHours": 6.0105774523024795,
+      "lagHours": 33.96151753396235,
+      "lakeCoefficient": 1.5,
+      "lapseRate": -0.009888678648497686,
+      "liquidCapacity": 0.055106981756182505,
+      "rainTemperature": 5.0,
+      "refreezeFactor": 2.9996048886186535,
+      "snowDdf": 8.268361544906824,
+      "snowSublimation": 0.3377805450877816,
+      "snowTemperature": -5.0,
+      "tauHours": 81.17211359023726
+    },
+    "bounds": {
+      "B": [
+        0.02,
+        0.8
+      ],
+      "C": [
+        0.01,
+        0.5
+      ],
+      "EX": [
+        0.1,
+        2.5
+      ],
+      "IM": [
+        0,
+        0.2
+      ],
+      "KC": [
+        0.2,
+        1.5
+      ],
+      "KG": [
+        0.0001,
+        0.1
+      ],
+      "KI": [
+        0.001,
+        0.15
+      ],
+      "SM": [
+        5,
+        100
+      ],
+      "WM": [
+        40,
+        300
+      ],
+      "baseflowTauHours": [
+        168,
+        2160
+      ],
+      "glacierRecessionDay": [
+        0.05,
+        3
+      ],
+      "iceDdf": [
+        2,
+        14
+      ],
+      "iceSublimationFraction": [
+        0,
+        1
+      ],
+      "iceSublimationMaxMmHour": [
+        0,
+        0.4
+      ],
+      "interflowTauHours": [
+        6,
+        240
+      ],
+      "lagHours": [
+        0,
+        72
+      ],
+      "lakeCoefficient": [
+        0.2,
+        1.5
+      ],
+      "lapseRate": [
+        -0.01,
+        -0.002
+      ],
+      "liquidCapacity": [
+        0.01,
+        0.15
+      ],
+      "rainTemperature": [
+        0,
+        5
+      ],
+      "refreezeFactor": [
+        0,
+        3
+      ],
+      "snowDdf": [
+        1,
+        10
+      ],
+      "snowSublimation": [
+        0,
+        1
+      ],
+      "snowTemperature": [
+        -5,
+        1
+      ],
+      "tauHours": [
+        1,
+        168
+      ]
+    },
+    "selectedParameters": [
+      "KC",
+      "WM",
+      "B",
+      "C",
+      "SM",
+      "EX",
+      "KI",
+      "KG",
+      "IM",
+      "snowDdf",
+      "iceDdf",
+      "snowTemperature",
+      "rainTemperature",
+      "liquidCapacity",
+      "refreezeFactor",
+      "snowSublimation",
+      "glacierRecessionDay",
+      "lapseRate",
+      "tauHours",
+      "lagHours",
+      "interflowTauHours",
+      "baseflowTauHours"
+    ],
+    "scoreVersion": "lake-four-equal-components-v1",
+    "refinement": {
+      "evaluations": 2000,
+      "converged": false,
+      "termination": "budget-exhausted",
+      "bestCandidateId": null,
+      "stateSHA256": "d28787064d44a29ba5c7d61bbb752c45ee6e72f88ae6f40362835aeb83b6ee9b"
+    },
+    "flowEvaluationsIncludingRefinementProposals": 34569,
+    "sourceTraceRows": 34165,
+    "converged": false
+  },
+  "flowFit": {
+    "algorithm": "historic-candidates-rescored-and-lake-constrained",
+    "bestObjective": 0.3626826705701659,
+    "bounds": {
+      "B": [
+        0.02,
+        0.8
+      ],
+      "C": [
+        0.01,
+        0.5
+      ],
+      "EX": [
+        0.1,
+        2.5
+      ],
+      "IM": [
+        0,
+        0.2
+      ],
+      "KC": [
+        0.2,
+        1.5
+      ],
+      "KG": [
+        0.0001,
+        0.1
+      ],
+      "KI": [
+        0.001,
+        0.15
+      ],
+      "SM": [
+        5,
+        100
+      ],
+      "WM": [
+        40,
+        300
+      ],
+      "baseflowTauHours": [
+        168,
+        2160
+      ],
+      "glacierRecessionDay": [
+        0.05,
+        3
+      ],
+      "iceDdf": [
+        2,
+        14
+      ],
+      "interflowTauHours": [
+        6,
+        240
+      ],
+      "lagHours": [
+        0,
+        72
+      ],
+      "lapseRate": [
+        -0.01,
+        -0.002
+      ],
+      "liquidCapacity": [
+        0.01,
+        0.15
+      ],
+      "rainTemperature": [
+        0,
+        5
+      ],
+      "refreezeFactor": [
+        0,
+        3
+      ],
+      "snowDdf": [
+        1,
+        10
+      ],
+      "snowSublimation": [
+        0,
+        1
+      ],
+      "snowTemperature": [
+        -5,
+        1
+      ],
+      "tauHours": [
+        1,
+        168
+      ]
+    },
+    "converged": false,
+    "evaluations": 34569,
+    "fit": "共享参数 · 杜加全部资料",
+    "initialParameters": {
+      "B": 0.02706294682950719,
+      "C": 0.04295623600648161,
+      "EX": 0.2521151900118612,
+      "IM": 0.0503954549913151,
+      "KC": 0.720337228981353,
+      "KG": 0.006449423481093118,
+      "KI": 0.001,
+      "SM": 88.58813487944634,
+      "WM": 168.3271131439654,
+      "baseflowTauHours": 2160.0,
+      "glacierRecessionDay": 2.1964703205360663,
+      "iceDdf": 10.491198321961527,
+      "iceSublimationFraction": 0.25,
+      "iceSublimationMaxMmHour": 0.08,
+      "interflowTauHours": 6.0105774523024795,
+      "lagHours": 33.96151753396235,
+      "lakeCoefficient": 1.5,
+      "lapseRate": -0.009888678648497686,
+      "liquidCapacity": 0.055106981756182505,
+      "rainTemperature": 5.0,
+      "refreezeFactor": 2.9996048886186535,
+      "snowDdf": 8.268361544906824,
+      "snowSublimation": 0.3377805450877816,
+      "snowTemperature": -5.0,
+      "tauHours": 81.17211359023726
+    },
+    "seeds": [
+      42,
+      142,
+      242
+    ],
+    "termination": "budget-exhausted",
+    "training": {
+      "bias": -2.728553296295043,
+      "count": 440,
+      "kge": 0.8314880389929953,
+      "logNse": 0.12286922739959094,
+      "mae": 23.642407323530033,
+      "nse": 0.7339923854339503,
+      "observedMean": 65.61438636363636,
+      "observedVolumeM3": 2494396512.0,
+      "pairedVolumeErrorM3": -103728682.11195278,
+      "pbias": -4.158468054815511,
+      "rmse": 35.87825753124604,
+      "simulatedMean": 62.885833067341316,
+      "simulatedVolumeM3": 2390667829.888047
+    },
+    "trainingPeriod": {
+      "end": "2026-01-01T00:00:00",
+      "start": "2024-01-01T00:00:00"
+    },
+    "validation": null,
+    "validationExcludedFromSearch": false,
+    "validationPeriod": {
+      "end": null,
+      "start": null
+    },
+    "yearlyEvaluation": {
+      "all": {
+        "bias": -2.728553296295043,
+        "count": 440,
+        "kge": 0.8314880389929953,
+        "logNse": 0.12286922739959094,
+        "mae": 23.642407323530033,
+        "nse": 0.7339923854339503,
+        "observedMean": 65.61438636363636,
+        "observedVolumeM3": 2494396512.0,
+        "pairedVolumeErrorM3": -103728682.11195278,
+        "pbias": -4.158468054815511,
+        "rmse": 35.87825753124604,
+        "simulatedMean": 62.885833067341316,
+        "simulatedVolumeM3": 2390667829.888047
+      },
+      "evaluation": {
+        "bias": -5.241855488035678,
+        "count": 211,
+        "kge": 0.8123795705153873,
+        "logNse": 0.16643069924336384,
+        "mae": 16.809326928621676,
+        "nse": 0.6732069304699972,
+        "observedMean": 49.027630331753564,
+        "observedVolumeM3": 893793312.0000001,
+        "pairedVolumeErrorM3": -95561122.28908587,
+        "pbias": -10.691635415715172,
+        "rmse": 21.69071363044021,
+        "simulatedMean": 43.785774843717874,
+        "simulatedVolumeM3": 798232189.7109143
+      },
+      "training": {
+        "bias": -0.41280324189646544,
+        "count": 229,
+        "kge": 0.8129408794110575,
+        "logNse": -0.023292372221457303,
+        "mae": 29.938389696131182,
+        "nse": 0.7274549179686409,
+        "observedMean": 80.89737991266375,
+        "observedVolumeM3": 1600603200.0,
+        "pairedVolumeErrorM3": -8167559.822866917,
+        "pbias": -0.5102801133264451,
+        "rmse": 45.16427805184081,
+        "simulatedMean": 80.48457667076728,
+        "simulatedVolumeM3": 1592435640.177133
+      }
+    }
+  },
+  "lakeFits": {
+    "trainingAndTimeCheck": {
+      "algorithm": "bounded-four-criterion-grid-v1",
+      "value": 1.4955,
+      "initial": 1.5,
+      "boundary": false,
+      "jointScore": 0.8863141384591858,
+      "converged": true,
+      "termination": "bounded-grid-completed",
+      "continuousOptimumGuaranteed": false,
+      "fixedTrainingObservationSHA256": "85216f582ca3169adc87002e35b5a062ed2ce7885c69804720d26e523ffe259d",
+      "fixedTrainingDays": 969,
+      "bounds": [
+        0.2,
+        1.5
+      ],
+      "trainingPeriod": {
+        "end": "2025-01-01T00:00:00",
+        "start": "2021-04-23T00:00:00"
+      },
+      "validationPeriod": {
+        "end": "2026-09-14T00:00:00",
+        "start": "2025-01-01T00:00:00"
+      },
+      "training": {
+        "amplitudeErrorM": 0.14244729393476518,
+        "bias": 0.01976805422411653,
+        "count": 969,
+        "countByYear": {
+          "2021": 246,
+          "2022": 269,
+          "2023": 222,
+          "2024": 232
+        },
+        "firstToLastErrorChangeM": 0.2703102142277203,
+        "fixedObservationSHA256": "85216f582ca3169adc87002e35b5a062ed2ce7885c69804720d26e523ffe259d",
+        "kge": 0.7732030077316044,
+        "logNse": 0.7635779948430366,
+        "mae": 0.10636851893370619,
+        "nse": 0.7635743474358438,
+        "observedMean": 4544.213735810114,
+        "observedTrendMPerYear": 0.20251511141802564,
+        "pbias": 0.000435015942765562,
+        "peakTimingErrorDays": 10.75,
+        "rmse": 0.13468061466146986,
+        "scales": {
+          "amplitudeErrorM": 0.1,
+          "peakTimingErrorDays": 14.0,
+          "rmseM": 0.1,
+          "trendErrorM": 0.1
+        },
+        "score": 0.8863141384591858,
+        "scoreComponents": {
+          "amplitude": 1.4244729393476518,
+          "peakTiming": 0.7678571428571429,
+          "rmse": 1.3468061466146986,
+          "trend": 0.006120325017250074
+        },
+        "seasonYears": [
+          2021,
+          2022,
+          2023,
+          2024
+        ],
+        "simulatedMean": 4544.233503864338,
+        "simulatedTrendMPerYear": 0.20234640177197938,
+        "trendErrorM": 0.0006120325017250074
+      },
+      "validation": {
+        "amplitudeErrorM": 0.008168396441760706,
+        "bias": 0.24092129991128255,
+        "count": 335,
+        "countByYear": {
+          "2025": 255,
+          "2026": 80
+        },
+        "firstToLastErrorChangeM": 0.016092582829514868,
+        "fixedObservationSHA256": "c4a5376be502fa4208ee698b0278ffcc9bba3dc9ab53ed93709d4d3de0ebc1f0",
+        "kge": 0.9653948606063932,
+        "logNse": -2.3599740372729934,
+        "mae": 0.24092129991128255,
+        "nse": -2.3601765200685527,
+        "observedMean": 4544.142404811523,
+        "observedTrendMPerYear": -0.2051127360836608,
+        "pbias": 0.005301799073378187,
+        "peakTimingErrorDays": 5.0,
+        "rmse": 0.24307142351400207,
+        "scales": {
+          "amplitudeErrorM": 0.1,
+          "peakTimingErrorDays": 14.0,
+          "rmseM": 0.1,
+          "trendErrorM": 0.1
+        },
+        "score": 0.8224673369970013,
+        "scoreComponents": {
+          "amplitude": 0.08168396441760706,
+          "peakTiming": 0.35714285714285715,
+          "rmse": 2.4307142351400204,
+          "trend": 0.4203282912875204
+        },
+        "seasonYears": [
+          2025
+        ],
+        "simulatedMean": 4544.383326111433,
+        "simulatedTrendMPerYear": -0.1756459883042784,
+        "trendErrorM": 0.042032829128752044
+      },
+      "rmseOnlyComparison": {
+        "algorithm": "bounded-linear-least-squares-on-frozen-inflow-v1",
+        "value": 1.5,
+        "unconstrainedValue": 1.5058214680822546,
+        "boundary": true,
+        "training": {
+          "bias": 0.012628112698168069,
+          "count": 969,
+          "countByYear": {
+            "2021": 246,
+            "2022": 269,
+            "2023": 222,
+            "2024": 232
+          },
+          "firstToLastErrorChangeM": 0.2552446923309617,
+          "kge": 0.7829536543496352,
+          "logNse": 0.7669005543494397,
+          "mae": 0.10588863519657096,
+          "nse": 0.7668995651614027,
+          "observedMean": 4544.213735810114,
+          "observedTrendMPerYear": 0.20251511141917977,
+          "pbias": 0.00027789433843425517,
+          "rmse": 0.1337301505130216,
+          "simulatedMean": 4544.226363922811,
+          "simulatedTrendMPerYear": 0.19836749012105998
+        },
+        "termination": "bounded-optimum"
+      }
+    },
+    "allObservationsFinal": {
+      "algorithm": "bounded-four-criterion-grid-v1",
+      "value": 1.4969999999999999,
+      "initial": 1.5,
+      "boundary": false,
+      "validationPeriod": null,
+      "validation": null,
+      "jointScore": 1.258923264886597,
+      "converged": true,
+      "termination": "bounded-grid-completed",
+      "continuousOptimumGuaranteed": false,
+      "fixedTrainingObservationSHA256": "58b2d77c9931473b64388774e6e30741a7d4d3f88178f088f5d8deddcef3eda4",
+      "fixedTrainingDays": 1304,
+      "bounds": [
+        0.2,
+        1.5
+      ],
+      "trainingPeriod": {
+        "end": "2026-09-14T00:00:00",
+        "start": "2021-04-23T00:00:00"
+      },
+      "training": {
+        "amplitudeErrorM": 0.12670204503301646,
+        "bias": 0.03246310169648437,
+        "count": 1304,
+        "countByYear": {
+          "2021": 246,
+          "2022": 269,
+          "2023": 222,
+          "2024": 232,
+          "2025": 255,
+          "2026": 80
+        },
+        "firstToLastErrorChangeM": 0.09894184646600479,
+        "fixedObservationSHA256": "58b2d77c9931473b64388774e6e30741a7d4d3f88178f088f5d8deddcef3eda4",
+        "kge": 0.7688476470418343,
+        "logNse": 0.6490537189792631,
+        "mae": 0.12330593072229677,
+        "nse": 0.6490585966391789,
+        "observedMean": 4544.195410745291,
+        "observedTrendMPerYear": 0.05786188324223888,
+        "pbias": 0.0007143861291642851,
+        "peakTimingErrorDays": 10.4,
+        "rmse": 0.14810074862829684,
+        "scales": {
+          "amplitudeErrorM": 0.1,
+          "peakTimingErrorDays": 14.0,
+          "rmseM": 0.1,
+          "trendErrorM": 0.1
+        },
+        "score": 1.258923264886597,
+        "scoreComponents": {
+          "amplitude": 1.2670204503301645,
+          "peakTiming": 0.7428571428571429,
+          "rmse": 1.4810074862829683,
+          "trend": 1.544807980076112
+        },
+        "seasonYears": [
+          2021,
+          2022,
+          2023,
+          2024,
+          2025
+        ],
+        "simulatedMean": 4544.227873846988,
+        "simulatedTrendMPerYear": 0.08653208286942127,
+        "trendErrorM": 0.15448079800761122
+      },
+      "rmseOnlyComparison": {
+        "algorithm": "bounded-linear-least-squares-on-frozen-inflow-v1",
+        "value": 1.5,
+        "unconstrainedValue": 1.5170650685553866,
+        "boundary": true,
+        "training": {
+          "bias": 0.02579783936169774,
+          "count": 1304,
+          "countByYear": {
+            "2021": 246,
+            "2022": 269,
+            "2023": 222,
+            "2024": 232,
+            "2025": 255,
+            "2026": 80
+          },
+          "firstToLastErrorChangeM": 0.084372738858292,
+          "kge": 0.7756548161397836,
+          "logNse": 0.6613211341303826,
+          "mae": 0.12067804849330004,
+          "nse": 0.6613276995704183,
+          "observedMean": 4544.195410745291,
+          "observedTrendMPerYear": 0.05786188324246187,
+          "pbias": 0.0005677097270222068,
+          "rmse": 0.1454888759308654,
+          "simulatedMean": 4544.221208584653,
+          "simulatedTrendMPerYear": 0.08386737442132138
+        },
+        "termination": "bounded-optimum"
+      }
+    }
+  },
+  "selection": {
+    "trainingCandidateId": "46d48edbfe668f9441514124617a21990513019194dad73ea44de71ff1f32128",
+    "finalCandidateId": "11a2d30fcf2e8e2f94d18b71e1cb6697e68524f89b179ffbefd736d6f2135953",
+    "flowMetrics": {
+      "all": {
+        "bias": -2.728553296295043,
+        "count": 440,
+        "kge": 0.8314880389929953,
+        "logNse": 0.12286922739959094,
+        "mae": 23.642407323530033,
+        "nse": 0.7339923854339503,
+        "observedMean": 65.61438636363636,
+        "observedVolumeM3": 2494396512.0,
+        "pairedVolumeErrorM3": -103728682.11195278,
+        "pbias": -4.158468054815511,
+        "rmse": 35.87825753124604,
+        "simulatedMean": 62.885833067341316,
+        "simulatedVolumeM3": 2390667829.888047
+      },
+      "evaluation": {
+        "bias": -5.241855488035678,
+        "count": 211,
+        "kge": 0.8123795705153873,
+        "logNse": 0.16643069924336384,
+        "mae": 16.809326928621676,
+        "nse": 0.6732069304699972,
+        "observedMean": 49.027630331753564,
+        "observedVolumeM3": 893793312.0000001,
+        "pairedVolumeErrorM3": -95561122.28908587,
+        "pbias": -10.691635415715172,
+        "rmse": 21.69071363044021,
+        "simulatedMean": 43.785774843717874,
+        "simulatedVolumeM3": 798232189.7109143
+      },
+      "training": {
+        "bias": -0.41280324189646544,
+        "count": 229,
+        "kge": 0.8129408794110575,
+        "logNse": -0.023292372221457303,
+        "mae": 29.938389696131182,
+        "nse": 0.7274549179686409,
+        "observedMean": 80.89737991266375,
+        "observedVolumeM3": 1600603200.0,
+        "pairedVolumeErrorM3": -8167559.822866917,
+        "pbias": -0.5102801133264451,
+        "rmse": 45.16427805184081,
+        "simulatedMean": 80.48457667076728,
+        "simulatedVolumeM3": 1592435640.177133
+      }
+    },
+    "flowObjective": 0.3626826705701659,
+    "adoptionComparison": {
+      "baselineLakeRmse": 1.2406977820406033,
+      "baselineLakeScore": 9.217552011034577,
+      "baselineTaskId": "JOB-4934a5d35c9344a59353",
+      "eligible": true,
+      "lakeRmse": 0.14810074862829684,
+      "lakeRmseImproved": true,
+      "lakeScore": 1.258923264886597,
+      "lakeScoreImproved": true,
+      "nse": 0.7339923854339503,
+      "pbias": -4.158468054815511
+    },
+    "fastParity": {
+      "comparisons": [
+        {
+          "maximumDailyDifference": {
+            "ali": 5.0818016461562365e-11,
+            "boqu": 4.993383484475089e-11,
+            "duja": 1.5484147297684103e-10,
+            "fringe": 4.9972470606007846e-11,
+            "lakeLevel": 5.002220859751105e-11,
+            "total": 1.3733369996771216e-10,
+            "zagen": 6.539835339935962e-11,
+            "zajia": 1.5802470443304628e-10
+          },
+          "parameters": {
+            "B": 0.02706294682950719,
+            "C": 0.04295623600648161,
+            "EX": 0.2521151900118612,
+            "IM": 0.0503954549913151,
+            "KC": 0.720337228981353,
+            "KG": 0.006449423481093118,
+            "KI": 0.001,
+            "SM": 88.58813487944634,
+            "WM": 168.3271131439654,
+            "baseflowTauHours": 2160.0,
+            "glacierRecessionDay": 2.1964703205360663,
+            "iceDdf": 10.491198321961527,
+            "iceSublimationFraction": 0.25,
+            "iceSublimationMaxMmHour": 0.08,
+            "interflowTauHours": 6.0105774523024795,
+            "lagHours": 33.96151753396235,
+            "lakeCoefficient": 1.5,
+            "lapseRate": -0.009888678648497686,
+            "liquidCapacity": 0.055106981756182505,
+            "rainTemperature": 5.0,
+            "refreezeFactor": 2.9996048886186535,
+            "snowDdf": 8.268361544906824,
+            "snowSublimation": 0.3377805450877816,
+            "snowTemperature": -5.0,
+            "tauHours": 81.17211359023726
+          }
+        },
+        {
+          "maximumDailyDifference": {
+            "ali": 5.0238924131917884e-11,
+            "boqu": 5.000705405322492e-11,
+            "duja": 1.6416379367001355e-10,
+            "fringe": 5.020339699512988e-11,
+            "lakeLevel": 5.002220859751105e-11,
+            "total": 1.6905232769204304e-10,
+            "zagen": 8.814993179839803e-11,
+            "zajia": 1.7314505385002121e-10
+          },
+          "parameters": {
+            "B": 0.02706294682950719,
+            "C": 0.04295623600648161,
+            "EX": 0.2521151900118612,
+            "IM": 0.0503954549913151,
+            "KC": 0.720337228981353,
+            "KG": 0.006449423481093118,
+            "KI": 0.001,
+            "SM": 88.58813487944634,
+            "WM": 168.3271131439654,
+            "baseflowTauHours": 2160.0,
+            "glacierRecessionDay": 3.0,
+            "iceDdf": 12.18591118169757,
+            "iceSublimationFraction": 0.25,
+            "iceSublimationMaxMmHour": 0.08,
+            "interflowTauHours": 6.0,
+            "lagHours": 32.99863873882326,
+            "lakeCoefficient": 1.5,
+            "lapseRate": -0.00938149815534025,
+            "liquidCapacity": 0.01,
+            "rainTemperature": 2.7623422897236933,
+            "refreezeFactor": 0.8088205930001433,
+            "snowDdf": 6.352655423921009,
+            "snowSublimation": 0.40469259604017677,
+            "snowTemperature": -2.4006816241322837,
+            "tauHours": 53.89093800514285
+          }
+        }
+      ],
+      "modelImplementation": "6abbc3e802baa94c00c3f4489e72847086eac3123ba1ead576d8379cdee2ee7d",
+      "warmupStart": "2017-01-01T00:00:00"
+    },
+    "formalParity": {
+      "ali": 5.062084085238894e-11,
+      "boqu": 4.996233982090814e-11,
+      "duja": 5.310596407070989e-11,
+      "fringe": 5.0032866738547455e-11,
+      "lakeLevel": 1.2641976354643703e-10,
+      "total": 5.334754860086832e-11,
+      "zagen": 5.312017492542509e-11,
+      "zajia": 5.290701210469706e-11
+    },
+    "trainingUsesValidationLake": false,
+    "finalUsesAllLakeObservations": true,
+    "flowParameterSelectionUsesLakeLevel": true
+  },
+  "warmupVerification": {
+    "file": "build/grid-revision-20261026/workspace/tasks/JOB-88b35b44b27d4e15840c/warmup-diagnostics/summary.json",
+    "sha256": "cd6e375b89b6ca9c8307941ec73514c07a37aed9c3af9379de364b379ebf98f1",
+    "identity": "91f166a819a4531f448a5dc3805218bde81a7bcce3056843317d7bab107d8c04",
+    "inputId": "INPUT-c00df956d638351ebeb4e96e",
+    "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6",
+    "referenceStart": "2017-01-01T00:00:00",
+    "parametersSHA256": "0008ac9fa5d5e11a7659092ec71de45957ea460e61abda4468f0b12dfb16753b",
+    "comparisons": {
+      "2018-01-01-0.5": {
+        "periodStart": "2021-04-24T00:00:00",
+        "periodEndExclusive": "2022-04-24T00:00:00",
+        "days": 365,
+        "flowNrmsePercent": 0.03179100958418281,
+        "flowVolumeRelativeDifferencePercent": 0.02193828625522666,
+        "lakeLevelMaxAbsoluteDifferenceM": 0.0003277923997302423,
+        "lakeLevelRmseDifferenceM": 0.00026687874312318757,
+        "passes": true
+      },
+      "2019-01-01-0.5": {
+        "periodStart": "2021-04-24T00:00:00",
+        "periodEndExclusive": "2022-04-24T00:00:00",
+        "days": 365,
+        "flowNrmsePercent": 0.2533311970387292,
+        "flowVolumeRelativeDifferencePercent": 0.17420233847894553,
+        "lakeLevelMaxAbsoluteDifferenceM": 0.002603281300253002,
+        "lakeLevelRmseDifferenceM": 0.002121006135304497,
+        "passes": true
+      },
+      "2020-01-01-0.5": {
+        "periodStart": "2021-04-24T00:00:00",
+        "periodEndExclusive": "2022-04-24T00:00:00",
+        "days": 365,
+        "flowNrmsePercent": 0.16146491269615526,
+        "flowVolumeRelativeDifferencePercent": 0.11141309997093676,
+        "lakeLevelMaxAbsoluteDifferenceM": 0.001664687800257525,
+        "lakeLevelRmseDifferenceM": 0.0013553745760797665,
+        "passes": true
+      },
+      "2017-01-01-0.1": {
+        "periodStart": "2021-04-24T00:00:00",
+        "periodEndExclusive": "2022-04-24T00:00:00",
+        "days": 365,
+        "flowNrmsePercent": 0.031724391664310916,
+        "flowVolumeRelativeDifferencePercent": 0.021892314673609043,
+        "lakeLevelMaxAbsoluteDifferenceM": 0.0003271055002187495,
+        "lakeLevelRmseDifferenceM": 0.0002663194920565673,
+        "passes": true
+      },
+      "2017-01-01-0.9": {
+        "periodStart": "2021-04-24T00:00:00",
+        "periodEndExclusive": "2022-04-24T00:00:00",
+        "days": 365,
+        "flowNrmsePercent": 8.524901823456286e-06,
+        "flowVolumeRelativeDifferencePercent": 5.8828517874281656e-06,
+        "lakeLevelMaxAbsoluteDifferenceM": 8.78999344422482e-08,
+        "lakeLevelRmseDifferenceM": 7.158326362345104e-08,
+        "passes": true
+      }
+    },
+    "passes": true
+  },
+  "checks": {
+    "manifestSHA256": "5a1dd1a827e3f9165171b9940ba956c2f7f0241a2ae431e01110775f17009fdd",
+    "manifestFiles": 6671,
+    "hourlyHours": 85921,
+    "hourlyArtifactsVerified": true,
+    "maximumTotalFlowSummationDifferenceM3s": 0.0,
+    "excludedBackgroundRunoffM3s": 0.0,
+    "flowVolumesM3": {
+      "duja": 18096032810.83148,
+      "zajia": 18279821005.44749,
+      "zagen": 10123168449.245224,
+      "boqu": 489297611.0816572,
+      "ali": 2292508180.529851,
+      "fringe": 586986082.8772378,
+      "total": 31771781329.18144
+    },
+    "dujaIncludedOnceVolumeErrorM3": 1.9073486328125e-05,
+    "partitionRoutedM3": {
+      "ali": 2292508180.5298514,
+      "boqu": 489297611.0816571,
+      "duja": 18096032810.83147,
+      "external": 0.0,
+      "fringe": 586986082.8772378,
+      "unresolved": 0.0,
+      "zagen": 10123168449.245226,
+      "zajia_rest": 183788194.616
+    },
+    "backgroundRunoffExcluded": true,
+    "parameterLakeStageFlowFixed": true,
+    "flowSelectionLakeLevelUsed": true,
+    "trainingValidationLakeMasksDisjoint": true,
+    "finalLakeWindowUsesAllFrozenObservations": true,
+    "cumulativeLakeBalanceErrorM3": -3.9800000000000026e-08,
+    "firstCompleteLakeDay": "2021-04-24",
+    "allDataFlowDays": 440,
+    "flowConstraintsMet": true,
+    "lakeRmseTargetM": 0.1,
+    "lakeRmseTargetMet": false,
+    "sharedParameterRegions": 6,
+    "selectedParameterWarmupIdentityVerified": true,
+    "oldDefaultComparisonIsNotSingleFactor": true
+  },
+  "evidenceFile": "docs\\evidence\\湖位联合正式成果-20261029.json",
+  "evidenceSHA256": "c2b39e53b6f86a410b8d382512fd14083f767a0140c2b78bd3deecd4de2ea117",
+  "restartEvidenceFile": "docs/evidence/湖位联合采用重启-20261029.json",
+  "fullArraysExternal": true,
+  "interpretation": "2025—2026作为时间检验窗口报告，不称为未参与开发的独立验证；旧采用成果、同条件原参数和本轮联合成果包含不同模型历史，仅作可复现对照。"
+}

@@ -1,0 +1,93 @@
+{
+  "comparison_family": "色林错湖位联合优选",
+  "variable": "日湖泊水位",
+  "units": "m",
+  "statistic": "各方案确定性模拟日值与主站整编实测日值；RMSE仅用共同有效观测日",
+  "sample_size_n": 1304,
+  "unit_of_independence": "共同有效观测日；日值具有时间相关性，不视为独立重复",
+  "uncertainty_definition": "not applicable; deterministic runs and observed daily series, no confidence intervals",
+  "data_kind": "categorical",
+  "counts": {
+    "observedLevel": 1304,
+    "oldDefault": 2006,
+    "sameCondition": 2006,
+    "selected": 2006
+  },
+  "rmseM": {
+    "oldDefault": 1.240697782040536,
+    "sameCondition": 1.3986999013025283,
+    "selected": 0.14810074862263783
+  },
+  "dateRange": [
+    "2021-04-24",
+    "2026-10-20"
+  ],
+  "palette": {
+    "主站实测": "#252525",
+    "原采用方案": "#8c8c8c",
+    "同条件原参数": "#d89031",
+    "本轮优选参数": "#176b95"
+  },
+  "normalization": "categorical colors plus distinct line styles; no colorbar",
+  "limits": {
+    "y": [
+      4543.403303355482,
+      4546.693117826318
+    ]
+  },
+  "vmin": 4543.403303355482,
+  "vmax": 4546.693117826318,
+  "final_width_mm": 355.6,
+  "minimum_font_pt": 13,
+  "font_size_pt": 13,
+  "legend_file": "图例_湖位过程对照.svg",
+  "sources": [
+    {
+      "file": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace\\tasks\\JOB-88b35b44b27d4e15840c\\result.json",
+      "sha256": "4af2c70536f3a6f8e6f056190a92427ac4167d5dcf3ce44cba64a50a80cd78ec"
+    },
+    {
+      "file": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace\\tasks\\JOB-4934a5d35c9344a59353\\result.json",
+      "sha256": "35acc88c3a97f2f68a35032ec63a43eb83cc1e52786867c151f24f734bcf2f50"
+    },
+    {
+      "file": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace\\diagnostics\\湖位预热核验-6019540360e4\\2017-01-01-0.5-result.json",
+      "sha256": "ef336df598d96ee191504bcc828ddcbc339796b72a902d5dd5059cae09a0092a"
+    }
+  ],
+  "outputs": {
+    "main": {
+      "svg": {
+        "file": "湖位过程对照.svg",
+        "sha256": "31e50429ea3eeb89100a45ece056e083f9160b09342afadc430aba6e08957707"
+      },
+      "pdf": {
+        "file": "湖位过程对照.pdf",
+        "sha256": "3fc837b426d61c56eca1c7ca86f36fd888a665c8273a896d64e067bf2e1e19ec"
+      },
+      "png": {
+        "file": "湖位过程对照.png",
+        "sha256": "a4d0463f9d04e2fbb62b8cd033dc8dab249ee0648bbade8af23309907d8c4170"
+      }
+    },
+    "legend": {
+      "svg": {
+        "file": "图例_湖位过程对照.svg",
+        "sha256": "3d22b346deb2e2c1a91a762eaab7ed575861281076dc8455aea4a0149b7d081d"
+      },
+      "pdf": {
+        "file": "图例_湖位过程对照.pdf",
+        "sha256": "6642dd99a3dddaf2f1a58f6d3ab03d395e8e8c19bac6073a39895815ebe3233c"
+      },
+      "png": {
+        "file": "图例_湖位过程对照.png",
+        "sha256": "1be31ebec5f48b7f8328e501b6ef87eb87a8e4fe3d9723318a2a9aa97794cd77"
+      }
+    },
+    "csv": {
+      "file": "日湖位对照.csv",
+      "sha256": "fdb350cbfde1d5abed7fdc0dd27ce2d9618b374a1dedc4456a9e0504b78f5872"
+    }
+  },
+  "caption": "色林错2021-04-24至2026-10-20日湖位。实测共1304日，三方案共同有效观测日n=1304。缺测断线；无置信区间。竖线为2025年1月1日的湖位训练/时间检验分界；2025—2026参与开发，不是未触碰独立验证。本轮正式结果另使用全部有效湖位拟合。原采用方案与新成果的预热和输入不同；同条件原参数对照用于分离参数变更。"
+}
