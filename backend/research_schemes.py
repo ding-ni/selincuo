@@ -48,11 +48,14 @@ def _new_scheme_defaults(value):
     value['target'] = 'duja'
     search = value['search']
     search['scope'] = 'duja'
-    search['keys'] = list(RUNOFF_KEYS + ROUTING_KEYS)
+    search['keys'] = list(public_config()['flowSelectableKeys'])
     search.setdefault('budgets', {}).setdefault('snow', 120)
     search.setdefault('seeds', [search.get('seed', 42)])
     search.pop('joint', None)
     value['periods']['warmupStart'] = '2020-01-01T00:00:00'
+    from .two_stage_calibration import defaults
+    value['twoStage']=defaults()
+    value['purpose']='business'
     return value
 
 
@@ -73,6 +76,20 @@ def builtin(db):
 
 
 def template(db):
+    from .business_selection import current
+    selection=current(db)
+    if selection.get('schemeId'):
+        value=deepcopy(_scheme(db,selection['schemeId'])['payload'])
+        for key in ('builtin','configurationSHA256','resultId','adoptedParameterId','id','familyId','revision','parentRevisionId'):
+            value.pop(key,None)
+        value['name']='我的色林错方案'
+        value['purpose']='business'
+        value['calibrationInitialParameters']=deepcopy(value['parameters'])
+        value['calibrationInitialPartitionParameters']={}
+        source=db.task(selection['resultId']).get('result') or {}
+        value['parameterSources']={**deepcopy(source.get('parameterSources',{})),
+                                   'sourceTaskId':selection['resultId']}
+        return value
     standard = builtin(db)
     if standard:
         value = deepcopy(standard['payload'])
@@ -102,7 +119,7 @@ def _family(row):
     return row['payload'].get('familyId') or row['id']
 
 
-def list_schemes(db, include_trashed=False):
+def list_schemes(db, include_trashed=False, include_experiments=False):
     """Expose one latest entry per user scheme while retaining every revision."""
     latest = {}
     for row in db.items('schemes'):
@@ -114,10 +131,19 @@ def list_schemes(db, include_trashed=False):
                 old['payload'].get('revision', 1), old.get('created_at', '')):
             latest[family] = row
     result = []
+    from .business_selection import purpose,current
+    chosen=current(db)
     standard = builtin(db)
-    if standard and (include_trashed or not standard['trashed']):
+    if standard and not chosen and (include_trashed or not standard.get('trashed',False)):
         result.append(standard)
+    adopted=next((r for r in db.items('schemes') if r['id']==chosen.get('schemeId')),None)
+    if adopted and latest.get(_family(adopted),{}).get('id')!=adopted['id']:
+        # A newly saved revision is a draft until a completed result is adopted.
+        # Keep the exact adopted revision selectable alongside that draft.
+        result.append({**adopted,'trashed':False})
     for row in latest.values():
+        if not include_experiments and purpose(db,row)=='development':
+            continue
         row['trashed'] = bool(db.setting('scheme-hidden:' + _family(row), False))
         if include_trashed or not row['trashed']:
             result.append(row)
@@ -137,6 +163,9 @@ def _scheme(db, identifier):
 def scheme_metadata(db, identifier, trashed):
     row = _scheme(db, identifier)
     family = _family(row)
+    from .business_selection import current
+    if trashed and current(db).get('familyId')==family:
+        raise ValueError('该方案正在采用，请先采用其他方案')
     if trashed:
         ids = [r['id'] for r in db.items('schemes') if _family(r) == family]
         if row.get('builtin'):
@@ -163,6 +192,9 @@ def list_parameters(db, include_trashed=False):
 def parameter_metadata(db, identifier, trashed):
     if not isinstance(identifier, str) or not identifier or not isinstance(trashed, bool):
         raise ValueError('请选择参数并指定是否移入回收站')
+    from .business_selection import current
+    if trashed and current(db).get('parameterId')==identifier:
+        raise ValueError('该参数正在采用，请先采用其他参数')
     # Visibility and audit are committed together; parameter/result bytes and
     # already captured task requests are left unchanged.
     with db.connect() as connection:
@@ -203,6 +235,9 @@ def _input(db, value, spatial, end, identifier=None):
 
 def validate(db, payload, coverage_end=None):
     value = deepcopy(payload)
+    if 'twoStage' in value:
+        from .two_stage_calibration import validate_options
+        value['twoStage']=validate_options(value['twoStage'])
     if value.get('schemaVersion') != 2 or value.get('modelFamily') != 'grid-continuous-v1':
         raise ValueError('请选择有效的连续计算方案')
     if not str(value.get('name', '')).strip() or len(value['name']) > 120:
@@ -238,7 +273,8 @@ def validate(db, payload, coverage_end=None):
     search = value['search']
     defs = {d['key']: d for d in PARAMETER_DEFINITIONS}
     keys = search['keys']
-    if not keys or len(keys) != len(set(keys)) or set(keys) - set(defs):
+    lake_only=value.get('twoStage',{}).get('mode')=='lake'
+    if (not keys and not lake_only) or len(keys) != len(set(keys)) or set(keys) - set(defs):
         raise ValueError('参与搜索参数无效或重复')
     if search.get('scope') not in ('duja', 'background'):
         raise ValueError('参数区域无效')
@@ -266,7 +302,10 @@ def validate(db, payload, coverage_end=None):
     initial = value.get('calibrationInitialParameters', value['parameters'])
     initial_regions = value.get('calibrationInitialPartitionParameters', value['partitionParameters'])
     baseline = {**initial, **(initial_regions.get('duja', {}) if search['scope'] == 'duja' else {})}
-    for key in keys:
+    bound_keys=list(keys)
+    if value.get('twoStage',{}).get('mode') in ('both','lake') and 'lakeCoefficient' not in bound_keys:
+        bound_keys.append('lakeCoefficient')
+    for key in bound_keys:
         bounds = search['bounds'].get(key)
         if not isinstance(bounds, list) or len(bounds) != 2 or any(type(v) not in (int, float) or not np.isfinite(v) for v in bounds):
             raise ValueError('请填写有效上下界：' + key)

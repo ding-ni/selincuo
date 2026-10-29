@@ -49,7 +49,7 @@ export function defaultReplayDay(dates,result){const latest=replayRows(result).f
 export function screenResults(published=[],tasks=[],homeId=''){
  const home=published.find(r=>r.id===homeId)||tasks.find(r=>r.id===homeId)
  const adopted=home&&!home.trashed?[{...home,builtin:published.some(r=>r.id===homeId)}]:homeId?[{id:homeId}]:[]
- const saved=tasks.filter(t=>t.id!==homeId&&t.status==='succeeded'&&!t.trashed&&['simulation','continuation'].includes(t.kind)&&!!t.userSaved)
+ const saved=tasks.filter(t=>t.id!==homeId&&t.status==='succeeded'&&!t.trashed&&['simulation','continuation','two-stage-calibration','trial'].includes(t.kind)&&!!t.userSaved)
  return [...adopted,...saved]
 }
 export function replayResultName(t,homeId,loaded){

@@ -74,6 +74,7 @@ def builtin_result_available(db, identifier):
 
 def result_summary(db, identifier):
     from .release_registry import current
+    from .business_selection import current as current_business
     task = result_task(db, identifier)
     result = task.get('result') or {}
     if task.get('status') != 'succeeded' or not result:
@@ -90,7 +91,7 @@ def result_summary(db, identifier):
         '固定湖面与冰川面积、裸冰外部水源等简化仍然存在。',
         '2025、2026资料已在开发中查看，不能称为未触碰的外部验证。',
     ]
-    limitations.append('未核实区独立计算，未计入已核实入湖合计。' if result.get('inflowComplete') is False
+    limitations.append('背景未定区域仅展示，不参与所选计算范围的来水统计。' if result.get('drainage',{}).get('displayOnlyUnresolvedAreaKm2',0)>0 else '未核实区独立计算，未计入已核实入湖合计。' if result.get('inflowComplete') is False
                        else '旧计水假定包含原残余区，不代表排水归属已经核实。')
     if window:
         limitations.append('窗口初始化指标不能与固定锚点连续指标直接排序。')
@@ -101,7 +102,7 @@ def result_summary(db, identifier):
     was_published = bool(releases_exist and db.rows('SELECT 1 FROM operational_releases WHERE result_id=? LIMIT 1', (identifier,)))
     return {
         'id': identifier, 'name': task.get('name') or '计算成果', 'status': task['status'],
-        'role': 'current-default' if identifier == current(db)['resultId'] else
+        'role': 'current-adopted' if identifier==current_business(db).get('resultId') else 'current-default' if identifier == current(db)['resultId'] else
                 'historical-release' if task.get('builtin') or was_published else 'research-candidate' if
                 request.get('researchSchemeId') or continuous else 'user-result',
         'scheme': scheme, 'identity': identity, 'identitySHA256': digest(identity),
@@ -144,10 +145,13 @@ def business_context(db, identifier=None):
     quality = daily_quality(db, 'SLC')
     valid = [r for r in quality if r['value'] is not None]
     last = valid[-1] if valid else None
-    default = result_summary(db, release['resultId'])
-    selected = default if not identifier or identifier == release['resultId'] else result_summary(db, identifier)
+    from .business_selection import current as current_business
+    adopted=current_business(db)
+    default_id=adopted.get('resultId') or release['resultId']
+    default = result_summary(db, default_id)
+    selected = default if not identifier or identifier == default_id else result_summary(db, identifier)
     return {'projectId': 'selinco', 'timezone': 'Asia/Shanghai', 'release': release,
-            'selectedResult': selected, 'defaultResult': default,
+            'selectedResult': selected, 'defaultResult': default,'adopted':adopted,
             'defaultResultInputId': default['inputId'],
             'forcing': {'latest': latest, 'products': coverages,
                         'selectedResult': next((r for r in coverages if r['inputId'] == selected['inputId']), None)},

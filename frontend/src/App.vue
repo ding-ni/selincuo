@@ -3,7 +3,7 @@ import {ref,computed,onMounted,onBeforeUnmount,watch} from 'vue'
 import Dashboard from './Dashboard.vue'
 import LakeMark from './LakeMark.vue'
 import MonitoringWorkspace from './MonitoringWorkspace.vue'
-import CalibrationWorkspace from './CalibrationWorkspace.vue'
+import CalibrationWorkspace from './CalibrationWorkbench.vue'
 import HistoricalSimulation from './HistoricalSimulation.vue'
 import HistoricalResult from './HistoricalResult.vue'
 import ResultWorkspace from './ResultWorkspace.vue'
@@ -15,7 +15,7 @@ const selectedId=ref(route.get('result')||''),viewDay=ref(route.get('date')||'')
 const pages=[['overview','⌂','湖情总览'],['monitor','≋','监测资料'],['calibration','⌘','模型方案与率定'],['simulation','▷','历史模拟'],['results','▥','成果中心'],['process','⊞','过程与状态'],['model','◇','资料更新']]
 const page=ref(pages.some(p=>p[0]===route.get('page'))?route.get('page'):'overview'),boot=ref(null),tasks=ref([]),trashedResults=ref([]),states=ref([]),detail=ref(null),historyDetail=ref(null),calibrationDetail=ref(null),error=ref(''),notice=ref(''),busy=ref(false),collapsed=ref(window.innerWidth<1280),monitorInitial=ref(null),stateResultId=ref(''),continuation=ref(null)
 const continuationCoverage=ref(null),simulationSelection=ref(null),resultWindow=ref(null)
-const active=computed(()=>tasks.value.filter(t=>['queued','running','stopping'].includes(t.status))),resultRecords=computed(()=>tasks.value.filter(t=>['simulation','continuation','trial','calibration'].includes(t.kind)||(['calibration-workflow','sensitivity'].includes(t.kind)&&t.status!=='succeeded'))),title=computed(()=>pages.find(p=>p[0]===page.value)?.[2]||'湖情总览')
+const active=computed(()=>tasks.value.filter(t=>['queued','running','stopping'].includes(t.status))),resultRecords=computed(()=>tasks.value.filter(t=>['simulation','continuation','two-stage-calibration','trial','calibration'].includes(t.kind)||(['calibration-workflow','sensitivity'].includes(t.kind)&&t.status!=='succeeded'))),title=computed(()=>pages.find(p=>p[0]===page.value)?.[2]||'湖情总览')
 let timer,contextTicket=0,manualNavigation=false
 function toggleNavigation(){manualNavigation=true;collapsed.value=!collapsed.value}
 function resizeNavigation(){if(!manualNavigation)collapsed.value=window.innerWidth<1280}
@@ -63,7 +63,7 @@ async function navigate(p,id,viewWindow=null){
 }
 async function submit(request){
  if(busy.value)return
- await action(async()=>{const task=await api('tasks',request);if(['calibration-workflow','calibration','trial','sensitivity'].includes(request.kind))calibrationDetail.value=task;else if(request.kind==='continuation'){detail.value=task;notice.value='续算已开始'}else if(request.kind==='simulation')historyDetail.value=task;else notice.value='资料处理已提交';await refresh()})
+ await action(async()=>{const task=await api('tasks',request);if(['two-stage-calibration','calibration-workflow','calibration','trial','sensitivity'].includes(request.kind))calibrationDetail.value=task;else if(request.kind==='continuation'){detail.value=task;notice.value='续算已开始'}else if(request.kind==='simulation')historyDetail.value=task;else notice.value='资料处理已提交';await refresh()})
 }
 function simulateWith(selection){simulationSelection.value=selection;navigate('simulation')}
 async function stop(id){await action(async()=>{await api('tasks/'+id+'/stop',{});await refresh()})}
@@ -78,7 +78,7 @@ async function exportResult(id,format){
  if(!error.value){notice.value='导出任务已提交，完成文件可在任务中心下载。';tasksOpen.value=true}
 }
 const taskMessage=t=>t.status==='failed'?t.message:t.message?.startsWith('备份 ')?'正在归档工作区文件':t.message?.startsWith('压缩逐时变量')?'正在生成逐时成果文件':t.message?.startsWith('校验')?'正在核验文件完整性':t.message
-const taskTitle=t=>t.name&&t.name!==t.kind?t.name:({'update-forcing':'补充气象资料','download-forcing':'下载气象资料','register-inputs':'整理气象资料','import-observations':'整编观测资料','build-spatial':'整理流域资料','build-grid-spatial':'整理水文计算单元','simulation':'历史模拟','continuation':'继续模拟','trial':'人工试算','calibration':'参数率定','calibration-workflow':'参数率定','export-result':'导出成果','continuous-reference':'生成连续参考','evaluation':'评价模拟成果'})[t.kind]||t.name||'后台任务'
+const taskTitle=t=>t.name&&t.name!==t.kind?t.name:({'update-forcing':'补充气象资料','download-forcing':'下载气象资料','register-inputs':'整理气象资料','import-observations':'整编观测资料','build-spatial':'整理流域资料','build-grid-spatial':'整理水文计算单元','simulation':'历史模拟','continuation':'继续模拟','trial':'人工试算','calibration':'参数率定','calibration-workflow':'参数率定','two-stage-calibration':'两阶段率定','export-result':'导出成果','continuous-reference':'生成连续参考','evaluation':'评价模拟成果'})[t.kind]||t.name||'后台任务'
 const beijingTime=value=>value?new Date(value).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false}):'—'
 function dashboardStation(id,day,comparison=false){monitorInitial.value={station:id,variable:boot.value.stations.find(s=>s.id===id)?.kind==='rain'?'precipitation':id==='DUJA'?'flow':'level',day,comparison};navigate('monitor')}
 watch(collapsed,v=>localStorage.setItem('selinco:nav-collapsed',String(v)))
@@ -98,7 +98,7 @@ onBeforeUnmount(()=>{clearInterval(timer);window.removeEventListener('popstate',
  <MonitoringWorkspace v-if="page==='monitor'" :initial="monitorInitial" @navigate="navigate"/>
  <CalibrationWorkspace v-if="page==='calibration'" :boot="boot" :tasks="tasks" :detail="calibrationDetail" :busy="busy" :active="active" @refresh="action(refresh)" @deleted="deletedResults" @submit="submit" @stop="stop" @select="action(()=>openResult($event,'calibration'))" @simulate="simulateWith" @state="showState(calibrationDetail)" @export="exportResult"/>
  <HistoricalSimulation v-if="page==='simulation'" :boot="boot" :selection="simulationSelection" :busy="busy" :active="active" @submit="submit" @navigate="navigate"><HistoricalResult :detail="historyDetail" :busy="busy" @stop="stop" @export="exportResult" @state="showState(historyDetail)" @retry="navigate('simulation')"/></HistoricalSimulation>
- <ResultWorkspace v-if="page==='results'" :tasks="resultRecords" :trashed-results="trashedResults" :published="boot.publishedResults" :standard-id="boot.standardResultId" :home-id="boot.homeResultId" :selected-id="detail?.id" :busy="busy" @select="resultWindow=null;action(()=>openResult($event))" @metadata="metadata" @changed="deletedResults" @stop="stop"><HistoricalResult :detail="detail" :view-window="resultWindow?.id===detail?.id?resultWindow:null" :busy="busy" @stop="stop" @export="exportResult" @state="showState(detail)" @retry="navigate('simulation')"/></ResultWorkspace>
+ <ResultWorkspace v-if="page==='results'" :tasks="resultRecords" :trashed-results="trashedResults" :published="boot.currentBusiness?.resultId?[]:boot.publishedResults.filter(t=>t.id===boot.homeResultId)" :standard-id="boot.standardResultId" :home-id="boot.homeResultId" :selected-id="detail?.id" :busy="busy" @select="resultWindow=null;action(()=>openResult($event))" @metadata="metadata" @changed="deletedResults" @stop="stop"><HistoricalResult :detail="detail" :view-window="resultWindow?.id===detail?.id?resultWindow:null" :busy="busy" @stop="stop" @export="exportResult" @state="showState(detail)" @retry="navigate('simulation')"/></ResultWorkspace>
  <ModelStates v-if="page==='process'" :boot="boot" :tasks="tasks" :states="states" :initial-id="selectedId||boot.homeResultId" :view-day="viewDay" @context="selectContext" :busy="busy" @resume="resume" @rename="renameState" @unprotect="unprotectState"><div v-if="continuation" class="result-toolbar"><span class="note">后台自动匹配气象资料，并核对已计算时段和完整末状态。</span><label>续算起点<input type="datetime-local" :value="continuation.start" readonly></label><label>结束时刻<input type="datetime-local" v-model="continuation.end" :max="continuationCoverage?.end?.slice(0,16)"></label><button class="primary" :disabled="busy||active.length>0||continuation.end<continuation.start" @click="submit(continuation)">开始续算</button></div></ModelStates>
  <ModelResources v-if="page==='model'" :boot="boot" :active="active" :busy="busy" @navigate="navigate" @refresh="action(refresh)" @error="error=$event" @submit="submit" @station="dashboardStation"/>
  </template></div></main>

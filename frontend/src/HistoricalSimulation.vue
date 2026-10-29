@@ -27,11 +27,12 @@ function pickScheme(id,force=false){
  const selected=force?(props.selection?.parameterId||''):''
  schemeId.value=id;parameterId.value=(props.boot.parameters||[]).some(p=>p.id===selected&&p.payload?.sourceTaskId&&parameterCompatible(p,s.payload))?selected:''
  const limit=lastDay.value
- start.value=s.payload.periods?.trainingStart?.slice(0,10)||s.payload.periods?.warmupStart?.slice(0,10)||''
- const preferred=s.payload.periods?.evaluationEnd?shiftCalendarDay(s.payload.periods.evaluationEnd,-1):limit
+ start.value=(s.payload.historyPeriod?.start||s.payload.periods?.trainingStart||s.payload.periods?.warmupStart||'').slice(0,10)
+ const endBoundary=s.payload.historyPeriod?.end||s.payload.periods?.evaluationEnd
+ const preferred=endBoundary?shiftCalendarDay(endBoundary,-1):limit
  end.value=limit&&preferred>limit?limit:preferred
 }
-watch(schemes,rows=>{if(!rows.length)return;if(!rows.some(s=>s.id===schemeId.value)){const s=rows.find(x=>x.id===props.selection?.schemeId)||rows.find(x=>x.builtin||x.payload?.builtin)||rows[0];pickScheme(s.id,!!props.selection)}},{immediate:true})
+watch(schemes,rows=>{if(!rows.length)return;if(!rows.some(s=>s.id===schemeId.value)){const s=rows.find(x=>x.id===props.selection?.schemeId)||rows.find(x=>x.id===props.boot.homeSchemeId)||rows.find(x=>x.builtin||x.payload?.builtin)||rows[0];pickScheme(s.id,!!props.selection)}},{immediate:true})
 watch(()=>props.selection,value=>{if(value?.schemeId)pickScheme(value.schemeId,true)},{deep:true})
 watch(parameters,rows=>{if(parameterId.value&&!rows.some(p=>p.id===parameterId.value))parameterId.value=''},{immediate:true})
 watch(()=>props.boot,async()=>{const ticket=++coverageTicket;coverageError.value='';try{const data=await api('forcing-coverage');if(ticket===coverageTicket){coverage.value=data.current;if(lastDay.value&&end.value>lastDay.value)end.value=lastDay.value}}catch(e){if(ticket===coverageTicket)coverageError.value=e.message}},{immediate:true})

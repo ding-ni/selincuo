@@ -203,7 +203,9 @@ class Handler(SimpleHTTPRequestHandler):
                 operational_schemes = []
                 operational_message = '原历史方案或其空间资料无法读取，请检查基础资源。'
             builtin_scheme = builtin(self.db)
-            builtin_result = (builtin_scheme or {}).get('payload', {}).get('resultId')
+            from .business_selection import current as business_current
+            selected_business=business_current(self.db)
+            builtin_result = selected_business.get('resultId') or (builtin_scheme or {}).get('payload', {}).get('resultId')
             builtin_available = builtin_result_available(self.db, builtin_result)
             return self.send_json({'projectId': 'selinco', 'name': '色林错预警预报平台', 'version': VERSION, 'gridSpatial':grid_summary,
                                    'spatialResourceMessage': spatial_message, 'operationalSchemesMessage': operational_message,
@@ -214,6 +216,8 @@ class Handler(SimpleHTTPRequestHandler):
                                    'operationalSchemes': operational_schemes,
                                    'publishedResults': published_catalog(), 'standardResultId': current_release(self.db)['resultId'],
                                    'homeResultId': builtin_result if builtin_available else None,
+                                   'homeSchemeId':selected_business.get('schemeId') or (builtin_scheme or {}).get('id'),
+                                   'currentBusiness':selected_business,
                                    'builtinResultAvailable': builtin_available,
                                    'builtinResultMessage': '' if builtin_available else '当前工作区缺少内置连续成果或其完整逐时资料，请接入对应成果资源。',
                                    'calibrationConfig': public_config(), 'routingModes': [{'id':'source-separated','label':'分水源调蓄 + 河道汇流'},{'id':'lumped','label':'原方案：合并径流单库汇流'}],
@@ -255,7 +259,19 @@ class Handler(SimpleHTTPRequestHandler):
             return self.send_json(template(self.db))
         if path == 'schemes':
             from .research_schemes import list_schemes
-            return self.send_json({'schemes': list_schemes(self.db, query.get('includeTrashed') == 'true')})
+            return self.send_json({'schemes': list_schemes(self.db, query.get('includeTrashed') == 'true', query.get('includeExperiments')=='true')})
+        if path == 'calibration-data':
+            from .observation_profiles import quality_series
+            from .model_forcing import current_summary
+            from .two_stage_calibration import defaults
+            rows={}
+            for key,station,variable in [('flow','DUJA','flow'),('lake','SLC','level')]:
+                values=quality_series(self.db,station,variable).dropna()
+                rows[key]={'stationId':station,'start':values.index.min().isoformat() if len(values) else None,
+                    'end':values.index.max().isoformat() if len(values) else None,'days':len(values),
+                    'years':[{'year':int(y),'days':len(g),'start':g.index.min().isoformat(),'end':g.index.max().isoformat()}
+                             for y,g in values.groupby(values.index.year)]}
+            return self.send_json({**rows,'forcing':current_summary(self.db),'defaults':defaults()})
         if path == 'parameters':
             from .research_schemes import list_parameters
             return self.send_json({'parameters': list_parameters(self.db, query.get('includeTrashed') == 'true')})
@@ -270,7 +286,11 @@ class Handler(SimpleHTTPRequestHandler):
             if query.get('check')=='true':write_json(folder/'latest-catalog.json',meta)
             return self.send_json({'catalog':meta,'update':read_json(folder/'latest-status.json'),'current':current_summary(self.db)})
         if path == 'search-progress':
-            self.db.task(query['taskId'])
+            task=self.db.task(query['taskId'])
+            if task['kind']=='two-stage-calibration':
+                from .two_stage_calibration import search_progress
+                return self.send_json(search_progress(within(self.db.workspace/'tasks',task['id']),
+                    max(0,int(query.get('after',0))),min(1000,max(1,int(query.get('limit',200))))))
             value=read_json(within(self.db.workspace/'tasks',query['taskId'])/'search-progress.json',{'trace':[]})
             trace=value.get('trace',[]);after=max(0,int(query.get('after',0)))
             return self.send_json({**value,'trace':trace[after:],'count':len(trace)})
@@ -366,7 +386,7 @@ class Handler(SimpleHTTPRequestHandler):
             # Normal task polling stays bounded. The recycle bin needs its
             # full set so "clear" does not silently omit older results.
             selection = ("WHERE trashed=1 AND status NOT IN ('queued','running','stopping') AND kind IN "
-                         "('simulation','continuation','trial','calibration','calibration-workflow','sensitivity') "
+                         "('simulation','continuation','trial','calibration','calibration-workflow','two-stage-calibration','sensitivity') "
                          "ORDER BY created_at DESC" if path == 'trashed-results'
                          else 'ORDER BY created_at DESC LIMIT 500')
             rows = self.db.rows('''SELECT id,kind,status,created_at,updated_at,progress,message,trashed,favorite,user_saved AS userSaved,name,notes,collection,
@@ -412,11 +432,18 @@ class Handler(SimpleHTTPRequestHandler):
                 row['phase']=row['message'].split(' · ')[0]
                 row['termination']=({'cancelled':'user-stopped','interrupted':'service-restarted',
                                      'failed':'failed','succeeded':'completed'}).get(row['status'])
+            from .business_selection import visible_tasks
+            rows=visible_tasks(self.db,rows,query.get('includeExperiments')=='true')
             return self.send_json({'tasks': rows})
         if path.startswith('tasks/'):
             return self.send_json(self.server.jobs.public(self.db.task(path.split('/')[1])))
         if path == 'states':
             states = self.db.items('states')
+            from .business_selection import visible_tasks
+            task_rows=[{'id':r['id'],'request':json.loads(r['request']),'user_saved':r['user_saved']}
+                       for r in self.db.rows('SELECT id,request,user_saved FROM tasks')]
+            visible_ids={r['id'] for r in visible_tasks(self.db,task_rows)}
+            states=[r for r in states if r['task_id'] in visible_ids or r.get('favorite') or r.get('name')]
             from .result_query import compatible
             for row in states:
                 payload = row['payload']
@@ -535,7 +562,7 @@ class Handler(SimpleHTTPRequestHandler):
             from .permanent_deletion import guard_no_pending, guard_parameter_source, guard_pending, guard_state
             with self.server.jobs.lock:
                 if value.get('kind')=='backup':guard_no_pending(self.db)
-                for field,kind in (('researchSchemeId','scheme'),('taskId','task'),('parentTaskId','task'),('baseTaskId','task'),('baselineResultId','task'),('candidateResultId','task')):
+                for field,kind in (('researchSchemeId','scheme'),('taskId','task'),('parentTaskId','task'),('baseTaskId','task'),('lakeOnlyBaseTaskId','task'),('baselineResultId','task'),('candidateResultId','task')):
                     if value.get(field):guard_pending(self.db,kind,value[field])
                 if value.get('candidateParameterId'):guard_parameter_source(self.db,value['candidateParameterId'])
                 if value.get('stateId'):guard_state(self.db,value['stateId'])
@@ -546,6 +573,12 @@ class Handler(SimpleHTTPRequestHandler):
             with self.server.jobs.lock:
                 guard_pending(self.db,'task',value.get('taskId'))
                 return self.send_json(save_parameters_from_task(self.db, value.get('taskId'), value.get('name')))
+        if path == 'business-adopt':
+            from .business_selection import adopt_result
+            from .permanent_deletion import guard_pending
+            with self.server.jobs.lock:
+                guard_pending(self.db,'task',value.get('taskId'))
+                return self.send_json(adopt_result(self.db,value.get('taskId'),value.get('name')))
         if path.startswith('parameters/'):
             parts = path.split('/')
             if len(parts) != 3 or parts[2] != 'metadata':
@@ -583,6 +616,8 @@ class Handler(SimpleHTTPRequestHandler):
             task = self.db.task(identifier)
             if action == 'stop':
                 return self.send_json(self.server.jobs.stop(identifier))
+            if action == 'resume':
+                return self.send_json(self.server.jobs.resume_calibration(identifier))
             if action == 'metadata':
                 from .permanent_deletion import guard_pending
                 with self.server.jobs.lock:
@@ -592,6 +627,9 @@ class Handler(SimpleHTTPRequestHandler):
                     if task['status'] in ('queued', 'running', 'stopping') and allowed.get('trashed'):
                         raise ValueError('活动任务不能移入回收站')
                     if allowed.get('trashed'):
+                        from .business_selection import current as business_current
+                        if business_current(self.db).get('resultId')==identifier:
+                            raise ValueError('当前采用成果不能移入回收站')
                         from .research_schemes import builtin
                         standard = builtin(self.db)
                         if standard and standard['payload'].get('resultId') == identifier:

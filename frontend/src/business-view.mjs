@@ -1,5 +1,5 @@
 export function businessTasks(tasks=[],maintenance=false){
- return maintenance?tasks:tasks.filter(t=>['simulation','continuation'].includes(t.kind))
+ return maintenance?tasks:tasks.filter(t=>['simulation','continuation','two-stage-calibration'].includes(t.kind))
 }
 export const qualityLabel=value=>({valid:'正常',qualified:'附注',missing:'缺测',ice_or_stopped:'停测',zero_needs_review:'待核查'}[value]||value||'—')
 export const stepLabel=value=>({day:'日值',hour:'小时',irregular:'时段记录'}[value]||value||'—')

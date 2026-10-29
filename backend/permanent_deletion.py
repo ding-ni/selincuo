@@ -16,7 +16,7 @@ from .common import ROOT, canonical, digest, now, read_json
 
 KINDS = {'task', 'scheme', 'parameter'}
 RESULT_KINDS = {'simulation', 'continuation', 'trial', 'calibration',
-                'calibration-workflow', 'sensitivity'}
+                'calibration-workflow', 'two-stage-calibration', 'sensitivity'}
 ACTIVE = {'queued', 'running', 'stopping'}
 JOURNAL = 'permanent_deletion_operations'
 IDENTIFIER = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$')
@@ -141,7 +141,7 @@ def _current_config():
 
 def _snapshot(conn):
     settings = {r['key']: _parse(r['value']) for r in conn.execute(
-        "SELECT key,value FROM settings WHERE key LIKE 'scheme-hidden:%' OR key LIKE 'parameter-hidden:%'")}
+        "SELECT key,value FROM settings WHERE key LIKE 'scheme-hidden:%' OR key LIKE 'parameter-hidden:%' OR key='business-adopted-scheme-v1'")}
     schemes = []
     for row in conn.execute('SELECT id,name,created_at,payload FROM schemes'):
         row = dict(row)
@@ -159,6 +159,7 @@ def _snapshot(conn):
         json_extract(request,'$.taskId') source_task_id,
         json_extract(request,'$.parentTaskId') parent_task_id,
         json_extract(request,'$.baseTaskId') base_task_id,
+        json_extract(request,'$.lakeOnlyBaseTaskId') lake_base_task_id,
         json_extract(request,'$.baselineResultId') baseline_result_id,
         json_extract(request,'$.candidateResultId') candidate_result_id,
         json_extract(request,'$.researchSchemeId') scheme_id,
@@ -213,6 +214,10 @@ def _build_plan(db, conn, requested, include_files=True):
             item = {'kind': kind, 'id': identifier, 'name': row['name'] or
                     {'task': '计算成果', 'scheme': '方案', 'parameter': '参数'}[kind],
                     'blocked': [], 'members': [identifier]}
+            adopted=snapshot['settings'].get('business-adopted-scheme-v1',{})
+            selected_id=adopted.get({'task':'resultId','parameter':'parameterId','scheme':'schemeId'}[kind])
+            if identifier==selected_id or kind=='scheme' and row['payload'].get('familyId')==adopted.get('familyId'):
+                item['blocked'].append(_blocked('该对象正在采用','先采用其他方案'))
             if kind == 'task':
                 item['stateIds'] = sorted(state['id'] for state in states if state['task_id'] == identifier)
                 if row['kind'] not in RESULT_KINDS:
@@ -251,7 +256,7 @@ def _build_plan(db, conn, requested, include_files=True):
             for item in items.values():
                 item['blocked'].append(_blocked('工作区备份“' + active_name + '”正在运行', action))
             continue
-        referenced_tasks = {active[field] for field in ('source_task_id', 'parent_task_id', 'base_task_id',
+        referenced_tasks = {active[field] for field in ('source_task_id', 'parent_task_id', 'base_task_id', 'lake_base_task_id',
                                                         'baseline_result_id', 'candidate_result_id') if active[field]}
         if active['state_id'] in state_owners:
             referenced_tasks.add(state_owners[active['state_id']])

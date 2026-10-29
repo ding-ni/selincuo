@@ -131,7 +131,7 @@ def unit_forcing(spatial,arrays,ids,base,regions):
             np.ascontiguousarray(arrays['temperature'][ids][:,grid_ids]+dz[None,:]*lapse[None,:]),
             np.ascontiguousarray(arrays['evaporation'][ids][:,grid_ids]))
 
-def run(db,request,folder=None,progress=None,cancelled=None,prepared=None):
+def run(db,request,folder=None,progress=None,cancelled=None,prepared=None,land_reuse=None):
     source=prepared or prepare(db,request['inputId'],request['spatialVersion'])
     spatial=source['spatial'];arrays=source['arrays'];all_times=source['times'];units=spatial['units']
     declared,regions_patch,p,regions,transfer_audit,parameter_identity=parameter_configuration(spatial,request)
@@ -148,6 +148,20 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None):
         else anchor(request,observation,start,end))
     identity={'projectId':'selinco','modelFamily':'grid-continuous-v1','modelImplementation':request.get('_modelIdentity') or model_identity(),'spatialVersion':spatial['version'],**parameter_identity,
               'initializationSHA256':digest(initial),'observationProfile':observation['profile'],'observationSnapshotSHA256':digest(observation),'forcingGridSHA256':spatial['forcingGridVersion'],'forcingTransformationSHA256':source['manifest'].get('transformationSHA256'),'routingMode':request.get('routingMode','source-separated')}
+    reused_arrays=None
+    if land_reuse is not None:
+        from .grid_storage import open_arrays
+        reuse_folder,reuse_result=land_reuse
+        comparable=lambda values:{k:v for k,v in values.items() if k!='lakeCoefficient'}
+        if (reuse_result.get('inputId')!=request['inputId'] or reuse_result.get('spatialVersion')!=spatial['version']
+                or comparable(reuse_result.get('parameters',{}))!=comparable(declared)
+                or reuse_result.get('partitionParameters',{})!=regions_patch
+                or reuse_result.get('parameterTransfer')!=transfer_audit['policy']
+                or reuse_result.get('start')!=start.isoformat() or reuse_result.get('end')!=end.isoformat()
+                or reuse_result['identity']['modelImplementation']!=identity['modelImplementation']
+                or reuse_result.get('routingMode')!=identity['routingMode'] or request.get('_parentState')):
+            raise ValueError('湖泊重算需要相同来水、空间和水文参数的完整成果')
+        reused_arrays=open_arrays(reuse_folder)
     if parent:
         # Observations are evaluation inputs, not physical state. Keep both
         # snapshots in their respective results, but allow newly imported
@@ -184,8 +198,13 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None):
     for offset in range(0,total_hours,168):
         if cancelled and cancelled():raise InterruptedError('用户停止逐格网计算')
         stop=min(total_hours,offset+168);ids=indexes[offset:stop];local_times=times[offset:stop]
-        rain,temperature,evap=unit_forcing(spatial,arrays,ids,p,regions)
-        diagnostic,history,state=run_region_kernel(rain,temperature,evap,glaciers,state,units,p,regions)
+        if reused_arrays is None:
+            rain,temperature,evap=unit_forcing(spatial,arrays,ids,p,regions)
+            diagnostic,history,state=run_region_kernel(rain,temperature,evap,glaciers,state,units,p,regions)
+        else:
+            diagnostic=np.asarray(reused_arrays['unitDiagnostics'][offset:stop])
+            history=np.asarray(reused_arrays['unitStates'][offset:stop])
+            state=history[-1].copy()
         balance_max=max(balance_max,float(np.max(np.abs(diagnostic[:,:,7]))))
         if balance_max>1e-6:raise ValueError('逐格网产流水量守恒失败')
         volumes=diagnostic[:,:,:4]*areas[None,:,None]*1000;routed={};stores=[];source_stores=[]
@@ -247,6 +266,7 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None):
     result={'projectId':'selinco','resultSource':'grid-continuous-model','identity':identity,'modelFamily':'grid-continuous-v1','start':times[0].isoformat(),'end':times[-1].isoformat(),'hours':len(times),'parameters':declared,'partitionParameters':regions_patch,'parameterTransfer':transfer_audit['policy'],'parameterTransferAudit':transfer_audit,'inputId':source['manifest']['id'],'spatialVersion':spatial['version'],'units':units,'rivers':RIVERS,'partitions':PARTITIONS,'routingMode':identity['routingMode'],'metrics':yearly,'daily':__import__('json').loads(daily.reset_index(names='date').to_json(orient='records',date_format='iso')),
             'initialization':initial,'observationProfile':QUALITY_VERSION,'inflowComplete':grid_spatial.topology_complete(spatial),'drainage':spatial['drainage'],'scheme':request.get('schemeSnapshot'),
             'diagnostics':{'landGlacierMaxBalanceErrorMm':balance_max,'routingMaxBalanceErrorM3':routing_error_max,'lakeAreaKm2':spatial['lakeAreaKm2'],'partitions':partition_totals,'lakeWindows':[] if initial is None else [{'start':initial['time'],'initialization':initial['method']}]},'checkpoint':checkpoint,'storageFormat':'zarr-v2' if writer else 'metrics-only'}
+    if land_reuse is not None:result['landReuse']={'sourceIdentitySHA256':digest(land_reuse[1]['identity']),'method':'frozen-hourly-runoff-and-states; same-routing; new-lake-balance'}
     if writer:
         result['hourlyArtifact']=writer.finish();daily.to_csv(folder/'daily.csv',index_label='date',encoding='utf-8-sig');write_json(folder/'checkpoint.json',checkpoint);write_json(folder/'result.json',result)
     return result

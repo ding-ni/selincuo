@@ -16,7 +16,7 @@ CODE_SENSITIVE_TASKS = frozenset((
     'simulation', 'trial', 'continuation', 'calibration', 'calibration-workflow',
     'sensitivity', 'evaluation', 'continuous-reference', 'import-observations',
     'build-spatial', 'build-grid-spatial', 'register-inputs', 'download-forcing',
-    'update-forcing',
+    'update-forcing', 'two-stage-calibration',
 ))
 
 
@@ -88,7 +88,7 @@ class Jobs:
     def _submit(self, kind, payload, submission=None):
         if self.restore_pending or self.restart_required:
             raise ValueError('恢复已排队或完成，暂停接收新任务；请等待恢复结束并重启后继续')
-        if kind not in ('simulation', 'trial', 'continuation', 'calibration', 'calibration-workflow', 'sensitivity', 'import-observations', 'build-spatial', 'build-grid-spatial', 'register-inputs', 'download-forcing', 'update-forcing', 'export-result', 'backup', 'restore-workspace', 'evaluation', 'continuous-reference'):
+        if kind not in ('simulation', 'trial', 'continuation', 'calibration', 'calibration-workflow', 'two-stage-calibration', 'sensitivity', 'import-observations', 'build-spatial', 'build-grid-spatial', 'register-inputs', 'download-forcing', 'update-forcing', 'export-result', 'backup', 'restore-workspace', 'evaluation', 'continuous-reference'):
             raise ValueError('未知任务类型')
         payload = {k: v for k, v in dict(payload).items() if not k.startswith('_')}
         if payload.get('projectId', 'selinco') != 'selinco' or payload.get('contextKey', CONTEXT_KEY) != CONTEXT_KEY:
@@ -142,12 +142,16 @@ class Jobs:
                     return self.public(prior)
         research = bool(payload.get('researchSchemeId'))
         if research and not release_bound:
-            if kind not in ('simulation', 'calibration', 'trial') or payload.get('schemeId'):
+            if kind not in ('simulation', 'calibration', 'trial', 'two-stage-calibration') or payload.get('schemeId'):
                 raise ValueError('我的方案仅用于独立模拟、人工试调或率定')
             if kind=='calibration' and payload.get('candidateParameterId'):
                 raise ValueError('请将候选参数保存为方案新修订后再率定')
-            from .research_schemes import prepare_request
-            payload = prepare_request(self.db, payload, kind=kind)
+            if kind=='two-stage-calibration':
+                from .two_stage_calibration import prepare
+                payload=prepare(self.db,payload)
+            else:
+                from .research_schemes import prepare_request
+                payload = prepare_request(self.db, payload, kind=kind)
         elif not release_bound and payload.get('modelFamily') == 'grid-continuous-v1' and kind != 'continuation':
             raise ValueError('请先保存研究方案修订，再提交计算')
         standard = kind == 'simulation' and (release_bound or bool(payload.get('schemeId')))
@@ -210,7 +214,7 @@ class Jobs:
                 if field in parent_task['request']:payload[field]=parent_task['request'][field]
         identifier = 'JOB-' + uuid.uuid4().hex[:20]
         folder = self.db.workspace / 'tasks' / identifier
-        if kind in ('simulation', 'trial', 'continuation', 'calibration', 'calibration-workflow', 'sensitivity'):
+        if kind in ('simulation', 'trial', 'continuation', 'calibration', 'calibration-workflow', 'two-stage-calibration', 'sensitivity'):
             normalized_parameters=parameters(payload.get('parameters'))
             if release_bound and normalized_parameters!=payload.get('parameters'):
                 raise ValueError('发布参数不能被当前默认参数补全或改写')
@@ -295,6 +299,21 @@ class Jobs:
     def stop(self, identifier):
         with self.lock:
             return self._stop(identifier)
+
+    def resume_calibration(self,identifier):
+        with self.lock:
+            self._check_backend_identity()
+            task=self.db.task(identifier)
+            if task['kind']!='two-stage-calibration' or task['status'] not in ('cancelled','interrupted','failed'):
+                raise ValueError('请选择已停止或中断的两阶段率定')
+            from .grid_simulation import model_identity as grid_identity
+            if task['request'].get('_modelIdentity')!=grid_identity():
+                raise ValueError('模型实现已更新，请新建率定')
+            self.cancelled.discard(identifier)
+            with self.db.connect() as connection:
+                connection.execute("UPDATE tasks SET status='queued',message='继续已保存的率定搜索',updated_at=? WHERE id=?",(now(),identifier))
+            self.executor.submit(self._execute,identifier)
+            return self.public(self.db.task(identifier))
 
     def _stop(self, identifier):
         task = self.db.task(identifier)
@@ -430,12 +449,22 @@ class Jobs:
             elif kind == 'build-grid-spatial':
                 from .grid_spatial import build
                 result = build(progress)
+            elif kind=='two-stage-calibration':
+                from .two_stage_calibration import run
+                result=run(self.db,request,folder,progress,is_cancelled)
             elif request.get('modelFamily') == 'grid-continuous-v1':
                 if kind == 'calibration':
                     from .grid_calibration import run
                 else:
                     from .grid_simulation import run
-                result = run(self.db, request, folder, progress, is_cancelled)
+                if kind=='trial' and request.get('lakeOnlyBaseTaskId'):
+                    from .common import within
+                    base=self.db.task(request['lakeOnlyBaseTaskId'])
+                    if base['status']!='succeeded':raise ValueError('湖泊试算需要成功的来水成果')
+                    result=run(self.db,request,folder,progress,is_cancelled,
+                               land_reuse=(within(self.db.workspace/'tasks',base['id']),base['result']))
+                else:
+                    result = run(self.db, request, folder, progress, is_cancelled)
             elif kind == 'download-forcing':
                 from .acquisition import acquire
                 result = acquire(self.db.workspace, direct=bool(request.get('direct')), progress=progress, cancelled=is_cancelled)
@@ -520,6 +549,16 @@ class Jobs:
                 db.execute("UPDATE tasks SET status='succeeded',result=?,progress=100,message='完成',updated_at=? WHERE id=?", (canonical(result), now(), identifier))
             write_json(folder / 'result.json', result)
             self.db.log('task.succeeded', {'id': identifier})
+            if request.get('adoptOnSuccess') and kind=='two-stage-calibration':
+                try:
+                    from .business_selection import adopt_result
+                    selection=adopt_result(self.db,identifier)
+                    result['adoption']=selection
+                except Exception as error:
+                    result['adoptionError']=str(error)
+                write_json(folder/'result.json',result)
+                with self.db.connect() as connection:
+                    connection.execute('UPDATE tasks SET result=? WHERE id=?',(canonical(result),identifier))
         except InterruptedError as exc:
             trace=read_json(folder/'search-progress.json')
             if trace is not None:

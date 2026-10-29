@@ -1,0 +1,1363 @@
+{
+  "schemaVersion": 1,
+  "adoption": {
+    "adoptedAt": "2026-10-29T05:06:13+00:00",
+    "familyId": "FAMILY-2488ba2277154c90",
+    "inputId": "INPUT-fc731ba1bf2b5e79d3e03d92",
+    "name": "色林错两阶段率定方案",
+    "parameterId": "PARAM-fdeffba776164a5bb7d4",
+    "resultId": "JOB-4934a5d35c9344a59353",
+    "schemeId": "SCHEME-ee8861d43d3549beb8ab",
+    "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6"
+  },
+  "payload": {
+    "adoptedParameterId": "PARAM-fdeffba776164a5bb7d4",
+    "calibrationInitialParameters": {
+      "B": 0.8,
+      "C": 0.15,
+      "EX": 1.2,
+      "IM": 0.01,
+      "KC": 0.7714797672529675,
+      "KG": 0.1,
+      "KI": 0.12447649497308605,
+      "SM": 100.0,
+      "WM": 300.0,
+      "baseflowTauHours": 2160.0,
+      "glacierRecessionDay": 0.5,
+      "iceDdf": 7.0,
+      "iceSublimationFraction": 0.25,
+      "iceSublimationMaxMmHour": 0.08,
+      "interflowTauHours": 123.4066595475932,
+      "lagHours": 0.0,
+      "lakeCoefficient": 1.0,
+      "lapseRate": -0.0065,
+      "liquidCapacity": 0.05,
+      "rainTemperature": 2.0,
+      "refreezeFactor": 1.0,
+      "snowDdf": 4.0,
+      "snowSublimation": 0.35,
+      "snowTemperature": -1.0,
+      "tauHours": 71.40081518816966
+    },
+    "calibrationInitialPartitionParameters": {},
+    "configurationSHA256": "05947537efc0e3c76706f43fd3019ad17e200a1b9a5ecd3d401ad4e2f663d67c",
+    "evidence": {
+      "note": "沿用完整全局及杜加参数、原固定湖位起算和31组结构；90米DEM保守追踪使93.219146平方公里获得入湖归属，2247.523850平方公里仍单列。气象重叠期值未改、湖面订正一次；长期初态和出口资料仍有限制，2025和2026并非未触碰的独立验证。",
+      "numericalComparison": "docs/evidence/第二轮空间完整期对照-20261028-152049-2fca47.json",
+      "previousComparison": "docs/E3同新域聚合顺序受控诊断-20261027.md",
+      "shortComparison": "docs/evidence/第二轮空间短期对照-20261028-151648-b08348.json",
+      "spatialComparison": "docs/第二轮空间归属与剩余资料-20261028.md"
+    },
+    "familyId": "FAMILY-2488ba2277154c90",
+    "historyPeriod": {
+      "end": "2026-10-21T00:00:00",
+      "start": "2021-04-23T00:00:00"
+    },
+    "initialization": {
+      "mode": "automatic"
+    },
+    "inputRequirement": {
+      "lakePrecipitationCorrection": {
+        "developmentYear": 2024,
+        "factor": 0.5336700706945834,
+        "gaugeMm": 226.5,
+        "gaugeSeriesSHA256": "e0abfd77539b3aaf758a6a8ca85c601ecf1716f069683357d34107bc53e59832",
+        "gridId": "89.4,31.8",
+        "gridMm": 424.41952891456936,
+        "limitations": [
+          "One shore gauge represents the lake only as a provisional spatial transfer.",
+          "Source daily labels used; station reporting day boundary not independently verified.",
+          "Gauge catch bias and snowfall undercatch not corrected."
+        ],
+        "method": "station-point-annual-ratio-v1",
+        "pairedDays": 366,
+        "scope": "lake-only",
+        "station": "SLC"
+      },
+      "precipitationEvidence": "docs/evidence/第三轮降水处理核查-20261028.json",
+      "stationUsage": {
+        "115DB": "点雨展示与格网对照；不直接用于湖面或陆域订正。",
+        "BLQ": "点雨展示与格网对照；不直接用于湖面或陆域订正。",
+        "DUJA": "点雨展示与格网对照；2025-01-01原表847.1毫米为待核异常，不用于计算订正。",
+        "SLC": "2024年完整日值用于湖面站点与同格点比例；其他年份仅作覆盖核查，不视为跨年独立验证。"
+      },
+      "transformationSHA256": "a28542996c03152f4bc7fcdbec1510a7cabbb4843c3fa51e928b49b5f135d458"
+    },
+    "lakeParameterSource": {
+      "calibratedToLakeLevel": true,
+      "coefficient": 1.5,
+      "method": "conditional-lake-level-calibration",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353"
+    },
+    "modelFamily": "grid-continuous-v1",
+    "name": "色林错两阶段率定方案",
+    "origin": "user",
+    "parameterTransfer": {
+      "areaExponent": 0.5,
+      "donor": "duja",
+      "mode": "duja-shared",
+      "version": 1
+    },
+    "parameters": {
+      "B": 0.02706294682950719,
+      "C": 0.04295623600648161,
+      "EX": 0.2521151900118612,
+      "IM": 0.0503954549913151,
+      "KC": 0.720337228981353,
+      "KG": 0.006449423481093118,
+      "KI": 0.001,
+      "SM": 88.58813487944634,
+      "WM": 168.3271131439654,
+      "baseflowTauHours": 2160.0,
+      "glacierRecessionDay": 2.1964703205360663,
+      "iceDdf": 10.491198321961527,
+      "iceSublimationFraction": 0.25,
+      "iceSublimationMaxMmHour": 0.08,
+      "interflowTauHours": 6.0105774523024795,
+      "lagHours": 33.96151753396235,
+      "lakeCoefficient": 1.5,
+      "lapseRate": -0.009888678648497686,
+      "liquidCapacity": 0.055106981756182505,
+      "rainTemperature": 5.0,
+      "refreezeFactor": 2.9996048886186535,
+      "snowDdf": 8.268361544906824,
+      "snowSublimation": 0.3377805450877816,
+      "snowTemperature": -5.0,
+      "tauHours": 81.17211359023726
+    },
+    "parentRevisionId": "SCHEME-f0197f19395b4d24bf05",
+    "partitionParameters": {},
+    "periods": {
+      "evaluationEnd": "2026-01-01T00:00:00",
+      "evaluationStart": "2025-01-01T00:00:00",
+      "trainingEnd": "2025-01-01T00:00:00",
+      "trainingStart": "2024-01-01T00:00:00",
+      "warmupStart": "2020-01-01T00:00:00"
+    },
+    "purpose": "business",
+    "revision": 2,
+    "routingMode": "source-separated",
+    "schemaVersion": 2,
+    "search": {
+      "bounds": {
+        "B": [
+          0.02,
+          0.8
+        ],
+        "C": [
+          0.01,
+          0.5
+        ],
+        "EX": [
+          0.1,
+          2.5
+        ],
+        "IM": [
+          0,
+          0.2
+        ],
+        "KC": [
+          0.2,
+          1.5
+        ],
+        "KG": [
+          0.0001,
+          0.1
+        ],
+        "KI": [
+          0.001,
+          0.15
+        ],
+        "SM": [
+          5,
+          100
+        ],
+        "WM": [
+          40,
+          300
+        ],
+        "baseflowTauHours": [
+          168,
+          2160
+        ],
+        "glacierRecessionDay": [
+          0.05,
+          3
+        ],
+        "iceDdf": [
+          2,
+          14
+        ],
+        "iceSublimationFraction": [
+          0,
+          1
+        ],
+        "iceSublimationMaxMmHour": [
+          0,
+          0.4
+        ],
+        "interflowTauHours": [
+          6,
+          240
+        ],
+        "lagHours": [
+          0,
+          72
+        ],
+        "lakeCoefficient": [
+          0.2,
+          1.5
+        ],
+        "lapseRate": [
+          -0.01,
+          -0.002
+        ],
+        "liquidCapacity": [
+          0.01,
+          0.15
+        ],
+        "rainTemperature": [
+          0,
+          5
+        ],
+        "refreezeFactor": [
+          0,
+          3
+        ],
+        "snowDdf": [
+          1,
+          10
+        ],
+        "snowSublimation": [
+          0,
+          1
+        ],
+        "snowTemperature": [
+          -5,
+          1
+        ],
+        "tauHours": [
+          1,
+          168
+        ]
+      },
+      "budgets": {
+        "lake": 30,
+        "routing": 120,
+        "runoff": 120,
+        "snow": 120
+      },
+      "keys": [
+        "KC",
+        "WM",
+        "B",
+        "C",
+        "SM",
+        "EX",
+        "KI",
+        "KG",
+        "IM",
+        "snowDdf",
+        "iceDdf",
+        "snowTemperature",
+        "rainTemperature",
+        "liquidCapacity",
+        "refreezeFactor",
+        "snowSublimation",
+        "glacierRecessionDay",
+        "lapseRate",
+        "tauHours",
+        "lagHours",
+        "interflowTauHours",
+        "baseflowTauHours"
+      ],
+      "objectiveProfile": "balanced",
+      "scope": "duja",
+      "seed": 42,
+      "seeds": [
+        42
+      ]
+    },
+    "sourceTransferSnapshot": {
+      "method": "explicit-new-draft-duja-lift",
+      "parameters": {
+        "B": 0.08475148517233684,
+        "C": 0.15,
+        "EX": 1.2,
+        "IM": 0.01,
+        "KC": 0.7294530893648382,
+        "KG": 0.0001,
+        "KI": 0.0922935896415091,
+        "SM": 5.0,
+        "WM": 226.55679731833598,
+        "baseflowTauHours": 720.0,
+        "glacierRecessionDay": 0.5,
+        "iceDdf": 7.0,
+        "iceSublimationFraction": 0.25,
+        "iceSublimationMaxMmHour": 0.08,
+        "interflowTauHours": 48.0,
+        "lagHours": 0.0,
+        "lakeCoefficient": 1.5,
+        "lapseRate": -0.0065,
+        "liquidCapacity": 0.05,
+        "rainTemperature": 2.0,
+        "refreezeFactor": 1.0,
+        "snowDdf": 4.0,
+        "snowSublimation": 0.35,
+        "snowTemperature": -1.0,
+        "tauHours": 168.0
+      },
+      "partitionParameters": {
+        "duja": {
+          "B": 0.8,
+          "C": 0.15,
+          "EX": 1.2,
+          "IM": 0.01,
+          "KC": 0.7714797672529675,
+          "KG": 0.1,
+          "KI": 0.12447649497308605,
+          "SM": 100.0,
+          "WM": 300.0,
+          "baseflowTauHours": 2160.0,
+          "glacierRecessionDay": 0.5,
+          "iceDdf": 7.0,
+          "iceSublimationFraction": 0.25,
+          "iceSublimationMaxMmHour": 0.08,
+          "interflowTauHours": 123.4066595475932,
+          "lagHours": 0.0,
+          "lapseRate": -0.0065,
+          "liquidCapacity": 0.05,
+          "rainTemperature": 2.0,
+          "refreezeFactor": 1.0,
+          "snowDdf": 4.0,
+          "snowSublimation": 0.35,
+          "snowTemperature": -1.0,
+          "tauHours": 71.40081518816966
+        }
+      },
+      "source": "continuous-builtin-v1.json",
+      "verifiedCalibration": false
+    },
+    "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6",
+    "target": "duja",
+    "twoStage": {
+      "allowExtension": true,
+      "budgets": {
+        "joint": 3000,
+        "routing": 3000,
+        "runoff": 6000,
+        "snow": 6000
+      },
+      "finalRefit": true,
+      "lakePeriods": {
+        "evaluationEnd": "2026-09-14T00:00:00",
+        "evaluationStart": "2025-01-01T00:00:00",
+        "trainingEnd": "2025-01-01T00:00:00",
+        "trainingStart": "2021-04-23T00:00:00"
+      },
+      "mode": "both",
+      "reverseCheck": true,
+      "seeds": [
+        42,
+        142,
+        242
+      ],
+      "version": 1
+    }
+  },
+  "parameterSources": {
+    "fixed": [
+      "iceSublimationFraction",
+      "iceSublimationMaxMmHour"
+    ],
+    "hydrology": {
+      "keys": [
+        "KC",
+        "WM",
+        "B",
+        "C",
+        "SM",
+        "EX",
+        "KI",
+        "KG",
+        "IM",
+        "snowDdf",
+        "iceDdf",
+        "snowTemperature",
+        "rainTemperature",
+        "liquidCapacity",
+        "refreezeFactor",
+        "snowSublimation",
+        "glacierRecessionDay",
+        "lapseRate",
+        "tauHours",
+        "lagHours",
+        "interflowTauHours",
+        "baseflowTauHours"
+      ],
+      "method": "Duja-flow-all-data-refit",
+      "periods": {
+        "evaluationEnd": "2026-01-01T00:00:00",
+        "evaluationStart": "2025-01-01T00:00:00",
+        "trainingEnd": "2025-01-01T00:00:00",
+        "trainingStart": "2024-01-01T00:00:00",
+        "warmupStart": "2020-01-01T00:00:00"
+      }
+    },
+    "lake": {
+      "keys": [
+        "lakeCoefficient"
+      ],
+      "method": "conditional-lake-level-fit"
+    }
+  },
+  "parameterInventory": [
+    {
+      "key": "KC",
+      "meaning": "陆面蒸发系数",
+      "unit": "",
+      "defaultValue": 0.8,
+      "initialValue": 0.7714797672529675,
+      "value": 0.720337228981353,
+      "physicalBounds": [
+        0.2,
+        1.5
+      ],
+      "searchBounds": [
+        0.2,
+        1.5
+      ],
+      "optimizationStage": "runoff",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "WM",
+      "meaning": "张力水容量",
+      "unit": "mm",
+      "defaultValue": 150.0,
+      "initialValue": 300.0,
+      "value": 168.3271131439654,
+      "physicalBounds": [
+        40,
+        300
+      ],
+      "searchBounds": [
+        40,
+        300
+      ],
+      "optimizationStage": "runoff",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "B",
+      "meaning": "蓄水容量曲线指数",
+      "unit": "",
+      "defaultValue": 0.3,
+      "initialValue": 0.8,
+      "value": 0.02706294682950719,
+      "physicalBounds": [
+        0.02,
+        0.8
+      ],
+      "searchBounds": [
+        0.02,
+        0.8
+      ],
+      "optimizationStage": "runoff",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "C",
+      "meaning": "深层蒸发系数",
+      "unit": "",
+      "defaultValue": 0.15,
+      "initialValue": 0.15,
+      "value": 0.04295623600648161,
+      "physicalBounds": [
+        0.01,
+        0.5
+      ],
+      "searchBounds": [
+        0.01,
+        0.5
+      ],
+      "optimizationStage": "runoff",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "SM",
+      "meaning": "自由水容量",
+      "unit": "mm",
+      "defaultValue": 30.0,
+      "initialValue": 100.0,
+      "value": 88.58813487944634,
+      "physicalBounds": [
+        5,
+        100
+      ],
+      "searchBounds": [
+        5,
+        100
+      ],
+      "optimizationStage": "runoff",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "EX",
+      "meaning": "自由水容量曲线指数",
+      "unit": "",
+      "defaultValue": 1.2,
+      "initialValue": 1.2,
+      "value": 0.2521151900118612,
+      "physicalBounds": [
+        0.1,
+        2.5
+      ],
+      "searchBounds": [
+        0.1,
+        2.5
+      ],
+      "optimizationStage": "runoff",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "KI",
+      "meaning": "小时壤中流出流系数",
+      "unit": "h⁻¹",
+      "defaultValue": 0.018,
+      "initialValue": 0.12447649497308605,
+      "value": 0.001,
+      "physicalBounds": [
+        0.001,
+        0.15
+      ],
+      "searchBounds": [
+        0.001,
+        0.15
+      ],
+      "optimizationStage": "runoff",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "KG",
+      "meaning": "小时地下出流系数",
+      "unit": "h⁻¹",
+      "defaultValue": 0.012,
+      "initialValue": 0.1,
+      "value": 0.006449423481093118,
+      "physicalBounds": [
+        0.0001,
+        0.1
+      ],
+      "searchBounds": [
+        0.0001,
+        0.1
+      ],
+      "optimizationStage": "runoff",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "IM",
+      "meaning": "不透水比例",
+      "unit": "",
+      "defaultValue": 0.01,
+      "initialValue": 0.01,
+      "value": 0.0503954549913151,
+      "physicalBounds": [
+        0,
+        0.2
+      ],
+      "searchBounds": [
+        0,
+        0.2
+      ],
+      "optimizationStage": "runoff",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "snowDdf",
+      "meaning": "融雪度日因子",
+      "unit": "mm/℃/d",
+      "defaultValue": 4.0,
+      "initialValue": 4.0,
+      "value": 8.268361544906824,
+      "physicalBounds": [
+        1,
+        10
+      ],
+      "searchBounds": [
+        1,
+        10
+      ],
+      "optimizationStage": "snow",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "iceDdf",
+      "meaning": "融冰度日因子",
+      "unit": "mm/℃/d",
+      "defaultValue": 7.0,
+      "initialValue": 7.0,
+      "value": 10.491198321961527,
+      "physicalBounds": [
+        2,
+        14
+      ],
+      "searchBounds": [
+        2,
+        14
+      ],
+      "optimizationStage": "snow",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "snowTemperature",
+      "meaning": "全雪温度",
+      "unit": "℃",
+      "defaultValue": -1.0,
+      "initialValue": -1.0,
+      "value": -5.0,
+      "physicalBounds": [
+        -5,
+        1
+      ],
+      "searchBounds": [
+        -5,
+        1
+      ],
+      "optimizationStage": "snow",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "rainTemperature",
+      "meaning": "全雨温度",
+      "unit": "℃",
+      "defaultValue": 2.0,
+      "initialValue": 2.0,
+      "value": 5.0,
+      "physicalBounds": [
+        0,
+        5
+      ],
+      "searchBounds": [
+        0,
+        5
+      ],
+      "optimizationStage": "snow",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "liquidCapacity",
+      "meaning": "雪层持水比例",
+      "unit": "",
+      "defaultValue": 0.05,
+      "initialValue": 0.05,
+      "value": 0.055106981756182505,
+      "physicalBounds": [
+        0.01,
+        0.15
+      ],
+      "searchBounds": [
+        0.01,
+        0.15
+      ],
+      "optimizationStage": "snow",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "refreezeFactor",
+      "meaning": "雪内再冻结因子",
+      "unit": "mm/℃/d",
+      "defaultValue": 1.0,
+      "initialValue": 1.0,
+      "value": 2.9996048886186535,
+      "physicalBounds": [
+        0,
+        3
+      ],
+      "searchBounds": [
+        0,
+        3
+      ],
+      "optimizationStage": "snow",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "snowSublimation",
+      "meaning": "升华分配比例",
+      "unit": "",
+      "defaultValue": 0.35,
+      "initialValue": 0.35,
+      "value": 0.3377805450877816,
+      "physicalBounds": [
+        0,
+        1
+      ],
+      "searchBounds": [
+        0,
+        1
+      ],
+      "optimizationStage": "snow",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "iceSublimationFraction",
+      "meaning": "裸冰升华潜在蒸发比例",
+      "unit": "",
+      "defaultValue": 0.25,
+      "initialValue": 0.25,
+      "value": 0.25,
+      "physicalBounds": [
+        0,
+        1
+      ],
+      "searchBounds": [
+        0,
+        1
+      ],
+      "optimizationStage": null,
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "unchanged-manual-prior"
+    },
+    {
+      "key": "iceSublimationMaxMmHour",
+      "meaning": "裸冰升华小时上限",
+      "unit": "mm/h",
+      "defaultValue": 0.08,
+      "initialValue": 0.08,
+      "value": 0.08,
+      "physicalBounds": [
+        0,
+        0.4
+      ],
+      "searchBounds": [
+        0,
+        0.4
+      ],
+      "optimizationStage": null,
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "unchanged-manual-prior"
+    },
+    {
+      "key": "glacierRecessionDay",
+      "meaning": "冰川日调蓄常数",
+      "unit": "d⁻¹",
+      "defaultValue": 0.5,
+      "initialValue": 0.5,
+      "value": 2.1964703205360663,
+      "physicalBounds": [
+        0.05,
+        3
+      ],
+      "searchBounds": [
+        0.05,
+        3
+      ],
+      "optimizationStage": "snow",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "tauHours",
+      "meaning": "子流域调蓄时间",
+      "unit": "h",
+      "defaultValue": 24.0,
+      "initialValue": 71.40081518816966,
+      "value": 81.17211359023726,
+      "physicalBounds": [
+        1,
+        168
+      ],
+      "searchBounds": [
+        1,
+        168
+      ],
+      "optimizationStage": "routing",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "lagHours",
+      "meaning": "传播滞时",
+      "unit": "h",
+      "defaultValue": 0.0,
+      "initialValue": 0.0,
+      "value": 33.96151753396235,
+      "physicalBounds": [
+        0,
+        72
+      ],
+      "searchBounds": [
+        0,
+        72
+      ],
+      "optimizationStage": "routing",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "lakeCoefficient",
+      "meaning": "湖面蒸发转换系数",
+      "unit": "",
+      "defaultValue": 0.8,
+      "initialValue": 1.0,
+      "value": 1.5,
+      "physicalBounds": [
+        0.2,
+        1.5
+      ],
+      "searchBounds": [
+        0.2,
+        1.5
+      ],
+      "optimizationStage": "lake",
+      "applicableRegion": "lake",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "lapseRate",
+      "meaning": "气温高程递减率",
+      "unit": "℃/m",
+      "defaultValue": -0.0065,
+      "initialValue": -0.0065,
+      "value": -0.009888678648497686,
+      "physicalBounds": [
+        -0.01,
+        -0.002
+      ],
+      "searchBounds": [
+        -0.01,
+        -0.002
+      ],
+      "optimizationStage": "snow",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "interflowTauHours",
+      "meaning": "壤中调蓄时间",
+      "unit": "h",
+      "defaultValue": 48.0,
+      "initialValue": 123.4066595475932,
+      "value": 6.0105774523024795,
+      "physicalBounds": [
+        6,
+        240
+      ],
+      "searchBounds": [
+        6,
+        240
+      ],
+      "optimizationStage": "routing",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    },
+    {
+      "key": "baseflowTauHours",
+      "meaning": "地下退水时间",
+      "unit": "h",
+      "defaultValue": 720.0,
+      "initialValue": 2160.0,
+      "value": 2160.0,
+      "physicalBounds": [
+        168,
+        2160
+      ],
+      "searchBounds": [
+        168,
+        2160
+      ],
+      "optimizationStage": "routing",
+      "applicableRegion": "all-calculation-land",
+      "sourceTaskId": "JOB-4934a5d35c9344a59353",
+      "source": "two-stage-calibration"
+    }
+  ],
+  "forcingReference": {
+    "inputId": "INPUT-fc731ba1bf2b5e79d3e03d92",
+    "firstCompleteDay": "2019-12-31",
+    "lastCompleteDay": "2026-10-20"
+  },
+  "spatialReference": {
+    "version": "AGG-SPATIAL-90fbdd73db960fdda4a6",
+    "manifestSHA256": "1386f7269381dce3384e5b72968f74d90bf781bdb587ab00317a28237e08c540",
+    "domain": {
+      "policy": "four-original-shp-basins-and-strict-direct-fringe; unknown-and-external-display-only-v1",
+      "originalBoundariesSHA256": "0ce09a1e76d1f45a6eb134749d2bef744061f698d5e9c99b26ffe8c99c5a6a01",
+      "calculationLandAreaKm2": 39535.2938096823,
+      "displayOnlyAreaKm2": 2061.2888235577575,
+      "excludedSourceUnits": [
+        "GRID-9e7c6d1b266deb06a96c",
+        "GRID-90cb8710b1afc8a0b2d4",
+        "GRID-642968f3867c3d21403b",
+        "GRID-2f8f2f2a80368707d70e",
+        "GRID-8f97ebe0c8c38934bf02",
+        "GRID-000b9971d451e515e086",
+        "GRID-34f8be482f52cd64969e",
+        "GRID-cd6d2e8dee600ad756de",
+        "GRID-a9ea86716dd8afef746f",
+        "GRID-aa73a698a7fd7a8cb7b7",
+        "GRID-2d3beeec78206c73d4d7",
+        "GRID-9d836cebc99f0e1b2d28",
+        "GRID-1135490d3dfbe8d09553",
+        "GRID-a9efff892eef2775aaa5",
+        "GRID-77df8ca11864802db838",
+        "GRID-3ad7e59e8772f3a717f8",
+        "GRID-fe4defe386b838322e2d",
+        "GRID-846c01cbbfa3afa753d6",
+        "GRID-cba241bc8bfbc808b346",
+        "GRID-e0c69da32e8942808506",
+        "GRID-79df697f82130e8feb1b",
+        "GRID-00af1684faca675d5c4f",
+        "GRID-de272d7917fd1b579dc8",
+        "GRID-718a3091d08f723597a8",
+        "GRID-5262e88fb637e1c698ff",
+        "GRID-a8f64ba950b8050822f1",
+        "GRID-05883b022e3ef4a49a95",
+        "GRID-d3b363745d91b0548728",
+        "GRID-6d29476648810ddda857",
+        "GRID-b342d637e4be55b1ca5b",
+        "GRID-d40d06354dffdfceaefc",
+        "GRID-9b36d5eba6591e31f0ae",
+        "GRID-f51c9b551fbaf331fd30",
+        "GRID-d57795866cffb5872a0e",
+        "GRID-3e54cb208171f41a9483",
+        "GRID-03a0d2b7029a97e3860b",
+        "GRID-492fe5c6681b8d2b873a",
+        "GRID-7176d0788497e984e03f",
+        "GRID-3ed15cbac80748523aae",
+        "GRID-607369cb4ec5a8da66e6",
+        "GRID-2e950b3bea804203f60e",
+        "GRID-4f3aecc50fd42298bc0c",
+        "GRID-01c87977c725b8988aa0",
+        "GRID-b50222caeea25d60f4ca",
+        "GRID-e2d2ea4997d2bb1257d1",
+        "GRID-88e2ae9d7a74093ba1ee",
+        "GRID-c78ab78b413661f59577",
+        "GRID-12e89b725bc88d6f646c",
+        "GRID-fd0d520c5871e68040ba",
+        "GRID-f159285cd569cc6cbea5",
+        "GRID-42a63e7bc6795c986b18",
+        "GRID-13767ebf8b3e5a608ab9",
+        "GRID-0952e16fdd72f0b9ec66",
+        "GRID-6f314e002ebc42909c32",
+        "GRID-8fda02b003de3a20c6ad",
+        "GRID-8465858432b93fd99900",
+        "GRID-28af53df4752edda1eb3",
+        "GRID-761f383bdb9281594104",
+        "GRID-2dc0a055a894f11e80be",
+        "GRID-7a61087eb5a004c26d7a",
+        "GRID-f4ccdd4a589802e94e7b",
+        "GRID-6520e420b1280ed98c47",
+        "GRID-a06eb020dc8efd80f4cc",
+        "GRID-cb1d1183c63c584ef582",
+        "GRID-56690a0bd09abba65a2b",
+        "GRID-65996f0538d741cc2f8a",
+        "GRID-d71f86b956e0657488c0",
+        "GRID-5542cb801d269e809bf4",
+        "GRID-ea24ef7b48939335c470",
+        "GRID-8c29767c5517f5e6fa89",
+        "GRID-2107adcfe6a5a2ca99bb",
+        "GRID-5fb89fd553053f036be6",
+        "GRID-d5f5f5474338bfeab590",
+        "GRID-c8935daac0792a79c271",
+        "GRID-cbd6e374958c80cb4f66",
+        "GRID-41d2941b1e486942a637",
+        "GRID-0ac219c5c442d1f6093a",
+        "GRID-61db113e3ee89f53a60e",
+        "GRID-5a05a896e666d2f914b3",
+        "GRID-9af5c866535f180bb830",
+        "GRID-f588c6cd06301358143d",
+        "GRID-d6a98ec6eb52c92d1d84",
+        "GRID-c441416f9b006c756ea8",
+        "GRID-f86fcc9555f7c7b3f6f6",
+        "GRID-32323af027c46eb33496",
+        "GRID-db3670650c1f3af7a2d3",
+        "GRID-623cc62c4763dc7deadc",
+        "GRID-b6892462eeccb6100db6",
+        "GRID-f8bfd1b66c343d1e688f",
+        "GRID-36275f2639f87d723e8d",
+        "GRID-4140c09d87ec06f2fb6e",
+        "GRID-3db27fb2c0f21366228a",
+        "GRID-8390c9cad53edc759276",
+        "GRID-68805dc2cdb0b7e4f81f",
+        "GRID-b38388e5a2632ce9378c",
+        "GRID-3354f10d23cff73fd831",
+        "GRID-e510474b339196c54497",
+        "GRID-8b72e9b7f2f1d8d9f4e4",
+        "GRID-d9c4a6d594592d3714e8",
+        "GRID-d2b59ff72df0a40578ce",
+        "GRID-ad13e664dbf8cf43c060",
+        "GRID-104b7032a52eb6beec18",
+        "GRID-ff4527906f6dfac31f77",
+        "GRID-054b592d697ea1570236",
+        "GRID-6e1d24fbb681ede497ee",
+        "GRID-cb6cce4ad898f94fda85",
+        "GRID-7ef6566b68175f04df35",
+        "GRID-1616f1a96f73900ebf55",
+        "GRID-502d1972bca5d2cafca7",
+        "GRID-f02063499a9563602f9f",
+        "GRID-8249cd4374d2cdca4375",
+        "GRID-8e1054dfbedfbe5e0f4d",
+        "GRID-7ae55d0b2ce267d18b71",
+        "GRID-e59ef09e22d92139d1d5",
+        "GRID-15a458424e75950490c9",
+        "GRID-af384b9378a3da4ca14a",
+        "GRID-9b077bac36361db2945b",
+        "GRID-0ea6abfe4e32e29f482a",
+        "GRID-04780aca055ed329738b",
+        "GRID-a88db06f75d5e34188e8",
+        "GRID-26b24c2a9f57cda88a51",
+        "GRID-cd9039161a781315405e",
+        "GRID-bbc19a66a48c8e69e8a3",
+        "GRID-cb7cc9595cd974f36fe2",
+        "GRID-164492832e20a9dd28e6",
+        "GRID-24c13f11565212868c47",
+        "GRID-4d6aa7eff0b83e30bae7",
+        "GRID-5efb6cd70dd75aafa044",
+        "GRID-3f3325133705ab728e05",
+        "GRID-1c343a4e557bf465dc84",
+        "GRID-128530cc02544b4beff6",
+        "GRID-7bc1d29be3961220bd55",
+        "GRID-3392b60729ad6ed938ce",
+        "GRID-166daf9011f102741383",
+        "GRID-af7a28577ab703da7ec4",
+        "GRID-2f05a3accdef99ef1ce0",
+        "GRID-f3936f279420f0fd4be5",
+        "GRID-c89f189103dd1e2f5261",
+        "GRID-6c7f73457835048dade0",
+        "GRID-3c1f8019b0687e4a2c74",
+        "GRID-d192eea44499dd574197",
+        "GRID-677e0d4f38f8dc28bc30",
+        "GRID-c089e1835ff73ec69e1d",
+        "GRID-a971a0cb3e0ec35b0724",
+        "GRID-57695f1d5e65e84966e4",
+        "GRID-4be37ca2b2a4f1931e08",
+        "GRID-1ddfed66c49026abdece",
+        "GRID-4dfa852e36afacf7a872",
+        "GRID-b372c7ee7425e12c2134",
+        "GRID-31a2372129f8e3152242",
+        "GRID-b2dc84840e0fe96f04bf",
+        "GRID-a4aec0600d8c361c23c4",
+        "GRID-821552922ca63ab693b0",
+        "GRID-10cd11294b288df42980",
+        "GRID-c3c3eee7de2d2d0dafcb",
+        "GRID-297dbeabf8e312a36b0b",
+        "GRID-cb5671069281f8cd00d8",
+        "GRID-37631cab07df9b7dc743",
+        "GRID-9e00ec5368b954d2c48a",
+        "GRID-0e727055fd002b77a4af",
+        "GRID-1d3766c656a98ad0d8e1",
+        "GRID-9c457ea2175e72a536d3",
+        "GRID-ed831f140f0540ea8a85",
+        "GRID-76ace3ad60c1a8a78669",
+        "GRID-82e23d3bdae22bb2ae8f",
+        "GRID-e02672ec0aebd4c5e887",
+        "GRID-ac80412e3b1b31731c07",
+        "GRID-44473266afd5dbfe09e1",
+        "GRID-12ce75b61a570145b25c",
+        "GRID-ee459f5da5118f772ba2",
+        "GRID-200cd7568bfff78fa8b0",
+        "GRID-9dd02df278569f97e832",
+        "GRID-7333311d9d23e850f5a3",
+        "GRID-fb8983f6f324693e8d9f",
+        "GRID-45f2d33c8de69851665f",
+        "GRID-d30cb6e26ce4844b8502",
+        "GRID-0055418b1ee4011afc56",
+        "GRID-33ad67b07a7f7c2ee39b",
+        "GRID-40974549740a883aed99",
+        "GRID-64e6ed68602447240736",
+        "GRID-5bf2180636ebe4f8f83c",
+        "GRID-80b6a50e6deded0da269",
+        "GRID-981a72b6fbcf646ec477",
+        "GRID-9e88aede6a10d6c832bb",
+        "GRID-8623722aa4a6b3896ed5",
+        "GRID-b34ee7c06a051db5799a",
+        "GRID-5aa9c10adcf3569cac93",
+        "GRID-abd82e46b35f9a483015",
+        "GRID-020e5875e08f88eda5f6",
+        "GRID-96cf547e2bb4f3d3a23e",
+        "GRID-4b791539d3282eef1272",
+        "GRID-2884d9edec76f77cd2d3",
+        "GRID-4fe56ba72e2b2a3f041a",
+        "GRID-cd5cb9eccda4bb1b6145",
+        "GRID-693bc5a46af7c719841f",
+        "GRID-ad5bd7361015effdd77d",
+        "GRID-88d361b675f5ea7bfa23",
+        "GRID-eefc316f769dbe8bffad",
+        "GRID-395097b237a4bb6be1c3",
+        "GRID-ef35fdd9ac2a9595c148",
+        "GRID-6379480bcf1b73f51d3d",
+        "GRID-05f06869da18b0acbc99",
+        "GRID-a28d2cc9436506207777",
+        "GRID-dc1fdee69a64540e3a63",
+        "GRID-34d74824d5a92914335d",
+        "GRID-2b29acc6afbb1077af4a",
+        "GRID-666b30d20b8fbf0a8635",
+        "GRID-4204796231b3c08e5acd",
+        "GRID-d4b67ae45e8c3ee7bc13",
+        "GRID-cddcd98d24fd7f4d1b07",
+        "GRID-f192b671cf8a4b92f414",
+        "GRID-a20b8d03dbae66919b62",
+        "GRID-446fc15db9b0a2b86201",
+        "GRID-99f54df97550875f1274",
+        "GRID-122d3a335b7a235d7723",
+        "GRID-8764fe576ed172d94c92",
+        "GRID-b27c43ac9e9320ad4a62",
+        "GRID-000a99d5ef999a6d46ce",
+        "GRID-d6553722a6ddd391fd1f",
+        "GRID-3bbf03a67152f1c9d828",
+        "GRID-9e2ee01c0100c9dfe9f6",
+        "GRID-0afe82631eb6b056cfc9",
+        "GRID-f2239fd9a34cfd4a9859",
+        "GRID-9af097fd5af64eefe844",
+        "GRID-4cfe78525d5186ca80bd",
+        "GRID-6a39c50094a4a242894d",
+        "GRID-c8372b4503566c14348c",
+        "GRID-68db223ea1e54fe93b70",
+        "GRID-15a2adff5fccfc8a81b6",
+        "GRID-32e9a1f5cc62558021e3",
+        "GRID-b8bfa797cf35bbd2b7a2",
+        "GRID-15b5bf0bd6b4a3da1288",
+        "GRID-a594396ce34087a1dd80",
+        "GRID-2fc501869587f2f950fe",
+        "GRID-341cf776f942ca9e7e16",
+        "GRID-72470e5981d638474d87",
+        "GRID-4a2a6315e73659ad308e",
+        "GRID-cca94fb187b5c71f0aff",
+        "GRID-846528c17581ed6d0f03",
+        "GRID-730410166f945720cc94",
+        "GRID-34c62ad2b539c92b3557",
+        "GRID-b7164c34803192ff1e69",
+        "GRID-4395f8ed42cac41d0e4c",
+        "GRID-3a597e41ec169697cc26",
+        "GRID-48ec7c6a442c0edee6ae",
+        "GRID-17e27dcc582c830b423e",
+        "GRID-dcee178041299ee192ba",
+        "GRID-e434e1896f2b17bc5616",
+        "GRID-1251d4d22bcf03b0b1a2",
+        "GRID-9a63227236dcaa1d2fb1",
+        "GRID-7e830bb60ee0ff44f8fc",
+        "GRID-ee8110d6c856fbe7973d",
+        "GRID-45a81bbe1b627c88b1a2",
+        "GRID-e7ee937c4c6b6d5183bc",
+        "GRID-35560cf3578bb0a300d1",
+        "GRID-8f0c58bf09c0d1604b95",
+        "GRID-9db7ebec9e523ab41fcd",
+        "GRID-d12bd71d8fa35770abea",
+        "GRID-7b3a2d13a5c517d54cfd",
+        "GRID-e363f19421ae60a13d81",
+        "GRID-d8442755b6ba7b1b7ce1",
+        "GRID-bf6cf7ae9ea581480d47",
+        "GRID-d5496fd99c47e858e854",
+        "GRID-603ca8e97c237de7fa15",
+        "GRID-7c6941a2a98fd0be7cb9",
+        "GRID-e9ddaee28548c136409f",
+        "GRID-3edc4524dbb9b72d37e1",
+        "GRID-50bed07d9b6ffcc79017",
+        "GRID-21f4b86519452fd4634b",
+        "GRID-96de7079bed5f40a01e0",
+        "GRID-4daeeabf1240399843c1",
+        "GRID-3c98b87e2122546d8a86",
+        "GRID-474572057562bd266121",
+        "GRID-b71b4cfd3df6d818e98d",
+        "GRID-0164597ee951d31faa40",
+        "GRID-9cff748f36b89ff2a231",
+        "GRID-59e94153d2ed404d8b12",
+        "GRID-97bc03b3eb1ec29db5a8",
+        "GRID-260c03a893d047b654cd",
+        "GRID-ca6ec763204eb8f39d23",
+        "GRID-cb53175b3b095e318e03",
+        "GRID-b7c078dc4595a0ba90c4",
+        "GRID-4a38e165501e6c0a1f52",
+        "GRID-b8b05a3a6a94ee2605d4",
+        "GRID-aade2d185cac630aea80",
+        "GRID-51c2df607c6ed7fd4559",
+        "GRID-1fdd51c7b01a3ee131a2",
+        "GRID-b7ab5089eb3a29518b8e",
+        "GRID-8255378ea9758f331c58",
+        "GRID-0c4bb96338ac25dca90d",
+        "GRID-c4ef8230bd6c668a6977",
+        "GRID-27527920efa5154b5fb8",
+        "GRID-19668bd2929a0f0f17cb",
+        "GRID-d0ac5815dd05b0433b23",
+        "GRID-e205bdcc7866fdcb2aa9",
+        "GRID-38d5ab8bedd06766a6d2",
+        "GRID-eb9e758e8d69faa46f30",
+        "GRID-e6d5a931cbde5a1df9e7",
+        "GRID-bb2ffc8993d71d89cc65",
+        "GRID-44bfe46533d142942fdb",
+        "GRID-dbfb2b82ea7b50e34efa",
+        "GRID-2748f9429d1903188b28",
+        "GRID-ce19e355fa770a76ad93",
+        "GRID-e3b26a47814f10fa9fd1",
+        "GRID-ee3e9fae64a8a9195505",
+        "GRID-6ed2a63dce792ef18932",
+        "GRID-f2b5047fab7d3be95ed5",
+        "GRID-fb1be9cf907be5297537",
+        "GRID-5d9956873344699c997c",
+        "GRID-c91ccc24c317089ee95f",
+        "GRID-5165e69ee092c1c19276",
+        "GRID-5482f08852a8d66f775f",
+        "GRID-8be82c4a5d2b6428e649",
+        "GRID-a9e3660db90bcd8d4336",
+        "GRID-7d57e3b8d5bad51e1800",
+        "GRID-9e887d59203ae7202b70",
+        "GRID-0323728580c454e10c5b",
+        "GRID-3c6ec0f279d5b46528f0",
+        "GRID-d722f8b18ccea55acd2b",
+        "GRID-0d022f8189f978b2f558",
+        "GRID-a0c5f7f9e48091307fcd",
+        "GRID-12452da5bb173c617b3d",
+        "GRID-5b8f99ab2b18f184f122",
+        "GRID-551d224d860de44c8efd",
+        "GRID-6a234683c62dca5f38b1",
+        "GRID-d5d9a7f0f51a091ff05d",
+        "GRID-b070a72f0aad9f056ba6",
+        "GRID-2de4e4968f5aaae00da5",
+        "GRID-05a9a9d10974cd9e6322",
+        "GRID-2d0203ca7c6a4dc75bdb",
+        "GRID-a227d61c471674c3ca8c",
+        "GRID-15b730e491f5afd92b4b",
+        "GRID-5d6caec80012e9e6c348",
+        "GRID-8f9d0919ee01040ec5ac",
+        "GRID-4fe248c11ef54e747946",
+        "GRID-dd666bb2c40308f7c8f2",
+        "GRID-74da25b7282acea0e9eb",
+        "GRID-dc0b08f0f527c1789998",
+        "GRID-219be976ddcc41d97e1e",
+        "GRID-bf72574a830e35af01ff",
+        "GRID-0e2d35c65d05b9257919",
+        "GRID-ec493e7fd3080361c3cc",
+        "GRID-7093b99f3b65174aec4a",
+        "GRID-85cb6d613c16f4da867a",
+        "GRID-a7a6c0c6b8a7eee543b5",
+        "GRID-76fc92edacf172868f02",
+        "GRID-f119395836bf64d5a6a6",
+        "GRID-333e49c7028bf8cb6fe0",
+        "GRID-cbe1e18c39b47014c972",
+        "GRID-9273fe97cd8333605acf",
+        "GRID-e7c4102b78621f0b076f",
+        "GRID-801efbc02a440891a98c",
+        "GRID-bcfe0bca5768aa59216d",
+        "GRID-0c6a3cec82d5f39fee70",
+        "GRID-9f8ab1247f381395f889",
+        "GRID-a1d7a005f4eab808ce18",
+        "GRID-5ec5a5dab8410355a937",
+        "GRID-afed8f71e665b9f4c039",
+        "GRID-a42588033039d2754005",
+        "GRID-fe50b5d92f731212de3c",
+        "GRID-950ef2348a0d11d42935",
+        "GRID-402b8278bd8cceef99d8",
+        "GRID-8e814902cfa2149cace4",
+        "GRID-5e30941591c0fdb2859f",
+        "GRID-3868fdeed078f1c794db",
+        "GRID-6d65c86b2e1a389b6bf9",
+        "GRID-c9a619fddbc0e6dd2e12",
+        "GRID-9b9cfe7bdcbbe3cc53ec",
+        "GRID-7395b3e79386bbb5a6fe",
+        "GRID-8b256f0ce27f3a41f808",
+        "GRID-0f8cf7fcaf4693d037db",
+        "GRID-1557c7b351d4844dea74",
+        "GRID-9deb52d399e8aca81060",
+        "GRID-bec24a37b908c1901488",
+        "GRID-fb7d8b9650b118358c00",
+        "GRID-6684a8c3ecc537ec3874",
+        "GRID-927d5317a1ad61222d87",
+        "GRID-c1c304a402ef8d9d24b9",
+        "GRID-e9a6583370541ac7ba92",
+        "GRID-f84e756a2278cd6eff6e",
+        "GRID-5d64d9ec705229e9f2cc",
+        "GRID-80333c4e1013981fe7ab",
+        "GRID-8ff7a1e38a748950909f",
+        "GRID-368bf80fd4a3e0b4a3c4",
+        "GRID-0d4cb7b6aa38d82b4100",
+        "GRID-ad1b0b8662ceeeefcab1",
+        "GRID-b076be7ecd12c6426bcb",
+        "GRID-73be07aad1da7ef80836",
+        "GRID-b1f90dc9126574ac51e3",
+        "GRID-8be0250547a814c81751",
+        "GRID-6c7d56f2339c0f6541ca",
+        "GRID-446634079a49a4ab36c7",
+        "GRID-de640232409b88141cab",
+        "GRID-da8d816eee1addedb759",
+        "GRID-b65bf1dd61ec6f686b0c",
+        "GRID-5e48620e40339a5e97c1",
+        "GRID-f3f0532b883f6a088ebb",
+        "GRID-0f8a15270937bbe59fc2",
+        "GRID-90ade42c189b44bb59f7",
+        "GRID-e48adbe5f3da992573f5",
+        "GRID-06d114eea5fc15917f1d",
+        "GRID-b5201836913414fd13d7",
+        "GRID-49254ad645c0d0e84247",
+        "GRID-349df8234ba7cfb56878",
+        "GRID-b8eff617504c46037025",
+        "GRID-613cb010280e00e2f71a",
+        "GRID-74fa2050baaa1dabf75c",
+        "GRID-1feca8b5eb5416c2c7cc",
+        "GRID-df89bcfa79a251e7ed8e",
+        "GRID-e84fe4a8fc0cd17f0972",
+        "GRID-033432b4de77895afb74",
+        "GRID-a9398f3ddaddc7c30f87",
+        "GRID-dd6ba2de231014f19505",
+        "GRID-56c0e534415acaf10582",
+        "GRID-beee5f0b6f79b62ba284",
+        "GRID-bf6bc29d1779d531c445",
+        "GRID-4332accfb41acf0df76c",
+        "GRID-bfecbbfd2b0adaa5e8dd",
+        "GRID-7dd8a877588c74b2794c",
+        "GRID-3ed7eae766cfa04ca7c5",
+        "GRID-6409449d17841bfaae4a",
+        "GRID-c7ae8c4881e966765db2"
+      ],
+      "namedBasinBoundaries": "original SHP-derived polygons; no terrain expansion of river or Duja boundary"
+    }
+  },
+  "resultReference": {
+    "taskId": "JOB-4934a5d35c9344a59353",
+    "resultSHA256": "35acc88c3a97f2f68a35032ec63a43eb83cc1e52786867c151f24f734bcf2f50",
+    "hourlyManifestSHA256": "4396dbe40d4485cbf6187635adff49b9b0231d893c6e740c49e00c9ac5c20e28"
+  },
+  "evidenceFile": "docs/evidence/两阶段率定交付-20261029.json",
+  "fullArraysExternal": true
+}

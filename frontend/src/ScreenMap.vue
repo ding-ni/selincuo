@@ -43,12 +43,13 @@ const positioned=computed(()=>(props.stations||[]).filter(s=>s.located).map(s=>{
 const stationPoints=computed(()=>positioned.value.map(s=>{const [x,y]=screen([s.lon,s.lat]);return{...s,x,y,name:s.name.replace('色林错','')}}).filter(s=>s.x>=0&&s.y>=0&&s.x<=size.value.width&&s.y<=size.value.height))
 const stationPointObstacles=computed(()=>props.showStations?stationPoints.value.map(s=>({x:s.x-8,y:s.y-8,w:16,h:16})):[])
 const stationLabels=computed(()=>{
- const obstacles=[...overlayBoxes.value,...stationPoints.value.map(s=>({x:s.x-8,y:s.y-8,w:16,h:16}))]
+ const obstacles=[...overlayBoxes.value,...(props.showNames?labels.value.map(l=>l.box):[]),...stationPoints.value.map(s=>({x:s.x-8,y:s.y-8,w:16,h:16}))]
  return placeLabels(stationPoints.value.map(s=>({...s,width:Math.max(48,s.name.length*13+8),height:22})),size.value,obstacles).map(s=>({...s,anchor:screen([s.lon,s.lat])}))
 })
 const stationLabel=id=>stationLabels.value.find(s=>s.id===id)
-const stationObstacles=computed(()=>[...overlayBoxes.value,...stationPointObstacles.value,...(props.showStations?stationLabels.value.map(s=>s.box):[])])
-const labels=computed(()=>placeLabels((presentation.value?.labels||context.value?.labels||[]).filter(l=>l.kind==='lake'||l.kind==='basin'&&displayedBasinIds.has(l.id)).map(l=>{const anchor=l.anchor||l.coordinate,geo=namedBasins.value.find(f=>f.properties.id===l.id),[x,y]=screen(anchor);return{...l,anchor,areaKm2:geo?.properties.areaKm2??l.areaKm2,name:businessName(l),x,y,width:l.kind==='lake'?78:Math.max(118,l.name.length*13),height:l.kind==='lake'||!(props.focus===l.id||zoom.value>1.8)?24:36}}).filter(l=>l.x>=0&&l.y>=0&&l.x<=size.value.width&&l.y<=size.value.height),size.value,stationObstacles.value))
+// Geographic names own their positions. Stations are placed around them.
+const geographicObstacles=computed(()=>[...overlayBoxes.value,...stationPoints.value.map(s=>({x:s.x-8,y:s.y-8,w:16,h:16}))])
+const labels=computed(()=>placeLabels((presentation.value?.labels||context.value?.labels||[]).filter(l=>l.kind==='lake'||l.kind==='basin'&&displayedBasinIds.has(l.id)).map(l=>{const anchor=l.anchor||l.coordinate,geo=namedBasins.value.find(f=>f.properties.id===l.id),[x,y]=screen(anchor);return{...l,anchor,areaKm2:geo?.properties.areaKm2??l.areaKm2,name:businessName(l),x,y,width:l.kind==='lake'?78:Math.max(118,l.name.length*13),height:l.kind==='lake'||!(props.focus===l.id||zoom.value>1.8)?24:36}}).filter(l=>l.x>=0&&l.y>=0&&l.x<=size.value.width&&l.y<=size.value.height),size.value,geographicObstacles.value))
 const selectionPins=computed(()=>geometryReady.value?selectedFeatures.value.flatMap(f=>(f.geometry?.type==='MultiPolygon'?f.geometry.coordinates.map(c=>({geometry:{type:'Polygon',coordinates:c}})):[f])).map(f=>geometryBounds([f])).filter(Boolean).map(b=>{const a=screen([b[0],b[3]]),z=screen([b[2],b[1]]);return{x:(a[0]+z[0])/2,y:(a[1]+z[1])/2,small:Math.max(z[0]-a[0],z[1]-a[1])<9}}).filter(p=>p.small):[])
 const terrainLevel=computed(()=>[...(terrain.value?.levels||[])].sort((a,b)=>(a.minZoom||0)-(b.minZoom||0)).filter(level=>zoom.value>=(level.minZoom||0)).at(-1))
 const terrainBox=computed(()=>{const b=terrainLevel.value?.bounds||terrain.value?.bounds||context.value?.bounds||[87.1,29.8,92.5,33.6],p=xy([b[0],b[3]]),q=xy([b[2],b[1]]);return{x:p[0],y:p[1],width:q[0]-p[0],height:q[1]-p[1]}})

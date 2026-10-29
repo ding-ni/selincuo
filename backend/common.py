@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import tempfile
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -50,7 +51,16 @@ def write_json(path, value):
         stream.write('\n')
         stream.flush()
         os.fsync(stream.fileno())
-    os.replace(name, p)
+    # Windows readers can briefly hold the destination without delete-sharing.
+    # Keep the completed temporary file and retry the atomic replacement.
+    for attempt in range(8):
+        try:
+            os.replace(name, p)
+            break
+        except PermissionError as error:
+            if os.name != 'nt' or getattr(error, 'winerror', None) not in (5, 32) or attempt == 7:
+                raise
+            time.sleep(.01 * 2**attempt)
 
 
 def within(root, relative):

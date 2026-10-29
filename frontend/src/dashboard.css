@@ -84,7 +84,7 @@
  .lake-screen,.lake-screen.screen-density-tight,.lake-screen.screen-density-compact{min-height:740px;grid-template-rows:36px 30px 68px minmax(308px,1fr) clamp(220px,calc(var(--screen-height,900px)*.27),290px) 48px;gap:6px}
  .lake-screen.screen-expanded{min-height:0;overflow:auto}
  .lake-screen .screen-main{grid-template-columns:minmax(220px,.9fr) minmax(340px,2fr) minmax(250px,.95fr)}
- .lake-screen .summary-stack,.lake-screen .hydrology-stack{gap:7px;padding:9px 11px;overflow-y:auto}
+ .lake-screen .summary-stack,.lake-screen .hydrology-stack{gap:10px;padding:12px 14px;overflow-y:auto;container-type:size;container-name:water-side}
  .lake-screen .summary-stack>section+section,.lake-screen .hydrology-stack>section+section{padding-top:6px}
  .lake-screen .summary-stack .screen-panel-heading,.lake-screen .hydrology-stack .screen-panel-heading{margin-bottom:3px}
  .lake-screen .rain-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 12px}
@@ -107,6 +107,49 @@
  .lake-screen.screen-density-regular .shore-list{gap:10px 16px}.lake-screen.screen-density-regular .shore-row{padding:4px 0}
  .lake-screen.screen-density-regular .balance-grid{gap:8px}.lake-screen.screen-density-regular .balance-grid>div{display:flex;padding:8px 10px;gap:5px}.lake-screen.screen-density-regular .balance-grid b{font-size:21px}
  .lake-screen.screen-density-regular .metric-card>b{font-size:32px}
+ .lake-screen .hydrology-stack{display:grid;grid-template-rows:minmax(0,45fr) minmax(0,25fr) minmax(0,30fr)}
+ .lake-screen .summary-stack{display:grid;grid-template-rows:minmax(0,55fr) minmax(0,45fr)}
+ .lake-screen .hydrology-stack,.lake-screen .summary-stack{grid-template-columns:minmax(0,1fr);justify-content:stretch;align-items:stretch}
+ .lake-screen .hydrology-stack>section,.lake-screen .summary-stack>section{min-height:0;min-width:0;display:flex;flex-direction:column;width:100%}
+ .lake-screen .hydrology-stack .screen-panel-heading,.lake-screen .summary-stack .screen-panel-heading,.lake-screen .screen-note{flex:0 0 auto}
+ .lake-screen .rain-list,.lake-screen .shore-list,.lake-screen .balance-grid{min-height:0;min-width:0}
+ .lake-screen .rain-list{flex:1;display:grid;grid-template-columns:1fr;grid-template-rows:repeat(5,minmax(0,1fr));gap:0}
+ .lake-screen .rain-summary-row,.lake-screen .river-row{min-height:0;align-content:center;padding:3px 0 6px;font-size:clamp(12px,2.7cqh,15px)}
+ .lake-screen .rain-summary-row>b,.lake-screen .river-row>b{font-size:clamp(15px,3.6cqh,20px)}
+ .lake-screen .observation-summary>div:not(.screen-panel-heading){flex:1;align-items:center;font-size:clamp(12px,2.9cqh,15px)}
+ .lake-screen .observation-summary b{font-size:clamp(15px,4cqh,23px)}
+ .lake-screen .shore-list{flex:1;grid-template-rows:repeat(2,minmax(0,1fr));gap:6px 12px}
+ .lake-screen .shore-row{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;font-size:clamp(12px,2.9cqh,15px)}
+ .lake-screen .shore-row b{font-size:clamp(13px,3.6cqh,20px);line-height:1.3;text-align:left}
+ .lake-screen .inflow-summary .river-row{flex:1}
+ .lake-screen .inflow-total{flex:0 0 auto;margin-top:6px;padding:8px 0 0}
+ .lake-screen .inflow-total b{font-size:clamp(21px,4.7cqh,28px)}
+ .lake-screen .balance-grid{flex:1;grid-template-rows:repeat(2,minmax(0,1fr));gap:8px}
+ .lake-screen .balance-grid>div,.lake-screen.screen-density-regular .balance-grid>div{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:9px 11px;gap:7px;font-size:clamp(12px,3cqh,16px)}
+ .lake-screen .balance-grid b,.lake-screen.screen-density-regular .balance-grid b{font-size:clamp(19px,5.1cqh,30px);line-height:1.2}
+ .lake-screen.screen-density-compact .summary-stack,.lake-screen.screen-density-compact .hydrology-stack{gap:6px;padding:8px 10px}
+ .lake-screen.screen-density-compact .rain-list{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:0 10px}
+ .lake-screen.screen-density-compact .shore-row{flex-direction:row;align-items:center;justify-content:space-between;gap:3px}
+ .lake-screen.screen-density-compact .shore-row b{font-size:12px}
+ .lake-screen.screen-density-compact .balance-grid>div{padding:5px 7px;gap:3px}
+ @container water-side (max-height:380px){
+  .lake-screen .screen-panel-heading{line-height:16px;min-height:0}
+  .lake-screen .screen-panel-heading h3{font-size:12px;line-height:16px}
+  .lake-screen .screen-panel-heading>span,.lake-screen .screen-note{font-size:10px;line-height:1.25}
+  .lake-screen .rain-list,.lake-screen.screen-density-regular .rain-list{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:0 12px}
+  .lake-screen .rain-summary-row,.lake-screen .river-row,.lake-screen.screen-density-regular .rain-summary-row,.lake-screen.screen-density-regular .river-row{padding:1px 0 4px;line-height:1.15;font-size:12px;gap:1px 6px}
+  .lake-screen .rain-summary-row>b,.lake-screen .river-row>b{font-size:15px;line-height:1.15}
+  .lake-screen .observation-summary>div:not(.screen-panel-heading),.lake-screen.screen-density-regular .observation-summary>div:not(.screen-panel-heading){padding:1px 0;font-size:12px;line-height:1.15}
+  .lake-screen .observation-summary b{font-size:15px;line-height:1.15}
+  .lake-screen .shore-list,.lake-screen.screen-density-regular .shore-list{gap:3px 10px}
+  .lake-screen .shore-row,.lake-screen.screen-density-regular .shore-row{padding:0;flex-direction:row;align-items:center;justify-content:space-between;gap:3px;font-size:12px}
+  .lake-screen .shore-row b{font-size:12px;line-height:1.2;white-space:nowrap}
+  .lake-screen .inflow-total{padding-top:3px;margin-top:3px;font-size:12px}
+  .lake-screen .inflow-total b{font-size:20px;line-height:1.15}
+  .lake-screen .balance-grid{gap:5px}
+  .lake-screen .balance-grid>div,.lake-screen.screen-density-regular .balance-grid>div{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;align-content:center;padding:5px 6px;gap:4px;font-size:12px;line-height:1.2}
+  .lake-screen .balance-grid b,.lake-screen.screen-density-regular .balance-grid b{font-size:18px;line-height:1.2}
+ }
 }
 
 @media(max-width:1000px){

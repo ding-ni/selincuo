@@ -103,7 +103,7 @@ def aggregate_manifest(parent, asset_hashes):
         units.append(unit); aggregation.append({'unitId': unit['id'], 'members': mapping}); weights.append(row)
     result = {k: parent[k] for k in ('projectId', 'forcingResolution', 'elevationBandMeters', 'areaCrs',
               'forcingGridVersion', 'domainAreaKm2', 'lakeAreaKm2', 'grids', 'lakeWeights', 'bounds',
-              'basins', 'drainage', 'temperatureElevationReference') if k in parent}
+              'basins', 'drainage', 'temperatureElevationReference', 'calculationDomain') if k in parent}
     result.update({'schemaVersion': 3, 'unitStrategy': AGGREGATE_STRATEGY,
                    'parentSpatialVersion': parent['version'], 'parentManifestSHA256': digest(parent),
                    'sourceAssetsSHA256': dict(sorted(asset_hashes.items())),
