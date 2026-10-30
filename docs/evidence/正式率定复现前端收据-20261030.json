@@ -1,0 +1,52 @@
+{
+  "taskId": "JOB-4a02ff08cbb54050b260",
+  "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+  "comparisonText": "复现结果与原记录一致\n逐日流量最大差 0 m³/s\n湖位最大差 0 m\n\n候选顺序、最终参数、阶段次数和过程数值分别核对，完整差异随本次设置导出。",
+  "historicalParameters": 25,
+  "selectedHydrology": 22,
+  "objectiveSpec": {
+    "flowWeights": {
+      "logNse": 0.25,
+      "nse": 0.5,
+      "volume": 0.25
+    },
+    "lakeScales": {
+      "amplitudeErrorM": 0.1,
+      "peakTimingErrorDays": 14,
+      "rmseM": 0.1,
+      "trendErrorM": 0.1
+    },
+    "lakeWeights": {
+      "amplitude": 0.25,
+      "peakTiming": 0.25,
+      "rmse": 0.25,
+      "trend": 0.25
+    }
+  },
+  "initialHydrology": {
+    "soilFraction": 0.5
+  },
+  "initialization": {
+    "level": 4543.66,
+    "method": "first-quality-daily-level-at-noon",
+    "reference": "SLC-working-datum",
+    "source": "time-weighted-level-v2-gap6h-cover18h",
+    "time": "2021-04-23T12:00:00"
+  },
+  "default": {
+    "adoptedAt": "2026-10-29T13:24:53+00:00",
+    "familyId": "FAMILY-08e7fc8c01364e88",
+    "inputId": "INPUT-c00df956d638351ebeb4e96e",
+    "name": "色林错流量与湖位联合优选",
+    "parameterId": "PARAM-bb4c92396eb04820adef",
+    "resultId": "JOB-88b35b44b27d4e15840c",
+    "schemeId": "SCHEME-1c4e16d578ee43aea372",
+    "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6"
+  },
+  "hiddenFromDailyList": true,
+  "errors": [],
+  "screenshots": [
+    "build\\正式率定复现最终页面-20261030\\前端复现结果.png"
+  ],
+  "settingsFile": "build\\正式率定复现最终页面-20261030\\复现任务完整设置.json"
+}

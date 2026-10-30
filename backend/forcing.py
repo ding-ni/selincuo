@@ -257,6 +257,8 @@ def load_input(db, identifier, spatial=None):
         raise ValueError('输入产品与当前空间单元不一致，请重新登记')
     if manifest.get('lakePrecipitationCorrection') and digest(manifest['lakePrecipitationCorrection']) != manifest.get('transformationSHA256'):
         raise ValueError('湖面降水转换定义摘要不一致')
+    from .land_precipitation import validate_manifest
+    validate_manifest(manifest)
     path = folder / manifest['data']
     if sha_file(path) != manifest['dataSHA256']:
         raise ValueError('输入文件摘要发生变化，拒绝使用')

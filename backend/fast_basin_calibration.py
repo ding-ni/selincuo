@@ -38,7 +38,10 @@ class BasinEvaluator:
         if not self.initial:
             raise ValueError('湖位筛选需要已确定的湖位起算')
         base = {**request['parameters'], 'lapseRate': 0.}
-        rain, temp, evap = unit_forcing(self.spatial, source['arrays'], ids, base, {})
+        from .land_precipitation import validate_manifest,validate_parameters
+        self.land_correction = validate_manifest(source.get('manifest', {}))
+        validate_parameters(self.land_correction,request['parameters'])
+        rain, temp, evap = unit_forcing(self.spatial, source['arrays'], ids, base, {},self.land_correction,source['times'])
         if self.spatial.get('aggregation'):
             offsets = np.array([sum(m['areaWeight'] * m['elevationOffsetM'] for m in g['members'])
                                 for g in self.spatial['aggregation']])
@@ -67,6 +70,8 @@ class BasinEvaluator:
     def daily(self, values, cancelled=None):
         from .grid_simulation import lake_balance_hourly
         p = parameters(values)
+        from .land_precipitation import validate_parameters
+        validate_parameters(self.land_correction,p)
         routed = {}
         vector = np.array([p[k] for k in PARAMETER_NAMES], dtype=float)
         for part in PARTITIONS:

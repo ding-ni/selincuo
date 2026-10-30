@@ -33,6 +33,13 @@ def _cached(db,key,make):
 
 def daily_quality(db,station,variable='level'):
     def make():
+        if variable=='precipitation':
+            # The aggregation owns the valid daily axis. Confirmed sparse
+            # rain coverage can contain no events or end after the last event.
+            old=daily_series(SeriesView(db),station,variable)
+            if old.empty:return []
+            days=pd.date_range(old.index.min(),old.index.max(),freq='D')
+            return [{'time':t.isoformat(),'value':None if pd.isna(v) else float(v),'coverageHours':None,'maximumGapHours':None,'source':'legacy-variable-rule','quality':'valid' if pd.notna(v) else 'missing'} for t,v in old.reindex(days).items()]
         records=SeriesView(db).observations(station,variable)
         if not records:return []
         frame=pd.DataFrame(records);frame['t']=pd.to_datetime(frame.time)

@@ -45,7 +45,8 @@ def visible_tasks(db, rows, include_experiments=False):
     development_schemes={row['id'] for row in db.items('schemes') if purpose(db,row)=='development'}
     chosen=current(db).get('resultId')
     return [row for row in rows if row['id']==chosen or row.get('userSaved') or row.get('user_saved') or
-            (row['id'] not in hidden and row.get('request',{}).get('researchSchemeId') not in development_schemes
+            (row.get('kind')=='calibration-replay' and row.get('status') in ('queued','running','stopping')) or
+            (row.get('kind')!='calibration-replay' and row['id'] not in hidden and row.get('request',{}).get('researchSchemeId') not in development_schemes
              and row.get('request',{}).get('purpose')!='development')]
 
 

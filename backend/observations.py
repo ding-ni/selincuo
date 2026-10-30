@@ -222,9 +222,9 @@ def daily_series(db, station, variable, start=None, end=None):
     import numpy as np
     import pandas as pd
     rows = db.observations(station, variable, start=start, end=end, limit=None)
-    if not rows:
+    if not rows and variable != 'precipitation':
         return pd.Series(dtype=float)
-    frame = pd.DataFrame(rows)
+    frame = pd.DataFrame(rows) if rows else pd.DataFrame(columns=['time', 'step', 'quality', 'value'])
     frame['date'] = pd.to_datetime(frame.time).dt.floor('D')
     daily = frame[(frame.step == 'day') & (frame.quality.isin(['valid', 'qualified']))].dropna(subset=['value'])
     result = daily.groupby('date').value.last()
@@ -238,26 +238,57 @@ def daily_series(db, station, variable, start=None, end=None):
                         else hourly_values.mean().where(hourly_values.count() == 24))
         result = result.combine_first(hourly_daily)
     sub = frame[(~frame.step.isin(['day', 'hour'])) & frame.quality.eq('valid')].dropna(subset=['value']).copy()
-    if len(sub):
+    if variable == 'precipitation':
+        # Each event source needs its own confirmed, complete observation day.
+        # A positive event alone does not prove that the rest of the day was
+        # observed; use one source per day and never add overlapping sources.
+        coverages = db.rows('''SELECT c.* FROM coverage c JOIN sources s ON s.id=c.source_id
+            WHERE c.station_id=? AND c.variable=? AND c.step='irregular'
+            AND s.rowid IN (SELECT MAX(rowid) FROM sources GROUP BY path)
+            ORDER BY s.imported_at DESC,s.rowid DESC''', (station, variable))
+        event_daily = pd.Series(dtype=float)
+        for c in coverages:
+            metadata = json.loads(c['metadata'])
+            if not metadata.get('coverageConfirmed') or not metadata.get('zeroForAbsent'):
+                continue
+            a, b = pd.Timestamp(c['start']), pd.Timestamp(c['end'])
+            days = pd.date_range(a.ceil('D'), b.floor('D') - pd.Timedelta(days=1), freq='D')
+            if start:
+                days = days[days >= pd.Timestamp(start).floor('D')]
+            if end:
+                days = days[days <= pd.Timestamp(end).floor('D')]
+            if not len(days):
+                continue
+            # Retain the confirmed coverage axis even when its final days are
+            # stopped. A stopped day is missing, never a zero-rain day.
+            operational = np.ones(len(days), dtype=bool)
+            for stopped_start, stopped_end in metadata.get('stoppedIntervals', []):
+                operational &= ((days + pd.Timedelta(days=1) <= pd.Timestamp(stopped_start)) |
+                                (days >= pd.Timestamp(stopped_end)))
+            source_rows = db.rows('''SELECT time,value,quality FROM observations
+                WHERE source_id=? AND station_id=? AND variable=? AND step='irregular'
+                ORDER BY time,id''', (c['source_id'], station, variable))
+            values = pd.Series(0., index=days)
+            if source_rows:
+                source = pd.DataFrame(source_rows)
+                source['date'] = pd.to_datetime(source.time).dt.floor('D')
+                bad = source[(~source.quality.isin(['valid', 'qualified'])) |
+                             source.value.isna() | (source.value < 0)]
+                valid = source[source.quality.isin(['valid', 'qualified']) &
+                               source.value.notna() & (source.value >= 0)]
+                sums = valid.groupby('date').value.sum()
+                common = values.index.intersection(sums.index)
+                values.loc[common] = sums.loc[common]
+                values.loc[values.index.intersection(bad.date)] = np.nan
+            values.loc[days[~operational]] = np.nan
+            event_daily = event_daily.combine_first(values)
+        result = result.combine_first(event_daily)
+    elif len(sub):
         sub.index = pd.to_datetime(sub.time)
         sub = sub.sort_index()
-        if variable == 'precipitation':
-            agg = sub.value.resample('D').sum(min_count=1)
-            # Sparse event records may only imply zeros in explicitly confirmed
-            # coverage. Unknown and stopped intervals remain unavailable.
-            for c in db.rows('SELECT * FROM coverage WHERE station_id=? AND variable=? AND step<>? AND source_id IN (SELECT id FROM sources WHERE rowid IN (SELECT MAX(rowid) FROM sources GROUP BY path))', (station, variable, 'day')):
-                metadata = json.loads(c['metadata'])
-                if not metadata.get('coverageConfirmed'):
-                    continue
-                days = pd.date_range(pd.Timestamp(c['start']).ceil('D'), pd.Timestamp(c['end']).floor('D') - pd.Timedelta(days=1), freq='D')
-                for a, b in metadata.get('stoppedIntervals', []):
-                    days = days[(days + pd.Timedelta(days=1) <= pd.Timestamp(a)) | (days >= pd.Timestamp(b))]
-                agg = agg.reindex(agg.index.union(days))
-                agg.loc[days] = agg.loc[days].fillna(0)
-        else:
-            hourly = sub.value.resample('1h').mean()
-            counts = hourly.resample('D').count()
-            agg = hourly.resample('D').mean().where(counts >= 12)
+        hourly = sub.value.resample('1h').mean()
+        counts = hourly.resample('D').count()
+        agg = hourly.resample('D').mean().where(counts >= 12)
         result = result.combine_first(agg)
     result = result.sort_index()
     if start:
@@ -287,7 +318,8 @@ def confirm_coverage(db, value):
     with db.connect() as conn:
         for r in records:
             metadata = {**json.loads(r['metadata']), 'coverageConfirmed': True, 'stoppedIntervals': stopped,
-                        'confirmedAt': now(), 'note': str(value.get('note', '')), 'zeroForAbsent': value['variable'] == 'precipitation'}
+                        'confirmedAt': now(), 'note': str(value.get('note', '')), 'zeroForAbsent': value['variable'] == 'precipitation',
+                        **({'eventTimeMeaning': value['eventTimeMeaning']} if value.get('eventTimeMeaning') else {})}
             conn.execute('UPDATE coverage SET start=?,end=?,metadata=? WHERE source_id=? AND station_id=? AND variable=? AND step=?',
                          (a.isoformat(), b.isoformat(), canonical(metadata), r['source_id'], r['station_id'], r['variable'], r['step']))
         conn.execute('INSERT INTO audit(at,action,payload) VALUES(?,?,?)',

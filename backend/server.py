@@ -302,10 +302,12 @@ class Handler(SimpleHTTPRequestHandler):
             folder=self.db.workspace/'downloads/era5-land'
             meta=availability() if query.get('check')=='true' else read_json(folder/'latest-catalog.json')
             if query.get('check')=='true':write_json(folder/'latest-catalog.json',meta)
-            return self.send_json({'catalog':meta,'update':read_json(folder/'latest-status.json'),'current':current_summary(self.db)})
+            return self.send_json({'catalog':meta,'update':read_json(folder/'latest-status.json'),
+                'current':current_summary(self.db),
+                'precipitationCorrection':self.db.setting('rainfall-correction-comparison')})
         if path == 'search-progress':
             task=self.db.task(query['taskId'])
-            if task['kind']=='two-stage-calibration':
+            if task['kind'] in ('two-stage-calibration','calibration-replay'):
                 from .two_stage_calibration import search_progress
                 return self.send_json(search_progress(within(self.db.workspace/'tasks',task['id']),
                     max(0,int(query.get('after',0))),min(1000,max(1,int(query.get('limit',200))))))
@@ -404,12 +406,14 @@ class Handler(SimpleHTTPRequestHandler):
             # Normal task polling stays bounded. The recycle bin needs its
             # full set so "clear" does not silently omit older results.
             selection = ("WHERE trashed=1 AND status NOT IN ('queued','running','stopping') AND kind IN "
-                         "('simulation','continuation','trial','calibration','calibration-workflow','two-stage-calibration','sensitivity') "
+                         "('simulation','continuation','trial','calibration','calibration-workflow','two-stage-calibration','calibration-replay','sensitivity') "
                          "ORDER BY created_at DESC" if path == 'trashed-results'
                          else 'ORDER BY created_at DESC LIMIT 500')
             rows = self.db.rows('''SELECT id,kind,status,created_at,updated_at,progress,message,trashed,favorite,user_saved AS userSaved,name,notes,collection,
                 json_object('researchSchemeId',json_extract(request,'$.researchSchemeId'),
                             'researchSchemeRevision',json_extract(request,'$.researchSchemeRevision'),
+                            'purpose',json_extract(request,'$.purpose'),
+                            'replaySourceTaskId',json_extract(request,'$.replay.sourceTaskId'),
                             'schemeName',json_extract(request,'$.schemeSnapshot.name'),
                             'start',json_extract(request,'$.start'),
                             'end',json_extract(request,'$.end'),
@@ -453,6 +457,9 @@ class Handler(SimpleHTTPRequestHandler):
             from .business_selection import visible_tasks
             rows=visible_tasks(self.db,rows,query.get('includeExperiments')=='true')
             return self.send_json({'tasks': rows})
+        if re.fullmatch(r'tasks/[^/]+/replay-plan', path):
+            from .calibration_replay import replay_plan
+            return self.send_json(replay_plan(self.db, path.split('/')[1]))
         if path.startswith('tasks/'):
             return self.send_json(self.server.jobs.public(self.db.task(path.split('/')[1])))
         if path == 'states':
@@ -632,6 +639,14 @@ class Handler(SimpleHTTPRequestHandler):
         if path.startswith('tasks/'):
             _, identifier, action = path.split('/')
             task = self.db.task(identifier)
+            if action == 'replay':
+                from .calibration_replay import BASELINE_ID
+                from .permanent_deletion import guard_pending
+                with self.server.jobs.lock:
+                    guard_pending(self.db, 'task', identifier)
+                    guard_pending(self.db, 'task', BASELINE_ID)
+                    return self.send_json(self.server.jobs.submit('calibration-replay',
+                        {**value, 'sourceTaskId': identifier}), 202)
             if action == 'stop':
                 return self.send_json(self.server.jobs.stop(identifier))
             if action == 'resume':

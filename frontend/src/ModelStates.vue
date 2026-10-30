@@ -28,7 +28,7 @@ const rangeLabel=computed(()=>scaleMode.value==='replay'&&periodRange.value?'完
 const selectedObject=computed(()=>units.value[unit.value]?{...units.value[unit.value],scope:definition.value?.scope}:null)
 function lockScale(){if(!numeric.value.length){scaleError.value='所选时刻没有有效数值，无法锁定颜色范围';return}const stops=colorLayer.value.stops;scaleLow.value=stops[0];scaleHigh.value=stops.at(-1);scaleMode.value='fixed';scaleError.value=''}
 const mapUnits=computed(()=>{const selectedIds=new Set(objectUnitIds(meta.value?.units,selectedObject.value));return (meta.value?.units||[]).map(u=>({id:u.id,value:definition.value?.scope==='river'?(selectedIds.has(u.id)?frameMap.value.get(selectedObject.value?.id):null):frameMap.value.get(definition.value?.scope==='unit'?u.id:u.partition)}))})
-const resultContext=computed(()=>id.value+':'+variable.value+':'+unit.value)
+const resultContext=computed(()=>id.value+':state:'+variable.value+':'+unit.value+':'+step.value)
 const stateColumns=computed(()=>selectedState.value?.variables||[])
 const stateDay=computed(()=>time.value?shiftCalendarDay(time.value,-1):'')
 function setStateDay(day){if(day)time.value=shiftCalendarDay(day,1)+'T00:00'}

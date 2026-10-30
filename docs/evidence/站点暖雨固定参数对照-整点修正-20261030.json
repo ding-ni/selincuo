@@ -1,0 +1,3091 @@
+{
+  "schemaVersion": 1,
+  "taskId": "JOB-3354c8660e854cbfa96f",
+  "baselineTaskId": "JOB-88b35b44b27d4e15840c",
+  "inputId": "INPUT-444d34047e8d5e777b0dbee9",
+  "baselineInputId": "INPUT-c00df956d638351ebeb4e96e",
+  "parameterId": "PARAM-bb4c92396eb04820adef",
+  "parameterSHA256": "0008ac9fa5d5e11a7659092ec71de45957ea460e61abda4468f0b12dfb16753b",
+  "landTransformationSHA256": "1b264e86d6b54afd117ecc8c6f7ab4e1f6f20b65003fa0b2ef4dbc4c27d683eb",
+  "lakeTransformationSHA256": "a28542996c03152f4bc7fcdbec1510a7cabbb4843c3fa51e928b49b5f135d458",
+  "forcingDataSHA256": "ec25016799f8d2585f1569d5710b56c0ae40d5017a743660cb6ed258ec1f0574",
+  "modelIdentityAtRun": "17364bcaf7ffc3c52f9a1d863b95fb418a9604e5226ce0bf7f7627d1a65b77df",
+  "modelIdentityAtVerification": "17364bcaf7ffc3c52f9a1d863b95fb418a9604e5226ce0bf7f7627d1a65b77df",
+  "reportFile": "build/grid-revision-20261026/workspace/tasks/JOB-3354c8660e854cbfa96f/站点暖雨对照报告.json",
+  "reportSHA256": "f95515d98cd0e3d016124c6cd71303e8e26c221e5210fd376ed58c3e46711d23",
+  "trialResultSHA256": "5e83e75e3e4768f129fca08d539bded10955c87801d92814d7ed295d664b2bf5",
+  "checks": {
+    "hourlyFiles": 6671,
+    "hourlyMismatchCount": 0,
+    "hourlyManifestSHA256": "b7419ed4c7a3c7bdee55f361a5c2a2cc47e7e147cdacbfe01acd2bb95cc87ff6",
+    "fastDays": 3580,
+    "fastVsCompleteMaxM3s": 5.1869619710487314e-11,
+    "riverSumMaxM3s": 0.0,
+    "landBalanceMaxMm": 9.472955753153656e-11,
+    "routingBalanceMaxM3": 7.748603820800781e-07,
+    "sameLakeRule": true,
+    "sameForcingBytes": true,
+    "baselineVsAdoptedDailyMaxAbs": {
+      "duja": 0.0,
+      "total": 0.0,
+      "lakeLevel": 0.0,
+      "lakeRainMm": 0.0,
+      "lakeEvaporationMm": 0.0
+    }
+  },
+  "scores": {
+    "baseline": {
+      "score": 1.2589232649685294,
+      "rmse": 0.14810074862264005,
+      "trendErrorM": 0.15448079799892916,
+      "amplitudeErrorM": 0.1267020450801283,
+      "peakTimingErrorDays": 10.4,
+      "observedTrendMPerYear": 0.05786188324223888,
+      "simulatedTrendMPerYear": 0.08653208286780996,
+      "bias": 0.03246310166579241,
+      "count": 1304,
+      "seasonYears": [
+        2021,
+        2022,
+        2023,
+        2024,
+        2025
+      ],
+      "fixedObservationSHA256": "58b2d77c9931473b64388774e6e30741a7d4d3f88178f088f5d8deddcef3eda4",
+      "scales": {
+        "rmseM": 0.1,
+        "trendErrorM": 0.1,
+        "amplitudeErrorM": 0.1,
+        "peakTimingErrorDays": 14.0
+      },
+      "scoreComponents": {
+        "rmse": 1.4810074862264004,
+        "trend": 1.5448079799892915,
+        "amplitude": 1.267020450801283,
+        "peakTiming": 0.7428571428571429
+      }
+    },
+    "corrected": {
+      "score": 4.006800157102408,
+      "rmse": 0.5140136077636193,
+      "trendErrorM": 0.7568419199747358,
+      "amplitudeErrorM": 0.044721677959751106,
+      "peakTimingErrorDays": 40.2,
+      "observedTrendMPerYear": 0.05786188324223888,
+      "simulatedTrendMPerYear": -0.0826009393981943,
+      "bias": -0.4485189404184234,
+      "count": 1304,
+      "seasonYears": [
+        2021,
+        2022,
+        2023,
+        2024,
+        2025
+      ],
+      "fixedObservationSHA256": "58b2d77c9931473b64388774e6e30741a7d4d3f88178f088f5d8deddcef3eda4",
+      "scales": {
+        "rmseM": 0.1,
+        "trendErrorM": 0.1,
+        "amplitudeErrorM": 0.1,
+        "peakTimingErrorDays": 14.0
+      },
+      "scoreComponents": {
+        "rmse": 5.140136077636193,
+        "trend": 7.568419199747358,
+        "amplitude": 0.44721677959751105,
+        "peakTiming": 2.8714285714285714
+      }
+    }
+  },
+  "comparison": {
+    "yearly": {
+      "all": {
+        "flow": {
+          "baseline": {
+            "logNse": 0.1228692273995674,
+            "count": 440,
+            "nse": 0.7339923854339634,
+            "kge": 0.8314880389929855,
+            "rmse": 35.878257531245154,
+            "mae": 23.642407323530453,
+            "bias": -2.7285532962963637,
+            "pbias": -4.158468054817524,
+            "observedMean": 65.61438636363636,
+            "simulatedMean": 62.88583306734
+          },
+          "corrected": {
+            "logNse": -0.18000804881029975,
+            "count": 440,
+            "nse": 0.6500099973903022,
+            "kge": 0.6068044267306791,
+            "rmse": 41.154007088715595,
+            "mae": 25.759915641440454,
+            "bias": -14.381878754340908,
+            "pbias": -21.91878877695544,
+            "observedMean": 65.61438636363636,
+            "simulatedMean": 51.232507609295446
+          }
+        },
+        "lake": {
+          "baseline": {
+            "logNse": 0.6490537190063425,
+            "count": 1304,
+            "nse": 0.6490585966658297,
+            "kge": 0.7688476470368584,
+            "rmse": 0.14810074862263783,
+            "mae": 0.12330593071845025,
+            "bias": 0.032463101665746376,
+            "pbias": 0.0007143861284878619,
+            "observedMean": 4544.195410745291,
+            "simulatedMean": 4544.227873846957
+          },
+          "corrected": {
+            "logNse": -3.227809672017516,
+            "count": 1304,
+            "nse": -3.2273609732628206,
+            "kge": 0.5035464923643769,
+            "rmse": 0.5140136077636921,
+            "mae": 0.45490977124606485,
+            "bias": -0.4485189404184694,
+            "pbias": -0.009870150816091511,
+            "observedMean": 4544.195410745291,
+            "simulatedMean": 4543.7468918048735
+          }
+        }
+      },
+      "2021": {
+        "flow": {
+          "baseline": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          },
+          "corrected": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          }
+        },
+        "lake": {
+          "baseline": {
+            "logNse": 0.11678323439221383,
+            "count": 246,
+            "nse": 0.11668326866754986,
+            "kge": 0.2652824830258027,
+            "rmse": 0.17216641793141213,
+            "mae": 0.14047132502066337,
+            "bias": 0.09441674256464186,
+            "pbias": 0.0020778770749524224,
+            "observedMean": 4543.904146341464,
+            "simulatedMean": 4543.998563084028
+          },
+          "corrected": {
+            "logNse": 0.9014027510129263,
+            "count": 246,
+            "nse": 0.9014069928171595,
+            "kge": 0.7706686725646693,
+            "rmse": 0.0575192575968678,
+            "mae": 0.04559935788327538,
+            "bias": -0.011722758699598797,
+            "pbias": -0.0002579886881865104,
+            "observedMean": 4543.904146341464,
+            "simulatedMean": 4543.892423582763
+          }
+        }
+      },
+      "2022": {
+        "flow": {
+          "baseline": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          },
+          "corrected": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          }
+        },
+        "lake": {
+          "baseline": {
+            "logNse": -2.231365961861625,
+            "count": 269,
+            "nse": -2.23132968423974,
+            "kge": -0.0613258534813248,
+            "rmse": 0.08382326103249291,
+            "mae": 0.07348167311255697,
+            "bias": -0.04005146832745169,
+            "pbias": -0.0008813765290359911,
+            "observedMean": 4544.19501858736,
+            "simulatedMean": 4544.154967119032
+          },
+          "corrected": {
+            "logNse": -53.47832103182463,
+            "count": 269,
+            "nse": -53.473944644721186,
+            "kge": -0.3780182214892662,
+            "rmse": 0.3441662897152906,
+            "mae": 0.3298695160412238,
+            "bias": -0.3298695160412238,
+            "pbias": -0.007259140831147015,
+            "observedMean": 4544.19501858736,
+            "simulatedMean": 4543.865149071319
+          }
+        }
+      },
+      "2023": {
+        "flow": {
+          "baseline": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          },
+          "corrected": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          }
+        },
+        "lake": {
+          "baseline": {
+            "logNse": 0.44332566691924324,
+            "count": 222,
+            "nse": 0.44339447757750794,
+            "kge": 0.6220633150471311,
+            "rmse": 0.19820663258625484,
+            "mae": 0.1743044856729538,
+            "bias": -0.15544074568463878,
+            "pbias": -0.003420596015650934,
+            "observedMean": 4544.259099099098,
+            "simulatedMean": 4544.103658353415
+          },
+          "corrected": {
+            "logNse": -3.958938290950309,
+            "count": 222,
+            "nse": -3.9582419385177383,
+            "kge": 0.9254680039306882,
+            "rmse": 0.5915729193823143,
+            "mae": 0.5885966918680063,
+            "bias": -0.5885966918680063,
+            "pbias": -0.012952533714125056,
+            "observedMean": 4544.259099099098,
+            "simulatedMean": 4543.670502407231
+          }
+        }
+      },
+      "2024": {
+        "flow": {
+          "baseline": {
+            "logNse": -0.02329237222121705,
+            "count": 229,
+            "nse": 0.7274549179686639,
+            "kge": 0.8129408794110451,
+            "rmse": 45.164278051838906,
+            "mae": 29.938389696128386,
+            "bias": -0.412803241896942,
+            "pbias": -0.5102801133270342,
+            "observedMean": 80.89737991266375,
+            "simulatedMean": 80.4845766707668
+          },
+          "corrected": {
+            "logNse": -0.32961702219033895,
+            "count": 229,
+            "nse": 0.6382327271952808,
+            "kge": 0.5786229812919097,
+            "rmse": 52.034398130623934,
+            "mae": 31.679618052004802,
+            "bias": -17.575117180859824,
+            "pbias": -21.72519950563763,
+            "observedMean": 80.89737991266375,
+            "simulatedMean": 63.322262731803924
+          }
+        },
+        "lake": {
+          "baseline": {
+            "logNse": 0.3819271741355966,
+            "count": 232,
+            "nse": 0.38190328456938016,
+            "kge": 0.6778896801791718,
+            "rmse": 0.10194488924032165,
+            "mae": 0.07306528080043947,
+            "bias": 0.05847146445648832,
+            "pbias": 0.0012866366651350404,
+            "observedMean": 4544.520301724137,
+            "simulatedMean": 4544.578773188593
+          },
+          "corrected": {
+            "logNse": -21.216644081701965,
+            "count": 232,
+            "nse": -21.213674454111995,
+            "kge": 0.8515039004065759,
+            "rmse": 0.6111494734696459,
+            "mae": 0.6096164143146341,
+            "bias": -0.6096164143146341,
+            "pbias": -0.013414318208312388,
+            "observedMean": 4544.520301724137,
+            "simulatedMean": 4543.910685309823
+          }
+        }
+      },
+      "2025": {
+        "flow": {
+          "baseline": {
+            "logNse": 0.1664306992429837,
+            "count": 211,
+            "nse": 0.6732069304699597,
+            "kge": 0.8123795705153554,
+            "rmse": 21.69071363044146,
+            "mae": 16.80932692862559,
+            "bias": -5.241855488037915,
+            "pbias": -10.691635415719734,
+            "observedMean": 49.027630331753564,
+            "simulatedMean": 43.78577484371565
+          },
+          "corrected": {
+            "logNse": -0.18424863647601497,
+            "count": 211,
+            "nse": 0.587951621468347,
+            "kge": 0.6886261557748923,
+            "rmse": 24.35631188302535,
+            "mae": 19.33521492097014,
+            "bias": -10.91623136252654,
+            "pbias": -22.265468040490756,
+            "observedMean": 49.027630331753564,
+            "simulatedMean": 38.11139896922701
+          }
+        },
+        "lake": {
+          "baseline": {
+            "logNse": -2.6550338643053975,
+            "count": 255,
+            "nse": -2.6551108560222496,
+            "kge": 0.751175445443905,
+            "rmse": 0.1676065554032543,
+            "mae": 0.16410682195961698,
+            "bias": 0.16410682195961698,
+            "pbias": 0.0036113463191555528,
+            "observedMean": 4544.200623716154,
+            "simulatedMean": 4544.364730538113
+          },
+          "corrected": {
+            "logNse": -51.27845411461621,
+            "count": 255,
+            "nse": -51.27094063019837,
+            "kge": 0.7431415595159797,
+            "rmse": 0.6338272135101561,
+            "mae": 0.6323185475309918,
+            "bias": -0.6323185475309918,
+            "pbias": -0.013914846633991585,
+            "observedMean": 4544.200623716154,
+            "simulatedMean": 4543.568305168622
+          }
+        }
+      },
+      "2026": {
+        "flow": {
+          "baseline": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          },
+          "corrected": {
+            "count": 0,
+            "nse": null,
+            "kge": null,
+            "rmse": null,
+            "mae": null,
+            "bias": null,
+            "pbias": null,
+            "logNse": null
+          }
+        },
+        "lake": {
+          "baseline": {
+            "logNse": -2.609562207586049,
+            "count": 80,
+            "nse": -2.609634923880801,
+            "kge": 0.752063719434087,
+            "rmse": 0.11852452737958971,
+            "mae": 0.11218046337122586,
+            "bias": 0.11218046337122586,
+            "pbias": 0.002468783650846027,
+            "observedMean": 4543.956832053014,
+            "simulatedMean": 4544.0690125163865
+          },
+          "corrected": {
+            "logNse": -143.77024587297373,
+            "count": 80,
+            "nse": -143.74643968638432,
+            "kge": 0.5217069072726894,
+            "rmse": 0.7505515694238332,
+            "mae": 0.7488662064299774,
+            "bias": -0.7488662064299774,
+            "pbias": -0.01648048681157102,
+            "observedMean": 4543.956832053014,
+            "simulatedMean": 4543.2079658465855
+          }
+        }
+      }
+    },
+    "lakeBalance": {
+      "baseline": {
+        "monthly": [
+          {
+            "date": "2021-04-01",
+            "lakeInflowM3": 5675901.178805679,
+            "lakePrecipitationM3": 368941.6763492575,
+            "lakeEvaporationM3": 50908312.262198135,
+            "lakeDeltaVolumeM3": -44863469.4070432,
+            "lakeBalanceErrorM3": 2.8000000000000003e-09
+          },
+          {
+            "date": "2021-05-01",
+            "lakeInflowM3": 68686307.24966225,
+            "lakePrecipitationM3": 72825385.56345622,
+            "lakeEvaporationM3": 170339880.20630774,
+            "lakeDeltaVolumeM3": -28828187.39318927,
+            "lakeBalanceErrorM3": -3.1999999999999997e-09
+          },
+          {
+            "date": "2021-06-01",
+            "lakeInflowM3": 232158032.47203654,
+            "lakePrecipitationM3": 74543953.61793944,
+            "lakeEvaporationM3": 211794205.9541089,
+            "lakeDeltaVolumeM3": 94907780.13586709,
+            "lakeBalanceErrorM3": -2e-09
+          },
+          {
+            "date": "2021-07-01",
+            "lakeInflowM3": 536434582.7344325,
+            "lakePrecipitationM3": 176468479.14293474,
+            "lakeEvaporationM3": 474931563.2718725,
+            "lakeDeltaVolumeM3": 237971498.60549474,
+            "lakeBalanceErrorM3": -9.4e-09
+          },
+          {
+            "date": "2021-08-01",
+            "lakeInflowM3": 911093274.306592,
+            "lakePrecipitationM3": 268592251.1163232,
+            "lakeEvaporationM3": 443081628.4592028,
+            "lakeDeltaVolumeM3": 736603896.9637123,
+            "lakeBalanceErrorM3": -3.7000000000000013e-09
+          },
+          {
+            "date": "2021-09-01",
+            "lakeInflowM3": 977107761.9380379,
+            "lakePrecipitationM3": 143240011.18938506,
+            "lakeEvaporationM3": 383012721.74580735,
+            "lakeDeltaVolumeM3": 737335051.3816156,
+            "lakeBalanceErrorM3": -1.12e-08
+          },
+          {
+            "date": "2021-10-01",
+            "lakeInflowM3": 393157284.76751,
+            "lakePrecipitationM3": 16351605.730166303,
+            "lakeEvaporationM3": 402676770.8680569,
+            "lakeDeltaVolumeM3": 6832119.629619374,
+            "lakeBalanceErrorM3": -9.5e-09
+          },
+          {
+            "date": "2021-11-01",
+            "lakeInflowM3": 153155099.07704264,
+            "lakePrecipitationM3": 7926392.328906799,
+            "lakeEvaporationM3": 315851250.38178444,
+            "lakeDeltaVolumeM3": -154769758.975835,
+            "lakeBalanceErrorM3": 3.8e-09
+          },
+          {
+            "date": "2021-12-01",
+            "lakeInflowM3": 112729570.24357738,
+            "lakePrecipitationM3": 9967727.734100282,
+            "lakeEvaporationM3": 157913204.42538214,
+            "lakeDeltaVolumeM3": -35215906.44770448,
+            "lakeBalanceErrorM3": -2.999999999999999e-10
+          },
+          {
+            "date": "2022-01-01",
+            "lakeInflowM3": 78317397.71953559,
+            "lakePrecipitationM3": 2204458.115206175,
+            "lakeEvaporationM3": 58461782.81165912,
+            "lakeDeltaVolumeM3": 22060073.023082647,
+            "lakeBalanceErrorM3": -1.3e-09
+          },
+          {
+            "date": "2022-02-01",
+            "lakeInflowM3": 50912309.113094814,
+            "lakePrecipitationM3": 7967924.656735236,
+            "lakeEvaporationM3": 91635105.84543528,
+            "lakeDeltaVolumeM3": -32754872.075605225,
+            "lakeBalanceErrorM3": 1e-09
+          },
+          {
+            "date": "2022-03-01",
+            "lakeInflowM3": 46244660.00210614,
+            "lakePrecipitationM3": 1109384.4097646947,
+            "lakeEvaporationM3": 147277454.59883702,
+            "lakeDeltaVolumeM3": -99923410.18696618,
+            "lakeBalanceErrorM3": -3.2e-09
+          },
+          {
+            "date": "2022-04-01",
+            "lakeInflowM3": 41682347.32428029,
+            "lakePrecipitationM3": 8313009.077405307,
+            "lakeEvaporationM3": 210624712.234708,
+            "lakeDeltaVolumeM3": -160629355.83302242,
+            "lakeBalanceErrorM3": -4.6e-09
+          },
+          {
+            "date": "2022-05-01",
+            "lakeInflowM3": 85669014.31595473,
+            "lakePrecipitationM3": 28629175.72987391,
+            "lakeEvaporationM3": 172413412.89013317,
+            "lakeDeltaVolumeM3": -58115222.84430454,
+            "lakeBalanceErrorM3": -5e-10
+          },
+          {
+            "date": "2022-06-01",
+            "lakeInflowM3": 243739679.57900095,
+            "lakePrecipitationM3": 36891594.05123462,
+            "lakeEvaporationM3": 317203339.21905625,
+            "lakeDeltaVolumeM3": -36572065.588820696,
+            "lakeBalanceErrorM3": -7.999999999999997e-10
+          },
+          {
+            "date": "2022-07-01",
+            "lakeInflowM3": 380589538.1608403,
+            "lakePrecipitationM3": 111056945.29012072,
+            "lakeEvaporationM3": 569266980.3814337,
+            "lakeDeltaVolumeM3": -77620496.93047273,
+            "lakeBalanceErrorM3": 5.7e-09
+          },
+          {
+            "date": "2022-08-01",
+            "lakeInflowM3": 420392954.6932447,
+            "lakePrecipitationM3": 187060381.30954474,
+            "lakeEvaporationM3": 501487019.09129107,
+            "lakeDeltaVolumeM3": 105966316.91149838,
+            "lakeBalanceErrorM3": 1.7e-09
+          },
+          {
+            "date": "2022-09-01",
+            "lakeInflowM3": 340436542.3677408,
+            "lakePrecipitationM3": 130625295.3456116,
+            "lakeEvaporationM3": 417860245.3493428,
+            "lakeDeltaVolumeM3": 53201592.364009604,
+            "lakeBalanceErrorM3": 5.7e-09
+          },
+          {
+            "date": "2022-10-01",
+            "lakeInflowM3": 163387794.16292527,
+            "lakePrecipitationM3": 68667932.0946528,
+            "lakeEvaporationM3": 349090323.06218755,
+            "lakeDeltaVolumeM3": -117034596.8046095,
+            "lakeBalanceErrorM3": -1.9e-09
+          },
+          {
+            "date": "2022-11-01",
+            "lakeInflowM3": 40648119.815729216,
+            "lakePrecipitationM3": 6680387.774799466,
+            "lakeEvaporationM3": 303712651.1492884,
+            "lakeDeltaVolumeM3": -256384143.55875975,
+            "lakeBalanceErrorM3": -4.7e-09
+          },
+          {
+            "date": "2022-12-01",
+            "lakeInflowM3": 27902314.05880351,
+            "lakePrecipitationM3": 1203159.975131553,
+            "lakeEvaporationM3": 159297032.29362535,
+            "lakeDeltaVolumeM3": -130191558.2596903,
+            "lakeBalanceErrorM3": -3e-09
+          },
+          {
+            "date": "2023-01-01",
+            "lakeInflowM3": 19746556.822659343,
+            "lakePrecipitationM3": 387110.9221311716,
+            "lakeEvaporationM3": 78452170.03999294,
+            "lakeDeltaVolumeM3": -58318502.295202434,
+            "lakeBalanceErrorM3": -1.2e-09
+          },
+          {
+            "date": "2023-02-01",
+            "lakeInflowM3": 12842547.132897438,
+            "lakePrecipitationM3": 636371.4498874975,
+            "lakeEvaporationM3": 111171241.26262413,
+            "lakeDeltaVolumeM3": -97692322.6798392,
+            "lakeBalanceErrorM3": 1.0000000000000007e-10
+          },
+          {
+            "date": "2023-03-01",
+            "lakeInflowM3": 10826827.018627718,
+            "lakePrecipitationM3": 9846231.060554998,
+            "lakeEvaporationM3": 137849233.66551346,
+            "lakeDeltaVolumeM3": -117176175.58633074,
+            "lakeBalanceErrorM3": 1.2e-09
+          },
+          {
+            "date": "2023-04-01",
+            "lakeInflowM3": 11310959.797548689,
+            "lakePrecipitationM3": 10301674.970799051,
+            "lakeEvaporationM3": 211778534.9854855,
+            "lakeDeltaVolumeM3": -190165900.21713775,
+            "lakeBalanceErrorM3": -1.5999999999999999e-09
+          },
+          {
+            "date": "2023-05-01",
+            "lakeInflowM3": 22751839.35411919,
+            "lakePrecipitationM3": 23787954.32314737,
+            "lakeEvaporationM3": 220509703.62178388,
+            "lakeDeltaVolumeM3": -173969909.9445173,
+            "lakeBalanceErrorM3": 4e-09
+          },
+          {
+            "date": "2023-06-01",
+            "lakeInflowM3": 173867184.98833004,
+            "lakePrecipitationM3": 50597176.411336266,
+            "lakeEvaporationM3": 218250288.83483633,
+            "lakeDeltaVolumeM3": 6214072.564829989,
+            "lakeBalanceErrorM3": 2.8e-09
+          },
+          {
+            "date": "2023-07-01",
+            "lakeInflowM3": 603087173.1222078,
+            "lakePrecipitationM3": 189594066.145607,
+            "lakeEvaporationM3": 413332781.1123568,
+            "lakeDeltaVolumeM3": 379348458.155458,
+            "lakeBalanceErrorM3": 2e-09
+          },
+          {
+            "date": "2023-08-01",
+            "lakeInflowM3": 1245825403.4183295,
+            "lakePrecipitationM3": 280329477.90368164,
+            "lakeEvaporationM3": 435083830.74427587,
+            "lakeDeltaVolumeM3": 1091071050.5777352,
+            "lakeBalanceErrorM3": 1.87e-08
+          },
+          {
+            "date": "2023-09-01",
+            "lakeInflowM3": 883109363.2964065,
+            "lakePrecipitationM3": 121896454.65571819,
+            "lakeEvaporationM3": 415812700.28031296,
+            "lakeDeltaVolumeM3": 589193117.6718118,
+            "lakeBalanceErrorM3": 5.5e-09
+          },
+          {
+            "date": "2023-10-01",
+            "lakeInflowM3": 338914057.2409759,
+            "lakePrecipitationM3": 46257780.011862606,
+            "lakeEvaporationM3": 369483083.98974395,
+            "lakeDeltaVolumeM3": 15688753.263094576,
+            "lakeBalanceErrorM3": -6.5e-09
+          },
+          {
+            "date": "2023-11-01",
+            "lakeInflowM3": 153160200.1728804,
+            "lakePrecipitationM3": 14516880.382138787,
+            "lakeEvaporationM3": 216009758.81422293,
+            "lakeDeltaVolumeM3": -48332678.25920373,
+            "lakeBalanceErrorM3": 2.7e-09
+          },
+          {
+            "date": "2023-12-01",
+            "lakeInflowM3": 112298166.54631804,
+            "lakePrecipitationM3": 5664991.7390286615,
+            "lakeEvaporationM3": 168832277.93053415,
+            "lakeDeltaVolumeM3": -50869119.64518746,
+            "lakeBalanceErrorM3": -1.5e-09
+          },
+          {
+            "date": "2024-01-01",
+            "lakeInflowM3": 78684855.89623202,
+            "lakePrecipitationM3": 3930308.1457899516,
+            "lakeEvaporationM3": 49713520.33997596,
+            "lakeDeltaVolumeM3": 32901643.702046007,
+            "lakeBalanceErrorM3": -9.000000000000001e-10
+          },
+          {
+            "date": "2024-02-01",
+            "lakeInflowM3": 52664680.31597291,
+            "lakePrecipitationM3": 3322635.7688407796,
+            "lakeEvaporationM3": 106406910.19686282,
+            "lakeDeltaVolumeM3": -50419594.11204913,
+            "lakeBalanceErrorM3": -5e-10
+          },
+          {
+            "date": "2024-03-01",
+            "lakeInflowM3": 40411704.52387948,
+            "lakePrecipitationM3": 2283445.9106905935,
+            "lakeEvaporationM3": 165742871.01645052,
+            "lakeDeltaVolumeM3": -123047720.58188044,
+            "lakeBalanceErrorM3": 1.0000000000000007e-10
+          },
+          {
+            "date": "2024-04-01",
+            "lakeInflowM3": 32518662.951261513,
+            "lakePrecipitationM3": 10327879.146252079,
+            "lakeEvaporationM3": 229379988.38897982,
+            "lakeDeltaVolumeM3": -186533446.29146624,
+            "lakeBalanceErrorM3": -1.0000000000000007e-10
+          },
+          {
+            "date": "2024-05-01",
+            "lakeInflowM3": 90832264.6976744,
+            "lakePrecipitationM3": 28396214.00823123,
+            "lakeEvaporationM3": 192316876.4890395,
+            "lakeDeltaVolumeM3": -73088397.7831339,
+            "lakeBalanceErrorM3": -2e-09
+          },
+          {
+            "date": "2024-06-01",
+            "lakeInflowM3": 264343495.91836756,
+            "lakePrecipitationM3": 65336131.5416965,
+            "lakeEvaporationM3": 285450125.0408538,
+            "lakeDeltaVolumeM3": 44229502.41921028,
+            "lakeBalanceErrorM3": -5.7e-09
+          },
+          {
+            "date": "2024-07-01",
+            "lakeInflowM3": 831552999.291165,
+            "lakePrecipitationM3": 205941183.74814034,
+            "lakeEvaporationM3": 464715481.44727695,
+            "lakeDeltaVolumeM3": 572778701.5920284,
+            "lakeBalanceErrorM3": -9.5e-09
+          },
+          {
+            "date": "2024-08-01",
+            "lakeInflowM3": 560254257.0591507,
+            "lakePrecipitationM3": 117644073.78172216,
+            "lakeEvaporationM3": 504046421.17886,
+            "lakeDeltaVolumeM3": 173851909.6620129,
+            "lakeBalanceErrorM3": 3.8e-09
+          },
+          {
+            "date": "2024-09-01",
+            "lakeInflowM3": 555863068.3718201,
+            "lakePrecipitationM3": 163269764.03665102,
+            "lakeEvaporationM3": 394356737.21027213,
+            "lakeDeltaVolumeM3": 324776095.198199,
+            "lakeBalanceErrorM3": 1.32e-08
+          },
+          {
+            "date": "2024-10-01",
+            "lakeInflowM3": 188983149.48756504,
+            "lakePrecipitationM3": 7540725.594391269,
+            "lakeEvaporationM3": 426408038.91145134,
+            "lakeDeltaVolumeM3": -229884163.82949504,
+            "lakeBalanceErrorM3": 1.31e-08
+          },
+          {
+            "date": "2024-11-01",
+            "lakeInflowM3": 77881824.99454305,
+            "lakePrecipitationM3": 3681875.6504138317,
+            "lakeEvaporationM3": 333006326.17567563,
+            "lakeDeltaVolumeM3": -251442625.5307188,
+            "lakeBalanceErrorM3": -9e-10
+          },
+          {
+            "date": "2024-12-01",
+            "lakeInflowM3": 54867371.30696559,
+            "lakePrecipitationM3": 1928713.942606666,
+            "lakeEvaporationM3": 182659131.93770677,
+            "lakeDeltaVolumeM3": -125863046.6881345,
+            "lakeBalanceErrorM3": -5.1e-09
+          },
+          {
+            "date": "2025-01-01",
+            "lakeInflowM3": 38905161.53137296,
+            "lakePrecipitationM3": 1486057.1945400373,
+            "lakeEvaporationM3": 82538716.7717136,
+            "lakeDeltaVolumeM3": -42147498.04580061,
+            "lakeBalanceErrorM3": 1.9e-09
+          },
+          {
+            "date": "2025-02-01",
+            "lakeInflowM3": 25282613.54471159,
+            "lakePrecipitationM3": 3934018.8200708204,
+            "lakeEvaporationM3": 109173523.43148352,
+            "lakeDeltaVolumeM3": -79956891.06670111,
+            "lakeBalanceErrorM3": -1.5000000000000002e-09
+          },
+          {
+            "date": "2025-03-01",
+            "lakeInflowM3": 20798825.334531512,
+            "lakePrecipitationM3": 3658205.7318501123,
+            "lakeEvaporationM3": 207049325.0038092,
+            "lakeDeltaVolumeM3": -182592293.9374276,
+            "lakeBalanceErrorM3": 4.1e-09
+          },
+          {
+            "date": "2025-04-01",
+            "lakeInflowM3": 21234602.820541646,
+            "lakePrecipitationM3": 5493044.527003797,
+            "lakeEvaporationM3": 217282185.09172276,
+            "lakeDeltaVolumeM3": -190554537.7441773,
+            "lakeBalanceErrorM3": -7.999999999999999e-10
+          },
+          {
+            "date": "2025-05-01",
+            "lakeInflowM3": 44754516.52594702,
+            "lakePrecipitationM3": 28910820.142203856,
+            "lakeEvaporationM3": 180257631.7067701,
+            "lakeDeltaVolumeM3": -106592295.03861922,
+            "lakeBalanceErrorM3": -3.5e-09
+          },
+          {
+            "date": "2025-06-01",
+            "lakeInflowM3": 151864218.68046114,
+            "lakePrecipitationM3": 87338346.99189451,
+            "lakeEvaporationM3": 268000265.10469365,
+            "lakeDeltaVolumeM3": -28797699.432337992,
+            "lakeBalanceErrorM3": 1.1200000000000001e-08
+          },
+          {
+            "date": "2025-07-01",
+            "lakeInflowM3": 326148427.2850011,
+            "lakePrecipitationM3": 212089711.61243525,
+            "lakeEvaporationM3": 473437074.08740056,
+            "lakeDeltaVolumeM3": 64801064.81003579,
+            "lakeBalanceErrorM3": -7.6e-09
+          },
+          {
+            "date": "2025-08-01",
+            "lakeInflowM3": 560392071.311515,
+            "lakePrecipitationM3": 200951067.5989571,
+            "lakeEvaporationM3": 490923923.70103025,
+            "lakeDeltaVolumeM3": 270419215.20944184,
+            "lakeBalanceErrorM3": 1.0000000000000007e-10
+          },
+          {
+            "date": "2025-09-01",
+            "lakeInflowM3": 354638629.9266294,
+            "lakePrecipitationM3": 96114814.76374313,
+            "lakeEvaporationM3": 406652798.1649547,
+            "lakeDeltaVolumeM3": 44100646.52541786,
+            "lakeBalanceErrorM3": 7.7e-09
+          },
+          {
+            "date": "2025-10-01",
+            "lakeInflowM3": 139247103.07972687,
+            "lakePrecipitationM3": 32178002.868581563,
+            "lakeEvaporationM3": 403853198.30284476,
+            "lakeDeltaVolumeM3": -232428092.35453627,
+            "lakeBalanceErrorM3": 1.04e-08
+          },
+          {
+            "date": "2025-11-01",
+            "lakeInflowM3": 46731521.340036236,
+            "lakePrecipitationM3": 11269637.49373811,
+            "lakeEvaporationM3": 269366471.8466502,
+            "lakeDeltaVolumeM3": -211365313.01287583,
+            "lakeBalanceErrorM3": -3.7e-09
+          },
+          {
+            "date": "2025-12-01",
+            "lakeInflowM3": 31461523.963785116,
+            "lakePrecipitationM3": 1619447.6915921252,
+            "lakeEvaporationM3": 143025082.9641138,
+            "lakeDeltaVolumeM3": -109944111.30873656,
+            "lakeBalanceErrorM3": -3.9999999999999976e-10
+          },
+          {
+            "date": "2026-01-01",
+            "lakeInflowM3": 22004819.33652708,
+            "lakePrecipitationM3": 844325.1713491136,
+            "lakeEvaporationM3": 74480891.29369025,
+            "lakeDeltaVolumeM3": -51631746.785814054,
+            "lakeBalanceErrorM3": 9e-10
+          },
+          {
+            "date": "2026-02-01",
+            "lakeInflowM3": 14249368.344173063,
+            "lakePrecipitationM3": 657488.3508302494,
+            "lakeEvaporationM3": 87176988.19162224,
+            "lakeDeltaVolumeM3": -72270131.49661893,
+            "lakeBalanceErrorM3": 3.9999999999999996e-10
+          },
+          {
+            "date": "2026-03-01",
+            "lakeInflowM3": 12991362.570251612,
+            "lakePrecipitationM3": 3586684.2827923293,
+            "lakeEvaporationM3": 174995468.7965306,
+            "lakeDeltaVolumeM3": -158417421.94348666,
+            "lakeBalanceErrorM3": 4.6e-09
+          },
+          {
+            "date": "2026-04-01",
+            "lakeInflowM3": 15067514.451676007,
+            "lakePrecipitationM3": 16669578.874259617,
+            "lakeEvaporationM3": 205107247.07539392,
+            "lakeDeltaVolumeM3": -173370153.7494583,
+            "lakeBalanceErrorM3": -7.4e-09
+          },
+          {
+            "date": "2026-05-01",
+            "lakeInflowM3": 46126994.09519322,
+            "lakePrecipitationM3": 27675441.437541176,
+            "lakeEvaporationM3": 191518385.29574242,
+            "lakeDeltaVolumeM3": -117715949.76300803,
+            "lakeBalanceErrorM3": -3.2e-09
+          },
+          {
+            "date": "2026-06-01",
+            "lakeInflowM3": 152741951.57424542,
+            "lakePrecipitationM3": 87164740.93152277,
+            "lakeEvaporationM3": 249973423.0821676,
+            "lakeDeltaVolumeM3": -10066730.576399416,
+            "lakeBalanceErrorM3": 1.9e-09
+          },
+          {
+            "date": "2026-07-01",
+            "lakeInflowM3": 397067807.1723658,
+            "lakePrecipitationM3": 223136622.48002738,
+            "lakeEvaporationM3": 466074021.6545268,
+            "lakeDeltaVolumeM3": 154130407.99786633,
+            "lakeBalanceErrorM3": -1.1200000000000001e-08
+          },
+          {
+            "date": "2026-08-01",
+            "lakeInflowM3": 482999889.2315426,
+            "lakePrecipitationM3": 162833523.67118526,
+            "lakeEvaporationM3": 498350686.3796754,
+            "lakeDeltaVolumeM3": 147482726.52305245,
+            "lakeBalanceErrorM3": 1.8e-09
+          },
+          {
+            "date": "2026-09-01",
+            "lakeInflowM3": 438108555.71161526,
+            "lakePrecipitationM3": 151018590.1147965,
+            "lakeEvaporationM3": 391689967.92209935,
+            "lakeDeltaVolumeM3": 197437177.90431243,
+            "lakeBalanceErrorM3": -3.8e-09
+          },
+          {
+            "date": "2026-10-01",
+            "lakeInflowM3": 174537081.28908798,
+            "lakePrecipitationM3": 13467921.122186396,
+            "lakeEvaporationM3": 267659276.29997605,
+            "lakeDeltaVolumeM3": -79654273.88870169,
+            "lakeBalanceErrorM3": -1.22e-08
+          }
+        ],
+        "annual": [
+          {
+            "date": "2021-01-01",
+            "lakeInflowM3": 3390197813.9676967,
+            "lakePrecipitationM3": 770284748.0995613,
+            "lakeEvaporationM3": 2610509537.574721,
+            "lakeDeltaVolumeM3": 1549973024.4925373,
+            "lakeBalanceErrorM3": -3.27e-08
+          },
+          {
+            "date": "2022-01-01",
+            "lakeInflowM3": 1919922671.3132563,
+            "lakePrecipitationM3": 590409647.8300809,
+            "lakeEvaporationM3": 3298330058.9269977,
+            "lakeDeltaVolumeM3": -787997739.7836608,
+            "lakeBalanceErrorM3": -5.9e-09
+          },
+          {
+            "date": "2023-01-01",
+            "lakeInflowM3": 3587740278.9113007,
+            "lakePrecipitationM3": 753816169.9758933,
+            "lakeEvaporationM3": 2996565605.281683,
+            "lakeDeltaVolumeM3": 1344990843.605511,
+            "lakeBalanceErrorM3": 2.62e-08
+          },
+          {
+            "date": "2024-01-01",
+            "lakeInflowM3": 2828858334.8145976,
+            "lakePrecipitationM3": 613602951.2754264,
+            "lakeEvaporationM3": 3334202428.3334055,
+            "lakeDeltaVolumeM3": 108258857.75661853,
+            "lakeBalanceErrorM3": 5.5e-09
+          },
+          {
+            "date": "2025-01-01",
+            "lakeInflowM3": 1761459215.3442595,
+            "lakePrecipitationM3": 685043175.4366103,
+            "lakeEvaporationM3": 3251560196.177187,
+            "lakeDeltaVolumeM3": -805057805.396317,
+            "lakeBalanceErrorM3": 1.79e-08
+          },
+          {
+            "date": "2026-01-01",
+            "lakeInflowM3": 1755895343.776678,
+            "lakePrecipitationM3": 687054916.4364908,
+            "lakeEvaporationM3": 2607026355.9914246,
+            "lakeDeltaVolumeM3": -164076095.77825582,
+            "lakeBalanceErrorM3": -2.82e-08
+          }
+        ]
+      },
+      "corrected": {
+        "monthly": [
+          {
+            "date": "2021-04-01",
+            "lakeInflowM3": 4388280.800760834,
+            "lakePrecipitationM3": 368941.6763492575,
+            "lakeEvaporationM3": 50908312.262198135,
+            "lakeDeltaVolumeM3": -46151089.78508805,
+            "lakeBalanceErrorM3": 2.8000000000000003e-09
+          },
+          {
+            "date": "2021-05-01",
+            "lakeInflowM3": 64143580.03855123,
+            "lakePrecipitationM3": 72825385.56345622,
+            "lakeEvaporationM3": 170339880.20630774,
+            "lakeDeltaVolumeM3": -33370914.604300283,
+            "lakeBalanceErrorM3": -3.1999999999999997e-09
+          },
+          {
+            "date": "2021-06-01",
+            "lakeInflowM3": 221810935.19148394,
+            "lakePrecipitationM3": 74543953.61793944,
+            "lakeEvaporationM3": 211794205.9541089,
+            "lakeDeltaVolumeM3": 84560682.85531452,
+            "lakeBalanceErrorM3": 3.7e-09
+          },
+          {
+            "date": "2021-07-01",
+            "lakeInflowM3": 469296036.99053997,
+            "lakePrecipitationM3": 176468479.14293474,
+            "lakeEvaporationM3": 474931563.2718725,
+            "lakeDeltaVolumeM3": 170832952.8616022,
+            "lakeBalanceErrorM3": -2.25e-08
+          },
+          {
+            "date": "2021-08-01",
+            "lakeInflowM3": 729978230.1535602,
+            "lakePrecipitationM3": 268592251.1163232,
+            "lakeEvaporationM3": 443081628.4592028,
+            "lakeDeltaVolumeM3": 555488852.8106806,
+            "lakeBalanceErrorM3": 7.500000000000001e-09
+          },
+          {
+            "date": "2021-09-01",
+            "lakeInflowM3": 791832172.6231158,
+            "lakePrecipitationM3": 143240011.18938506,
+            "lakeEvaporationM3": 383012721.74580735,
+            "lakeDeltaVolumeM3": 552059462.0666934,
+            "lakeBalanceErrorM3": 1.52e-08
+          },
+          {
+            "date": "2021-10-01",
+            "lakeInflowM3": 318637375.10783297,
+            "lakePrecipitationM3": 16351605.730166303,
+            "lakeEvaporationM3": 402676770.8680569,
+            "lakeDeltaVolumeM3": -67687790.03005765,
+            "lakeBalanceErrorM3": -9.5e-09
+          },
+          {
+            "date": "2021-11-01",
+            "lakeInflowM3": 118398187.25021863,
+            "lakePrecipitationM3": 7926392.328906799,
+            "lakeEvaporationM3": 315851250.38178444,
+            "lakeDeltaVolumeM3": -189526670.80265898,
+            "lakeBalanceErrorM3": 3.8e-09
+          },
+          {
+            "date": "2021-12-01",
+            "lakeInflowM3": 87062281.63069484,
+            "lakePrecipitationM3": 9967727.734100282,
+            "lakeEvaporationM3": 157913204.42538214,
+            "lakeDeltaVolumeM3": -60883195.06058702,
+            "lakeBalanceErrorM3": -3.9999999999999996e-10
+          },
+          {
+            "date": "2022-01-01",
+            "lakeInflowM3": 60353146.36151786,
+            "lakePrecipitationM3": 2204458.115206175,
+            "lakeEvaporationM3": 58461782.81165912,
+            "lakeDeltaVolumeM3": 4095821.665064915,
+            "lakeBalanceErrorM3": -5e-10
+          },
+          {
+            "date": "2022-02-01",
+            "lakeInflowM3": 39233877.830410406,
+            "lakePrecipitationM3": 7967924.656735236,
+            "lakeEvaporationM3": 91635105.84543528,
+            "lakeDeltaVolumeM3": -44433303.35828963,
+            "lakeBalanceErrorM3": 6.000000000000001e-10
+          },
+          {
+            "date": "2022-03-01",
+            "lakeInflowM3": 36920592.6986722,
+            "lakePrecipitationM3": 1109384.4097646947,
+            "lakeEvaporationM3": 147277454.59883702,
+            "lakeDeltaVolumeM3": -109247477.49040012,
+            "lakeBalanceErrorM3": 5e-10
+          },
+          {
+            "date": "2022-04-01",
+            "lakeInflowM3": 34767510.8317648,
+            "lakePrecipitationM3": 8313009.077405307,
+            "lakeEvaporationM3": 210624712.234708,
+            "lakeDeltaVolumeM3": -167544192.32553792,
+            "lakeBalanceErrorM3": 2.8e-09
+          },
+          {
+            "date": "2022-05-01",
+            "lakeInflowM3": 75759132.91595998,
+            "lakePrecipitationM3": 28629175.72987391,
+            "lakeEvaporationM3": 172413412.89013317,
+            "lakeDeltaVolumeM3": -68025104.24429928,
+            "lakeBalanceErrorM3": -2.3e-09
+          },
+          {
+            "date": "2022-06-01",
+            "lakeInflowM3": 222636540.1114413,
+            "lakePrecipitationM3": 36891594.05123462,
+            "lakeEvaporationM3": 317203339.21905625,
+            "lakeDeltaVolumeM3": -57675205.05638034,
+            "lakeBalanceErrorM3": 5.6000000000000005e-09
+          },
+          {
+            "date": "2022-07-01",
+            "lakeInflowM3": 357823705.81697017,
+            "lakePrecipitationM3": 111056945.29012072,
+            "lakeEvaporationM3": 569266980.3814337,
+            "lakeDeltaVolumeM3": -100386329.2743428,
+            "lakeBalanceErrorM3": 2.6100000000000002e-08
+          },
+          {
+            "date": "2022-08-01",
+            "lakeInflowM3": 390964139.4421942,
+            "lakePrecipitationM3": 187060381.30954474,
+            "lakeEvaporationM3": 501487019.09129107,
+            "lakeDeltaVolumeM3": 76537501.66044788,
+            "lakeBalanceErrorM3": 1.8e-09
+          },
+          {
+            "date": "2022-09-01",
+            "lakeInflowM3": 289227298.4190036,
+            "lakePrecipitationM3": 130625295.3456116,
+            "lakeEvaporationM3": 417860245.3493428,
+            "lakeDeltaVolumeM3": 1992348.4152723663,
+            "lakeBalanceErrorM3": 0.0
+          },
+          {
+            "date": "2022-10-01",
+            "lakeInflowM3": 118553397.325453,
+            "lakePrecipitationM3": 68667932.0946528,
+            "lakeEvaporationM3": 349090323.06218755,
+            "lakeDeltaVolumeM3": -161868993.64208177,
+            "lakeBalanceErrorM3": 5.7e-09
+          },
+          {
+            "date": "2022-11-01",
+            "lakeInflowM3": 28028845.824961424,
+            "lakePrecipitationM3": 6680387.774799466,
+            "lakeEvaporationM3": 303712651.1492884,
+            "lakeDeltaVolumeM3": -269003417.5495275,
+            "lakeBalanceErrorM3": 6.6e-09
+          },
+          {
+            "date": "2022-12-01",
+            "lakeInflowM3": 19140091.45798967,
+            "lakePrecipitationM3": 1203159.975131553,
+            "lakeEvaporationM3": 159297032.29362535,
+            "lakeDeltaVolumeM3": -138953780.86050415,
+            "lakeBalanceErrorM3": 1.2e-09
+          },
+          {
+            "date": "2023-01-01",
+            "lakeInflowM3": 13543667.692739058,
+            "lakePrecipitationM3": 387110.9221311716,
+            "lakeEvaporationM3": 78452170.03999294,
+            "lakeDeltaVolumeM3": -64521391.425122716,
+            "lakeBalanceErrorM3": -2.0000000000000003e-10
+          },
+          {
+            "date": "2023-02-01",
+            "lakeInflowM3": 8809895.54763014,
+            "lakePrecipitationM3": 636371.4498874975,
+            "lakeEvaporationM3": 111171241.26262413,
+            "lakeDeltaVolumeM3": -101724974.26510648,
+            "lakeBalanceErrorM3": 1.5000000000000002e-09
+          },
+          {
+            "date": "2023-03-01",
+            "lakeInflowM3": 7536281.953101766,
+            "lakePrecipitationM3": 9846231.060554998,
+            "lakeEvaporationM3": 137849233.66551346,
+            "lakeDeltaVolumeM3": -120466720.65185669,
+            "lakeBalanceErrorM3": 3.1e-09
+          },
+          {
+            "date": "2023-04-01",
+            "lakeInflowM3": 8790586.367732706,
+            "lakePrecipitationM3": 10301674.970799051,
+            "lakeEvaporationM3": 211778534.9854855,
+            "lakeDeltaVolumeM3": -192686273.64695373,
+            "lakeBalanceErrorM3": 1.1000000000000001e-09
+          },
+          {
+            "date": "2023-05-01",
+            "lakeInflowM3": 20798353.324823633,
+            "lakePrecipitationM3": 23787954.32314737,
+            "lakeEvaporationM3": 220509703.62178388,
+            "lakeDeltaVolumeM3": -175923395.97381288,
+            "lakeBalanceErrorM3": 2.7e-09
+          },
+          {
+            "date": "2023-06-01",
+            "lakeInflowM3": 167856651.2035705,
+            "lakePrecipitationM3": 50597176.411336266,
+            "lakeEvaporationM3": 218250288.83483633,
+            "lakeDeltaVolumeM3": 203538.78007041477,
+            "lakeBalanceErrorM3": -1.8e-09
+          },
+          {
+            "date": "2023-07-01",
+            "lakeInflowM3": 528731446.7342729,
+            "lakePrecipitationM3": 189594066.145607,
+            "lakeEvaporationM3": 413332781.1123568,
+            "lakeDeltaVolumeM3": 304992731.7675231,
+            "lakeBalanceErrorM3": -3.7e-09
+          },
+          {
+            "date": "2023-08-01",
+            "lakeInflowM3": 1054881549.2670271,
+            "lakePrecipitationM3": 280329477.90368164,
+            "lakeEvaporationM3": 435083830.74427587,
+            "lakeDeltaVolumeM3": 900127196.426433,
+            "lakeBalanceErrorM3": -9.399999999999998e-09
+          },
+          {
+            "date": "2023-09-01",
+            "lakeInflowM3": 736664923.0462961,
+            "lakePrecipitationM3": 121896454.65571819,
+            "lakeEvaporationM3": 415812700.28031296,
+            "lakeDeltaVolumeM3": 442748677.4217014,
+            "lakeBalanceErrorM3": 1.7e-09
+          },
+          {
+            "date": "2023-10-01",
+            "lakeInflowM3": 279317008.5824452,
+            "lakePrecipitationM3": 46257780.011862606,
+            "lakeEvaporationM3": 369483083.98974395,
+            "lakeDeltaVolumeM3": -43908295.39543612,
+            "lakeBalanceErrorM3": -9.4e-09
+          },
+          {
+            "date": "2023-11-01",
+            "lakeInflowM3": 123567124.38269229,
+            "lakePrecipitationM3": 14516880.382138787,
+            "lakeEvaporationM3": 216009758.81422293,
+            "lakeDeltaVolumeM3": -77925754.04939185,
+            "lakeBalanceErrorM3": 2.8000000000000003e-09
+          },
+          {
+            "date": "2023-12-01",
+            "lakeInflowM3": 90589578.12677899,
+            "lakePrecipitationM3": 5664991.7390286615,
+            "lakeEvaporationM3": 168832277.93053415,
+            "lakeDeltaVolumeM3": -72577708.0647265,
+            "lakeBalanceErrorM3": 2.6e-09
+          },
+          {
+            "date": "2024-01-01",
+            "lakeInflowM3": 63362073.08576923,
+            "lakePrecipitationM3": 3930308.1457899516,
+            "lakeEvaporationM3": 49713520.33997596,
+            "lakeDeltaVolumeM3": 17578860.89158322,
+            "lakeBalanceErrorM3": 1.6e-09
+          },
+          {
+            "date": "2024-02-01",
+            "lakeInflowM3": 42403936.98157395,
+            "lakePrecipitationM3": 3322635.7688407796,
+            "lakeEvaporationM3": 106406910.19686282,
+            "lakeDeltaVolumeM3": -60680337.4464481,
+            "lakeBalanceErrorM3": -2.8000000000000003e-09
+          },
+          {
+            "date": "2024-03-01",
+            "lakeInflowM3": 32542095.8738119,
+            "lakePrecipitationM3": 2283445.9106905935,
+            "lakeEvaporationM3": 165742871.01645052,
+            "lakeDeltaVolumeM3": -130917329.23194802,
+            "lakeBalanceErrorM3": 1.0000000000000007e-10
+          },
+          {
+            "date": "2024-04-01",
+            "lakeInflowM3": 26315280.60470838,
+            "lakePrecipitationM3": 10327879.146252079,
+            "lakeEvaporationM3": 229379988.38897982,
+            "lakeDeltaVolumeM3": -192736828.63801938,
+            "lakeBalanceErrorM3": -1.1000000000000003e-09
+          },
+          {
+            "date": "2024-05-01",
+            "lakeInflowM3": 81631401.0343489,
+            "lakePrecipitationM3": 28396214.00823123,
+            "lakeEvaporationM3": 192316876.4890395,
+            "lakeDeltaVolumeM3": -82289261.44645938,
+            "lakeBalanceErrorM3": -6.6e-09
+          },
+          {
+            "date": "2024-06-01",
+            "lakeInflowM3": 243689160.22510058,
+            "lakePrecipitationM3": 65336131.5416965,
+            "lakeEvaporationM3": 285450125.0408538,
+            "lakeDeltaVolumeM3": 23575166.725943305,
+            "lakeBalanceErrorM3": 9.000000000000002e-10
+          },
+          {
+            "date": "2024-07-01",
+            "lakeInflowM3": 680547921.6693261,
+            "lakePrecipitationM3": 205941183.74814034,
+            "lakeEvaporationM3": 464715481.44727695,
+            "lakeDeltaVolumeM3": 421773623.97018945,
+            "lakeBalanceErrorM3": 1.0000000000000007e-10
+          },
+          {
+            "date": "2024-08-01",
+            "lakeInflowM3": 482347408.659684,
+            "lakePrecipitationM3": 117644073.78172216,
+            "lakeEvaporationM3": 504046421.17886,
+            "lakeDeltaVolumeM3": 95945061.26254615,
+            "lakeBalanceErrorM3": -1.8e-09
+          },
+          {
+            "date": "2024-09-01",
+            "lakeInflowM3": 463636988.36116034,
+            "lakePrecipitationM3": 163269764.03665102,
+            "lakeEvaporationM3": 394356737.21027213,
+            "lakeDeltaVolumeM3": 232550015.18753922,
+            "lakeBalanceErrorM3": 0.0
+          },
+          {
+            "date": "2024-10-01",
+            "lakeInflowM3": 154340266.8957344,
+            "lakePrecipitationM3": 7540725.594391269,
+            "lakeEvaporationM3": 426408038.91145134,
+            "lakeDeltaVolumeM3": -264527046.42132568,
+            "lakeBalanceErrorM3": 1.14e-08
+          },
+          {
+            "date": "2024-11-01",
+            "lakeInflowM3": 58492860.63545747,
+            "lakePrecipitationM3": 3681875.6504138317,
+            "lakeEvaporationM3": 333006326.17567563,
+            "lakeDeltaVolumeM3": -270831589.88980436,
+            "lakeBalanceErrorM3": 1.13e-08
+          },
+          {
+            "date": "2024-12-01",
+            "lakeInflowM3": 40655681.14267009,
+            "lakePrecipitationM3": 1928713.942606666,
+            "lakeEvaporationM3": 182659131.93770677,
+            "lakeDeltaVolumeM3": -140074736.85243002,
+            "lakeBalanceErrorM3": -3.7e-09
+          },
+          {
+            "date": "2025-01-01",
+            "lakeInflowM3": 28818721.640409157,
+            "lakePrecipitationM3": 1486057.1945400373,
+            "lakeEvaporationM3": 82538716.7717136,
+            "lakeDeltaVolumeM3": -52233937.93676441,
+            "lakeBalanceErrorM3": 1.1e-09
+          },
+          {
+            "date": "2025-02-01",
+            "lakeInflowM3": 18732937.53390806,
+            "lakePrecipitationM3": 3934018.8200708204,
+            "lakeEvaporationM3": 109173523.43148352,
+            "lakeDeltaVolumeM3": -86506567.07750463,
+            "lakeBalanceErrorM3": -2.2e-09
+          },
+          {
+            "date": "2025-03-01",
+            "lakeInflowM3": 15566457.556183048,
+            "lakePrecipitationM3": 3658205.7318501123,
+            "lakeEvaporationM3": 207049325.0038092,
+            "lakeDeltaVolumeM3": -187824661.71577606,
+            "lakeBalanceErrorM3": 1.4000000000000001e-09
+          },
+          {
+            "date": "2025-04-01",
+            "lakeInflowM3": 17629189.14746985,
+            "lakePrecipitationM3": 5493044.527003797,
+            "lakeEvaporationM3": 217282185.09172276,
+            "lakeDeltaVolumeM3": -194159951.4172491,
+            "lakeBalanceErrorM3": -1.7000000000000001e-09
+          },
+          {
+            "date": "2025-05-01",
+            "lakeInflowM3": 42088746.75581515,
+            "lakePrecipitationM3": 28910820.142203856,
+            "lakeEvaporationM3": 180257631.7067701,
+            "lakeDeltaVolumeM3": -109258064.80875109,
+            "lakeBalanceErrorM3": -2.6999999999999998e-09
+          },
+          {
+            "date": "2025-06-01",
+            "lakeInflowM3": 147058333.42731473,
+            "lakePrecipitationM3": 87338346.99189451,
+            "lakeEvaporationM3": 268000265.10469365,
+            "lakeDeltaVolumeM3": -33603584.68548439,
+            "lakeBalanceErrorM3": 2.6999999999999998e-09
+          },
+          {
+            "date": "2025-07-01",
+            "lakeInflowM3": 310977434.6959964,
+            "lakePrecipitationM3": 212089711.61243525,
+            "lakeEvaporationM3": 473437074.08740056,
+            "lakeDeltaVolumeM3": 49630072.2210311,
+            "lakeBalanceErrorM3": -1.13e-08
+          },
+          {
+            "date": "2025-08-01",
+            "lakeInflowM3": 506261776.8987777,
+            "lakePrecipitationM3": 200951067.5989571,
+            "lakeEvaporationM3": 490923923.70103025,
+            "lakeDeltaVolumeM3": 216288920.7967046,
+            "lakeBalanceErrorM3": -1.9e-09
+          },
+          {
+            "date": "2025-09-01",
+            "lakeInflowM3": 308486804.75091577,
+            "lakePrecipitationM3": 96114814.76374313,
+            "lakeEvaporationM3": 406652798.1649547,
+            "lakeDeltaVolumeM3": -2051178.65029585,
+            "lakeBalanceErrorM3": 2e-09
+          },
+          {
+            "date": "2025-10-01",
+            "lakeInflowM3": 117536055.52220449,
+            "lakePrecipitationM3": 32178002.868581563,
+            "lakeEvaporationM3": 403853198.30284476,
+            "lakeDeltaVolumeM3": -254139139.91205868,
+            "lakeBalanceErrorM3": 6.5e-09
+          },
+          {
+            "date": "2025-11-01",
+            "lakeInflowM3": 37428169.20930297,
+            "lakePrecipitationM3": 11269637.49373811,
+            "lakeEvaporationM3": 269366471.8466502,
+            "lakeDeltaVolumeM3": -220668665.1436091,
+            "lakeBalanceErrorM3": -1.8e-09
+          },
+          {
+            "date": "2025-12-01",
+            "lakeInflowM3": 25008690.726478018,
+            "lakePrecipitationM3": 1619447.6915921252,
+            "lakeEvaporationM3": 143025082.9641138,
+            "lakeDeltaVolumeM3": -116396944.54604365,
+            "lakeBalanceErrorM3": 3.4000000000000003e-09
+          },
+          {
+            "date": "2026-01-01",
+            "lakeInflowM3": 17435205.756495096,
+            "lakePrecipitationM3": 844325.1713491136,
+            "lakeEvaporationM3": 74480891.29369025,
+            "lakeDeltaVolumeM3": -56201360.36584604,
+            "lakeBalanceErrorM3": 1.2e-09
+          },
+          {
+            "date": "2026-02-01",
+            "lakeInflowM3": 11279070.800958239,
+            "lakePrecipitationM3": 657488.3508302494,
+            "lakeEvaporationM3": 87176988.19162224,
+            "lakeDeltaVolumeM3": -75240429.03983375,
+            "lakeBalanceErrorM3": -2.4e-09
+          },
+          {
+            "date": "2026-03-01",
+            "lakeInflowM3": 10619347.541257488,
+            "lakePrecipitationM3": 3586684.2827923293,
+            "lakeEvaporationM3": 174995468.7965306,
+            "lakeDeltaVolumeM3": -160789436.97248077,
+            "lakeBalanceErrorM3": 1.9e-09
+          },
+          {
+            "date": "2026-04-01",
+            "lakeInflowM3": 13096335.688159386,
+            "lakePrecipitationM3": 16669578.874259617,
+            "lakeEvaporationM3": 205107247.07539392,
+            "lakeDeltaVolumeM3": -175341332.51297492,
+            "lakeBalanceErrorM3": -8.4e-09
+          },
+          {
+            "date": "2026-05-01",
+            "lakeInflowM3": 43070418.76431283,
+            "lakePrecipitationM3": 27675441.437541176,
+            "lakeEvaporationM3": 191518385.29574242,
+            "lakeDeltaVolumeM3": -120772525.0938884,
+            "lakeBalanceErrorM3": -6.8e-09
+          },
+          {
+            "date": "2026-06-01",
+            "lakeInflowM3": 141730810.45597404,
+            "lakePrecipitationM3": 87164740.93152277,
+            "lakeEvaporationM3": 249973423.0821676,
+            "lakeDeltaVolumeM3": -21077871.694670774,
+            "lakeBalanceErrorM3": -1.8e-09
+          },
+          {
+            "date": "2026-07-01",
+            "lakeInflowM3": 364690506.4498902,
+            "lakePrecipitationM3": 223136622.48002738,
+            "lakeEvaporationM3": 466074021.6545268,
+            "lakeDeltaVolumeM3": 121753107.27539076,
+            "lakeBalanceErrorM3": -1.69e-08
+          },
+          {
+            "date": "2026-08-01",
+            "lakeInflowM3": 428804489.2721994,
+            "lakePrecipitationM3": 162833523.67118526,
+            "lakeEvaporationM3": 498350686.3796754,
+            "lakeDeltaVolumeM3": 93287326.56370927,
+            "lakeBalanceErrorM3": 9.6e-09
+          },
+          {
+            "date": "2026-09-01",
+            "lakeInflowM3": 362588916.4220505,
+            "lakePrecipitationM3": 151018590.1147965,
+            "lakeEvaporationM3": 391689967.92209935,
+            "lakeDeltaVolumeM3": 121917538.61474763,
+            "lakeBalanceErrorM3": -3.8e-09
+          },
+          {
+            "date": "2026-10-01",
+            "lakeInflowM3": 105873121.83313607,
+            "lakePrecipitationM3": 13467921.122186396,
+            "lakeEvaporationM3": 267659276.29997605,
+            "lakeDeltaVolumeM3": -148318233.3446536,
+            "lakeBalanceErrorM3": -1.0000000000000003e-09
+          }
+        ],
+        "annual": [
+          {
+            "date": "2021-01-01",
+            "lakeInflowM3": 2805547079.7867584,
+            "lakePrecipitationM3": 770284748.0995613,
+            "lakeEvaporationM3": 2610509537.574721,
+            "lakeDeltaVolumeM3": 965322290.3115988,
+            "lakeBalanceErrorM3": -2.6e-09
+          },
+          {
+            "date": "2022-01-01",
+            "lakeInflowM3": 1673408279.0363386,
+            "lakePrecipitationM3": 590409647.8300809,
+            "lakeEvaporationM3": 3298330058.9269977,
+            "lakeDeltaVolumeM3": -1034512132.0605783,
+            "lakeBalanceErrorM3": 4.81e-08
+          },
+          {
+            "date": "2023-01-01",
+            "lakeInflowM3": 3041087066.2291102,
+            "lakePrecipitationM3": 753816169.9758933,
+            "lakeEvaporationM3": 2996565605.281683,
+            "lakeDeltaVolumeM3": 798337630.9233209,
+            "lakeBalanceErrorM3": -9e-09
+          },
+          {
+            "date": "2024-01-01",
+            "lakeInflowM3": 2369965075.1693454,
+            "lakePrecipitationM3": 613602951.2754264,
+            "lakeEvaporationM3": 3334202428.3334055,
+            "lakeDeltaVolumeM3": -350634401.8886336,
+            "lakeBalanceErrorM3": 9.4e-09
+          },
+          {
+            "date": "2025-01-01",
+            "lakeInflowM3": 1575593317.8647754,
+            "lakePrecipitationM3": 685043175.4366103,
+            "lakeEvaporationM3": 3251560196.177187,
+            "lakeDeltaVolumeM3": -990923702.8758013,
+            "lakeBalanceErrorM3": -4.500000000000001e-09
+          },
+          {
+            "date": "2026-01-01",
+            "lakeInflowM3": 1499188222.9844332,
+            "lakePrecipitationM3": 687054916.4364908,
+            "lakeEvaporationM3": 2607026355.9914246,
+            "lakeDeltaVolumeM3": -420783216.5705006,
+            "lakeBalanceErrorM3": -2.84e-08
+          }
+        ]
+      }
+    },
+    "lakeFourCriteria": {
+      "baseline": {
+        "score": 1.2589232649685294,
+        "rmse": 0.14810074862264005,
+        "trendErrorM": 0.15448079799892916,
+        "amplitudeErrorM": 0.1267020450801283,
+        "peakTimingErrorDays": 10.4,
+        "observedTrendMPerYear": 0.05786188324223888,
+        "simulatedTrendMPerYear": 0.08653208286780996,
+        "bias": 0.03246310166579241,
+        "count": 1304,
+        "seasonYears": [
+          2021,
+          2022,
+          2023,
+          2024,
+          2025
+        ],
+        "fixedObservationSHA256": "58b2d77c9931473b64388774e6e30741a7d4d3f88178f088f5d8deddcef3eda4",
+        "scales": {
+          "rmseM": 0.1,
+          "trendErrorM": 0.1,
+          "amplitudeErrorM": 0.1,
+          "peakTimingErrorDays": 14.0
+        },
+        "scoreComponents": {
+          "rmse": 1.4810074862264004,
+          "trend": 1.5448079799892915,
+          "amplitude": 1.267020450801283,
+          "peakTiming": 0.7428571428571429
+        }
+      },
+      "corrected": {
+        "score": 4.006800157102408,
+        "rmse": 0.5140136077636193,
+        "trendErrorM": 0.7568419199747358,
+        "amplitudeErrorM": 0.044721677959751106,
+        "peakTimingErrorDays": 40.2,
+        "observedTrendMPerYear": 0.05786188324223888,
+        "simulatedTrendMPerYear": -0.0826009393981943,
+        "bias": -0.4485189404184234,
+        "count": 1304,
+        "seasonYears": [
+          2021,
+          2022,
+          2023,
+          2024,
+          2025
+        ],
+        "fixedObservationSHA256": "58b2d77c9931473b64388774e6e30741a7d4d3f88178f088f5d8deddcef3eda4",
+        "scales": {
+          "rmseM": 0.1,
+          "trendErrorM": 0.1,
+          "amplitudeErrorM": 0.1,
+          "peakTimingErrorDays": 14.0
+        },
+        "scoreComponents": {
+          "rmse": 5.140136077636193,
+          "trend": 7.568419199747358,
+          "amplitude": 0.44721677959751105,
+          "peakTiming": 2.8714285714285714
+        }
+      }
+    }
+  },
+  "stationDiagnostics": {
+    "timeComparison2025to2026": [
+      {
+        "station": "SLC",
+        "season": "JJA",
+        "trainingYear": 2025,
+        "evaluationYear": 2026,
+        "factor": 0.7640665678178207,
+        "observedWarmMm": 109.5,
+        "rawWarmMm": 272.07532401911294,
+        "correctedWarmMm": 207.88365901120508
+      },
+      {
+        "station": "DUJA",
+        "season": "JJA",
+        "trainingYear": 2025,
+        "evaluationYear": 2026,
+        "factor": 0.7011822924531921,
+        "observedWarmMm": 136.89999999999998,
+        "rawWarmMm": 297.90137408440387,
+        "correctedWarmMm": 208.88316840545826
+      },
+      {
+        "station": "BLQ",
+        "season": "JJA",
+        "trainingYear": 2025,
+        "evaluationYear": 2026,
+        "factor": 0.6028632604456495,
+        "observedWarmMm": 113.19999999999999,
+        "rawWarmMm": 218.0105531637082,
+        "correctedWarmMm": 131.43055289183275
+      }
+    ],
+    "spatialSensitivity": [
+      {
+        "radiusKm": 50.0,
+        "evaluationYear": 2025,
+        "mode": "leave-station-out",
+        "count": 6,
+        "meanNormalizedAbsoluteError": 0.16697893633541347,
+        "records": [
+          {
+            "station": "SLC",
+            "season": "JJA",
+            "factor": 0.8094516122040925,
+            "observedWarmMm": 208.5,
+            "rawWarmMm": 272.881982777335,
+            "correctedWarmMm": 220.8847609005632,
+            "normalizedAbsoluteError": 0.045385044386271806
+          },
+          {
+            "station": "SLC",
+            "season": "SON",
+            "factor": 0.6893378609895527,
+            "observedWarmMm": 37.5,
+            "rawWarmMm": 63.70409105647923,
+            "correctedWarmMm": 43.91364186515709,
+            "normalizedAbsoluteError": 0.10067864965643787
+          },
+          {
+            "station": "DUJA",
+            "season": "JJA",
+            "factor": 0.8519292748920024,
+            "observedWarmMm": 210.0,
+            "rawWarmMm": 299.49415759671183,
+            "correctedWarmMm": 255.14784051575782,
+            "normalizedAbsoluteError": 0.15074698243881035
+          },
+          {
+            "station": "DUJA",
+            "season": "SON",
+            "factor": 0.7293766244801836,
+            "observedWarmMm": 31.200000000000003,
+            "rawWarmMm": 58.272681145467686,
+            "correctedWarmMm": 42.502731473291256,
+            "normalizedAbsoluteError": 0.19396278412307708
+          },
+          {
+            "station": "BLQ",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 141.4,
+            "rawWarmMm": 234.54738292639377,
+            "correctedWarmMm": 234.54738292639377,
+            "normalizedAbsoluteError": 0.3971367395543505
+          },
+          {
+            "station": "BLQ",
+            "season": "SON",
+            "factor": 1.0,
+            "observedWarmMm": 50.0,
+            "rawWarmMm": 56.431078589184835,
+            "correctedWarmMm": 56.431078589184835,
+            "normalizedAbsoluteError": 0.11396341785353307
+          }
+        ]
+      },
+      {
+        "radiusKm": 50.0,
+        "evaluationYear": 2025,
+        "mode": "leave-cluster-out",
+        "count": 6,
+        "meanNormalizedAbsoluteError": 0.3202963742411083,
+        "records": [
+          {
+            "station": "SLC",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 208.5,
+            "rawWarmMm": 272.881982777335,
+            "correctedWarmMm": 272.881982777335,
+            "normalizedAbsoluteError": 0.23593343218217935
+          },
+          {
+            "station": "SLC",
+            "season": "SON",
+            "factor": 1.0,
+            "observedWarmMm": 37.5,
+            "rawWarmMm": 63.70409105647923,
+            "correctedWarmMm": 63.70409105647923,
+            "normalizedAbsoluteError": 0.4113407886668851
+          },
+          {
+            "station": "DUJA",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 210.0,
+            "rawWarmMm": 299.49415759671183,
+            "correctedWarmMm": 299.49415759671183,
+            "normalizedAbsoluteError": 0.2988177075468079
+          },
+          {
+            "station": "DUJA",
+            "season": "SON",
+            "factor": 1.0,
+            "observedWarmMm": 31.200000000000003,
+            "rawWarmMm": 58.272681145467686,
+            "correctedWarmMm": 58.272681145467686,
+            "normalizedAbsoluteError": 0.46458615964289357
+          },
+          {
+            "station": "BLQ",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 141.4,
+            "rawWarmMm": 234.54738292639377,
+            "correctedWarmMm": 234.54738292639377,
+            "normalizedAbsoluteError": 0.3971367395543505
+          },
+          {
+            "station": "BLQ",
+            "season": "SON",
+            "factor": 1.0,
+            "observedWarmMm": 50.0,
+            "rawWarmMm": 56.431078589184835,
+            "correctedWarmMm": 56.431078589184835,
+            "normalizedAbsoluteError": 0.11396341785353307
+          }
+        ]
+      },
+      {
+        "radiusKm": 50.0,
+        "evaluationYear": 2026,
+        "mode": "leave-station-out",
+        "count": 3,
+        "meanNormalizedAbsoluteError": 0.426709942026194,
+        "records": [
+          {
+            "station": "SLC",
+            "season": "JJA",
+            "factor": 0.8094516122040925,
+            "observedWarmMm": 109.5,
+            "rawWarmMm": 272.07532401911294,
+            "correctedWarmMm": 220.2318096682218,
+            "normalizedAbsoluteError": 0.40698953522313197
+          },
+          {
+            "station": "DUJA",
+            "season": "JJA",
+            "factor": 0.8519292748920024,
+            "observedWarmMm": 136.89999999999998,
+            "rawWarmMm": 297.90137408440387,
+            "correctedWarmMm": 253.79090161305734,
+            "normalizedAbsoluteError": 0.3923812099635998
+          },
+          {
+            "station": "BLQ",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 113.19999999999999,
+            "rawWarmMm": 218.0105531637082,
+            "correctedWarmMm": 218.0105531637082,
+            "normalizedAbsoluteError": 0.48075908089185027
+          }
+        ]
+      },
+      {
+        "radiusKm": 50.0,
+        "evaluationYear": 2026,
+        "mode": "leave-cluster-out",
+        "count": 3,
+        "meanNormalizedAbsoluteError": 0.539582979660829,
+        "records": [
+          {
+            "station": "SLC",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 109.5,
+            "rawWarmMm": 272.07532401911294,
+            "correctedWarmMm": 272.07532401911294,
+            "normalizedAbsoluteError": 0.5975379230190395
+          },
+          {
+            "station": "DUJA",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 136.89999999999998,
+            "rawWarmMm": 297.90137408440387,
+            "correctedWarmMm": 297.90137408440387,
+            "normalizedAbsoluteError": 0.5404519350715974
+          },
+          {
+            "station": "BLQ",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 113.19999999999999,
+            "rawWarmMm": 218.0105531637082,
+            "correctedWarmMm": 218.0105531637082,
+            "normalizedAbsoluteError": 0.48075908089185027
+          }
+        ]
+      },
+      {
+        "radiusKm": 100.0,
+        "evaluationYear": 2025,
+        "mode": "leave-station-out",
+        "count": 6,
+        "meanNormalizedAbsoluteError": 0.12289587761446784,
+        "records": [
+          {
+            "station": "SLC",
+            "season": "JJA",
+            "factor": 0.7230296261870116,
+            "observedWarmMm": 208.5,
+            "rawWarmMm": 272.881982777335,
+            "correctedWarmMm": 197.30175800066706,
+            "normalizedAbsoluteError": 0.041036941630809044
+          },
+          {
+            "station": "SLC",
+            "season": "SON",
+            "factor": 0.5651184897507204,
+            "observedWarmMm": 37.5,
+            "rawWarmMm": 63.70409105647923,
+            "correctedWarmMm": 36.00035972877992,
+            "normalizedAbsoluteError": 0.02354072158239443
+          },
+          {
+            "station": "DUJA",
+            "season": "JJA",
+            "factor": 0.7820462021630011,
+            "observedWarmMm": 210.0,
+            "rawWarmMm": 299.49415759671183,
+            "correctedWarmMm": 234.21826851851583,
+            "normalizedAbsoluteError": 0.08086390970980906
+          },
+          {
+            "station": "DUJA",
+            "season": "SON",
+            "factor": 0.6162473757130174,
+            "observedWarmMm": 31.200000000000003,
+            "rawWarmMm": 58.272681145467686,
+            "correctedWarmMm": 35.910386831655885,
+            "normalizedAbsoluteError": 0.08083353535591085
+          },
+          {
+            "station": "BLQ",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 141.4,
+            "rawWarmMm": 234.54738292639377,
+            "correctedWarmMm": 234.54738292639377,
+            "normalizedAbsoluteError": 0.3971367395543505
+          },
+          {
+            "station": "BLQ",
+            "season": "SON",
+            "factor": 1.0,
+            "observedWarmMm": 50.0,
+            "rawWarmMm": 56.431078589184835,
+            "correctedWarmMm": 56.431078589184835,
+            "normalizedAbsoluteError": 0.11396341785353307
+          }
+        ]
+      },
+      {
+        "radiusKm": 100.0,
+        "evaluationYear": 2025,
+        "mode": "leave-cluster-out",
+        "count": 6,
+        "meanNormalizedAbsoluteError": 0.3202963742411083,
+        "records": [
+          {
+            "station": "SLC",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 208.5,
+            "rawWarmMm": 272.881982777335,
+            "correctedWarmMm": 272.881982777335,
+            "normalizedAbsoluteError": 0.23593343218217935
+          },
+          {
+            "station": "SLC",
+            "season": "SON",
+            "factor": 1.0,
+            "observedWarmMm": 37.5,
+            "rawWarmMm": 63.70409105647923,
+            "correctedWarmMm": 63.70409105647923,
+            "normalizedAbsoluteError": 0.4113407886668851
+          },
+          {
+            "station": "DUJA",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 210.0,
+            "rawWarmMm": 299.49415759671183,
+            "correctedWarmMm": 299.49415759671183,
+            "normalizedAbsoluteError": 0.2988177075468079
+          },
+          {
+            "station": "DUJA",
+            "season": "SON",
+            "factor": 1.0,
+            "observedWarmMm": 31.200000000000003,
+            "rawWarmMm": 58.272681145467686,
+            "correctedWarmMm": 58.272681145467686,
+            "normalizedAbsoluteError": 0.46458615964289357
+          },
+          {
+            "station": "BLQ",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 141.4,
+            "rawWarmMm": 234.54738292639377,
+            "correctedWarmMm": 234.54738292639377,
+            "normalizedAbsoluteError": 0.3971367395543505
+          },
+          {
+            "station": "BLQ",
+            "season": "SON",
+            "factor": 1.0,
+            "observedWarmMm": 50.0,
+            "rawWarmMm": 56.431078589184835,
+            "correctedWarmMm": 56.431078589184835,
+            "normalizedAbsoluteError": 0.11396341785353307
+          }
+        ]
+      },
+      {
+        "radiusKm": 100.0,
+        "evaluationYear": 2026,
+        "mode": "leave-station-out",
+        "count": 3,
+        "meanNormalizedAbsoluteError": 0.37460825577749995,
+        "records": [
+          {
+            "station": "SLC",
+            "season": "JJA",
+            "factor": 0.7230296261870116,
+            "observedWarmMm": 109.5,
+            "rawWarmMm": 272.07532401911294,
+            "correctedWarmMm": 196.7185198202493,
+            "normalizedAbsoluteError": 0.32056754920605113
+          },
+          {
+            "station": "DUJA",
+            "season": "JJA",
+            "factor": 0.7820462021630011,
+            "observedWarmMm": 136.89999999999998,
+            "rawWarmMm": 297.90137408440387,
+            "correctedWarmMm": 232.97263822184755,
+            "normalizedAbsoluteError": 0.3224981372345986
+          },
+          {
+            "station": "BLQ",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 113.19999999999999,
+            "rawWarmMm": 218.0105531637082,
+            "correctedWarmMm": 218.0105531637082,
+            "normalizedAbsoluteError": 0.48075908089185027
+          }
+        ]
+      },
+      {
+        "radiusKm": 100.0,
+        "evaluationYear": 2026,
+        "mode": "leave-cluster-out",
+        "count": 3,
+        "meanNormalizedAbsoluteError": 0.539582979660829,
+        "records": [
+          {
+            "station": "SLC",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 109.5,
+            "rawWarmMm": 272.07532401911294,
+            "correctedWarmMm": 272.07532401911294,
+            "normalizedAbsoluteError": 0.5975379230190395
+          },
+          {
+            "station": "DUJA",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 136.89999999999998,
+            "rawWarmMm": 297.90137408440387,
+            "correctedWarmMm": 297.90137408440387,
+            "normalizedAbsoluteError": 0.5404519350715974
+          },
+          {
+            "station": "BLQ",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 113.19999999999999,
+            "rawWarmMm": 218.0105531637082,
+            "correctedWarmMm": 218.0105531637082,
+            "normalizedAbsoluteError": 0.48075908089185027
+          }
+        ]
+      },
+      {
+        "radiusKm": 150.0,
+        "evaluationYear": 2025,
+        "mode": "leave-station-out",
+        "count": 6,
+        "meanNormalizedAbsoluteError": 0.12347899684625345,
+        "records": [
+          {
+            "station": "SLC",
+            "season": "JJA",
+            "factor": 0.7104386336426729,
+            "observedWarmMm": 208.5,
+            "rawWarmMm": 272.881982777335,
+            "correctedWarmMm": 193.86590299003328,
+            "normalizedAbsoluteError": 0.05362793417514775
+          },
+          {
+            "station": "SLC",
+            "season": "SON",
+            "factor": 0.5479146344052398,
+            "observedWarmMm": 37.5,
+            "rawWarmMm": 63.70409105647923,
+            "correctedWarmMm": 34.90440376132892,
+            "normalizedAbsoluteError": 0.0407445769278751
+          },
+          {
+            "station": "DUJA",
+            "season": "JJA",
+            "factor": 0.7717005412951293,
+            "observedWarmMm": 210.0,
+            "rawWarmMm": 299.49415759671183,
+            "correctedWarmMm": 231.1198035321113,
+            "normalizedAbsoluteError": 0.07051824884193723
+          },
+          {
+            "station": "DUJA",
+            "season": "SON",
+            "factor": 0.6002969040817835,
+            "observedWarmMm": 31.200000000000003,
+            "rawWarmMm": 58.272681145467686,
+            "correctedWarmMm": 34.98091008416917,
+            "normalizedAbsoluteError": 0.06488306372467702
+          },
+          {
+            "station": "BLQ",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 141.4,
+            "rawWarmMm": 234.54738292639377,
+            "correctedWarmMm": 234.54738292639377,
+            "normalizedAbsoluteError": 0.3971367395543505
+          },
+          {
+            "station": "BLQ",
+            "season": "SON",
+            "factor": 1.0,
+            "observedWarmMm": 50.0,
+            "rawWarmMm": 56.431078589184835,
+            "correctedWarmMm": 56.431078589184835,
+            "normalizedAbsoluteError": 0.11396341785353307
+          }
+        ]
+      },
+      {
+        "radiusKm": 150.0,
+        "evaluationYear": 2025,
+        "mode": "leave-cluster-out",
+        "count": 6,
+        "meanNormalizedAbsoluteError": 0.3202963742411083,
+        "records": [
+          {
+            "station": "SLC",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 208.5,
+            "rawWarmMm": 272.881982777335,
+            "correctedWarmMm": 272.881982777335,
+            "normalizedAbsoluteError": 0.23593343218217935
+          },
+          {
+            "station": "SLC",
+            "season": "SON",
+            "factor": 1.0,
+            "observedWarmMm": 37.5,
+            "rawWarmMm": 63.70409105647923,
+            "correctedWarmMm": 63.70409105647923,
+            "normalizedAbsoluteError": 0.4113407886668851
+          },
+          {
+            "station": "DUJA",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 210.0,
+            "rawWarmMm": 299.49415759671183,
+            "correctedWarmMm": 299.49415759671183,
+            "normalizedAbsoluteError": 0.2988177075468079
+          },
+          {
+            "station": "DUJA",
+            "season": "SON",
+            "factor": 1.0,
+            "observedWarmMm": 31.200000000000003,
+            "rawWarmMm": 58.272681145467686,
+            "correctedWarmMm": 58.272681145467686,
+            "normalizedAbsoluteError": 0.46458615964289357
+          },
+          {
+            "station": "BLQ",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 141.4,
+            "rawWarmMm": 234.54738292639377,
+            "correctedWarmMm": 234.54738292639377,
+            "normalizedAbsoluteError": 0.3971367395543505
+          },
+          {
+            "station": "BLQ",
+            "season": "SON",
+            "factor": 1.0,
+            "observedWarmMm": 50.0,
+            "rawWarmMm": 56.431078589184835,
+            "correctedWarmMm": 56.431078589184835,
+            "normalizedAbsoluteError": 0.11396341785353307
+          }
+        ]
+      },
+      {
+        "radiusKm": 150.0,
+        "evaluationYear": 2026,
+        "mode": "leave-station-out",
+        "count": 3,
+        "meanNormalizedAbsoluteError": 0.36696270464009645,
+        "records": [
+          {
+            "station": "SLC",
+            "season": "JJA",
+            "factor": 0.7104386336426729,
+            "observedWarmMm": 109.5,
+            "rawWarmMm": 272.07532401911294,
+            "correctedWarmMm": 193.2928214440261,
+            "normalizedAbsoluteError": 0.30797655666171236
+          },
+          {
+            "station": "DUJA",
+            "season": "JJA",
+            "factor": 0.7717005412951293,
+            "observedWarmMm": 136.89999999999998,
+            "rawWarmMm": 297.90137408440387,
+            "correctedWarmMm": 229.89065163349727,
+            "normalizedAbsoluteError": 0.3121524763667267
+          },
+          {
+            "station": "BLQ",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 113.19999999999999,
+            "rawWarmMm": 218.0105531637082,
+            "correctedWarmMm": 218.0105531637082,
+            "normalizedAbsoluteError": 0.48075908089185027
+          }
+        ]
+      },
+      {
+        "radiusKm": 150.0,
+        "evaluationYear": 2026,
+        "mode": "leave-cluster-out",
+        "count": 3,
+        "meanNormalizedAbsoluteError": 0.539582979660829,
+        "records": [
+          {
+            "station": "SLC",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 109.5,
+            "rawWarmMm": 272.07532401911294,
+            "correctedWarmMm": 272.07532401911294,
+            "normalizedAbsoluteError": 0.5975379230190395
+          },
+          {
+            "station": "DUJA",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 136.89999999999998,
+            "rawWarmMm": 297.90137408440387,
+            "correctedWarmMm": 297.90137408440387,
+            "normalizedAbsoluteError": 0.5404519350715974
+          },
+          {
+            "station": "BLQ",
+            "season": "JJA",
+            "factor": 1.0,
+            "observedWarmMm": 113.19999999999999,
+            "rawWarmMm": 218.0105531637082,
+            "correctedWarmMm": 218.0105531637082,
+            "normalizedAbsoluteError": 0.48075908089185027
+          }
+        ]
+      }
+    ],
+    "note": "2025—2026已查看，时间对照属于开发内检验；空间半径固定100 km，不用流量或湖位选择。"
+  },
+  "stationStatistics": {
+    "SLC": [
+      {
+        "seasonYear": 2024,
+        "season": "DJF",
+        "start": "2023-12-01",
+        "endExclusive": "2024-03-01",
+        "expectedDays": 91,
+        "coverageDays": 60,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2024,
+        "season": "MAM",
+        "start": "2024-03-01",
+        "endExclusive": "2024-06-01",
+        "expectedDays": 92,
+        "coverageDays": 92,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2024,
+        "season": "JJA",
+        "start": "2024-06-01",
+        "endExclusive": "2024-09-01",
+        "expectedDays": 92,
+        "coverageDays": 92,
+        "warmPairedDays": 46,
+        "warmObservedRainDays": 23,
+        "gaugeMm": 116.0,
+        "eraMm": 232.76632966735633,
+        "ratio": 0.49835386486427935,
+        "usableForFactor": true
+      },
+      {
+        "seasonYear": 2024,
+        "season": "SON",
+        "start": "2024-09-01",
+        "endExclusive": "2024-12-01",
+        "expectedDays": 91,
+        "coverageDays": 91,
+        "warmPairedDays": 13,
+        "warmObservedRainDays": 8,
+        "gaugeMm": 41.0,
+        "eraMm": 64.03577441960806,
+        "ratio": 0.6402671064979829,
+        "usableForFactor": true
+      },
+      {
+        "seasonYear": 2025,
+        "season": "DJF",
+        "start": "2024-12-01",
+        "endExclusive": "2025-03-01",
+        "expectedDays": 90,
+        "coverageDays": 90,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2025,
+        "season": "MAM",
+        "start": "2025-03-01",
+        "endExclusive": "2025-06-01",
+        "expectedDays": 92,
+        "coverageDays": 92,
+        "warmPairedDays": 60,
+        "warmObservedRainDays": 1,
+        "gaugeMm": 0.5,
+        "eraMm": 10.403411350182523,
+        "ratio": 0.048061158322959874,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2025,
+        "season": "JJA",
+        "start": "2025-06-01",
+        "endExclusive": "2025-09-01",
+        "expectedDays": 92,
+        "coverageDays": 92,
+        "warmPairedDays": 92,
+        "warmObservedRainDays": 40,
+        "gaugeMm": 208.5,
+        "eraMm": 272.881982777335,
+        "ratio": 0.7640665678178207,
+        "usableForFactor": true
+      },
+      {
+        "seasonYear": 2025,
+        "season": "SON",
+        "start": "2025-09-01",
+        "endExclusive": "2025-12-01",
+        "expectedDays": 91,
+        "coverageDays": 91,
+        "warmPairedDays": 54,
+        "warmObservedRainDays": 10,
+        "gaugeMm": 37.5,
+        "eraMm": 63.70409105647923,
+        "ratio": 0.5886592113331149,
+        "usableForFactor": true
+      },
+      {
+        "seasonYear": 2026,
+        "season": "DJF",
+        "start": "2025-12-01",
+        "endExclusive": "2026-03-01",
+        "expectedDays": 90,
+        "coverageDays": 90,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2026,
+        "season": "MAM",
+        "start": "2026-03-01",
+        "endExclusive": "2026-06-01",
+        "expectedDays": 92,
+        "coverageDays": 92,
+        "warmPairedDays": 54,
+        "warmObservedRainDays": 3,
+        "gaugeMm": 3.0,
+        "eraMm": 7.830730807654618,
+        "ratio": 0.3831060055170674,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2026,
+        "season": "JJA",
+        "start": "2026-06-01",
+        "endExclusive": "2026-09-01",
+        "expectedDays": 92,
+        "coverageDays": 92,
+        "warmPairedDays": 92,
+        "warmObservedRainDays": 35,
+        "gaugeMm": 109.5,
+        "eraMm": 272.07532401911294,
+        "ratio": 0.4024620769809605,
+        "usableForFactor": true
+      },
+      {
+        "seasonYear": 2026,
+        "season": "SON",
+        "start": "2026-09-01",
+        "endExclusive": "2026-12-01",
+        "expectedDays": 91,
+        "coverageDays": 50,
+        "warmPairedDays": 37,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 60.2147103676316,
+        "ratio": 0.0,
+        "usableForFactor": false
+      }
+    ],
+    "DUJA": [
+      {
+        "seasonYear": 2024,
+        "season": "DJF",
+        "start": "2023-12-01",
+        "endExclusive": "2024-03-01",
+        "expectedDays": 91,
+        "coverageDays": 0,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2024,
+        "season": "MAM",
+        "start": "2024-03-01",
+        "endExclusive": "2024-06-01",
+        "expectedDays": 92,
+        "coverageDays": 0,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2024,
+        "season": "JJA",
+        "start": "2024-06-01",
+        "endExclusive": "2024-09-01",
+        "expectedDays": 92,
+        "coverageDays": 0,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2024,
+        "season": "SON",
+        "start": "2024-09-01",
+        "endExclusive": "2024-12-01",
+        "expectedDays": 91,
+        "coverageDays": 0,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2025,
+        "season": "DJF",
+        "start": "2024-12-01",
+        "endExclusive": "2025-03-01",
+        "expectedDays": 90,
+        "coverageDays": 58,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2025,
+        "season": "MAM",
+        "start": "2025-03-01",
+        "endExclusive": "2025-06-01",
+        "expectedDays": 92,
+        "coverageDays": 92,
+        "warmPairedDays": 58,
+        "warmObservedRainDays": 3,
+        "gaugeMm": 2.7,
+        "eraMm": 8.16033626489343,
+        "ratio": 0.3308687181943305,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2025,
+        "season": "JJA",
+        "start": "2025-06-01",
+        "endExclusive": "2025-09-01",
+        "expectedDays": 92,
+        "coverageDays": 92,
+        "warmPairedDays": 92,
+        "warmObservedRainDays": 40,
+        "gaugeMm": 210.0,
+        "eraMm": 299.49415759671183,
+        "ratio": 0.7011822924531921,
+        "usableForFactor": true
+      },
+      {
+        "seasonYear": 2025,
+        "season": "SON",
+        "start": "2025-09-01",
+        "endExclusive": "2025-12-01",
+        "expectedDays": 91,
+        "coverageDays": 91,
+        "warmPairedDays": 56,
+        "warmObservedRainDays": 14,
+        "gaugeMm": 31.200000000000003,
+        "eraMm": 58.272681145467686,
+        "ratio": 0.5354138403571065,
+        "usableForFactor": true
+      },
+      {
+        "seasonYear": 2026,
+        "season": "DJF",
+        "start": "2025-12-01",
+        "endExclusive": "2026-03-01",
+        "expectedDays": 90,
+        "coverageDays": 90,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2026,
+        "season": "MAM",
+        "start": "2026-03-01",
+        "endExclusive": "2026-06-01",
+        "expectedDays": 92,
+        "coverageDays": 92,
+        "warmPairedDays": 57,
+        "warmObservedRainDays": 2,
+        "gaugeMm": 2.8000000000000003,
+        "eraMm": 7.435817670511824,
+        "ratio": 0.3765557634776257,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2026,
+        "season": "JJA",
+        "start": "2026-06-01",
+        "endExclusive": "2026-09-01",
+        "expectedDays": 92,
+        "coverageDays": 92,
+        "warmPairedDays": 92,
+        "warmObservedRainDays": 35,
+        "gaugeMm": 136.89999999999998,
+        "eraMm": 297.90137408440387,
+        "ratio": 0.4595480649284026,
+        "usableForFactor": true
+      },
+      {
+        "seasonYear": 2026,
+        "season": "SON",
+        "start": "2026-09-01",
+        "endExclusive": "2026-12-01",
+        "expectedDays": 91,
+        "coverageDays": 50,
+        "warmPairedDays": 39,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 54.36491549698985,
+        "ratio": 0.0,
+        "usableForFactor": false
+      }
+    ],
+    "BLQ": [
+      {
+        "seasonYear": 2024,
+        "season": "DJF",
+        "start": "2023-12-01",
+        "endExclusive": "2024-03-01",
+        "expectedDays": 91,
+        "coverageDays": 42,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2024,
+        "season": "MAM",
+        "start": "2024-03-01",
+        "endExclusive": "2024-06-01",
+        "expectedDays": 92,
+        "coverageDays": 86,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2024,
+        "season": "JJA",
+        "start": "2024-06-01",
+        "endExclusive": "2024-09-01",
+        "expectedDays": 92,
+        "coverageDays": 75,
+        "warmPairedDays": 1,
+        "warmObservedRainDays": 1,
+        "gaugeMm": 3.4,
+        "eraMm": 12.24304735660553,
+        "ratio": 0.27770863747950686,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2024,
+        "season": "SON",
+        "start": "2024-09-01",
+        "endExclusive": "2024-12-01",
+        "expectedDays": 91,
+        "coverageDays": 74,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2025,
+        "season": "DJF",
+        "start": "2024-12-01",
+        "endExclusive": "2025-03-01",
+        "expectedDays": 90,
+        "coverageDays": 90,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2025,
+        "season": "MAM",
+        "start": "2025-03-01",
+        "endExclusive": "2025-06-01",
+        "expectedDays": 92,
+        "coverageDays": 92,
+        "warmPairedDays": 15,
+        "warmObservedRainDays": 3,
+        "gaugeMm": 22.200000000000003,
+        "eraMm": 13.197772960097609,
+        "ratio": 1.6821019778958082,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2025,
+        "season": "JJA",
+        "start": "2025-06-01",
+        "endExclusive": "2025-09-01",
+        "expectedDays": 92,
+        "coverageDays": 92,
+        "warmPairedDays": 82,
+        "warmObservedRainDays": 38,
+        "gaugeMm": 141.4,
+        "eraMm": 234.54738292639377,
+        "ratio": 0.6028632604456495,
+        "usableForFactor": true
+      },
+      {
+        "seasonYear": 2025,
+        "season": "SON",
+        "start": "2025-09-01",
+        "endExclusive": "2025-12-01",
+        "expectedDays": 91,
+        "coverageDays": 91,
+        "warmPairedDays": 31,
+        "warmObservedRainDays": 12,
+        "gaugeMm": 50.0,
+        "eraMm": 56.431078589184835,
+        "ratio": 0.886036582146467,
+        "usableForFactor": true
+      },
+      {
+        "seasonYear": 2026,
+        "season": "DJF",
+        "start": "2025-12-01",
+        "endExclusive": "2026-03-01",
+        "expectedDays": 90,
+        "coverageDays": 90,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2026,
+        "season": "MAM",
+        "start": "2026-03-01",
+        "endExclusive": "2026-06-01",
+        "expectedDays": 92,
+        "coverageDays": 92,
+        "warmPairedDays": 12,
+        "warmObservedRainDays": 2,
+        "gaugeMm": 1.7999999999999998,
+        "eraMm": 5.715861174394377,
+        "ratio": 0.3149131766991732,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2026,
+        "season": "JJA",
+        "start": "2026-06-01",
+        "endExclusive": "2026-09-01",
+        "expectedDays": 92,
+        "coverageDays": 92,
+        "warmPairedDays": 86,
+        "warmObservedRainDays": 33,
+        "gaugeMm": 113.19999999999999,
+        "eraMm": 218.0105531637082,
+        "ratio": 0.5192409191081497,
+        "usableForFactor": true
+      },
+      {
+        "seasonYear": 2026,
+        "season": "SON",
+        "start": "2026-09-01",
+        "endExclusive": "2026-12-01",
+        "expectedDays": 91,
+        "coverageDays": 50,
+        "warmPairedDays": 23,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 35.61319806613028,
+        "ratio": 0.0,
+        "usableForFactor": false
+      }
+    ],
+    "115DB": [
+      {
+        "seasonYear": 2024,
+        "season": "DJF",
+        "start": "2023-12-01",
+        "endExclusive": "2024-03-01",
+        "expectedDays": 91,
+        "coverageDays": 43,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2024,
+        "season": "MAM",
+        "start": "2024-03-01",
+        "endExclusive": "2024-06-01",
+        "expectedDays": 92,
+        "coverageDays": 86,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2024,
+        "season": "JJA",
+        "start": "2024-06-01",
+        "endExclusive": "2024-09-01",
+        "expectedDays": 92,
+        "coverageDays": 79,
+        "warmPairedDays": 3,
+        "warmObservedRainDays": 3,
+        "gaugeMm": 21.0,
+        "eraMm": 34.7872911952436,
+        "ratio": 0.603668732990377,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2024,
+        "season": "SON",
+        "start": "2024-09-01",
+        "endExclusive": "2024-12-01",
+        "expectedDays": 91,
+        "coverageDays": 75,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2025,
+        "season": "DJF",
+        "start": "2024-12-01",
+        "endExclusive": "2025-03-01",
+        "expectedDays": 90,
+        "coverageDays": 90,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2025,
+        "season": "MAM",
+        "start": "2025-03-01",
+        "endExclusive": "2025-06-01",
+        "expectedDays": 92,
+        "coverageDays": 72,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2025,
+        "season": "JJA",
+        "start": "2025-06-01",
+        "endExclusive": "2025-09-01",
+        "expectedDays": 92,
+        "coverageDays": 0,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2025,
+        "season": "SON",
+        "start": "2025-09-01",
+        "endExclusive": "2025-12-01",
+        "expectedDays": 91,
+        "coverageDays": 0,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2026,
+        "season": "DJF",
+        "start": "2025-12-01",
+        "endExclusive": "2026-03-01",
+        "expectedDays": 90,
+        "coverageDays": 0,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2026,
+        "season": "MAM",
+        "start": "2026-03-01",
+        "endExclusive": "2026-06-01",
+        "expectedDays": 92,
+        "coverageDays": 0,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2026,
+        "season": "JJA",
+        "start": "2026-06-01",
+        "endExclusive": "2026-09-01",
+        "expectedDays": 92,
+        "coverageDays": 0,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      },
+      {
+        "seasonYear": 2026,
+        "season": "SON",
+        "start": "2026-09-01",
+        "endExclusive": "2026-12-01",
+        "expectedDays": 91,
+        "coverageDays": 0,
+        "warmPairedDays": 0,
+        "warmObservedRainDays": 0,
+        "gaugeMm": 0.0,
+        "eraMm": 0.0,
+        "ratio": null,
+        "usableForFactor": false
+      }
+    ]
+  },
+  "eventTemperaturePairing": {
+    "eventTime": "北京时间实际发生时刻",
+    "eventInterval": "[floor(event,h), floor(event,h)+1h)",
+    "eraTemperatureEndpoint": "floor(event,h)+1h",
+    "dailyInterval": "[当天00:00,次日00:00)，对应ERA结束时刻当天01:00至次日00:00"
+  },
+  "confirmedSources": [
+    {
+      "station": "BLQ",
+      "year": 2025,
+      "sourceId": "SRC-408b98bb895d5321abf71665",
+      "sourceSHA256": "80b69084c2f08dd6a9877a74b4579daa1fcc736fa54b4a1b5e6dbbad07152d1b",
+      "start": "2025-01-01T00:00:00",
+      "endExclusive": "2026-01-01T00:00:00"
+    },
+    {
+      "station": "BLQ",
+      "year": 2026,
+      "sourceId": "SRC-27bc61416f80a46d098f1f51",
+      "sourceSHA256": "1bfacb7d59b60ed02a7b9f6a8e178013e43392baeeded6617c7f5b5dc0885e86",
+      "start": "2026-01-01T00:00:00",
+      "endExclusive": "2026-10-21T00:00:00"
+    },
+    {
+      "station": "DUJA",
+      "year": 2025,
+      "sourceId": "SRC-ca1ec81a975b76f180bc833e",
+      "sourceSHA256": "2b1b1008e5d9d3358903509d91c50db968d2af43d1c75f1831d9911b7f42aad0",
+      "start": "2025-01-01T00:00:00",
+      "endExclusive": "2026-01-01T00:00:00"
+    },
+    {
+      "station": "DUJA",
+      "year": 2026,
+      "sourceId": "SRC-7db3e23c82ec182a8b9107f8",
+      "sourceSHA256": "8aaa2c5495680df2e69a80a4a4fbcb9b5cd41898b6d2d5d543837682acbd2fe9",
+      "start": "2026-01-01T00:00:00",
+      "endExclusive": "2026-10-21T00:00:00"
+    },
+    {
+      "station": "SLC",
+      "year": 2025,
+      "sourceId": "SRC-935a719eb332313ba76102d0",
+      "sourceSHA256": "a659a2039139d0b6e21ee9a78a77087a51b2e99b622d14565b8cffb74fd68385",
+      "start": "2025-01-01T00:00:00",
+      "endExclusive": "2026-01-01T00:00:00"
+    },
+    {
+      "station": "SLC",
+      "year": 2026,
+      "sourceId": "SRC-f927dc64f33321c98a25aa1d",
+      "sourceSHA256": "da6249dd6c48b3327300bcde16f4163e4431425721cdb297fb9df861c96d3063",
+      "start": "2026-01-01T00:00:00",
+      "endExclusive": "2026-10-21T00:00:00"
+    }
+  ],
+  "confirmedCoverage": "3站2025整年及2026-01-01至10-20；2024逐次未确认",
+  "defaultUnchanged": true,
+  "adopted": false,
+  "interpretation": [
+    "暖时是ERA气温代理，缺少站点气温和独立降雪量",
+    "最终订正使用2024—2026合格站季，2017—2023是时间外推",
+    "2025/2026已参与开发，时间比较不能称盲验证",
+    "未利用Q或H选择站雨因子或半径",
+    "未重新率定或采用"
+  ]
+}

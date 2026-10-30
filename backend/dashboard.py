@@ -112,13 +112,26 @@ def map_frame(db, input_id, day, variable='precipitation',spatial_version=None):
     lake_used=lake_raw*lake_factor
     domain_used=float(domain_weights@values)+(lake_used-lake_raw)*spatial['lakeAreaKm2']/(areas.sum()+spatial['lakeAreaKm2'])
     unit_values=weights@values
+    if variable=='precipitation' and manifest.get('landPrecipitationCorrection') is not None:
+        # Reuse the actual per-member model transformation while retaining raw
+        # source-grid values for the weather map and the lake correction once.
+        from .grid_simulation import unit_forcing
+        from .land_precipitation import validate_manifest
+        correction=validate_manifest(manifest)
+        times=pd.DatetimeIndex(arrays['time'])
+        start=parse_day(day)
+        ids=times.get_indexer(pd.date_range(start+pd.Timedelta(hours=1),start+pd.Timedelta(days=1),freq='h'))
+        if np.any(ids<0):raise ValueError('陆域降水订正缺少完整日气象')
+        rain,_,_=unit_forcing(spatial,arrays,ids,{'lapseRate':correction['memberLapseRateCPerM']},{},correction,times)
+        unit_values=rain.sum(axis=0)
+        domain_used=float((areas@unit_values+spatial['lakeAreaKm2']*lake_used)/(areas.sum()+spatial['lakeAreaKm2']))
     return {**base,'cells':[{**g,'value':float(v)} for g,v in zip(spatial['grids'],values)],
             'unitValues':[{'id':u['id'],'value':float(v)} for u,v in zip(spatial['units'],unit_values)],
             'domainMean':domain_used,'lakeMean':lake_used,'lakeRawMean':lake_raw,
             'lakePrecipitationFactor':lake_factor,'cellsRepresentRawGrid':True,
-            'displaySupport':'model-units-and-lake' if variable=='precipitation' else 'raw-grid',
+            'displaySupport':'raw-grid',
             'domainAreaKm2':float(areas.sum()+spatial['lakeAreaKm2']),
-            'domainIncludesLake':True,'displayLabel':'模型采用日降水' if variable=='precipitation' else base['variable'],
+            'domainIncludesLake':True,'displayLabel':'再分析格网日降水' if variable=='precipitation' else base['variable'],
             'message':''}
 
 

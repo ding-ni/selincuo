@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-10-30T15:54:07.191693+08:00",
+  "taskId": "JOB-4a02ff08cbb54050b260",
+  "hourlyFiles": 6671,
+  "hourlyMismatchCount": 0,
+  "hourlyExtraFiles": 0,
+  "manifestSHA256": "9204d75d7adfa5706ccea75b33e5ff8a9c90603e47598f17a36f5cc9b7c78da4",
+  "hourlyContentIdentity": "e1d71d463a1def3b6982cf1e85d76b7ea2e3cad735d2e5dccdceaceec96d8529",
+  "sourceHourlyContentIdentity": "2ca77bc2100af901a92311d2469e36765ffdf1fcb2b590649f03a8fc9089c982",
+  "sameHourlyFileHashMap": false,
+  "workerEnvironmentSHA256": "d5483e5e55e248e7293d9869bb4a336442c00803a2d60904ac488ad39b37075b",
+  "actualPython": "3.9.17",
+  "actualPlatform": "Windows-10-10.0.26100-SP0",
+  "expectedPackagesMatch": true,
+  "currentBusiness": {
+    "adoptedAt": "2026-10-29T13:24:53+00:00",
+    "familyId": "FAMILY-08e7fc8c01364e88",
+    "inputId": "INPUT-c00df956d638351ebeb4e96e",
+    "name": "色林错流量与湖位联合优选",
+    "parameterId": "PARAM-bb4c92396eb04820adef",
+    "resultId": "JOB-88b35b44b27d4e15840c",
+    "schemeId": "SCHEME-1c4e16d578ee43aea372",
+    "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6"
+  },
+  "sourceRequestUnchanged": true,
+  "sourceResultUnchanged": true,
+  "integrityScope": "hourlyMismatchCount compares the replay files with its own manifest; sameHourlyFileHashMap compares replay against source compressed file hashes.",
+  "decodedHourlyComparison": {
+    "filesPerRun": 6671,
+    "compressedHashDifferences": 1001,
+    "compressedHashMatches": 5670,
+    "differentChunksByArray": {
+      "unitDiagnostics": 489,
+      "unitStates": 512
+    },
+    "decodedBitDifferences": 0,
+    "nanMaskDifferences": 0,
+    "elementsCompared": 44202311,
+    "physicalValuesAffected": false,
+    "evidence": "docs/evidence/正式率定复现逐时编码核验-20261030.json",
+    "sha256": "c4186105708cd21bb36798382e5cfb3c8358f98b11436f0c39b6ccc4408571db",
+    "checkedAt": "2026-10-30T16:34:09.566746+08:00"
+  }
+}

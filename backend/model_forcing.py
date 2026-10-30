@@ -71,6 +71,8 @@ def verify_product(db, product, spatial=None):
     if (m.get('transformationSHA256') != _required_correction()
             or digest(m.get('lakePrecipitationCorrection')) != m.get('transformationSHA256')):
         raise ValueError('气象资料缺少当前方案的湖面降水处理规则')
+    from .land_precipitation import validate_manifest
+    validate_manifest(m)
     source_spatial = grid_spatial.load(m['spatialVersion'])
     if spatial is not None and digest(source_spatial['grids']) != spatial.get('forcingGridVersion', digest(spatial['grids'])):
         raise ValueError('模型气象格网与方案计算格网不一致')

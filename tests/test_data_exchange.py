@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 from backend.database import Database
 from backend.data_exchange import import_records, import_file, preview_file
@@ -9,13 +10,14 @@ from backend.observations import daily_series
 
 class DataExchangeTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
+        self.tmp = SimpleNamespace(name=tempfile.mkdtemp(prefix='selinco-exchange-test-'))
         self.db = Database(self.tmp.name)
         with self.db.connect() as c:
             c.execute('INSERT INTO stations VALUES(?,?,?,?,?,?)', ('SLC','lake','lake',89.,32.,'{}'))
 
     def tearDown(self):
-        self.tmp.cleanup()
+        # Retain test artifacts: this project does not automatically delete files.
+        pass
 
     def document(self, records=None):
         return {'schemaVersion':1,'projectId':'selinco','sourceKey':'lake-daily',
@@ -62,7 +64,7 @@ class DataExchangeTests(unittest.TestCase):
         with self.assertRaises(ValueError):import_records(self.db,self.document([r,r]))
         with self.assertRaises(ValueError):import_records(self.db,self.document([{k:v for k,v in r.items() if k not in ('periodStart','periodEnd')}]))
         import_records(self.db,self.document([r]))
-        self.assertEqual(list(daily_series(self.db,'SLC','precipitation').values),[1.])
+        self.assertTrue(daily_series(self.db,'SLC','precipitation').empty)
         self.assertFalse(self.db.summary()['coverage'][0]['metadata']['zeroForAbsent'])
 
     def test_export_mapping_and_file_archive(self):

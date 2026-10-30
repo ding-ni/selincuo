@@ -18,7 +18,7 @@ _cache={};_prefixes={}
 def model_identity():
     # Reuse and continuation also depend on forcing interpretation, spatial
     # loading and the shared evaluation routines used below.
-    files = ('model_core.py', 'routing.py', 'parameter_regions.py', 'parameter_transfer.py',
+    files = ('model_core.py', 'routing.py', 'parameter_regions.py', 'parameter_transfer.py', 'land_precipitation.py',
              'grid_simulation.py', 'forcing.py', 'grid_spatial.py', 'simulation.py')
     return digest({'format': 'grid-continuous-v1',
                    'files': {name: sha_file(ROOT / 'backend' / name) for name in files}})
@@ -64,9 +64,12 @@ def prefix_identity(source,end,start=None):
             (start is not None and times[begin]!=pd.Timestamp(start))):
         raise ValueError('当前气象资料未完整覆盖父状态的历史前缀')
     n=stop-begin
-    key=(source['manifest']['dataSHA256'],source['manifest'].get('transformationSHA256'),source['spatial']['forcingGridVersion'],begin,stop)
+    land_sha=source['manifest'].get('landTransformationSHA256')
+    key=(source['manifest']['dataSHA256'],source['manifest'].get('transformationSHA256'),land_sha,source['spatial']['forcingGridVersion'],begin,stop)
     if key in _prefixes:return _prefixes[key]
-    h=hashlib.sha256();h.update(digest({'grids':source['spatial']['forcingGridVersion'],'transformation':source['manifest'].get('transformationSHA256'),'n':n}).encode())
+    prefix={'grids':source['spatial']['forcingGridVersion'],'transformation':source['manifest'].get('transformationSHA256'),'n':n}
+    if land_sha is not None:prefix['landTransformation']=land_sha
+    h=hashlib.sha256();h.update(digest(prefix).encode())
     h.update(times[begin:stop].asi8.tobytes())
     for k in ('precipitation','temperature','evaporation'):
         h.update(k.encode())
@@ -101,9 +104,13 @@ def anchor(request,observation,start,end):
     if t>end:return None
     return {'time':t.isoformat(),'level':level,'method':'first-quality-daily-level-at-noon','source':observation['profile'],'reference':'SLC-working-datum'}
 
-def unit_forcing(spatial,arrays,ids,base,regions):
+def unit_forcing(spatial,arrays,ids,base,regions,land_correction=None,times=None):
     """Apply the temperature correction before optional HRU area aggregation."""
     units=spatial['units']
+    if land_correction is not None:
+        if times is None:raise ValueError('暖雨订正需要逐时气象时间')
+        from .land_precipitation import corrected_member_precipitation
+        local_times=pd.DatetimeIndex(times)[ids]
     if spatial.get('unitStrategy') == grid_spatial.AGGREGATE_STRATEGY:
         groups=spatial.get('aggregation',[])
         if len(groups)!=len(units):raise ValueError('聚合单元的成员清单不完整')
@@ -121,13 +128,21 @@ def unit_forcing(spatial,arrays,ids,base,regions):
             lapse=regions.get(unit['partition'],base)['lapseRate']
             for key in columns:
                 values=arrays[key][ids][:,indexes]
+                if key=='precipitation' and land_correction is not None:
+                    values=corrected_member_precipitation(land_correction,spatial['grids'],local_times,values,
+                        arrays['temperature'][ids][:,indexes],indexes,dz,weights)
                 if key=='temperature':values=values+dz[None,:]*lapse
                 columns[key].append(values@weights)
         return tuple(np.ascontiguousarray(np.stack(columns[k],axis=1)) for k in ('precipitation','temperature','evaporation'))
     grid_ids=np.array([u['gridIndex'] for u in units])
     dz=np.array([u['elevation']-spatial['grids'][u['gridIndex']]['referenceElevation'] for u in units])
     lapse=np.array([regions.get(u['partition'],base)['lapseRate'] for u in units])
-    return (np.ascontiguousarray(arrays['precipitation'][ids][:,grid_ids]),
+    rain=arrays['precipitation'][ids][:,grid_ids]
+    if land_correction is not None:
+        raw_temp=arrays['temperature'][ids][:,grid_ids]
+        rain=np.column_stack([corrected_member_precipitation(land_correction,spatial['grids'],local_times,
+            rain[:,i:i+1],raw_temp[:,i:i+1],grid_ids[i:i+1],dz[i:i+1],[1.])[:,0] for i in range(len(units))])
+    return (np.ascontiguousarray(rain),
             np.ascontiguousarray(arrays['temperature'][ids][:,grid_ids]+dz[None,:]*lapse[None,:]),
             np.ascontiguousarray(arrays['evaporation'][ids][:,grid_ids]))
 
@@ -155,6 +170,9 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None,land_r
     source=prepared or prepare(db,request['inputId'],request['spatialVersion'])
     spatial=source['spatial'];arrays=source['arrays'];all_times=source['times'];units=spatial['units']
     declared,regions_patch,p,regions,transfer_audit,parameter_identity=parameter_configuration(spatial,request)
+    from .land_precipitation import validate_manifest,validate_parameters
+    land_correction=validate_manifest(source['manifest'])
+    validate_parameters(land_correction,p,regions)
     start=pd.Timestamp(request.get('start') or '2023-01-01');end=pd.Timestamp(request.get('end') or all_times[-1])
     if start.tzinfo or end.tzinfo or start.minute or end.minute or start.second or end.second or start>end or start<all_times[0] or end>all_times[-1]:raise ValueError('计算起止必须是驱动覆盖内的北京时间整小时')
     indexes=np.flatnonzero((all_times>=start)&(all_times<=end));times=all_times[indexes]
@@ -169,6 +187,7 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None,land_r
         else anchor(request,observation,start,end))
     identity={'projectId':'selinco','modelFamily':'grid-continuous-v1','modelImplementation':request.get('_modelIdentity') or model_identity(),'spatialVersion':spatial['version'],**parameter_identity,
               'initializationSHA256':digest(initial),'initialHydrologySHA256':digest(initial_hydrology),'observationProfile':observation['profile'],'observationSnapshotSHA256':digest(observation),'forcingGridSHA256':spatial['forcingGridVersion'],'forcingTransformationSHA256':source['manifest'].get('transformationSHA256'),'routingMode':request.get('routingMode','source-separated')}
+    if land_correction is not None:identity['landForcingTransformationSHA256']=source['manifest']['landTransformationSHA256']
     reused_arrays=None
     if land_reuse is not None:
         from .grid_storage import open_arrays
@@ -221,7 +240,7 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None,land_r
         if cancelled and cancelled():raise InterruptedError('用户停止逐格网计算')
         stop=min(total_hours,offset+168);ids=indexes[offset:stop];local_times=times[offset:stop]
         if reused_arrays is None:
-            rain,temperature,evap=unit_forcing(spatial,arrays,ids,p,regions)
+            rain,temperature,evap=unit_forcing(spatial,arrays,ids,p,regions,land_correction,all_times)
             diagnostic,history,state=run_region_kernel(rain,temperature,evap,glaciers,state,units,p,regions)
         else:
             diagnostic=np.asarray(reused_arrays['unitDiagnostics'][offset:stop])

@@ -13,7 +13,7 @@ const definitions=computed(()=>props.boot.parameterDefinitions.filter(d=>d.group
 const baseTasks=computed(()=>props.completed.filter(t=>!t.trashed))
 const searchKeys=computed(()=>props.run.stage==='lake'?['lakeCoefficient']:props.run.stage==='routing'?(props.boot.calibrationConfig?.routingKeys||[]):(props.boot.calibrationConfig?.runoffKeys||[]))
 const automaticLocked=d=>mode.value==='calibration'&&!searchKeys.value.includes(d.key)
-const roleLabels={'land-runoff':'产流参数','routing':'汇流参数','lake':'湖泊参数','fixed-prior':'固定参数'}
+const roleLabels={'land-runoff':'产流参数','snow-ice':'雪冰参数','routing':'汇流参数','lake':'湖泊参数','fixed-prior':'固定参数'}
 function selectInput(e){const i=props.boot.inputs.find(i=>i.id===e.target.value);props.run.inputId=i?.id||'';props.run.baseTaskId='';if(i){Object.assign(props.run,historicalPeriod(i.manifest))}}
 function preset(year){props.run.start=(year===2024?'2023':year)+'-01-01T00:00';props.run.end=(year+1)+'-01-01T00:00'}
 function completeHistory(){const i=preferredHistoricalInput(props.boot.inputs);if(i){props.run.inputId=i.id;props.run.baseTaskId='';Object.assign(props.run,historicalPeriod(i.manifest))}}

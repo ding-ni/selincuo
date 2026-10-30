@@ -1,0 +1,441 @@
+{
+  "startedAt": "2026-10-30T15:00:47.612387",
+  "base": "http://127.0.0.1:8882",
+  "screenshots": [
+    "build\\正式复现与交互验收-20261030-150047\\模拟普通1366.png",
+    "build\\正式复现与交互验收-20261030-150047\\模拟全屏1366.png",
+    "build\\正式复现与交互验收-20261030-150047\\监测普通1366.png",
+    "build\\正式复现与交互验收-20261030-150047\\监测全屏1366.png",
+    "build\\正式复现与交互验收-20261030-150047\\模拟普通1920.png",
+    "build\\正式复现与交互验收-20261030-150047\\模拟全屏1920.png",
+    "build\\正式复现与交互验收-20261030-150047\\监测普通1920.png",
+    "build\\正式复现与交互验收-20261030-150047\\监测全屏1920.png",
+    "build\\正式复现与交互验收-20261030-150047\\本次率定记录.png"
+  ],
+  "layouts": [
+    {
+      "mode": "模拟普通1366",
+      "viewport": [
+        1366,
+        768
+      ],
+      "geometry": {
+        "x": 222,
+        "y": 14,
+        "width": 1130,
+        "height": 740,
+        "scrollWidth": 1130,
+        "scrollHeight": 740
+      }
+    },
+    {
+      "mode": "模拟全屏1366",
+      "viewport": [
+        1366,
+        768
+      ],
+      "geometry": {
+        "x": 0,
+        "y": 0,
+        "width": 1366,
+        "height": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768
+      }
+    },
+    {
+      "mode": "监测普通1366",
+      "viewport": [
+        1366,
+        768
+      ],
+      "geometry": {
+        "x": 222,
+        "y": 14,
+        "width": 1130,
+        "height": 740,
+        "scrollWidth": 1130,
+        "scrollHeight": 740
+      }
+    },
+    {
+      "mode": "监测全屏1366",
+      "viewport": [
+        1366,
+        768
+      ],
+      "geometry": {
+        "x": 0,
+        "y": 0,
+        "width": 1366,
+        "height": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768
+      }
+    },
+    {
+      "mode": "模拟普通1920",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "geometry": {
+        "x": 222,
+        "y": 14,
+        "width": 1684,
+        "height": 1052,
+        "scrollWidth": 1684,
+        "scrollHeight": 1052
+      }
+    },
+    {
+      "mode": "模拟全屏1920",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "geometry": {
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1080,
+        "scrollWidth": 1920,
+        "scrollHeight": 1080
+      }
+    },
+    {
+      "mode": "监测普通1920",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "geometry": {
+        "x": 222,
+        "y": 14,
+        "width": 1684,
+        "height": 1052,
+        "scrollWidth": 1684,
+        "scrollHeight": 1052
+      }
+    },
+    {
+      "mode": "监测全屏1920",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "geometry": {
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1080,
+        "scrollWidth": 1920,
+        "scrollHeight": 1080
+      }
+    }
+  ],
+  "errors": [],
+  "selectedReadings": [
+    "日期 2025-07-15\n模拟湖位 4,544.286 m\n主站实测 4,544.17 m",
+    "日期 2025-07-15\n入湖流量 113.51 m³/s\n杜加模拟 61.884 m³/s\n杜加实测 32.3 m³/s"
+  ],
+  "chartInteraction": {
+    "wheel": {
+      "selected": {},
+      "zoom": [
+        5.890213398294378,
+        96.79930430738528
+      ],
+      "yRange": null
+    },
+    "pan": {
+      "selected": {},
+      "zoom": [
+        0,
+        90.9090909090909
+      ],
+      "yRange": null
+    },
+    "locate": {
+      "selected": {},
+      "zoom": [
+        9.090909090909093,
+        100
+      ],
+      "yRange": null
+    },
+    "box": {
+      "selected": {},
+      "zoom": [
+        16.899302093718845,
+        70.7876370887338
+      ],
+      "yRange": [
+        4543.608088235294,
+        4544.670441391889
+      ]
+    },
+    "restored": {
+      "selected": {},
+      "zoom": [
+        0,
+        100
+      ],
+      "yRange": null
+    },
+    "other": {
+      "selected": {},
+      "zoom": [
+        0,
+        100
+      ],
+      "yRange": null
+    }
+  },
+  "rainGrid": {
+    "count": 535,
+    "values": [
+      {
+        "id": "88.5,30.1",
+        "value": "4.97707724571228"
+      },
+      {
+        "id": "88.6,30.1",
+        "value": "3.9241015911102295"
+      },
+      {
+        "id": "88.4,30.2",
+        "value": "5.704805254936218"
+      },
+      {
+        "id": "88.5,30.2",
+        "value": "5.238905549049377"
+      },
+      {
+        "id": "88.6,30.2",
+        "value": "4.066303372383118"
+      },
+      {
+        "id": "88.7,30.2",
+        "value": "2.808809280395508"
+      },
+      {
+        "id": "88.8,30.2",
+        "value": "1.9879192113876343"
+      },
+      {
+        "id": "88.9,30.2",
+        "value": "1.4123320579528809"
+      }
+    ]
+  },
+  "fixedNames": [
+    {
+      "id": "lake",
+      "anchor": "89.05,31.759498",
+      "text": "<text x=\"246.51702917982283\" y=\"132.77831863601298\" text-anchor=\"middle\"><tspan x=\"246.51702917982283\" dy=\"0\">色林错</tspan></text>"
+    },
+    {
+      "id": "zajia",
+      "anchor": "91.2175028040074,32.8465323355393",
+      "text": "<text x=\"362.4845891391948\" y=\"64.4263237546194\" text-anchor=\"middle\"><tspan x=\"362.4845891391948\" dy=\"0\">扎加藏布</tspan></text>"
+    },
+    {
+      "id": "zagen",
+      "anchor": "88.4153183995355,30.753855719538137",
+      "text": "<text x=\"212.55975981855732\" y=\"196.01243531415827\" text-anchor=\"middle\"><tspan x=\"212.55975981855732\" dy=\"0\">扎根藏布</tspan></text>"
+    },
+    {
+      "id": "boqu",
+      "anchor": "89.44627175904056,31.348741902266394",
+      "text": "<text x=\"267.71869447491645\" y=\"151.60638843277763\" text-anchor=\"middle\"><tspan x=\"267.71869447491645\" dy=\"0\">波曲</tspan><tspan x=\"267.71869447491645\" dy=\"13\">藏布</tspan></text>"
+    },
+    {
+      "id": "ali",
+      "anchor": "88.61037766717594,31.30629809582074",
+      "text": "<text x=\"222.99598498694115\" y=\"154.27522670777182\" text-anchor=\"middle\"><tspan x=\"222.99598498694115\" dy=\"0\">阿里</tspan><tspan x=\"222.99598498694115\" dy=\"13\">藏布</tspan></text>"
+    }
+  ],
+  "monitoring": {
+    "pointDimensions": [
+      {
+        "width": 4,
+        "height": 4
+      },
+      {
+        "width": 4,
+        "height": 4
+      },
+      {
+        "width": 4,
+        "height": 4
+      },
+      {
+        "width": 4,
+        "height": 4
+      },
+      {
+        "width": 4,
+        "height": 4
+      },
+      {
+        "width": 4,
+        "height": 4
+      }
+    ]
+  },
+  "historicalSettings": {
+    "taskId": "JOB-88b35b44b27d4e15840c",
+    "kc": "水文阶段\t陆面蒸发系数\nKC\n\t0.72033723\t0.2\t1.5\t0.71435399\t杜加流量与湖位分阶段筛选",
+    "count": 25,
+    "counts": {
+      "rescored": 32569,
+      "eligible": 9861,
+      "selectedForBasin": 256,
+      "jointProposals": 2000,
+      "basinCandidates": 773,
+      "numericEvaluations": 34569
+    }
+  },
+  "rainReportDownload": {
+    "url": "/api/model/task-artifact?taskId=JOB-3354c8660e854cbfa96f&name=%E7%AB%99%E7%82%B9%E6%9A%96%E9%9B%A8%E5%AF%B9%E7%85%A7%E6%8A%A5%E5%91%8A.json",
+    "status": 200,
+    "bytes": 105028
+  },
+  "adoptedAfter": {
+    "adoptedAt": "2026-10-29T13:24:53+00:00",
+    "familyId": "FAMILY-08e7fc8c01364e88",
+    "inputId": "INPUT-c00df956d638351ebeb4e96e",
+    "name": "色林错流量与湖位联合优选",
+    "parameterId": "PARAM-bb4c92396eb04820adef",
+    "resultId": "JOB-88b35b44b27d4e15840c",
+    "schemeId": "SCHEME-1c4e16d578ee43aea372",
+    "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6"
+  },
+  "mouseChecks": {
+    "rainClick": {
+      "id": "88.5,30.1",
+      "value": "4.97707724571228",
+      "x": 709.5591125488281,
+      "y": 440.1263427734375,
+      "hit": true
+    },
+    "popup": "气象格网 · 日降水\n4.98 mm/d\n×",
+    "beforeLegend": "日期 2025-07-15\n模拟湖位 4,544.286 m\n主站实测 4,544.17 m",
+    "afterLegend": "日期 2025-07-15\n主站实测 4,544.17 m",
+    "chartState": {
+      "selected": {
+        "模拟湖位": false,
+        "主站实测": true
+      },
+      "zoom": [
+        0,
+        100
+      ],
+      "yRange": null
+    }
+  },
+  "sourceReceipt": {
+    "file": "build/正式复现与交互验收-20261030-150047/界面验收.json",
+    "sha256": "8992fef64274659a2aa3c760137ef3d29773a6682ac345a6a4b93867845c7c7a"
+  },
+  "allScreenshotFiles": [
+    {
+      "file": "build/正式复现与交互验收-20261030-150047/模拟普通1366.png",
+      "sha256": "9ac6f6085d3e1e50fdeb7a1ab4bf978a12d7659a8a835929c1c42d18e5f4b519",
+      "bytes": 184731
+    },
+    {
+      "file": "build/正式复现与交互验收-20261030-150047/模拟全屏1366.png",
+      "sha256": "38bbba397a9f026a1f74d2b098351578d7020973e84b8eefa361383d420c9b3b",
+      "bytes": 170786
+    },
+    {
+      "file": "build/正式复现与交互验收-20261030-150047/监测普通1366.png",
+      "sha256": "dd249d7a636fa660cd3e5debe7a64c5b99ce552224571003c4ab397c179125d1",
+      "bytes": 162122
+    },
+    {
+      "file": "build/正式复现与交互验收-20261030-150047/监测全屏1366.png",
+      "sha256": "26cab26d657ab6f775b5fbc3475d63125a034f7001e350a34541d7101cc8185d",
+      "bytes": 150968
+    },
+    {
+      "file": "build/正式复现与交互验收-20261030-150047/模拟普通1920.png",
+      "sha256": "e854ae5566dd9a6d3d3fd2e0e3bb09dd5896c34bd165c7023c360a83dfc75b06",
+      "bytes": 263407
+    },
+    {
+      "file": "build/正式复现与交互验收-20261030-150047/模拟全屏1920.png",
+      "sha256": "f8818c55c77853aaeab7d555519c1f0c95651d5cc319598d322bfd73c00c9119",
+      "bytes": 251162
+    },
+    {
+      "file": "build/正式复现与交互验收-20261030-150047/监测普通1920.png",
+      "sha256": "c8f69fff43ce1a2617f30d80dcc0698f45c3d0c2cccde17e85092f38d369b947",
+      "bytes": 237143
+    },
+    {
+      "file": "build/正式复现与交互验收-20261030-150047/监测全屏1920.png",
+      "sha256": "3f5353a0f94e03feac9fae3396b4d1719896dd81172f9229db8e3a900ab870e7",
+      "bytes": 225930
+    },
+    {
+      "file": "build/正式复现与交互验收-20261030-150047/本次率定记录.png",
+      "sha256": "b8b4d4ab99667aef1d42720767ebab41ad26d0d0a78fa8c85d77702acd77f026",
+      "bytes": 236738
+    }
+  ],
+  "selectedScreenshots": [
+    {
+      "file": "docs/evidence/正式复现交互验收-20261030/模拟普通1366.png",
+      "sha256": "9ac6f6085d3e1e50fdeb7a1ab4bf978a12d7659a8a835929c1c42d18e5f4b519",
+      "bytes": 184731
+    },
+    {
+      "file": "docs/evidence/正式复现交互验收-20261030/模拟全屏1920.png",
+      "sha256": "f8818c55c77853aaeab7d555519c1f0c95651d5cc319598d322bfd73c00c9119",
+      "bytes": 251162
+    },
+    {
+      "file": "docs/evidence/正式复现交互验收-20261030/监测普通1366.png",
+      "sha256": "dd249d7a636fa660cd3e5debe7a64c5b99ce552224571003c4ab397c179125d1",
+      "bytes": 162122
+    },
+    {
+      "file": "docs/evidence/正式复现交互验收-20261030/监测全屏1920.png",
+      "sha256": "3f5353a0f94e03feac9fae3396b4d1719896dd81172f9229db8e3a900ab870e7",
+      "bytes": 225930
+    },
+    {
+      "file": "docs/evidence/正式复现交互验收-20261030/本次率定记录.png",
+      "sha256": "b8b4d4ab99667aef1d42720767ebab41ad26d0d0a78fa8c85d77702acd77f026",
+      "bytes": 236738
+    }
+  ],
+  "checks": {
+    "backendTests": 64,
+    "frontendTests": 22,
+    "javascriptErrors": [],
+    "emptyOutDir": false,
+    "independentZoom": true,
+    "boxXY": true,
+    "dateOutsideKeepsView": true,
+    "enlargedStateReturns": true,
+    "fixedPoints": true,
+    "fixedPlaceNames": true,
+    "rawPrecipitationGrid": true,
+    "manualGridClick": true,
+    "historical25Parameters": true,
+    "hydrology22Selected": true,
+    "frozenExportPrecision": true
+  },
+  "healthAtReceipt": {
+    "backendSourceSHA256": "c4a10670d122db8435c27de3280befb1079faaf891a2612bba32600f4b726d8a",
+    "instanceId": "a1be309c122c423a80f66f4e694e40ff",
+    "projectId": "selinco",
+    "version": "0.12.0",
+    "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+  },
+  "notAutomaticallyAdopted": true
+}

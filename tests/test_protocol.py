@@ -13,17 +13,22 @@ from backend.model_core import parameters
 
 class ProtocolTests(unittest.TestCase):
     def test_generation_routing_searches_are_disjoint_and_ice_sublimation_is_versioned(self):
-        from backend.calibration_config import RUNOFF_KEYS, ROUTING_KEYS
+        from backend.calibration_config import RUNOFF_KEYS, ROUTING_KEYS, LAND_KEYS, SNOW_KEYS
         from backend.model_core import PARAMETER_DEFINITIONS
         self.assertFalse(set(RUNOFF_KEYS) & set(ROUTING_KEYS))
-        self.assertEqual(set(ROUTING_KEYS), {'tauHours', 'interflowTauHours', 'baseflowTauHours'})
+        self.assertEqual(set(ROUTING_KEYS), {'tauHours', 'lagHours', 'interflowTauHours', 'baseflowTauHours'})
         p = parameters()
         self.assertEqual(p['iceSublimationFraction'], .25)
         self.assertEqual(p['iceSublimationMaxMmHour'], .08)
         roles={item['key']:item['calibrationRole'] for item in PARAMETER_DEFINITIONS}
-        self.assertEqual({k for k,v in roles.items() if v=='land-runoff'},set(RUNOFF_KEYS))
+        self.assertEqual({k for k,v in roles.items() if v=='land-runoff'},set(LAND_KEYS))
+        self.assertEqual({k for k,v in roles.items() if v=='snow-ice'},set(SNOW_KEYS))
         self.assertEqual({k for k,v in roles.items() if v=='routing'},set(ROUTING_KEYS))
-        self.assertEqual(roles['iceDdf'],'fixed-prior')
+        self.assertEqual(roles['iceDdf'],'snow-ice')
+        selected={d['key'] for d in PARAMETER_DEFINITIONS if d['flowCalibration']['defaultSelected']}
+        self.assertEqual(selected, set(LAND_KEYS + SNOW_KEYS + ROUTING_KEYS))
+        self.assertEqual({k for k,v in roles.items() if v=='fixed-prior'},
+                         {'iceSublimationFraction', 'iceSublimationMaxMmHour'})
 
     def test_validation_values_do_not_change_parameter_search(self):
         prepared = {'times': pd.DatetimeIndex(['2023-01-01', '2025-12-31'])}

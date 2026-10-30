@@ -16,7 +16,7 @@ from .common import ROOT, canonical, digest, now, read_json
 
 KINDS = {'task', 'scheme', 'parameter'}
 RESULT_KINDS = {'simulation', 'continuation', 'trial', 'calibration',
-                'calibration-workflow', 'two-stage-calibration', 'sensitivity'}
+                'calibration-workflow', 'two-stage-calibration', 'calibration-replay', 'sensitivity'}
 ACTIVE = {'queued', 'running', 'stopping'}
 JOURNAL = 'permanent_deletion_operations'
 IDENTIFIER = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$')
@@ -162,6 +162,7 @@ def _snapshot(conn):
         json_extract(request,'$.lakeOnlyBaseTaskId') lake_base_task_id,
         json_extract(request,'$.twoStage.candidateSourceTaskId') candidate_source_task_id,
         json_extract(request,'$.twoStage.baselineTaskId') selection_baseline_task_id,
+        json_extract(request,'$.replay.sourceTaskId') replay_source_task_id,
         json_extract(request,'$.baselineResultId') baseline_result_id,
         json_extract(request,'$.candidateResultId') candidate_result_id,
         json_extract(request,'$.researchSchemeId') scheme_id,
@@ -260,7 +261,7 @@ def _build_plan(db, conn, requested, include_files=True):
             continue
         referenced_tasks = {active[field] for field in ('source_task_id', 'parent_task_id', 'base_task_id', 'lake_base_task_id',
                                                         'baseline_result_id', 'candidate_result_id',
-                                                        'candidate_source_task_id', 'selection_baseline_task_id') if active[field]}
+                                                        'candidate_source_task_id', 'selection_baseline_task_id', 'replay_source_task_id') if active[field]}
         if active['state_id'] in state_owners:
             referenced_tasks.add(state_owners[active['state_id']])
         for identifier in referenced_tasks:
@@ -314,8 +315,8 @@ def _build_plan(db, conn, requested, include_files=True):
                        {'kind': 'scheme', 'id': row['id'], 'name': row['name'],
                         'trashed': bool(snapshot['settings'].get('scheme-hidden:' + family, False))})
     for row in tasks.values():
-        if row['kind'] == 'two-stage-calibration':
-            for field in ('candidate_source_task_id', 'selection_baseline_task_id'):
+        if row['kind'] in ('two-stage-calibration', 'calibration-replay'):
+            for field in ('candidate_source_task_id', 'selection_baseline_task_id', 'replay_source_task_id'):
                 reference = row[field]
                 if reference in task_keys and row['id'] != reference:
                     dependency(task_keys[reference], _key('task', row['id']),

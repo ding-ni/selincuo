@@ -2,7 +2,7 @@
 import {computed,ref} from 'vue'
 import Chart from './Chart.vue'
 import {partitionSummary} from './diagnostics.mjs'
-const props=defineProps({diagnostics:Object,year:String})
+const props=defineProps({diagnostics:Object,year:String,context:{default:'model-diagnostics'}})
 const active=ref('duja')
 const rows=computed(()=>partitionSummary(props.diagnostics?.partitions,props.year))
 const selected=computed(()=>rows.value.find(r=>r.id===active.value)||rows.value[0])
@@ -17,7 +17,7 @@ const n=(v,d=1)=>v==null||!Number.isFinite(v)?'—':v.toLocaleString('zh-CN',{ma
   <template v-if="selected"><div class="partition-statement"><b>{{selected.name}}</b><span>{{selected.observationConstraint}} · {{selected.completeMonths}}个完整月 / {{n(selected.hours,0)}}小时</span></div>
    <div class="partition-ledger"><article><span>格网降水</span><b>{{n(selected.precipitationMm)}}<small>mm</small></b></article><article><span>实际蒸散</span><b>{{n(selected.actualEtMm)}}<small>mm</small></b></article><article><span>出区径流</span><b>{{n(selected.routedRunoffMm)}}<small>mm</small></b></article><article><span>单元＋汇流蓄水变化</span><b>{{n(selected.unitStorageChangeMm+selected.routingStorageChangeMm)}}<small>mm</small></b></article></div>
    <p class="note">该区冰体外部供水 {{n(selected.iceExternalMm)}} mm；蒸发能力基准 {{n(selected.evaporationBaselineMm)}} mm。产水 {{n(selected.generatedRunoffMm)}} mm 经汇流后出区，二者差额保存在汇流蓄水中。面积 {{n(selected.areaKm2)}} km²（含冰川 {{n(selected.glacierAreaKm2,2)}} km²）。</p>
-   <Chart :rows="chartRows" :series="[{key:'precipitationMm',label:'降水',type:'bar'},{key:'actualEtMm',label:'实际蒸散'},{key:'routedRunoffMm',label:'出区径流'},{key:'iceExternalMm',label:'冰体外部供水'}]" unit="mm/月"/>
+   <Chart :rows="chartRows" :series="[{key:'precipitationMm',label:'降水',type:'bar'},{key:'actualEtMm',label:'实际蒸散'},{key:'routedRunoffMm',label:'出区径流'},{key:'iceExternalMm',label:'冰体外部供水'}]" unit="mm/月" :context="context+':partition:'+selected.id+':'+year"/>
   </template>
   <div class="table-wrap"><table><thead><tr><th>{{year}}分区 / mm</th><th>降水</th><th>实际蒸散</th><th>产水</th><th>出区径流</th><th>冰体供水</th><th>单元蓄水Δ</th><th>汇流蓄水Δ</th><th>逐时最大闭合误差 m³</th></tr></thead><tbody><tr v-for="r in rows" :key="r.id" :class="{picked:selected?.id===r.id}"><td>{{r.name}}</td><td>{{n(r.precipitationMm)}}</td><td>{{n(r.actualEtMm)}}</td><td>{{n(r.generatedRunoffMm)}}</td><td>{{n(r.routedRunoffMm)}}</td><td>{{n(r.iceExternalMm)}}</td><td>{{n(r.unitStorageChangeMm)}}</td><td>{{n(r.routingStorageChangeMm)}}</td><td>{{n(r.balanceMaxErrorM3,7)}}</td></tr></tbody></table></div>
   <p class="note">各区使用自己的面积折算水深，跨区请比较体积或来水份额，不能直接相加水深。杜加控制区＋扎加下游补充区＝扎加藏布；其余分区缺少流量观测，水量闭合不代表模型已经得到验证。逐时最大误差覆盖本次完整计算时段。</p>

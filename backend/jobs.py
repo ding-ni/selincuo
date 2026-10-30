@@ -16,7 +16,7 @@ CODE_SENSITIVE_TASKS = frozenset((
     'simulation', 'trial', 'continuation', 'calibration', 'calibration-workflow',
     'sensitivity', 'evaluation', 'continuous-reference', 'import-observations',
     'build-spatial', 'build-grid-spatial', 'register-inputs', 'download-forcing',
-    'update-forcing', 'two-stage-calibration',
+    'update-forcing', 'two-stage-calibration', 'calibration-replay',
 ))
 
 
@@ -88,12 +88,29 @@ class Jobs:
     def _submit(self, kind, payload, submission=None):
         if self.restore_pending or self.restart_required:
             raise ValueError('恢复已排队或完成，暂停接收新任务；请等待恢复结束并重启后继续')
-        if kind not in ('simulation', 'trial', 'continuation', 'calibration', 'calibration-workflow', 'two-stage-calibration', 'sensitivity', 'import-observations', 'build-spatial', 'build-grid-spatial', 'register-inputs', 'download-forcing', 'update-forcing', 'export-result', 'backup', 'restore-workspace', 'evaluation', 'continuous-reference'):
+        if kind not in ('simulation', 'trial', 'continuation', 'calibration', 'calibration-workflow', 'two-stage-calibration', 'calibration-replay', 'sensitivity', 'import-observations', 'build-spatial', 'build-grid-spatial', 'register-inputs', 'download-forcing', 'update-forcing', 'export-result', 'backup', 'restore-workspace', 'evaluation', 'continuous-reference'):
             raise ValueError('未知任务类型')
         payload = {k: v for k, v in dict(payload).items() if not k.startswith('_')}
         if payload.get('projectId', 'selinco') != 'selinco' or payload.get('contextKey', CONTEXT_KEY) != CONTEXT_KEY:
             raise ValueError('拒绝其他项目的计算上下文')
         payload['projectId'], payload['contextKey'] = 'selinco', CONTEXT_KEY
+        if kind == 'calibration-replay':
+            from .calibration_replay import freeze, prepare_request
+            payload, plan = prepare_request(self.db, payload)
+            identifier = 'JOB-' + uuid.uuid4().hex[:20]
+            folder = self.db.workspace / 'tasks' / identifier
+            folder.mkdir(parents=True, exist_ok=False)
+            freeze(self.db, folder, plan)
+            write_json(folder / 'request.json', payload)
+            with self.db.connect() as db:
+                db.execute('INSERT INTO tasks(id,kind,status,created_at,updated_at,request,name,favorite,collection) VALUES(?,?,?,?,?,?,?,?,?)',
+                           (identifier, kind, 'queued', now(), now(), canonical(payload), '正式率定复现', 0, ''))
+                if submission:
+                    db.execute('INSERT INTO settings(key,value) VALUES(?,?)',
+                               (submission[0], canonical({'fingerprint': submission[1], 'taskId': identifier})))
+            self.db.log('task.submit', {'id': identifier, 'kind': kind})
+            self.executor.submit(self._execute, identifier)
+            return self.public(self.db.task(identifier))
         release_bound=kind=='simulation' and bool(payload.get('expectedReleaseId'))
         if release_bound:
             # This is an internal server-owned request. Do not send it through
@@ -309,11 +326,15 @@ class Jobs:
         with self.lock:
             self._check_backend_identity()
             task=self.db.task(identifier)
-            if task['kind']!='two-stage-calibration' or task['status'] not in ('cancelled','interrupted','failed'):
+            if task['kind'] not in ('two-stage-calibration','calibration-replay') or task['status'] not in ('cancelled','interrupted','failed'):
                 raise ValueError('请选择已停止或中断的两阶段率定')
-            from .grid_simulation import model_identity as grid_identity
-            if task['request'].get('_modelIdentity')!=grid_identity():
-                raise ValueError('模型实现已更新，请新建率定')
+            if task['kind'] == 'two-stage-calibration':
+                from .grid_simulation import model_identity as grid_identity
+                if task['request'].get('_modelIdentity')!=grid_identity():
+                    raise ValueError('模型实现已更新，请新建率定')
+            else:
+                from .calibration_replay import verify_inputs
+                verify_inputs(self.db, task['request'], self.db.workspace / 'tasks' / identifier)
             self.cancelled.discard(identifier)
             with self.db.connect() as connection:
                 connection.execute("UPDATE tasks SET status='queued',message='继续已保存的率定搜索',updated_at=? WHERE id=?",(now(),identifier))
@@ -454,6 +475,9 @@ class Jobs:
             elif kind == 'build-grid-spatial':
                 from .grid_spatial import build
                 result = build(progress)
+            elif kind=='calibration-replay':
+                from .calibration_replay import run
+                result=run(self.db,request,folder,progress,is_cancelled)
             elif kind=='two-stage-calibration':
                 from .two_stage_calibration import run
                 result=run(self.db,request,folder,progress,is_cancelled)

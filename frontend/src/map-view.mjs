@@ -18,7 +18,7 @@ export function detailMapUrl(base,manifest){
 }
 // Inside the original Ali polygon; also keeps the name clear of the lake on
 // the small overview. The remaining names use their presentation anchors.
-export const geographicAnchorOverrides=Object.freeze({ali:[88.61037766717594,31.30629809582074]})
+export const geographicAnchorOverrides=Object.freeze({ali:[88.61037766717594,31.30629809582074],lake:[89.05,31.759498]})
 export function placeLabels(labels,size,obstacles=[]) {
  const boxes=[...obstacles], result=[]
  const overlaps=(a,b)=>a.x<b.x+b.w+5&&a.x+a.w+5>b.x&&a.y<b.y+b.h+5&&a.y+a.h+5>b.y

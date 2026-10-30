@@ -6,7 +6,7 @@ from .dashboard import aggregate_frame
 _cache=OrderedDict()
 
 def range_for(db,q):
-    key=(str(db.workspace),q.get('inputId'),q.get('resultId'),q.get('spatialVersion'),q.get('variable'),q.get('start'),q.get('end'))
+    key=('raw-grid-v1',str(db.workspace),q.get('inputId'),q.get('resultId'),q.get('spatialVersion'),q.get('variable'),q.get('start'),q.get('end'))
     if key in _cache:return _cache[key]
     variable=q['variable'];lo=np.inf;hi=-np.inf;count=0;samples=[]
     def collect(a):
@@ -32,22 +32,14 @@ def range_for(db,q):
         from .common import read_json
         manifest=read_json(db.workspace/'inputs/products'/q['inputId']/'manifest.json')
         source=prepare(db,q['inputId'],q.get('spatialVersion') or manifest['spatialVersion']);times=source['times']
-        from .forcing import lake_precipitation_factor
-        spatial=source['spatial']
-        if spatial.get('schemaVersion')==2:
-            weights=np.zeros((len(spatial['units']),len(spatial['grids'])))
-            weights[np.arange(len(spatial['units'])),[u['gridIndex'] for u in spatial['units']]]=1.
-        else:weights=np.asarray(spatial['weights'])
         for day in pd.date_range(pd.Timestamp(q.get('start') or times[0]).normalize(),pd.Timestamp(q.get('end') or times[-1]).normalize(),freq='D'):
             a,hours=aggregate_frame(times,source['arrays'][variable],day.strftime('%Y-%m-%d'),'mean' if variable=='temperature' else 'sum')
-            if a is not None:
-                if variable=='precipitation':
-                    collect(np.r_[weights@a,np.asarray(spatial['lakeWeights'])@a*lake_precipitation_factor(source['manifest'])])
-                else:collect(a)
+            if a is not None:collect(a)
     positive=np.asarray([v for v in samples if v>0])
     result={'variable':variable,'minimum':lo if count else None,'maximum':hi if count else None,'count':int(count),'scope':'replay-period',
             'positiveQuantiles':np.quantile(positive,[.2,.4,.6,.8,.95]).tolist() if positive.size else [],
-            'sampling':'bounded-systematic-max65536','sampleCount':len(samples)}
+            'sampling':'bounded-systematic-max65536','sampleCount':len(samples),
+            'displaySupport':'model-units' if variable=='snow' else 'raw-grid'}
     _cache[key]=result
     while len(_cache)>32:_cache.popitem(last=False)
     return result

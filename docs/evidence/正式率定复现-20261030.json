@@ -1,0 +1,3108 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-10-30T15:47:08.936374+08:00",
+  "taskId": "JOB-4a02ff08cbb54050b260",
+  "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+  "baselineTaskId": "JOB-4934a5d35c9344a59353",
+  "comparison": {
+    "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+    "candidateOrderEqual": true,
+    "trainingCandidateEqual": true,
+    "finalCandidateEqual": true,
+    "counts": {
+      "totalRescored": {
+        "original": 32569,
+        "replayed": 32569
+      },
+      "eligibleRescored": {
+        "original": 9861,
+        "replayed": 9861
+      },
+      "selectedForBasin": {
+        "original": 256,
+        "replayed": 256
+      },
+      "basinCandidatesEvaluated": {
+        "original": 773,
+        "replayed": 773
+      }
+    },
+    "jointProposals": {
+      "original": 2000,
+      "replayed": 2000
+    },
+    "datesEqual": true,
+    "dailyDifferences": {
+      "duja": {
+        "paired": 3580,
+        "missingPatternEqual": true,
+        "maxAbsoluteDifference": 0.0
+      },
+      "zajia": {
+        "paired": 3580,
+        "missingPatternEqual": true,
+        "maxAbsoluteDifference": 0.0
+      },
+      "zagen": {
+        "paired": 3580,
+        "missingPatternEqual": true,
+        "maxAbsoluteDifference": 0.0
+      },
+      "boqu": {
+        "paired": 3580,
+        "missingPatternEqual": true,
+        "maxAbsoluteDifference": 0.0
+      },
+      "ali": {
+        "paired": 3580,
+        "missingPatternEqual": true,
+        "maxAbsoluteDifference": 0.0
+      },
+      "fringe": {
+        "paired": 3580,
+        "missingPatternEqual": true,
+        "maxAbsoluteDifference": 0.0
+      },
+      "total": {
+        "paired": 3580,
+        "missingPatternEqual": true,
+        "maxAbsoluteDifference": 0.0
+      },
+      "lakeLevel": {
+        "paired": 2006,
+        "missingPatternEqual": true,
+        "maxAbsoluteDifference": 0.0
+      }
+    },
+    "parameterMaximumDifference": 0.0,
+    "tolerances": {
+      "flowM3s": 1e-07,
+      "lakeM": 1e-08,
+      "metrics": 1e-08,
+      "parameters": 1e-12
+    },
+    "metricsStructureEqual": true,
+    "metricsMaxAbsoluteDifference": 0.0,
+    "flowMetrics": {
+      "original": {
+        "training": {
+          "count": 229,
+          "nse": 0.7274549179686409,
+          "logNse": -0.023292372221457303,
+          "kge": 0.8129408794110575,
+          "rmse": 45.16427805184081,
+          "mae": 29.938389696131182,
+          "bias": -0.41280324189646544,
+          "pbias": -0.5102801133264451,
+          "observedMean": 80.89737991266375,
+          "simulatedMean": 80.48457667076728,
+          "observedVolumeM3": 1600603200.0,
+          "simulatedVolumeM3": 1592435640.177133,
+          "pairedVolumeErrorM3": -8167559.822866917
+        },
+        "evaluation": {
+          "count": 211,
+          "nse": 0.6732069304699972,
+          "logNse": 0.16643069924336384,
+          "kge": 0.8123795705153873,
+          "rmse": 21.69071363044021,
+          "mae": 16.809326928621676,
+          "bias": -5.241855488035678,
+          "pbias": -10.691635415715172,
+          "observedMean": 49.027630331753564,
+          "simulatedMean": 43.785774843717874,
+          "observedVolumeM3": 893793312.0000001,
+          "simulatedVolumeM3": 798232189.7109143,
+          "pairedVolumeErrorM3": -95561122.28908587
+        },
+        "all": {
+          "count": 440,
+          "nse": 0.7339923854339503,
+          "logNse": 0.12286922739959094,
+          "kge": 0.8314880389929953,
+          "rmse": 35.87825753124604,
+          "mae": 23.642407323530033,
+          "bias": -2.728553296295043,
+          "pbias": -4.158468054815511,
+          "observedMean": 65.61438636363636,
+          "simulatedMean": 62.885833067341316,
+          "observedVolumeM3": 2494396512.0,
+          "simulatedVolumeM3": 2390667829.888047,
+          "pairedVolumeErrorM3": -103728682.11195278
+        }
+      },
+      "replayed": {
+        "training": {
+          "count": 229,
+          "nse": 0.7274549179686409,
+          "logNse": -0.023292372221457303,
+          "kge": 0.8129408794110575,
+          "rmse": 45.16427805184081,
+          "mae": 29.938389696131182,
+          "bias": -0.41280324189646544,
+          "pbias": -0.5102801133264451,
+          "observedMean": 80.89737991266375,
+          "simulatedMean": 80.48457667076728,
+          "observedVolumeM3": 1600603200.0,
+          "simulatedVolumeM3": 1592435640.177133,
+          "pairedVolumeErrorM3": -8167559.822866917
+        },
+        "evaluation": {
+          "count": 211,
+          "nse": 0.6732069304699972,
+          "logNse": 0.16643069924336384,
+          "kge": 0.8123795705153873,
+          "rmse": 21.69071363044021,
+          "mae": 16.809326928621676,
+          "bias": -5.241855488035678,
+          "pbias": -10.691635415715172,
+          "observedMean": 49.027630331753564,
+          "simulatedMean": 43.785774843717874,
+          "observedVolumeM3": 893793312.0000001,
+          "simulatedVolumeM3": 798232189.7109143,
+          "pairedVolumeErrorM3": -95561122.28908587
+        },
+        "all": {
+          "count": 440,
+          "nse": 0.7339923854339503,
+          "logNse": 0.12286922739959094,
+          "kge": 0.8314880389929953,
+          "rmse": 35.87825753124604,
+          "mae": 23.642407323530033,
+          "bias": -2.728553296295043,
+          "pbias": -4.158468054815511,
+          "observedMean": 65.61438636363636,
+          "simulatedMean": 62.885833067341316,
+          "observedVolumeM3": 2494396512.0,
+          "simulatedVolumeM3": 2390667829.888047,
+          "pairedVolumeErrorM3": -103728682.11195278
+        }
+      }
+    },
+    "lakeMetrics": {
+      "original": {
+        "logNse": 0.6490537189792631,
+        "count": 1304,
+        "nse": 0.6490585966391789,
+        "kge": 0.7688476470418343,
+        "rmse": 0.14810074862829684,
+        "mae": 0.12330593072229677,
+        "bias": 0.03246310169648437,
+        "pbias": 0.0007143861291642851,
+        "observedMean": 4544.195410745291,
+        "simulatedMean": 4544.227873846988,
+        "observedTrendMPerYear": 0.05786188324223888,
+        "simulatedTrendMPerYear": 0.08653208286942127,
+        "firstToLastErrorChangeM": 0.09894184646600479,
+        "countByYear": {
+          "2021": 246,
+          "2022": 269,
+          "2023": 222,
+          "2024": 232,
+          "2025": 255,
+          "2026": 80
+        },
+        "score": 1.258923264886597,
+        "trendErrorM": 0.15448079800761122,
+        "amplitudeErrorM": 0.12670204503301646,
+        "peakTimingErrorDays": 10.4,
+        "seasonYears": [
+          2021,
+          2022,
+          2023,
+          2024,
+          2025
+        ],
+        "fixedObservationSHA256": "58b2d77c9931473b64388774e6e30741a7d4d3f88178f088f5d8deddcef3eda4",
+        "scales": {
+          "rmseM": 0.1,
+          "trendErrorM": 0.1,
+          "amplitudeErrorM": 0.1,
+          "peakTimingErrorDays": 14.0
+        },
+        "scoreComponents": {
+          "rmse": 1.4810074862829683,
+          "trend": 1.544807980076112,
+          "amplitude": 1.2670204503301645,
+          "peakTiming": 0.7428571428571429
+        }
+      },
+      "replayed": {
+        "logNse": 0.6490537189792631,
+        "count": 1304,
+        "nse": 0.6490585966391789,
+        "kge": 0.7688476470418343,
+        "rmse": 0.14810074862829684,
+        "mae": 0.12330593072229677,
+        "bias": 0.03246310169648437,
+        "pbias": 0.0007143861291642851,
+        "observedMean": 4544.195410745291,
+        "simulatedMean": 4544.227873846988,
+        "observedTrendMPerYear": 0.05786188324223888,
+        "simulatedTrendMPerYear": 0.08653208286942127,
+        "firstToLastErrorChangeM": 0.09894184646600479,
+        "countByYear": {
+          "2021": 246,
+          "2022": 269,
+          "2023": 222,
+          "2024": 232,
+          "2025": 255,
+          "2026": 80
+        },
+        "score": 1.258923264886597,
+        "trendErrorM": 0.15448079800761122,
+        "amplitudeErrorM": 0.12670204503301646,
+        "peakTimingErrorDays": 10.4,
+        "seasonYears": [
+          2021,
+          2022,
+          2023,
+          2024,
+          2025
+        ],
+        "fixedObservationSHA256": "58b2d77c9931473b64388774e6e30741a7d4d3f88178f088f5d8deddcef3eda4",
+        "scales": {
+          "rmseM": 0.1,
+          "trendErrorM": 0.1,
+          "amplitudeErrorM": 0.1,
+          "peakTimingErrorDays": 14.0
+        },
+        "scoreComponents": {
+          "rmse": 1.4810074862829683,
+          "trend": 1.544807980076112,
+          "amplitude": 1.2670204503301645,
+          "peakTiming": 0.7428571428571429
+        }
+      }
+    },
+    "periodMetrics": {
+      "original": {
+        "flow": {
+          "training": {
+            "count": 229,
+            "nse": 0.7274549179686409,
+            "logNse": -0.023292372221457303,
+            "kge": 0.8129408794110575,
+            "rmse": 45.16427805184081,
+            "mae": 29.938389696131182,
+            "bias": -0.41280324189646544,
+            "pbias": -0.5102801133264451,
+            "observedMean": 80.89737991266375,
+            "simulatedMean": 80.48457667076728,
+            "observedVolumeM3": 1600603200.0,
+            "simulatedVolumeM3": 1592435640.177133,
+            "pairedVolumeErrorM3": -8167559.822866917
+          },
+          "evaluation": {
+            "count": 211,
+            "nse": 0.6732069304699972,
+            "logNse": 0.16643069924336384,
+            "kge": 0.8123795705153873,
+            "rmse": 21.69071363044021,
+            "mae": 16.809326928621676,
+            "bias": -5.241855488035678,
+            "pbias": -10.691635415715172,
+            "observedMean": 49.027630331753564,
+            "simulatedMean": 43.785774843717874,
+            "observedVolumeM3": 893793312.0000001,
+            "simulatedVolumeM3": 798232189.7109143,
+            "pairedVolumeErrorM3": -95561122.28908587
+          },
+          "all": {
+            "count": 440,
+            "nse": 0.7339923854339503,
+            "logNse": 0.12286922739959094,
+            "kge": 0.8314880389929953,
+            "rmse": 35.87825753124604,
+            "mae": 23.642407323530033,
+            "bias": -2.728553296295043,
+            "pbias": -4.158468054815511,
+            "observedMean": 65.61438636363636,
+            "simulatedMean": 62.885833067341316,
+            "observedVolumeM3": 2494396512.0,
+            "simulatedVolumeM3": 2390667829.888047,
+            "pairedVolumeErrorM3": -103728682.11195278
+          }
+        },
+        "lakeAll": {
+          "logNse": 0.6490537189792631,
+          "count": 1304,
+          "nse": 0.6490585966391789,
+          "kge": 0.7688476470418343,
+          "rmse": 0.14810074862829684,
+          "mae": 0.12330593072229677,
+          "bias": 0.03246310169648437,
+          "pbias": 0.0007143861291642851,
+          "observedMean": 4544.195410745291,
+          "simulatedMean": 4544.227873846988,
+          "observedTrendMPerYear": 0.05786188324223888,
+          "simulatedTrendMPerYear": 0.08653208286942127,
+          "firstToLastErrorChangeM": 0.09894184646600479,
+          "countByYear": {
+            "2021": 246,
+            "2022": 269,
+            "2023": 222,
+            "2024": 232,
+            "2025": 255,
+            "2026": 80
+          },
+          "score": 1.258923264886597,
+          "trendErrorM": 0.15448079800761122,
+          "amplitudeErrorM": 0.12670204503301646,
+          "peakTimingErrorDays": 10.4,
+          "seasonYears": [
+            2021,
+            2022,
+            2023,
+            2024,
+            2025
+          ],
+          "fixedObservationSHA256": "58b2d77c9931473b64388774e6e30741a7d4d3f88178f088f5d8deddcef3eda4",
+          "scales": {
+            "rmseM": 0.1,
+            "trendErrorM": 0.1,
+            "amplitudeErrorM": 0.1,
+            "peakTimingErrorDays": 14.0
+          },
+          "scoreComponents": {
+            "rmse": 1.4810074862829683,
+            "trend": 1.544807980076112,
+            "amplitude": 1.2670204503301645,
+            "peakTiming": 0.7428571428571429
+          }
+        },
+        "lakeTraining": {
+          "logNse": 0.7635779948430366,
+          "count": 969,
+          "nse": 0.7635743474358438,
+          "kge": 0.7732030077316044,
+          "rmse": 0.13468061466146986,
+          "mae": 0.10636851893370619,
+          "bias": 0.01976805422411653,
+          "pbias": 0.000435015942765562,
+          "observedMean": 4544.213735810114,
+          "simulatedMean": 4544.233503864338,
+          "observedTrendMPerYear": 0.20251511141802564,
+          "simulatedTrendMPerYear": 0.20234640177197938,
+          "firstToLastErrorChangeM": 0.2703102142277203,
+          "countByYear": {
+            "2021": 246,
+            "2022": 269,
+            "2023": 222,
+            "2024": 232
+          },
+          "score": 0.8863141384591858,
+          "trendErrorM": 0.0006120325017250074,
+          "amplitudeErrorM": 0.14244729393476518,
+          "peakTimingErrorDays": 10.75,
+          "seasonYears": [
+            2021,
+            2022,
+            2023,
+            2024
+          ],
+          "fixedObservationSHA256": "85216f582ca3169adc87002e35b5a062ed2ce7885c69804720d26e523ffe259d",
+          "scales": {
+            "rmseM": 0.1,
+            "trendErrorM": 0.1,
+            "amplitudeErrorM": 0.1,
+            "peakTimingErrorDays": 14.0
+          },
+          "scoreComponents": {
+            "rmse": 1.3468061466146986,
+            "trend": 0.006120325017250074,
+            "amplitude": 1.4244729393476518,
+            "peakTiming": 0.7678571428571429
+          }
+        },
+        "lakeTimeCheck": {
+          "logNse": -2.3599740372729934,
+          "count": 335,
+          "nse": -2.3601765200685527,
+          "kge": 0.9653948606063932,
+          "rmse": 0.24307142351400207,
+          "mae": 0.24092129991128255,
+          "bias": 0.24092129991128255,
+          "pbias": 0.005301799073378187,
+          "observedMean": 4544.142404811523,
+          "simulatedMean": 4544.383326111433,
+          "observedTrendMPerYear": -0.2051127360836608,
+          "simulatedTrendMPerYear": -0.1756459883042784,
+          "firstToLastErrorChangeM": 0.016092582829514868,
+          "countByYear": {
+            "2025": 255,
+            "2026": 80
+          },
+          "score": 0.8224673369970013,
+          "trendErrorM": 0.042032829128752044,
+          "amplitudeErrorM": 0.008168396441760706,
+          "peakTimingErrorDays": 5.0,
+          "seasonYears": [
+            2025
+          ],
+          "fixedObservationSHA256": "c4a5376be502fa4208ee698b0278ffcc9bba3dc9ab53ed93709d4d3de0ebc1f0",
+          "scales": {
+            "rmseM": 0.1,
+            "trendErrorM": 0.1,
+            "amplitudeErrorM": 0.1,
+            "peakTimingErrorDays": 14.0
+          },
+          "scoreComponents": {
+            "rmse": 2.4307142351400204,
+            "trend": 0.4203282912875204,
+            "amplitude": 0.08168396441760706,
+            "peakTiming": 0.35714285714285715
+          }
+        },
+        "yearly": {
+          "2017": {
+            "purpose": "预热",
+            "periodDays": {
+              "预热": 365
+            },
+            "flow": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            },
+            "lake": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            }
+          },
+          "2018": {
+            "purpose": "预热",
+            "periodDays": {
+              "预热": 365
+            },
+            "flow": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            },
+            "lake": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            }
+          },
+          "2019": {
+            "purpose": "预热",
+            "periodDays": {
+              "预热": 365
+            },
+            "flow": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            },
+            "lake": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            }
+          },
+          "2020": {
+            "purpose": "预热",
+            "periodDays": {
+              "预热": 366
+            },
+            "flow": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            },
+            "lake": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            }
+          },
+          "2021": {
+            "purpose": "预热",
+            "periodDays": {
+              "预热": 365
+            },
+            "flow": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            },
+            "lake": {
+              "logNse": 0.11678323436229598,
+              "count": 246,
+              "nse": 0.11668326863437994,
+              "kge": 0.2652824830078413,
+              "rmse": 0.17216641793464468,
+              "mae": 0.14047132502419782,
+              "bias": 0.09441674256584712,
+              "pbias": 0.002077877074978947,
+              "observedMean": 4543.904146341464,
+              "simulatedMean": 4543.998563084029
+            }
+          },
+          "2022": {
+            "purpose": "预热",
+            "periodDays": {
+              "预热": 365
+            },
+            "flow": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            },
+            "lake": {
+              "logNse": -2.2313659618399506,
+              "count": 269,
+              "nse": -2.231329684204599,
+              "kge": -0.06132585347083719,
+              "rmse": 0.08382326103203712,
+              "mae": 0.07348167311123838,
+              "bias": -0.04005146832856743,
+              "pbias": -0.0008813765290605442,
+              "observedMean": 4544.19501858736,
+              "simulatedMean": 4544.154967119031
+            }
+          },
+          "2023": {
+            "purpose": "预热",
+            "periodDays": {
+              "预热": 365
+            },
+            "flow": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            },
+            "lake": {
+              "logNse": 0.4433256669190597,
+              "count": 222,
+              "nse": 0.44339447757586203,
+              "kge": 0.6220633150427708,
+              "rmse": 0.1982066325865479,
+              "mae": 0.1743044856738838,
+              "bias": -0.15544074568402017,
+              "pbias": -0.0034205960156373206,
+              "observedMean": 4544.259099099098,
+              "simulatedMean": 4544.103658353416
+            }
+          },
+          "2024": {
+            "purpose": "率定",
+            "periodDays": {
+              "率定": 366
+            },
+            "flow": {
+              "logNse": -0.023292372221459523,
+              "count": 229,
+              "nse": 0.7274549179686415,
+              "kge": 0.8129408794110592,
+              "rmse": 45.16427805184076,
+              "mae": 29.93838969613116,
+              "bias": -0.4128032418962182,
+              "pbias": -0.5102801133261394,
+              "observedMean": 80.89737991266375,
+              "simulatedMean": 80.48457667076755
+            },
+            "lake": {
+              "logNse": 0.3819271741176742,
+              "count": 232,
+              "nse": 0.3819032845508402,
+              "kge": 0.6778896801632601,
+              "rmse": 0.10194488924185058,
+              "mae": 0.07306528080105103,
+              "bias": 0.05847146445742918,
+              "pbias": 0.0012866366651557435,
+              "observedMean": 4544.520301724137,
+              "simulatedMean": 4544.578773188596
+            }
+          },
+          "2025": {
+            "purpose": "检验",
+            "periodDays": {
+              "检验": 365
+            },
+            "flow": {
+              "logNse": 0.16643069924337062,
+              "count": 211,
+              "nse": 0.6732069304700048,
+              "kge": 0.8123795705153903,
+              "rmse": 21.690713630439962,
+              "mae": 16.809326928621584,
+              "bias": -5.241855488035735,
+              "pbias": -10.691635415715288,
+              "observedMean": 49.027630331753564,
+              "simulatedMean": 43.78577484371782
+            },
+            "lake": {
+              "logNse": -2.6550338642587454,
+              "count": 255,
+              "nse": -2.6551108559716807,
+              "kge": 0.7511754454399283,
+              "rmse": 0.1676065554013605,
+              "mae": 0.1641068219575947,
+              "bias": 0.1641068219575947,
+              "pbias": 0.00361134631911105,
+              "observedMean": 4544.200623716154,
+              "simulatedMean": 4544.36473053811
+            }
+          },
+          "2026": {
+            "purpose": "历史模拟",
+            "periodDays": {
+              "历史模拟": 293
+            },
+            "flow": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            },
+            "lake": {
+              "logNse": -2.609562207088592,
+              "count": 80,
+              "nse": -2.609634923470946,
+              "kge": 0.7520637194633655,
+              "rmse": 0.11852452737373431,
+              "mae": 0.11218046336757652,
+              "bias": 0.11218046336757652,
+              "pbias": 0.0024687836507657148,
+              "observedMean": 4543.956832053014,
+              "simulatedMean": 4544.069012516382
+            }
+          }
+        }
+      },
+      "replayed": {
+        "flow": {
+          "training": {
+            "count": 229,
+            "nse": 0.7274549179686409,
+            "logNse": -0.023292372221457303,
+            "kge": 0.8129408794110575,
+            "rmse": 45.16427805184081,
+            "mae": 29.938389696131182,
+            "bias": -0.41280324189646544,
+            "pbias": -0.5102801133264451,
+            "observedMean": 80.89737991266375,
+            "simulatedMean": 80.48457667076728,
+            "observedVolumeM3": 1600603200.0,
+            "simulatedVolumeM3": 1592435640.177133,
+            "pairedVolumeErrorM3": -8167559.822866917
+          },
+          "evaluation": {
+            "count": 211,
+            "nse": 0.6732069304699972,
+            "logNse": 0.16643069924336384,
+            "kge": 0.8123795705153873,
+            "rmse": 21.69071363044021,
+            "mae": 16.809326928621676,
+            "bias": -5.241855488035678,
+            "pbias": -10.691635415715172,
+            "observedMean": 49.027630331753564,
+            "simulatedMean": 43.785774843717874,
+            "observedVolumeM3": 893793312.0000001,
+            "simulatedVolumeM3": 798232189.7109143,
+            "pairedVolumeErrorM3": -95561122.28908587
+          },
+          "all": {
+            "count": 440,
+            "nse": 0.7339923854339503,
+            "logNse": 0.12286922739959094,
+            "kge": 0.8314880389929953,
+            "rmse": 35.87825753124604,
+            "mae": 23.642407323530033,
+            "bias": -2.728553296295043,
+            "pbias": -4.158468054815511,
+            "observedMean": 65.61438636363636,
+            "simulatedMean": 62.885833067341316,
+            "observedVolumeM3": 2494396512.0,
+            "simulatedVolumeM3": 2390667829.888047,
+            "pairedVolumeErrorM3": -103728682.11195278
+          }
+        },
+        "lakeAll": {
+          "logNse": 0.6490537189792631,
+          "count": 1304,
+          "nse": 0.6490585966391789,
+          "kge": 0.7688476470418343,
+          "rmse": 0.14810074862829684,
+          "mae": 0.12330593072229677,
+          "bias": 0.03246310169648437,
+          "pbias": 0.0007143861291642851,
+          "observedMean": 4544.195410745291,
+          "simulatedMean": 4544.227873846988,
+          "observedTrendMPerYear": 0.05786188324223888,
+          "simulatedTrendMPerYear": 0.08653208286942127,
+          "firstToLastErrorChangeM": 0.09894184646600479,
+          "countByYear": {
+            "2021": 246,
+            "2022": 269,
+            "2023": 222,
+            "2024": 232,
+            "2025": 255,
+            "2026": 80
+          },
+          "score": 1.258923264886597,
+          "trendErrorM": 0.15448079800761122,
+          "amplitudeErrorM": 0.12670204503301646,
+          "peakTimingErrorDays": 10.4,
+          "seasonYears": [
+            2021,
+            2022,
+            2023,
+            2024,
+            2025
+          ],
+          "fixedObservationSHA256": "58b2d77c9931473b64388774e6e30741a7d4d3f88178f088f5d8deddcef3eda4",
+          "scales": {
+            "rmseM": 0.1,
+            "trendErrorM": 0.1,
+            "amplitudeErrorM": 0.1,
+            "peakTimingErrorDays": 14.0
+          },
+          "scoreComponents": {
+            "rmse": 1.4810074862829683,
+            "trend": 1.544807980076112,
+            "amplitude": 1.2670204503301645,
+            "peakTiming": 0.7428571428571429
+          }
+        },
+        "lakeTraining": {
+          "logNse": 0.7635779948430366,
+          "count": 969,
+          "nse": 0.7635743474358438,
+          "kge": 0.7732030077316044,
+          "rmse": 0.13468061466146986,
+          "mae": 0.10636851893370619,
+          "bias": 0.01976805422411653,
+          "pbias": 0.000435015942765562,
+          "observedMean": 4544.213735810114,
+          "simulatedMean": 4544.233503864338,
+          "observedTrendMPerYear": 0.20251511141802564,
+          "simulatedTrendMPerYear": 0.20234640177197938,
+          "firstToLastErrorChangeM": 0.2703102142277203,
+          "countByYear": {
+            "2021": 246,
+            "2022": 269,
+            "2023": 222,
+            "2024": 232
+          },
+          "score": 0.8863141384591858,
+          "trendErrorM": 0.0006120325017250074,
+          "amplitudeErrorM": 0.14244729393476518,
+          "peakTimingErrorDays": 10.75,
+          "seasonYears": [
+            2021,
+            2022,
+            2023,
+            2024
+          ],
+          "fixedObservationSHA256": "85216f582ca3169adc87002e35b5a062ed2ce7885c69804720d26e523ffe259d",
+          "scales": {
+            "rmseM": 0.1,
+            "trendErrorM": 0.1,
+            "amplitudeErrorM": 0.1,
+            "peakTimingErrorDays": 14.0
+          },
+          "scoreComponents": {
+            "rmse": 1.3468061466146986,
+            "trend": 0.006120325017250074,
+            "amplitude": 1.4244729393476518,
+            "peakTiming": 0.7678571428571429
+          }
+        },
+        "lakeTimeCheck": {
+          "logNse": -2.3599740372729934,
+          "count": 335,
+          "nse": -2.3601765200685527,
+          "kge": 0.9653948606063932,
+          "rmse": 0.24307142351400207,
+          "mae": 0.24092129991128255,
+          "bias": 0.24092129991128255,
+          "pbias": 0.005301799073378187,
+          "observedMean": 4544.142404811523,
+          "simulatedMean": 4544.383326111433,
+          "observedTrendMPerYear": -0.2051127360836608,
+          "simulatedTrendMPerYear": -0.1756459883042784,
+          "firstToLastErrorChangeM": 0.016092582829514868,
+          "countByYear": {
+            "2025": 255,
+            "2026": 80
+          },
+          "score": 0.8224673369970013,
+          "trendErrorM": 0.042032829128752044,
+          "amplitudeErrorM": 0.008168396441760706,
+          "peakTimingErrorDays": 5.0,
+          "seasonYears": [
+            2025
+          ],
+          "fixedObservationSHA256": "c4a5376be502fa4208ee698b0278ffcc9bba3dc9ab53ed93709d4d3de0ebc1f0",
+          "scales": {
+            "rmseM": 0.1,
+            "trendErrorM": 0.1,
+            "amplitudeErrorM": 0.1,
+            "peakTimingErrorDays": 14.0
+          },
+          "scoreComponents": {
+            "rmse": 2.4307142351400204,
+            "trend": 0.4203282912875204,
+            "amplitude": 0.08168396441760706,
+            "peakTiming": 0.35714285714285715
+          }
+        },
+        "yearly": {
+          "2017": {
+            "purpose": "预热",
+            "periodDays": {
+              "预热": 365
+            },
+            "flow": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            },
+            "lake": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            }
+          },
+          "2018": {
+            "purpose": "预热",
+            "periodDays": {
+              "预热": 365
+            },
+            "flow": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            },
+            "lake": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            }
+          },
+          "2019": {
+            "purpose": "预热",
+            "periodDays": {
+              "预热": 365
+            },
+            "flow": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            },
+            "lake": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            }
+          },
+          "2020": {
+            "purpose": "预热",
+            "periodDays": {
+              "预热": 366
+            },
+            "flow": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            },
+            "lake": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            }
+          },
+          "2021": {
+            "purpose": "预热",
+            "periodDays": {
+              "预热": 365
+            },
+            "flow": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            },
+            "lake": {
+              "logNse": 0.11678323436229598,
+              "count": 246,
+              "nse": 0.11668326863437994,
+              "kge": 0.2652824830078413,
+              "rmse": 0.17216641793464468,
+              "mae": 0.14047132502419782,
+              "bias": 0.09441674256584712,
+              "pbias": 0.002077877074978947,
+              "observedMean": 4543.904146341464,
+              "simulatedMean": 4543.998563084029
+            }
+          },
+          "2022": {
+            "purpose": "预热",
+            "periodDays": {
+              "预热": 365
+            },
+            "flow": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            },
+            "lake": {
+              "logNse": -2.2313659618399506,
+              "count": 269,
+              "nse": -2.231329684204599,
+              "kge": -0.06132585347083719,
+              "rmse": 0.08382326103203712,
+              "mae": 0.07348167311123838,
+              "bias": -0.04005146832856743,
+              "pbias": -0.0008813765290605442,
+              "observedMean": 4544.19501858736,
+              "simulatedMean": 4544.154967119031
+            }
+          },
+          "2023": {
+            "purpose": "预热",
+            "periodDays": {
+              "预热": 365
+            },
+            "flow": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            },
+            "lake": {
+              "logNse": 0.4433256669190597,
+              "count": 222,
+              "nse": 0.44339447757586203,
+              "kge": 0.6220633150427708,
+              "rmse": 0.1982066325865479,
+              "mae": 0.1743044856738838,
+              "bias": -0.15544074568402017,
+              "pbias": -0.0034205960156373206,
+              "observedMean": 4544.259099099098,
+              "simulatedMean": 4544.103658353416
+            }
+          },
+          "2024": {
+            "purpose": "率定",
+            "periodDays": {
+              "率定": 366
+            },
+            "flow": {
+              "logNse": -0.023292372221459523,
+              "count": 229,
+              "nse": 0.7274549179686415,
+              "kge": 0.8129408794110592,
+              "rmse": 45.16427805184076,
+              "mae": 29.93838969613116,
+              "bias": -0.4128032418962182,
+              "pbias": -0.5102801133261394,
+              "observedMean": 80.89737991266375,
+              "simulatedMean": 80.48457667076755
+            },
+            "lake": {
+              "logNse": 0.3819271741176742,
+              "count": 232,
+              "nse": 0.3819032845508402,
+              "kge": 0.6778896801632601,
+              "rmse": 0.10194488924185058,
+              "mae": 0.07306528080105103,
+              "bias": 0.05847146445742918,
+              "pbias": 0.0012866366651557435,
+              "observedMean": 4544.520301724137,
+              "simulatedMean": 4544.578773188596
+            }
+          },
+          "2025": {
+            "purpose": "检验",
+            "periodDays": {
+              "检验": 365
+            },
+            "flow": {
+              "logNse": 0.16643069924337062,
+              "count": 211,
+              "nse": 0.6732069304700048,
+              "kge": 0.8123795705153903,
+              "rmse": 21.690713630439962,
+              "mae": 16.809326928621584,
+              "bias": -5.241855488035735,
+              "pbias": -10.691635415715288,
+              "observedMean": 49.027630331753564,
+              "simulatedMean": 43.78577484371782
+            },
+            "lake": {
+              "logNse": -2.6550338642587454,
+              "count": 255,
+              "nse": -2.6551108559716807,
+              "kge": 0.7511754454399283,
+              "rmse": 0.1676065554013605,
+              "mae": 0.1641068219575947,
+              "bias": 0.1641068219575947,
+              "pbias": 0.00361134631911105,
+              "observedMean": 4544.200623716154,
+              "simulatedMean": 4544.36473053811
+            }
+          },
+          "2026": {
+            "purpose": "历史模拟",
+            "periodDays": {
+              "历史模拟": 293
+            },
+            "flow": {
+              "count": 0,
+              "nse": null,
+              "kge": null,
+              "rmse": null,
+              "mae": null,
+              "bias": null,
+              "pbias": null,
+              "logNse": null
+            },
+            "lake": {
+              "logNse": -2.609562207088592,
+              "count": 80,
+              "nse": -2.609634923470946,
+              "kge": 0.7520637194633655,
+              "rmse": 0.11852452737373431,
+              "mae": 0.11218046336757652,
+              "bias": 0.11218046336757652,
+              "pbias": 0.0024687836507657148,
+              "observedMean": 4543.956832053014,
+              "simulatedMean": 4544.069012516382
+            }
+          }
+        }
+      }
+    },
+    "flowMaxAbsoluteM3s": 0.0,
+    "lakeMaxAbsoluteM": 0.0,
+    "passes": true
+  },
+  "configuration": {
+    "parameters": {
+      "KC": 0.720337228981353,
+      "WM": 168.3271131439654,
+      "B": 0.02706294682950719,
+      "C": 0.04295623600648161,
+      "SM": 88.58813487944634,
+      "EX": 0.2521151900118612,
+      "KI": 0.001,
+      "KG": 0.006449423481093118,
+      "IM": 0.0503954549913151,
+      "snowDdf": 8.268361544906824,
+      "iceDdf": 10.491198321961527,
+      "snowTemperature": -5.0,
+      "rainTemperature": 5.0,
+      "liquidCapacity": 0.055106981756182505,
+      "refreezeFactor": 2.9996048886186535,
+      "snowSublimation": 0.3377805450877816,
+      "glacierRecessionDay": 2.1964703205360663,
+      "tauHours": 81.17211359023726,
+      "lagHours": 33.96151753396235,
+      "lakeCoefficient": 1.5,
+      "lapseRate": -0.009888678648497686,
+      "interflowTauHours": 6.0105774523024795,
+      "baseflowTauHours": 2160.0,
+      "iceSublimationFraction": 0.25,
+      "iceSublimationMaxMmHour": 0.08
+    },
+    "results": {
+      "KC": 0.7143539894250547,
+      "WM": 180.10725576074435,
+      "B": 0.12362853524917454,
+      "C": 0.26189116640935695,
+      "SM": 60.05529043123532,
+      "EX": 1.016782036689256,
+      "KI": 0.05453408467128742,
+      "KG": 0.03597564102910988,
+      "IM": 0.019203505157108544,
+      "snowDdf": 8.21922005394951,
+      "iceDdf": 11.064146446235254,
+      "snowTemperature": 0.9925266183579309,
+      "rainTemperature": 5.0,
+      "liquidCapacity": 0.1166055718935576,
+      "refreezeFactor": 1.809162003816423,
+      "snowSublimation": 0.38972750370326054,
+      "glacierRecessionDay": 0.9367280321216869,
+      "tauHours": 103.16477670006633,
+      "lagHours": 30.79296214670429,
+      "lakeCoefficient": 1.4969999999999999,
+      "lapseRate": -0.01,
+      "interflowTauHours": 6.0,
+      "baseflowTauHours": 2159.2085189377794,
+      "iceSublimationFraction": 0.25,
+      "iceSublimationMaxMmHour": 0.08
+    },
+    "bounds": {
+      "B": [
+        0.02,
+        0.8
+      ],
+      "C": [
+        0.01,
+        0.5
+      ],
+      "EX": [
+        0.1,
+        2.5
+      ],
+      "IM": [
+        0,
+        0.2
+      ],
+      "KC": [
+        0.2,
+        1.5
+      ],
+      "KG": [
+        0.0001,
+        0.1
+      ],
+      "KI": [
+        0.001,
+        0.15
+      ],
+      "SM": [
+        5,
+        100
+      ],
+      "WM": [
+        40,
+        300
+      ],
+      "baseflowTauHours": [
+        168,
+        2160
+      ],
+      "glacierRecessionDay": [
+        0.05,
+        3
+      ],
+      "iceDdf": [
+        2,
+        14
+      ],
+      "iceSublimationFraction": [
+        0,
+        1
+      ],
+      "iceSublimationMaxMmHour": [
+        0,
+        0.4
+      ],
+      "interflowTauHours": [
+        6,
+        240
+      ],
+      "lagHours": [
+        0,
+        72
+      ],
+      "lakeCoefficient": [
+        0.2,
+        1.5
+      ],
+      "lapseRate": [
+        -0.01,
+        -0.002
+      ],
+      "liquidCapacity": [
+        0.01,
+        0.15
+      ],
+      "rainTemperature": [
+        0,
+        5
+      ],
+      "refreezeFactor": [
+        0,
+        3
+      ],
+      "snowDdf": [
+        1,
+        10
+      ],
+      "snowSublimation": [
+        0,
+        1
+      ],
+      "snowTemperature": [
+        -5,
+        1
+      ],
+      "tauHours": [
+        1,
+        168
+      ]
+    },
+    "selectedKeys": [
+      "KC",
+      "WM",
+      "B",
+      "C",
+      "SM",
+      "EX",
+      "KI",
+      "KG",
+      "IM",
+      "snowDdf",
+      "iceDdf",
+      "snowTemperature",
+      "rainTemperature",
+      "liquidCapacity",
+      "refreezeFactor",
+      "snowSublimation",
+      "glacierRecessionDay",
+      "lapseRate",
+      "tauHours",
+      "lagHours",
+      "interflowTauHours",
+      "baseflowTauHours"
+    ],
+    "periods": {
+      "evaluationEnd": "2026-01-01T00:00:00",
+      "evaluationStart": "2025-01-01T00:00:00",
+      "trainingEnd": "2025-01-01T00:00:00",
+      "trainingStart": "2024-01-01T00:00:00",
+      "warmupStart": "2017-01-01T00:00:00"
+    },
+    "twoStage": {
+      "version": 1,
+      "mode": "both",
+      "reverseCheck": true,
+      "finalRefit": true,
+      "seeds": [
+        42,
+        142,
+        242
+      ],
+      "budgets": {
+        "joint": 3000,
+        "routing": 3000,
+        "runoff": 6000,
+        "snow": 6000
+      },
+      "allowExtension": true,
+      "selectionMode": "flow-constrained-lake",
+      "candidateSourceTaskId": "JOB-4934a5d35c9344a59353",
+      "baselineTaskId": "JOB-4934a5d35c9344a59353",
+      "flowConstraints": {
+        "maxAbsPbias": 5.0,
+        "minNse": 0.7
+      },
+      "candidateLimit": 256,
+      "jointBudget": 2000,
+      "lakePeriods": {
+        "evaluationEnd": "2026-09-14T00:00:00",
+        "evaluationStart": "2025-01-01T00:00:00",
+        "trainingEnd": "2025-01-01T00:00:00",
+        "trainingStart": "2021-04-23T00:00:00"
+      }
+    },
+    "initialHydrology": {
+      "soilFraction": 0.5
+    },
+    "initialization": {
+      "time": "2021-04-23T12:00:00",
+      "level": 4543.66,
+      "method": "first-quality-daily-level-at-noon",
+      "source": "time-weighted-level-v2-gap6h-cover18h",
+      "reference": "SLC-working-datum"
+    },
+    "inputId": "INPUT-c00df956d638351ebeb4e96e",
+    "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6",
+    "start": "2017-01-01T00:00:00",
+    "end": "2026-10-21T00:00:00",
+    "objectiveProfile": "balanced",
+    "objectiveSpec": {
+      "flowWeights": {
+        "nse": 0.5,
+        "logNse": 0.25,
+        "volume": 0.25
+      },
+      "lakeWeights": {
+        "rmse": 0.25,
+        "trend": 0.25,
+        "amplitude": 0.25,
+        "peakTiming": 0.25
+      },
+      "lakeScales": {
+        "rmseM": 0.1,
+        "trendErrorM": 0.1,
+        "amplitudeErrorM": 0.1,
+        "peakTimingErrorDays": 14.0
+      }
+    },
+    "observationCounts": {
+      "level": 1305,
+      "flow": 440
+    },
+    "sourceRequestSHA256": "b3acc5a7ae1d80ce0725d86389c62edb3ba13138e1b473703f1cc921bfea8581",
+    "modelIdentity": "6abbc3e802baa94c00c3f4489e72847086eac3123ba1ead576d8379cdee2ee7d"
+  },
+  "originalPlanSHA256": "6badbda80e3aaa44b2d1bef69ae73a4bc2bd4feeac3e16217c971468303ea3ff",
+  "replay": {
+    "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+    "planSHA256": "bbf128ee2c69d664d4700e33925b14b2b0f5620cee1fdd4f0a9f78a13281a152",
+    "frozenPlanSHA256": "6badbda80e3aaa44b2d1bef69ae73a4bc2bd4feeac3e16217c971468303ea3ff",
+    "workerMigration": {
+      "reason": "短暂控制文件读取异常不再误判为停止",
+      "frozenPlanSHA256": "6badbda80e3aaa44b2d1bef69ae73a4bc2bd4feeac3e16217c971468303ea3ff",
+      "currentPlanSHA256": "bbf128ee2c69d664d4700e33925b14b2b0f5620cee1fdd4f0a9f78a13281a152",
+      "previousWorker": {
+        "name": "replayWorker",
+        "sha256": "667311bafa6ea8a77b6578c88a85f2470518fac5cd1277f5ded44eeb7bce6702",
+        "bytes": 4588
+      },
+      "currentWorker": {
+        "name": "replayWorker",
+        "sha256": "4c26f751f038598865944487049fddbe51989ad28cef9beee47af9db0e96d341",
+        "bytes": 10229
+      },
+      "environmentChange": null,
+      "recordFile": "replay-snapshot/worker-migration-4c26f751f038-bbf128ee2c69.json"
+    },
+    "backendSourceSHA256": "d209aa6b038b278e913aeffce300494de3c9556f76037c6115f191837b2bfd5f",
+    "historicalRevision": "9cbed4b58ab3ded5982bbb55dd9850f7d58ddda5",
+    "automaticAdoption": false,
+    "comparison": {
+      "sourceTaskId": "JOB-88b35b44b27d4e15840c",
+      "candidateOrderEqual": true,
+      "trainingCandidateEqual": true,
+      "finalCandidateEqual": true,
+      "counts": {
+        "totalRescored": {
+          "original": 32569,
+          "replayed": 32569
+        },
+        "eligibleRescored": {
+          "original": 9861,
+          "replayed": 9861
+        },
+        "selectedForBasin": {
+          "original": 256,
+          "replayed": 256
+        },
+        "basinCandidatesEvaluated": {
+          "original": 773,
+          "replayed": 773
+        }
+      },
+      "jointProposals": {
+        "original": 2000,
+        "replayed": 2000
+      },
+      "datesEqual": true,
+      "dailyDifferences": {
+        "duja": {
+          "paired": 3580,
+          "missingPatternEqual": true,
+          "maxAbsoluteDifference": 0.0
+        },
+        "zajia": {
+          "paired": 3580,
+          "missingPatternEqual": true,
+          "maxAbsoluteDifference": 0.0
+        },
+        "zagen": {
+          "paired": 3580,
+          "missingPatternEqual": true,
+          "maxAbsoluteDifference": 0.0
+        },
+        "boqu": {
+          "paired": 3580,
+          "missingPatternEqual": true,
+          "maxAbsoluteDifference": 0.0
+        },
+        "ali": {
+          "paired": 3580,
+          "missingPatternEqual": true,
+          "maxAbsoluteDifference": 0.0
+        },
+        "fringe": {
+          "paired": 3580,
+          "missingPatternEqual": true,
+          "maxAbsoluteDifference": 0.0
+        },
+        "total": {
+          "paired": 3580,
+          "missingPatternEqual": true,
+          "maxAbsoluteDifference": 0.0
+        },
+        "lakeLevel": {
+          "paired": 2006,
+          "missingPatternEqual": true,
+          "maxAbsoluteDifference": 0.0
+        }
+      },
+      "parameterMaximumDifference": 0.0,
+      "tolerances": {
+        "flowM3s": 1e-07,
+        "lakeM": 1e-08,
+        "metrics": 1e-08,
+        "parameters": 1e-12
+      },
+      "metricsStructureEqual": true,
+      "metricsMaxAbsoluteDifference": 0.0,
+      "flowMetrics": {
+        "original": {
+          "training": {
+            "count": 229,
+            "nse": 0.7274549179686409,
+            "logNse": -0.023292372221457303,
+            "kge": 0.8129408794110575,
+            "rmse": 45.16427805184081,
+            "mae": 29.938389696131182,
+            "bias": -0.41280324189646544,
+            "pbias": -0.5102801133264451,
+            "observedMean": 80.89737991266375,
+            "simulatedMean": 80.48457667076728,
+            "observedVolumeM3": 1600603200.0,
+            "simulatedVolumeM3": 1592435640.177133,
+            "pairedVolumeErrorM3": -8167559.822866917
+          },
+          "evaluation": {
+            "count": 211,
+            "nse": 0.6732069304699972,
+            "logNse": 0.16643069924336384,
+            "kge": 0.8123795705153873,
+            "rmse": 21.69071363044021,
+            "mae": 16.809326928621676,
+            "bias": -5.241855488035678,
+            "pbias": -10.691635415715172,
+            "observedMean": 49.027630331753564,
+            "simulatedMean": 43.785774843717874,
+            "observedVolumeM3": 893793312.0000001,
+            "simulatedVolumeM3": 798232189.7109143,
+            "pairedVolumeErrorM3": -95561122.28908587
+          },
+          "all": {
+            "count": 440,
+            "nse": 0.7339923854339503,
+            "logNse": 0.12286922739959094,
+            "kge": 0.8314880389929953,
+            "rmse": 35.87825753124604,
+            "mae": 23.642407323530033,
+            "bias": -2.728553296295043,
+            "pbias": -4.158468054815511,
+            "observedMean": 65.61438636363636,
+            "simulatedMean": 62.885833067341316,
+            "observedVolumeM3": 2494396512.0,
+            "simulatedVolumeM3": 2390667829.888047,
+            "pairedVolumeErrorM3": -103728682.11195278
+          }
+        },
+        "replayed": {
+          "training": {
+            "count": 229,
+            "nse": 0.7274549179686409,
+            "logNse": -0.023292372221457303,
+            "kge": 0.8129408794110575,
+            "rmse": 45.16427805184081,
+            "mae": 29.938389696131182,
+            "bias": -0.41280324189646544,
+            "pbias": -0.5102801133264451,
+            "observedMean": 80.89737991266375,
+            "simulatedMean": 80.48457667076728,
+            "observedVolumeM3": 1600603200.0,
+            "simulatedVolumeM3": 1592435640.177133,
+            "pairedVolumeErrorM3": -8167559.822866917
+          },
+          "evaluation": {
+            "count": 211,
+            "nse": 0.6732069304699972,
+            "logNse": 0.16643069924336384,
+            "kge": 0.8123795705153873,
+            "rmse": 21.69071363044021,
+            "mae": 16.809326928621676,
+            "bias": -5.241855488035678,
+            "pbias": -10.691635415715172,
+            "observedMean": 49.027630331753564,
+            "simulatedMean": 43.785774843717874,
+            "observedVolumeM3": 893793312.0000001,
+            "simulatedVolumeM3": 798232189.7109143,
+            "pairedVolumeErrorM3": -95561122.28908587
+          },
+          "all": {
+            "count": 440,
+            "nse": 0.7339923854339503,
+            "logNse": 0.12286922739959094,
+            "kge": 0.8314880389929953,
+            "rmse": 35.87825753124604,
+            "mae": 23.642407323530033,
+            "bias": -2.728553296295043,
+            "pbias": -4.158468054815511,
+            "observedMean": 65.61438636363636,
+            "simulatedMean": 62.885833067341316,
+            "observedVolumeM3": 2494396512.0,
+            "simulatedVolumeM3": 2390667829.888047,
+            "pairedVolumeErrorM3": -103728682.11195278
+          }
+        }
+      },
+      "lakeMetrics": {
+        "original": {
+          "logNse": 0.6490537189792631,
+          "count": 1304,
+          "nse": 0.6490585966391789,
+          "kge": 0.7688476470418343,
+          "rmse": 0.14810074862829684,
+          "mae": 0.12330593072229677,
+          "bias": 0.03246310169648437,
+          "pbias": 0.0007143861291642851,
+          "observedMean": 4544.195410745291,
+          "simulatedMean": 4544.227873846988,
+          "observedTrendMPerYear": 0.05786188324223888,
+          "simulatedTrendMPerYear": 0.08653208286942127,
+          "firstToLastErrorChangeM": 0.09894184646600479,
+          "countByYear": {
+            "2021": 246,
+            "2022": 269,
+            "2023": 222,
+            "2024": 232,
+            "2025": 255,
+            "2026": 80
+          },
+          "score": 1.258923264886597,
+          "trendErrorM": 0.15448079800761122,
+          "amplitudeErrorM": 0.12670204503301646,
+          "peakTimingErrorDays": 10.4,
+          "seasonYears": [
+            2021,
+            2022,
+            2023,
+            2024,
+            2025
+          ],
+          "fixedObservationSHA256": "58b2d77c9931473b64388774e6e30741a7d4d3f88178f088f5d8deddcef3eda4",
+          "scales": {
+            "rmseM": 0.1,
+            "trendErrorM": 0.1,
+            "amplitudeErrorM": 0.1,
+            "peakTimingErrorDays": 14.0
+          },
+          "scoreComponents": {
+            "rmse": 1.4810074862829683,
+            "trend": 1.544807980076112,
+            "amplitude": 1.2670204503301645,
+            "peakTiming": 0.7428571428571429
+          }
+        },
+        "replayed": {
+          "logNse": 0.6490537189792631,
+          "count": 1304,
+          "nse": 0.6490585966391789,
+          "kge": 0.7688476470418343,
+          "rmse": 0.14810074862829684,
+          "mae": 0.12330593072229677,
+          "bias": 0.03246310169648437,
+          "pbias": 0.0007143861291642851,
+          "observedMean": 4544.195410745291,
+          "simulatedMean": 4544.227873846988,
+          "observedTrendMPerYear": 0.05786188324223888,
+          "simulatedTrendMPerYear": 0.08653208286942127,
+          "firstToLastErrorChangeM": 0.09894184646600479,
+          "countByYear": {
+            "2021": 246,
+            "2022": 269,
+            "2023": 222,
+            "2024": 232,
+            "2025": 255,
+            "2026": 80
+          },
+          "score": 1.258923264886597,
+          "trendErrorM": 0.15448079800761122,
+          "amplitudeErrorM": 0.12670204503301646,
+          "peakTimingErrorDays": 10.4,
+          "seasonYears": [
+            2021,
+            2022,
+            2023,
+            2024,
+            2025
+          ],
+          "fixedObservationSHA256": "58b2d77c9931473b64388774e6e30741a7d4d3f88178f088f5d8deddcef3eda4",
+          "scales": {
+            "rmseM": 0.1,
+            "trendErrorM": 0.1,
+            "amplitudeErrorM": 0.1,
+            "peakTimingErrorDays": 14.0
+          },
+          "scoreComponents": {
+            "rmse": 1.4810074862829683,
+            "trend": 1.544807980076112,
+            "amplitude": 1.2670204503301645,
+            "peakTiming": 0.7428571428571429
+          }
+        }
+      },
+      "periodMetrics": {
+        "original": {
+          "flow": {
+            "training": {
+              "count": 229,
+              "nse": 0.7274549179686409,
+              "logNse": -0.023292372221457303,
+              "kge": 0.8129408794110575,
+              "rmse": 45.16427805184081,
+              "mae": 29.938389696131182,
+              "bias": -0.41280324189646544,
+              "pbias": -0.5102801133264451,
+              "observedMean": 80.89737991266375,
+              "simulatedMean": 80.48457667076728,
+              "observedVolumeM3": 1600603200.0,
+              "simulatedVolumeM3": 1592435640.177133,
+              "pairedVolumeErrorM3": -8167559.822866917
+            },
+            "evaluation": {
+              "count": 211,
+              "nse": 0.6732069304699972,
+              "logNse": 0.16643069924336384,
+              "kge": 0.8123795705153873,
+              "rmse": 21.69071363044021,
+              "mae": 16.809326928621676,
+              "bias": -5.241855488035678,
+              "pbias": -10.691635415715172,
+              "observedMean": 49.027630331753564,
+              "simulatedMean": 43.785774843717874,
+              "observedVolumeM3": 893793312.0000001,
+              "simulatedVolumeM3": 798232189.7109143,
+              "pairedVolumeErrorM3": -95561122.28908587
+            },
+            "all": {
+              "count": 440,
+              "nse": 0.7339923854339503,
+              "logNse": 0.12286922739959094,
+              "kge": 0.8314880389929953,
+              "rmse": 35.87825753124604,
+              "mae": 23.642407323530033,
+              "bias": -2.728553296295043,
+              "pbias": -4.158468054815511,
+              "observedMean": 65.61438636363636,
+              "simulatedMean": 62.885833067341316,
+              "observedVolumeM3": 2494396512.0,
+              "simulatedVolumeM3": 2390667829.888047,
+              "pairedVolumeErrorM3": -103728682.11195278
+            }
+          },
+          "lakeAll": {
+            "logNse": 0.6490537189792631,
+            "count": 1304,
+            "nse": 0.6490585966391789,
+            "kge": 0.7688476470418343,
+            "rmse": 0.14810074862829684,
+            "mae": 0.12330593072229677,
+            "bias": 0.03246310169648437,
+            "pbias": 0.0007143861291642851,
+            "observedMean": 4544.195410745291,
+            "simulatedMean": 4544.227873846988,
+            "observedTrendMPerYear": 0.05786188324223888,
+            "simulatedTrendMPerYear": 0.08653208286942127,
+            "firstToLastErrorChangeM": 0.09894184646600479,
+            "countByYear": {
+              "2021": 246,
+              "2022": 269,
+              "2023": 222,
+              "2024": 232,
+              "2025": 255,
+              "2026": 80
+            },
+            "score": 1.258923264886597,
+            "trendErrorM": 0.15448079800761122,
+            "amplitudeErrorM": 0.12670204503301646,
+            "peakTimingErrorDays": 10.4,
+            "seasonYears": [
+              2021,
+              2022,
+              2023,
+              2024,
+              2025
+            ],
+            "fixedObservationSHA256": "58b2d77c9931473b64388774e6e30741a7d4d3f88178f088f5d8deddcef3eda4",
+            "scales": {
+              "rmseM": 0.1,
+              "trendErrorM": 0.1,
+              "amplitudeErrorM": 0.1,
+              "peakTimingErrorDays": 14.0
+            },
+            "scoreComponents": {
+              "rmse": 1.4810074862829683,
+              "trend": 1.544807980076112,
+              "amplitude": 1.2670204503301645,
+              "peakTiming": 0.7428571428571429
+            }
+          },
+          "lakeTraining": {
+            "logNse": 0.7635779948430366,
+            "count": 969,
+            "nse": 0.7635743474358438,
+            "kge": 0.7732030077316044,
+            "rmse": 0.13468061466146986,
+            "mae": 0.10636851893370619,
+            "bias": 0.01976805422411653,
+            "pbias": 0.000435015942765562,
+            "observedMean": 4544.213735810114,
+            "simulatedMean": 4544.233503864338,
+            "observedTrendMPerYear": 0.20251511141802564,
+            "simulatedTrendMPerYear": 0.20234640177197938,
+            "firstToLastErrorChangeM": 0.2703102142277203,
+            "countByYear": {
+              "2021": 246,
+              "2022": 269,
+              "2023": 222,
+              "2024": 232
+            },
+            "score": 0.8863141384591858,
+            "trendErrorM": 0.0006120325017250074,
+            "amplitudeErrorM": 0.14244729393476518,
+            "peakTimingErrorDays": 10.75,
+            "seasonYears": [
+              2021,
+              2022,
+              2023,
+              2024
+            ],
+            "fixedObservationSHA256": "85216f582ca3169adc87002e35b5a062ed2ce7885c69804720d26e523ffe259d",
+            "scales": {
+              "rmseM": 0.1,
+              "trendErrorM": 0.1,
+              "amplitudeErrorM": 0.1,
+              "peakTimingErrorDays": 14.0
+            },
+            "scoreComponents": {
+              "rmse": 1.3468061466146986,
+              "trend": 0.006120325017250074,
+              "amplitude": 1.4244729393476518,
+              "peakTiming": 0.7678571428571429
+            }
+          },
+          "lakeTimeCheck": {
+            "logNse": -2.3599740372729934,
+            "count": 335,
+            "nse": -2.3601765200685527,
+            "kge": 0.9653948606063932,
+            "rmse": 0.24307142351400207,
+            "mae": 0.24092129991128255,
+            "bias": 0.24092129991128255,
+            "pbias": 0.005301799073378187,
+            "observedMean": 4544.142404811523,
+            "simulatedMean": 4544.383326111433,
+            "observedTrendMPerYear": -0.2051127360836608,
+            "simulatedTrendMPerYear": -0.1756459883042784,
+            "firstToLastErrorChangeM": 0.016092582829514868,
+            "countByYear": {
+              "2025": 255,
+              "2026": 80
+            },
+            "score": 0.8224673369970013,
+            "trendErrorM": 0.042032829128752044,
+            "amplitudeErrorM": 0.008168396441760706,
+            "peakTimingErrorDays": 5.0,
+            "seasonYears": [
+              2025
+            ],
+            "fixedObservationSHA256": "c4a5376be502fa4208ee698b0278ffcc9bba3dc9ab53ed93709d4d3de0ebc1f0",
+            "scales": {
+              "rmseM": 0.1,
+              "trendErrorM": 0.1,
+              "amplitudeErrorM": 0.1,
+              "peakTimingErrorDays": 14.0
+            },
+            "scoreComponents": {
+              "rmse": 2.4307142351400204,
+              "trend": 0.4203282912875204,
+              "amplitude": 0.08168396441760706,
+              "peakTiming": 0.35714285714285715
+            }
+          },
+          "yearly": {
+            "2017": {
+              "purpose": "预热",
+              "periodDays": {
+                "预热": 365
+              },
+              "flow": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              },
+              "lake": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              }
+            },
+            "2018": {
+              "purpose": "预热",
+              "periodDays": {
+                "预热": 365
+              },
+              "flow": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              },
+              "lake": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              }
+            },
+            "2019": {
+              "purpose": "预热",
+              "periodDays": {
+                "预热": 365
+              },
+              "flow": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              },
+              "lake": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              }
+            },
+            "2020": {
+              "purpose": "预热",
+              "periodDays": {
+                "预热": 366
+              },
+              "flow": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              },
+              "lake": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              }
+            },
+            "2021": {
+              "purpose": "预热",
+              "periodDays": {
+                "预热": 365
+              },
+              "flow": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              },
+              "lake": {
+                "logNse": 0.11678323436229598,
+                "count": 246,
+                "nse": 0.11668326863437994,
+                "kge": 0.2652824830078413,
+                "rmse": 0.17216641793464468,
+                "mae": 0.14047132502419782,
+                "bias": 0.09441674256584712,
+                "pbias": 0.002077877074978947,
+                "observedMean": 4543.904146341464,
+                "simulatedMean": 4543.998563084029
+              }
+            },
+            "2022": {
+              "purpose": "预热",
+              "periodDays": {
+                "预热": 365
+              },
+              "flow": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              },
+              "lake": {
+                "logNse": -2.2313659618399506,
+                "count": 269,
+                "nse": -2.231329684204599,
+                "kge": -0.06132585347083719,
+                "rmse": 0.08382326103203712,
+                "mae": 0.07348167311123838,
+                "bias": -0.04005146832856743,
+                "pbias": -0.0008813765290605442,
+                "observedMean": 4544.19501858736,
+                "simulatedMean": 4544.154967119031
+              }
+            },
+            "2023": {
+              "purpose": "预热",
+              "periodDays": {
+                "预热": 365
+              },
+              "flow": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              },
+              "lake": {
+                "logNse": 0.4433256669190597,
+                "count": 222,
+                "nse": 0.44339447757586203,
+                "kge": 0.6220633150427708,
+                "rmse": 0.1982066325865479,
+                "mae": 0.1743044856738838,
+                "bias": -0.15544074568402017,
+                "pbias": -0.0034205960156373206,
+                "observedMean": 4544.259099099098,
+                "simulatedMean": 4544.103658353416
+              }
+            },
+            "2024": {
+              "purpose": "率定",
+              "periodDays": {
+                "率定": 366
+              },
+              "flow": {
+                "logNse": -0.023292372221459523,
+                "count": 229,
+                "nse": 0.7274549179686415,
+                "kge": 0.8129408794110592,
+                "rmse": 45.16427805184076,
+                "mae": 29.93838969613116,
+                "bias": -0.4128032418962182,
+                "pbias": -0.5102801133261394,
+                "observedMean": 80.89737991266375,
+                "simulatedMean": 80.48457667076755
+              },
+              "lake": {
+                "logNse": 0.3819271741176742,
+                "count": 232,
+                "nse": 0.3819032845508402,
+                "kge": 0.6778896801632601,
+                "rmse": 0.10194488924185058,
+                "mae": 0.07306528080105103,
+                "bias": 0.05847146445742918,
+                "pbias": 0.0012866366651557435,
+                "observedMean": 4544.520301724137,
+                "simulatedMean": 4544.578773188596
+              }
+            },
+            "2025": {
+              "purpose": "检验",
+              "periodDays": {
+                "检验": 365
+              },
+              "flow": {
+                "logNse": 0.16643069924337062,
+                "count": 211,
+                "nse": 0.6732069304700048,
+                "kge": 0.8123795705153903,
+                "rmse": 21.690713630439962,
+                "mae": 16.809326928621584,
+                "bias": -5.241855488035735,
+                "pbias": -10.691635415715288,
+                "observedMean": 49.027630331753564,
+                "simulatedMean": 43.78577484371782
+              },
+              "lake": {
+                "logNse": -2.6550338642587454,
+                "count": 255,
+                "nse": -2.6551108559716807,
+                "kge": 0.7511754454399283,
+                "rmse": 0.1676065554013605,
+                "mae": 0.1641068219575947,
+                "bias": 0.1641068219575947,
+                "pbias": 0.00361134631911105,
+                "observedMean": 4544.200623716154,
+                "simulatedMean": 4544.36473053811
+              }
+            },
+            "2026": {
+              "purpose": "历史模拟",
+              "periodDays": {
+                "历史模拟": 293
+              },
+              "flow": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              },
+              "lake": {
+                "logNse": -2.609562207088592,
+                "count": 80,
+                "nse": -2.609634923470946,
+                "kge": 0.7520637194633655,
+                "rmse": 0.11852452737373431,
+                "mae": 0.11218046336757652,
+                "bias": 0.11218046336757652,
+                "pbias": 0.0024687836507657148,
+                "observedMean": 4543.956832053014,
+                "simulatedMean": 4544.069012516382
+              }
+            }
+          }
+        },
+        "replayed": {
+          "flow": {
+            "training": {
+              "count": 229,
+              "nse": 0.7274549179686409,
+              "logNse": -0.023292372221457303,
+              "kge": 0.8129408794110575,
+              "rmse": 45.16427805184081,
+              "mae": 29.938389696131182,
+              "bias": -0.41280324189646544,
+              "pbias": -0.5102801133264451,
+              "observedMean": 80.89737991266375,
+              "simulatedMean": 80.48457667076728,
+              "observedVolumeM3": 1600603200.0,
+              "simulatedVolumeM3": 1592435640.177133,
+              "pairedVolumeErrorM3": -8167559.822866917
+            },
+            "evaluation": {
+              "count": 211,
+              "nse": 0.6732069304699972,
+              "logNse": 0.16643069924336384,
+              "kge": 0.8123795705153873,
+              "rmse": 21.69071363044021,
+              "mae": 16.809326928621676,
+              "bias": -5.241855488035678,
+              "pbias": -10.691635415715172,
+              "observedMean": 49.027630331753564,
+              "simulatedMean": 43.785774843717874,
+              "observedVolumeM3": 893793312.0000001,
+              "simulatedVolumeM3": 798232189.7109143,
+              "pairedVolumeErrorM3": -95561122.28908587
+            },
+            "all": {
+              "count": 440,
+              "nse": 0.7339923854339503,
+              "logNse": 0.12286922739959094,
+              "kge": 0.8314880389929953,
+              "rmse": 35.87825753124604,
+              "mae": 23.642407323530033,
+              "bias": -2.728553296295043,
+              "pbias": -4.158468054815511,
+              "observedMean": 65.61438636363636,
+              "simulatedMean": 62.885833067341316,
+              "observedVolumeM3": 2494396512.0,
+              "simulatedVolumeM3": 2390667829.888047,
+              "pairedVolumeErrorM3": -103728682.11195278
+            }
+          },
+          "lakeAll": {
+            "logNse": 0.6490537189792631,
+            "count": 1304,
+            "nse": 0.6490585966391789,
+            "kge": 0.7688476470418343,
+            "rmse": 0.14810074862829684,
+            "mae": 0.12330593072229677,
+            "bias": 0.03246310169648437,
+            "pbias": 0.0007143861291642851,
+            "observedMean": 4544.195410745291,
+            "simulatedMean": 4544.227873846988,
+            "observedTrendMPerYear": 0.05786188324223888,
+            "simulatedTrendMPerYear": 0.08653208286942127,
+            "firstToLastErrorChangeM": 0.09894184646600479,
+            "countByYear": {
+              "2021": 246,
+              "2022": 269,
+              "2023": 222,
+              "2024": 232,
+              "2025": 255,
+              "2026": 80
+            },
+            "score": 1.258923264886597,
+            "trendErrorM": 0.15448079800761122,
+            "amplitudeErrorM": 0.12670204503301646,
+            "peakTimingErrorDays": 10.4,
+            "seasonYears": [
+              2021,
+              2022,
+              2023,
+              2024,
+              2025
+            ],
+            "fixedObservationSHA256": "58b2d77c9931473b64388774e6e30741a7d4d3f88178f088f5d8deddcef3eda4",
+            "scales": {
+              "rmseM": 0.1,
+              "trendErrorM": 0.1,
+              "amplitudeErrorM": 0.1,
+              "peakTimingErrorDays": 14.0
+            },
+            "scoreComponents": {
+              "rmse": 1.4810074862829683,
+              "trend": 1.544807980076112,
+              "amplitude": 1.2670204503301645,
+              "peakTiming": 0.7428571428571429
+            }
+          },
+          "lakeTraining": {
+            "logNse": 0.7635779948430366,
+            "count": 969,
+            "nse": 0.7635743474358438,
+            "kge": 0.7732030077316044,
+            "rmse": 0.13468061466146986,
+            "mae": 0.10636851893370619,
+            "bias": 0.01976805422411653,
+            "pbias": 0.000435015942765562,
+            "observedMean": 4544.213735810114,
+            "simulatedMean": 4544.233503864338,
+            "observedTrendMPerYear": 0.20251511141802564,
+            "simulatedTrendMPerYear": 0.20234640177197938,
+            "firstToLastErrorChangeM": 0.2703102142277203,
+            "countByYear": {
+              "2021": 246,
+              "2022": 269,
+              "2023": 222,
+              "2024": 232
+            },
+            "score": 0.8863141384591858,
+            "trendErrorM": 0.0006120325017250074,
+            "amplitudeErrorM": 0.14244729393476518,
+            "peakTimingErrorDays": 10.75,
+            "seasonYears": [
+              2021,
+              2022,
+              2023,
+              2024
+            ],
+            "fixedObservationSHA256": "85216f582ca3169adc87002e35b5a062ed2ce7885c69804720d26e523ffe259d",
+            "scales": {
+              "rmseM": 0.1,
+              "trendErrorM": 0.1,
+              "amplitudeErrorM": 0.1,
+              "peakTimingErrorDays": 14.0
+            },
+            "scoreComponents": {
+              "rmse": 1.3468061466146986,
+              "trend": 0.006120325017250074,
+              "amplitude": 1.4244729393476518,
+              "peakTiming": 0.7678571428571429
+            }
+          },
+          "lakeTimeCheck": {
+            "logNse": -2.3599740372729934,
+            "count": 335,
+            "nse": -2.3601765200685527,
+            "kge": 0.9653948606063932,
+            "rmse": 0.24307142351400207,
+            "mae": 0.24092129991128255,
+            "bias": 0.24092129991128255,
+            "pbias": 0.005301799073378187,
+            "observedMean": 4544.142404811523,
+            "simulatedMean": 4544.383326111433,
+            "observedTrendMPerYear": -0.2051127360836608,
+            "simulatedTrendMPerYear": -0.1756459883042784,
+            "firstToLastErrorChangeM": 0.016092582829514868,
+            "countByYear": {
+              "2025": 255,
+              "2026": 80
+            },
+            "score": 0.8224673369970013,
+            "trendErrorM": 0.042032829128752044,
+            "amplitudeErrorM": 0.008168396441760706,
+            "peakTimingErrorDays": 5.0,
+            "seasonYears": [
+              2025
+            ],
+            "fixedObservationSHA256": "c4a5376be502fa4208ee698b0278ffcc9bba3dc9ab53ed93709d4d3de0ebc1f0",
+            "scales": {
+              "rmseM": 0.1,
+              "trendErrorM": 0.1,
+              "amplitudeErrorM": 0.1,
+              "peakTimingErrorDays": 14.0
+            },
+            "scoreComponents": {
+              "rmse": 2.4307142351400204,
+              "trend": 0.4203282912875204,
+              "amplitude": 0.08168396441760706,
+              "peakTiming": 0.35714285714285715
+            }
+          },
+          "yearly": {
+            "2017": {
+              "purpose": "预热",
+              "periodDays": {
+                "预热": 365
+              },
+              "flow": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              },
+              "lake": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              }
+            },
+            "2018": {
+              "purpose": "预热",
+              "periodDays": {
+                "预热": 365
+              },
+              "flow": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              },
+              "lake": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              }
+            },
+            "2019": {
+              "purpose": "预热",
+              "periodDays": {
+                "预热": 365
+              },
+              "flow": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              },
+              "lake": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              }
+            },
+            "2020": {
+              "purpose": "预热",
+              "periodDays": {
+                "预热": 366
+              },
+              "flow": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              },
+              "lake": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              }
+            },
+            "2021": {
+              "purpose": "预热",
+              "periodDays": {
+                "预热": 365
+              },
+              "flow": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              },
+              "lake": {
+                "logNse": 0.11678323436229598,
+                "count": 246,
+                "nse": 0.11668326863437994,
+                "kge": 0.2652824830078413,
+                "rmse": 0.17216641793464468,
+                "mae": 0.14047132502419782,
+                "bias": 0.09441674256584712,
+                "pbias": 0.002077877074978947,
+                "observedMean": 4543.904146341464,
+                "simulatedMean": 4543.998563084029
+              }
+            },
+            "2022": {
+              "purpose": "预热",
+              "periodDays": {
+                "预热": 365
+              },
+              "flow": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              },
+              "lake": {
+                "logNse": -2.2313659618399506,
+                "count": 269,
+                "nse": -2.231329684204599,
+                "kge": -0.06132585347083719,
+                "rmse": 0.08382326103203712,
+                "mae": 0.07348167311123838,
+                "bias": -0.04005146832856743,
+                "pbias": -0.0008813765290605442,
+                "observedMean": 4544.19501858736,
+                "simulatedMean": 4544.154967119031
+              }
+            },
+            "2023": {
+              "purpose": "预热",
+              "periodDays": {
+                "预热": 365
+              },
+              "flow": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              },
+              "lake": {
+                "logNse": 0.4433256669190597,
+                "count": 222,
+                "nse": 0.44339447757586203,
+                "kge": 0.6220633150427708,
+                "rmse": 0.1982066325865479,
+                "mae": 0.1743044856738838,
+                "bias": -0.15544074568402017,
+                "pbias": -0.0034205960156373206,
+                "observedMean": 4544.259099099098,
+                "simulatedMean": 4544.103658353416
+              }
+            },
+            "2024": {
+              "purpose": "率定",
+              "periodDays": {
+                "率定": 366
+              },
+              "flow": {
+                "logNse": -0.023292372221459523,
+                "count": 229,
+                "nse": 0.7274549179686415,
+                "kge": 0.8129408794110592,
+                "rmse": 45.16427805184076,
+                "mae": 29.93838969613116,
+                "bias": -0.4128032418962182,
+                "pbias": -0.5102801133261394,
+                "observedMean": 80.89737991266375,
+                "simulatedMean": 80.48457667076755
+              },
+              "lake": {
+                "logNse": 0.3819271741176742,
+                "count": 232,
+                "nse": 0.3819032845508402,
+                "kge": 0.6778896801632601,
+                "rmse": 0.10194488924185058,
+                "mae": 0.07306528080105103,
+                "bias": 0.05847146445742918,
+                "pbias": 0.0012866366651557435,
+                "observedMean": 4544.520301724137,
+                "simulatedMean": 4544.578773188596
+              }
+            },
+            "2025": {
+              "purpose": "检验",
+              "periodDays": {
+                "检验": 365
+              },
+              "flow": {
+                "logNse": 0.16643069924337062,
+                "count": 211,
+                "nse": 0.6732069304700048,
+                "kge": 0.8123795705153903,
+                "rmse": 21.690713630439962,
+                "mae": 16.809326928621584,
+                "bias": -5.241855488035735,
+                "pbias": -10.691635415715288,
+                "observedMean": 49.027630331753564,
+                "simulatedMean": 43.78577484371782
+              },
+              "lake": {
+                "logNse": -2.6550338642587454,
+                "count": 255,
+                "nse": -2.6551108559716807,
+                "kge": 0.7511754454399283,
+                "rmse": 0.1676065554013605,
+                "mae": 0.1641068219575947,
+                "bias": 0.1641068219575947,
+                "pbias": 0.00361134631911105,
+                "observedMean": 4544.200623716154,
+                "simulatedMean": 4544.36473053811
+              }
+            },
+            "2026": {
+              "purpose": "历史模拟",
+              "periodDays": {
+                "历史模拟": 293
+              },
+              "flow": {
+                "count": 0,
+                "nse": null,
+                "kge": null,
+                "rmse": null,
+                "mae": null,
+                "bias": null,
+                "pbias": null,
+                "logNse": null
+              },
+              "lake": {
+                "logNse": -2.609562207088592,
+                "count": 80,
+                "nse": -2.609634923470946,
+                "kge": 0.7520637194633655,
+                "rmse": 0.11852452737373431,
+                "mae": 0.11218046336757652,
+                "bias": 0.11218046336757652,
+                "pbias": 0.0024687836507657148,
+                "observedMean": 4543.956832053014,
+                "simulatedMean": 4544.069012516382
+              }
+            }
+          }
+        }
+      },
+      "flowMaxAbsoluteM3s": 0.0,
+      "lakeMaxAbsoluteM": 0.0,
+      "passes": true
+    },
+    "environment": {
+      "python": "3.9.17",
+      "pythonVersion": "3.9.17 (main, Jul  5 2023, 20:47:11) [MSC v.1916 64 bit (AMD64)]",
+      "executable": "D:\\miniconda3\\python.exe",
+      "platform": "Windows-10-10.0.26100-SP0",
+      "packages": {
+        "Pillow": "11.3.0",
+        "asciitree": "1.0.0",
+        "cdsapi": "0.7.7",
+        "fasteners": "0.20",
+        "geopandas": "0.14.0",
+        "h5netcdf": "1.7.3",
+        "h5py": "3.12.1",
+        "llvmlite": "0.43.0",
+        "numba": "0.60.0",
+        "numcodecs": "0.12.1",
+        "numpy": "1.26.4",
+        "openpyxl": "3.1.5",
+        "pandas": "2.2.2",
+        "pyinstaller": "6.18.0",
+        "pyproj": "3.6.1",
+        "rasterio": "1.3.10",
+        "scipy": "1.13.0",
+        "shapely": "2.0.2",
+        "xarray": "2024.6.0",
+        "xlrd": "2.0.2",
+        "zarr": "2.18.2"
+      },
+      "lockMismatches": {
+        "asciitree": {
+          "expected": "0.3.3",
+          "actual": "1.0.0"
+        }
+      },
+      "lockReference": "9cbed4b58ab3ded5982bbb55dd9850f7d58ddda5:requirements-lock.windows.txt",
+      "historicalRuntimeRecorded": false
+    },
+    "workerEnvironment": {
+      "file": "replay-runtime/worker-environment-d8337f5b374e400096ea282789c993fd.json",
+      "sha256": "d5483e5e55e248e7293d9869bb4a336442c00803a2d60904ac488ad39b37075b"
+    }
+  },
+  "workerActualEnvironment": {
+    "schemaVersion": 1,
+    "expected": {
+      "python": "3.9.17",
+      "pythonVersion": "3.9.17 (main, Jul  5 2023, 20:47:11) [MSC v.1916 64 bit (AMD64)]",
+      "executable": "D:\\miniconda3\\python.exe",
+      "platform": "Windows-10-10.0.26100-SP0",
+      "packages": {
+        "Pillow": "11.3.0",
+        "asciitree": "1.0.0",
+        "cdsapi": "0.7.7",
+        "fasteners": "0.20",
+        "geopandas": "0.14.0",
+        "h5netcdf": "1.7.3",
+        "h5py": "3.12.1",
+        "llvmlite": "0.43.0",
+        "numba": "0.60.0",
+        "numcodecs": "0.12.1",
+        "numpy": "1.26.4",
+        "openpyxl": "3.1.5",
+        "pandas": "2.2.2",
+        "pyinstaller": "6.18.0",
+        "pyproj": "3.6.1",
+        "rasterio": "1.3.10",
+        "scipy": "1.13.0",
+        "shapely": "2.0.2",
+        "xarray": "2024.6.0",
+        "xlrd": "2.0.2",
+        "zarr": "2.18.2"
+      },
+      "lockMismatches": {
+        "asciitree": {
+          "expected": "0.3.3",
+          "actual": "1.0.0"
+        }
+      },
+      "lockReference": "9cbed4b58ab3ded5982bbb55dd9850f7d58ddda5:requirements-lock.windows.txt",
+      "historicalRuntimeRecorded": false
+    },
+    "actual": {
+      "python": "3.9.17",
+      "pythonVersion": "3.9.17 (main, Jul  5 2023, 20:47:11) [MSC v.1916 64 bit (AMD64)]",
+      "executable": "D:\\miniconda3\\python.exe",
+      "platform": "Windows-10-10.0.26100-SP0",
+      "packages": {
+        "Pillow": "11.3.0",
+        "asciitree": "1.0.0",
+        "cdsapi": "0.7.7",
+        "fasteners": "0.20",
+        "geopandas": "0.14.0",
+        "h5netcdf": "1.7.3",
+        "h5py": "3.12.1",
+        "llvmlite": "0.43.0",
+        "numba": "0.60.0",
+        "numcodecs": "0.12.1",
+        "numpy": "1.26.4",
+        "openpyxl": "3.1.5",
+        "pandas": "2.2.2",
+        "pyinstaller": "6.18.0",
+        "pyproj": "3.6.1",
+        "rasterio": "1.3.10",
+        "scipy": "1.13.0",
+        "shapely": "2.0.2",
+        "xarray": "2024.6.0",
+        "xlrd": "2.0.2",
+        "zarr": "2.18.2"
+      },
+      "executableSHA256": "4083de838be94764a717aa233109033db8fd3ae142a44904cd2f72299632d190",
+      "numericPackageFiles": {
+        "llvmlite": [
+          {
+            "file": "llvmlite-0.43.0.dist-info/RECORD",
+            "sha256": "0a23deb2d8f3425109dfa4fd4864baf2577452be7a2d3a2e9b3027292063a235"
+          },
+          {
+            "file": "llvmlite/binding/llvmlite.dll",
+            "sha256": "d430b531fe90eb28e2b25dff18f09e899362ed9fe1f854e7e3cae24325e50d1e"
+          }
+        ],
+        "numba": [
+          {
+            "file": "numba-0.60.0.dist-info/RECORD",
+            "sha256": "109b7a5815a5efd71c5faae856fa64880897c6b56c56c78e5f496a393b399f03"
+          },
+          {
+            "file": "numba/_dispatcher.cp39-win_amd64.pyd",
+            "sha256": "bfc090d0b903c7e0e313002577758010ec856191e40222c5018f9e58191fd5dd"
+          },
+          {
+            "file": "numba/cuda/tests/cudapy/__pycache__/test_dispatcher.cpython-39.pyc",
+            "sha256": "a36495f562076f07edc6e107daa86a5ecc4376be598ead7015276a391aa9a39c"
+          },
+          {
+            "file": "numba/cuda/tests/cudapy/test_dispatcher.py",
+            "sha256": "a17fa5fcbe07f2b304d48a25c21032a2b752189d79da79eea860057568df81ab"
+          },
+          {
+            "file": "numba/tests/__pycache__/test_dispatcher.cpython-39.pyc",
+            "sha256": "bc3b19fae13f75f6160150d661ac2bf5ea23c2680c6034dffa4cee9f31efb569"
+          },
+          {
+            "file": "numba/tests/test_dispatcher.py",
+            "sha256": "f2bde8bb994186e1348a97055d74a3339fcbadd92b30e045fdf394a5cb7470f4"
+          }
+        ],
+        "numcodecs": [
+          {
+            "file": "numcodecs-0.12.1.dist-info/RECORD",
+            "sha256": "fc2eb734342bffa646b2585a05c9939d536ba6062a21b1b643117fb458c7e7ae"
+          },
+          {
+            "file": "numcodecs/blosc.cp39-win_amd64.pyd",
+            "sha256": "16e0b3ba83c400c7a84be88b4495fbfe4326d4d09af4f34147fba187e9509528"
+          }
+        ],
+        "numpy": [
+          {
+            "file": "numpy-1.26.4.dist-info/RECORD",
+            "sha256": "9d6789266018aad3fd79ba2cc8626dfc527bd7065fa888bbe63e7469b80c7922"
+          },
+          {
+            "file": "numpy/_core/__pycache__/_multiarray_umath.cpython-39.pyc",
+            "sha256": "a3e99884afb469934391c6aaa6aac793ae993d060363489e692530bcf39f2e5a"
+          },
+          {
+            "file": "numpy/_core/_multiarray_umath.py",
+            "sha256": "0819b670ad048ef48e55d368dabf717487a33d837a44cea55d79f24a5802dde8"
+          },
+          {
+            "file": "numpy/core/_multiarray_umath.cp39-win_amd64.lib",
+            "sha256": "869473714be6aa9ef0f093ac412bf8994e0ae3bea5b2af15ab14c847a55db105"
+          },
+          {
+            "file": "numpy/core/_multiarray_umath.cp39-win_amd64.pyd",
+            "sha256": "174fa7b850775f0224764bb754d4c0ca5515885480aac14a08a2ea8c305aac16"
+          },
+          {
+            "file": "numpy/core/tests/__pycache__/test_cpu_dispatcher.cpython-39.pyc",
+            "sha256": "d0fcf4a4e0ae73f8aa346520c98f1b96af0e49888cfeee0b9ce97e055a07a697"
+          },
+          {
+            "file": "numpy/core/tests/test_cpu_dispatcher.py",
+            "sha256": "f5f3229b0eda511aaab7570480c2049ffcb492ec82df87d20b2f8c7d2108ef4a"
+          },
+          {
+            "file": "numpy/linalg/_umath_linalg.cp39-win_amd64.lib",
+            "sha256": "6113072c6d0cdd14918a4daf223af7d3365a5fc6f7617eee2704a339a9ffb439"
+          },
+          {
+            "file": "numpy/linalg/_umath_linalg.cp39-win_amd64.pyd",
+            "sha256": "3327e82005d1259bbece28122c75a4e83bb508ee0cd62114adc285f21ae89365"
+          }
+        ],
+        "pandas": [
+          {
+            "file": "pandas-2.2.2.dist-info/RECORD",
+            "sha256": "61a63bd1c42dddf6980f68f7c60921a141b2ae95e6f81d28ff6c9b7e4c57306d"
+          }
+        ],
+        "scipy": [
+          {
+            "file": "scipy-1.13.0.dist-info/RECORD",
+            "sha256": "66bb78c6cf7fdc583dacee19f7a30749487cfa6bf6b0b7d8c8d6277ce2aacffb"
+          },
+          {
+            "file": "scipy/_lib/_ccallback_c.cp39-win_amd64.dll.a",
+            "sha256": "cf0ebce04f6449878e46666df751d1bb209b481d207a84807a0d8050eb6071a5"
+          },
+          {
+            "file": "scipy/_lib/_ccallback_c.cp39-win_amd64.pyd",
+            "sha256": "1a4a99eadae869d722419dda18ee0e2d03e1c18f4e7a778ec4ed8bf8551edb19"
+          }
+        ],
+        "zarr": [
+          {
+            "file": "zarr-2.18.2.dist-info/RECORD",
+            "sha256": "7ec4ca94c7394cc91bfee33526365d55c7d94bc20c3dbe659570202c0283966c"
+          }
+        ]
+      }
+    },
+    "differences": {},
+    "note": "历史环境没有数值包文件摘要；本次摘要供后续核验，不能反证历史文件相同。"
+  },
+  "frozenAssets": [
+    {
+      "name": "sourceRequest",
+      "sha256": "b3acc5a7ae1d80ce0725d86389c62edb3ba13138e1b473703f1cc921bfea8581",
+      "bytes": 181686
+    },
+    {
+      "name": "sourceResult",
+      "sha256": "4af2c70536f3a6f8e6f056190a92427ac4167d5dcf3ce44cba64a50a80cd78ec",
+      "bytes": 5377256
+    },
+    {
+      "name": "sourcePool",
+      "sha256": "6d0b7e04fc9ffe7a37a8c2b0c1164d9f445b160d8ea1bf5d9926cf0a3b032b6c",
+      "bytes": 18699
+    },
+    {
+      "name": "baselineRequest",
+      "sha256": "7d61a07c122148774acc1aa72b2c07db67989c84685654140086c686cc77f966",
+      "bytes": 138184
+    },
+    {
+      "name": "baselineResult",
+      "sha256": "35acc88c3a97f2f68a35032ec63a43eb83cc1e52786867c151f24f734bcf2f50",
+      "bytes": 3552613
+    },
+    {
+      "name": "sourceTrace",
+      "sha256": "d12fa8d700d24b8fd5fda0d7dbce54922463959e0dc6807eb81e014cc3a2a563",
+      "bytes": 39372442
+    },
+    {
+      "name": "sourceProgress",
+      "sha256": "27d91ec3db9e2ad9f0a548bbd1d5632e991ebd05aeae7e1bab521e73ea97df25",
+      "bytes": 55998
+    },
+    {
+      "name": "inputManifest",
+      "sha256": "ec5cffacd7a6deed572cc95d9f2d0990e4a4e1d0ceb6f744fd48e8cf08528ad7",
+      "bytes": 56845
+    },
+    {
+      "name": "forcing",
+      "sha256": "ec25016799f8d2585f1569d5710b56c0ae40d5017a743660cb6ed258ec1f0574",
+      "bytes": 371621014
+    },
+    {
+      "name": "spatial",
+      "sha256": "c400c08e44a8dd7c116ad53123f57652151a5dc0a1320fe3db7a26d738ed067e",
+      "bytes": 845154
+    },
+    {
+      "name": "parentSpatial",
+      "sha256": "0333b48fb5d70bdcb1f4952d1c707b8355b5b81b2c29f7e3b0a209af78693976",
+      "bytes": 1024989
+    },
+    {
+      "name": "inputSpatial",
+      "sha256": "98d4575c32031063e63fb0d44ca3819b315517988a114dd0a05f14126add13dd",
+      "bytes": 287711
+    },
+    {
+      "name": "historicalBackend",
+      "sha256": "d209aa6b038b278e913aeffce300494de3c9556f76037c6115f191837b2bfd5f",
+      "files": 77,
+      "revision": "9cbed4b58ab3ded5982bbb55dd9850f7d58ddda5"
+    },
+    {
+      "name": "replayWorker",
+      "sha256": "667311bafa6ea8a77b6578c88a85f2470518fac5cd1277f5ded44eeb7bce6702",
+      "bytes": 4588
+    }
+  ],
+  "files": [
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/request.json",
+      "bytes": 181913,
+      "sha256": "e2e1b5240e69092c3f0401b5b97b45b9fe3e56d3ddbd0a9c1cdf2b35666683fd"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/result.json",
+      "bytes": 5419739,
+      "sha256": "68fe1ec81287c6ce5c97a3f659b1407f55838075f0f13a894d4b4b22b2cd5cfe"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/replay-comparison.json",
+      "bytes": 35104,
+      "sha256": "317dbe17dc37bef4278322cbc3a8bb351f675971f510c0f0dc2cfac0b0567b10"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/replay-snapshot/plan.json",
+      "bytes": 15561,
+      "sha256": "b063792abf172d6aab6426991e4c7096ba956fe8e6000be7746f8c1c2678cf25"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/hourly-manifest.json",
+      "bytes": 627867,
+      "sha256": "9204d75d7adfa5706ccea75b33e5ff8a9c90603e47598f17a36f5cc9b7c78da4"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/joint/all-lake-fits.jsonl",
+      "bytes": 928040,
+      "sha256": "0a00faf1ecc3aa4a4146f93f07ac0259327c3e3249b672daad40d7e1903fa380"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/joint/candidate-pool.json",
+      "bytes": 18699,
+      "sha256": "6d0b7e04fc9ffe7a37a8c2b0c1164d9f445b160d8ea1bf5d9926cf0a3b032b6c"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/joint/duja-rescore.jsonl",
+      "bytes": 38370788,
+      "sha256": "4f8964bb7b090637434253d4f4c7de19815a4781cd553266c8735d002eb3e9b8"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/joint/fast-basin-parity.json",
+      "bytes": 2851,
+      "sha256": "010f742e280cf15e658bd8c7cb3901c6a89fafc5c584af14d528fdd74b5bdac9"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/joint/identity.json",
+      "bytes": 117802,
+      "sha256": "3535622d35d6b7b4f46a5b22b1dd4971deb68e4e3d4c2ce255da4849c608cb67"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/joint/lake-candidates.jsonl",
+      "bytes": 1879336,
+      "sha256": "7010b40b148beaf13bdc7b38cadc2c622fd51133faadc11df904f7b22ee5b390"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/joint/refinement-state.json",
+      "bytes": 133808,
+      "sha256": "b889a71b51fab602b61aaf91523953f8847bdfa1734f7a21b6bbf9cfe404f058"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/joint/search-progress.json",
+      "bytes": 218,
+      "sha256": "75379b23afadd97d6bf234c393468fa72d72fcb54c0a5780ee835ab9fe8ac87c"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/joint/search-trace.jsonl",
+      "bytes": 2473526,
+      "sha256": "90f15cd81d25f1ae6e98e661b419d3bd8ca81727df74e9709c39a8a992767809"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/joint/selected-formal-parity.json",
+      "bytes": 413,
+      "sha256": "5d27c4e055dfa0ac92e7bf1264cb89472e653696a0ae0f4d110441f9bf1d64bb"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/joint/selection-result.json",
+      "bytes": 423126,
+      "sha256": "a1d77232082932b7323dcf9f37a761b0a016f4d01d6338679fd3a8b39533e697"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/joint/water-budget.json",
+      "bytes": 18305,
+      "sha256": "fcb8396408ccfdc81b8c472b17bad8cb131e203d8950a7a1a369ff53d3b9e764"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/replay-runtime/environment.json",
+      "bytes": 17256,
+      "sha256": "f74c9fc533e2680678ba51d92c0bfcb7d81b63d8899e1fe0bb66656d4ae9ddd8"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/replay-runtime/worker-environment-d8337f5b374e400096ea282789c993fd.json",
+      "bytes": 6412,
+      "sha256": "d5483e5e55e248e7293d9869bb4a336442c00803a2d60904ac488ad39b37075b"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/replay-runtime/worker-expected-environment-d8337f5b374e400096ea282789c993fd.json",
+      "bytes": 968,
+      "sha256": "e343ec83b1fcba20c30842246882905d8293fa8080fe801a649273a4672d5722"
+    },
+    {
+      "file": "build/grid-revision-20261026/workspace/tasks/JOB-4a02ff08cbb54050b260/replay-snapshot/worker-migration-4c26f751f038-bbf128ee2c69.json",
+      "bytes": 17326,
+      "sha256": "7049fe2e54937c13ff14c09c4ab5c8ce781a8b8f3df9b64fdf30154ababa731d"
+    }
+  ],
+  "preexistingSearchEvaluationsNotRepeated": 86117,
+  "defaultAfter": {
+    "adoptedAt": "2026-10-29T13:24:53+00:00",
+    "familyId": "FAMILY-08e7fc8c01364e88",
+    "inputId": "INPUT-c00df956d638351ebeb4e96e",
+    "name": "色林错流量与湖位联合优选",
+    "parameterId": "PARAM-bb4c92396eb04820adef",
+    "resultId": "JOB-88b35b44b27d4e15840c",
+    "schemeId": "SCHEME-1c4e16d578ee43aea372",
+    "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6"
+  },
+  "notAdopted": true,
+  "parametersPreserved": true,
+  "frontendStartReceipt": "build/正式率定前端复现-20261030-132718/前端启动收据.json",
+  "frontendResumeReceipt": "build/正式率定前端复现-20261030-145313/前端接续收据.json",
+  "checks": {
+    "allDailyFlows": 3580,
+    "dailyLakeLevels": 2006,
+    "sourceBackendFiles": 77,
+    "flowMaxAbsoluteM3s": 0.0,
+    "lakeMaxAbsoluteM": 0.0,
+    "parameterMaxAbsolute": 0.0,
+    "metricsMaxAbsolute": 0.0,
+    "candidateAndCountsEqual": true,
+    "historicalRuntimePackageFileHashesAvailable": false
+  }
+}

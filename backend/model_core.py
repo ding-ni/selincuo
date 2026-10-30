@@ -59,20 +59,25 @@ PARAMETER_DEFINITIONS += [
     {'key': 'baseflowTauHours', 'label': '地下退水时间', 'min': 168, 'max': 2160, 'step': 24, 'unit': 'h', 'group': 'routing'},
 ]
 CALIBRATION_ROLE = {key: stage for stage, keys in (
-    ('land-runoff', ['KC', 'WM', 'B', 'SM', 'KI', 'KG']),
+    ('land-runoff', ['KC', 'WM', 'B', 'C', 'SM', 'EX', 'KI', 'KG', 'IM']),
+    ('snow-ice', ['snowDdf', 'iceDdf', 'snowTemperature', 'rainTemperature',
+                  'liquidCapacity', 'refreezeFactor', 'snowSublimation',
+                  'glacierRecessionDay', 'lapseRate']),
     ('routing', ['tauHours', 'lagHours', 'interflowTauHours', 'baseflowTauHours']),
     ('lake', ['lakeCoefficient']),
 ) for key in keys}
 for definition in PARAMETER_DEFINITIONS:
     definition['calibrationRole'] = CALIBRATION_ROLE.get(definition['key'], 'fixed-prior')
     if definition['calibrationRole'] == 'fixed-prior':
-        definition['parameterBasis'] = '沿用原平台/通用概念初值；色林错缺少对应过程实测，尚未独立验证'
+        definition['parameterBasis'] = '人工固定的裸冰升华项；当前计算不改变径流，不参与流量率定'
     elif definition['calibrationRole'] == 'land-runoff':
-        definition['parameterBasis'] = '候选率定参数；只受杜加单站日流量约束，不能代表未测分区'
+        definition['parameterBasis'] = '陆面产流率定参数；由杜加流量及所选流程约束，形成全陆域共享参数'
+    elif definition['calibrationRole'] == 'snow-ice':
+        definition['parameterBasis'] = '雪冰过程率定参数；参与所选水文参数搜索，流量提供间接约束，尚无独立冰雪过程率定'
     elif definition['calibrationRole'] == 'routing':
-        definition['parameterBasis'] = '候选路由参数；冻结产流过程后由杜加日流量约束，需检验边界与初始状态影响'
+        definition['parameterBasis'] = '汇流率定参数；分组搜索复用产流序列，联合细化随所选产流参数重新计算'
     else:
-        definition['parameterBasis'] = '候选湖面转换参数；仅由条件湖位窗口约束，缺湖面蒸发实测'
+        definition['parameterBasis'] = '湖泊阶段率定参数；固定入湖流量后由湖位资料确定湖面蒸发转换系数'
 
 # A parameter's presence in the physical model is distinct from whether a
 # Duja discharge series can identify it. Metadata does not change the kernel.
@@ -89,7 +94,7 @@ for definition in PARAMETER_DEFINITIONS:
     else:
         reason = '作用及可辨识性取决于本期气象、下垫面与流量资料。'
     definition['flowCalibration'] = {'allowed': stage is not None, 'stage': stage,
-                                     'defaultSelected': key in RUNOFF_KEYS or key in ROUTING_KEYS,
+                                     'defaultSelected': stage is not None,
                                      'condition': reason}
 STATE_NAMES = ['swe', 'snow_liquid', 'WU', 'WL', 'WD', 'S', 'FR', 'glacier_storage']
 DIAGNOSTIC_NAMES = ['RS', 'RI', 'RG', 'glacier_runoff', 'snowmelt', 'icemelt', 'et_actual', 'water_balance_error', 'ice_sublimation']

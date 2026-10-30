@@ -75,7 +75,10 @@ class DujaEvaluator:
         if len(ids)<25 or not np.all(np.diff(self.times.asi8)==3600*10**9):
             raise ValueError('杜加率定需要连续小时驱动')
         base = {**request['parameters'], 'lapseRate':0.}
-        self.rain, self.temperature, self.evaporation = unit_forcing(spatial, source['arrays'], ids, base, {})
+        from .land_precipitation import validate_manifest,validate_parameters
+        self.land_correction = validate_manifest(source.get('manifest', {}))
+        validate_parameters(self.land_correction,request['parameters'])
+        self.rain, self.temperature, self.evaporation = unit_forcing(spatial, source['arrays'], ids, base, {},self.land_correction,times)
         if spatial.get('aggregation'):
             self.offsets = np.array([sum(m['areaWeight']*m['elevationOffsetM'] for m in g['members'])
                                      for g in spatial['aggregation']])
@@ -98,6 +101,8 @@ class DujaEvaluator:
         self.routing_evaluations = 0
 
     def sources(self, candidate):
+        from .land_precipitation import validate_parameters
+        validate_parameters(self.land_correction,candidate)
         key = tuple(candidate[k] for k in PARAMETER_NAMES if k not in ROUTING_KEYS+['lakeCoefficient'])
         if key not in self._sources_cache:
             values = _sources(self.rain, self.temperature, self.evaporation, self.offsets,
