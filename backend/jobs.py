@@ -158,7 +158,11 @@ class Jobs:
                     except (OSError,ValueError,KeyError):continue
                     return self.public(prior)
         research = bool(payload.get('researchSchemeId'))
-        if research and not release_bound:
+        configuration_bound=kind=='two-stage-calibration' and bool(payload.get('calibrationConfigurationSHA256'))
+        if configuration_bound:
+            from .calibration_configuration import prepare_request as prepare_configuration
+            payload=prepare_configuration(self.db,payload)
+        if research and not release_bound and not configuration_bound:
             if kind not in ('simulation', 'calibration', 'trial', 'two-stage-calibration') or payload.get('schemeId'):
                 raise ValueError('我的方案仅用于独立模拟、人工试调或率定')
             if kind=='calibration' and payload.get('candidateParameterId'):
@@ -169,7 +173,7 @@ class Jobs:
             else:
                 from .research_schemes import prepare_request
                 payload = prepare_request(self.db, payload, kind=kind)
-        elif not release_bound and payload.get('modelFamily') == 'grid-continuous-v1' and kind != 'continuation':
+        elif not release_bound and not configuration_bound and payload.get('modelFamily') == 'grid-continuous-v1' and kind != 'continuation':
             raise ValueError('请先保存研究方案修订，再提交计算')
         standard = kind == 'simulation' and (release_bound or bool(payload.get('schemeId')))
         if standard and not release_bound:
@@ -247,7 +251,7 @@ class Jobs:
             from .forcing_latest import provenance_summary
             product=next(r for r in self.db.items('input_products') if r['id']==payload['inputId'])
             payload['inputProvenance']=provenance_summary(self.db,product['manifest'])
-            if release_bound:
+            if release_bound or configuration_bound:
                 if not payload.get('_observations') or not payload.get('_modelIdentity'):
                     raise ValueError('发布请求缺少服务端冻结观测或真实模型身份')
             elif research:
@@ -329,6 +333,11 @@ class Jobs:
             if task['kind'] not in ('two-stage-calibration','calibration-replay') or task['status'] not in ('cancelled','interrupted','failed'):
                 raise ValueError('请选择已停止或中断的两阶段率定')
             if task['kind'] == 'two-stage-calibration':
+                if task['request'].get('calibrationConfigurationSHA256'):
+                    from .calibration_configuration import _read, implementation
+                    frozen=_read(self.db,task['request']['calibrationConfigurationSHA256'])
+                    if frozen['implementation']!=implementation():
+                        raise ValueError('率定算法版本已变化，请使用原代码版本接续')
                 from .grid_simulation import model_identity as grid_identity
                 if task['request'].get('_modelIdentity')!=grid_identity():
                     raise ValueError('模型实现已更新，请新建率定')

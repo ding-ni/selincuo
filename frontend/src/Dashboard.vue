@@ -8,6 +8,7 @@ import {rivers,layers,exactValue,timelineDates,defaultReplayDay,balanceTerms,bas
 import {api,number} from './api.mjs'
 import {scaledLayer} from './map-scale.mjs'
 import {createFrameCache} from './frame-cache.mjs'
+import {recordMapTiming} from './map-performance.mjs'
 const props=defineProps({boot:Object,tasks:Array,active:Array,selectedId:String,viewDay:String,summary:Object}),emit=defineEmits(['navigate','result','station','context'])
 const mode=ref('model'),task=ref(null),monitor=ref(null),meta=ref(null),shown=ref(null),requestedDay=ref(''),variable=ref('basin'),error=ref(''),loading=ref(true),pending=ref(false),playing=ref(false),speed=ref(1200),host=ref(),expanded=ref(false),feature=ref(null)
 const monitoringDays=ref(90)
@@ -70,12 +71,14 @@ async function rangeFor(t,m,v){
 function frameFor(t,m,d,v,prefetch=false){
  const inputId=t.result.inputId,spatialVersion=m.spatialVersion||t.result.spatialVersion,key=[t.id,inputId,spatialVersion,v,d].join('|')
  return frames.get(key,async signal=>{
+  const started=performance.now()
   const params={inputId,day:d,spatialVersion},options={signal}
   const requests=[api('map-frame?'+new URLSearchParams({...params,variable:'precipitation'}),null,options)]
   if(v==='snow')requests.push(api('snow-frame?'+new URLSearchParams({taskId:t.id,day:d}),null,options))
   else if(!['basin','terrain','precipitation'].includes(v))requests.push(api('map-frame?'+new URLSearchParams({...params,variable:v}),null,options))
-  const [values,range]=await Promise.all([Promise.all(requests),rangeFor(t,m,v)])
-  return {day:d,variable:v,rain:values[0],frame:v==='precipitation'?values[0]:values[1],snow:v==='snow'?values[1]:null,range}
+  const values=await Promise.all(requests)
+  recordMapTiming('api:'+v,started,performance.now()-started)
+  return {day:d,variable:v,rain:values[0],frame:v==='precipitation'?values[0]:values[1],snow:v==='snow'?values[1]:null,range:null}
  },prefetch)
 }
 function prefetch(){
@@ -84,12 +87,17 @@ function prefetch(){
 }
 async function requestView(d,t=task.value,m=meta.value){
  if(!d)return
- const ticket=++sequence,v=variable.value;requestedDay.value=d;pending.value=true;error.value=''
+ const ticket=++sequence,v=variable.value;frames.cancelPending();requestedDay.value=d;pending.value=true;error.value=''
  try{
   const view=mode.value==='observation'?{day:d,variable:['basin','terrain'].includes(v)?v:'basin'}:await frameFor(t,m,d,v)
   if(disposed||ticket!==sequence)return
   if(mode.value==='model'){task.value=t;meta.value=m}
   shown.value=view;feature.value=null;pending.value=false;emit('context',mode.value==='model'?t.id:undefined,d);prefetch()
+  // The daily frame is usable immediately. A slow first full-period scan may
+  // update its scale later, but cannot replace a newer day or another layer.
+  if(mode.value==='model'&&!['basin','terrain'].includes(v))rangeFor(t,m,v).then(range=>{
+   if(!disposed&&ticket===sequence&&shown.value?.day===d&&shown.value?.variable===v)shown.value={...shown.value,range}
+  }).catch(()=>{})
  }catch(e){if(ticket===sequence&&!disposed){pending.value=false;if(e.name!=='AbortError'){error.value=e.message;stop()}}}
 }
 async function selectResult(){

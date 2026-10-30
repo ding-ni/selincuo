@@ -23,3 +23,20 @@ test('closing the dashboard cancels active frame fetches',async()=>{
  const request=cache.get('a',signal=>new Promise((resolve,reject)=>{signal.addEventListener('abort',()=>reject(new DOMException('closed','AbortError')));started.resolve()}))
  await started.promise;cache.clear();await assert.rejects(request,{name:'AbortError'})
 })
+
+test('new selection aborts obsolete loads without deleting the replacement',async()=>{
+ const cache=createFrameCache(8,1)
+ let oldStarted
+ const started=new Promise(resolve=>oldStarted=resolve)
+ const first=cache.get('same',signal=>new Promise((resolve,reject)=>{
+  oldStarted()
+  signal.addEventListener('abort',()=>reject(new DOMException('stale','AbortError')))
+ }))
+ await started
+ cache.cancelPending()
+ const second=cache.get('same',()=>Promise.resolve({day:'new'}))
+ await assert.rejects(first,{name:'AbortError'})
+ assert.deepEqual(await second,{day:'new'})
+ assert.deepEqual(await cache.get('same',()=>{throw Error('not cached')}),{day:'new'})
+ cache.clear()
+})

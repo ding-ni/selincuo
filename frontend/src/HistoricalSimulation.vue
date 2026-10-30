@@ -7,11 +7,11 @@ const emit=defineEmits(['submit','navigate'])
 const schemeId=ref(''),parameterId=ref(''),start=ref(''),end=ref(''),name=ref(''),coverage=ref(null),coverageError=ref('')
 const plan=ref(null),planError=ref(''),planNotice=ref(''),planning=ref(false)
 let planTicket=0,coverageTicket=0,planTimer,planController
-const schemes=computed(()=>(props.boot.schemes||[]).filter(s=>s.payload?.modelFamily==='grid-continuous-v1'))
+const schemes=computed(()=>(props.boot.schemes||[]).filter(s=>s.payload?.modelFamily==='grid-continuous-v1'&&(s.id===props.boot.homeSchemeId||s.id===props.selection?.schemeId)))
 const selectedScheme=computed(()=>schemes.value.find(s=>s.id===schemeId.value))
 const firstDay=computed(()=>coverage.value?.complete&&coverage.value.firstCompleteDay?shiftCalendarDay(coverage.value.firstCompleteDay,365):'')
 const lastDay=computed(()=>coverage.value?.complete?coverage.value.lastCompleteDay:'')
-const parameters=computed(()=>(props.boot.parameters||[]).filter(p=>p.payload?.sourceTaskId&&parameterCompatible(p,selectedScheme.value?.payload)))
+const parameters=computed(()=>(props.boot.parameters||[]).filter(p=>p.id===props.selection?.parameterId&&p.payload?.sourceTaskId&&parameterCompatible(p,selectedScheme.value?.payload)))
 const issue=computed(()=>{
  if(!selectedScheme.value)return '请选择可用方案。'
  if(coverageError.value)return '气象资料读取失败：'+coverageError.value

@@ -40,6 +40,20 @@ test('manual trials do not claim calibration and lake-only runs keep hydrology f
  assert.equal(calibrationRecord(lake,definitions)[3].selected,true)
 })
 
+test('continuous calibration exports actual objective and fresh generation counts',()=>{
+ const current=structuredClone(task)
+ current.request.twoStage={mode:'both',selectionMode:'continuous-dual',objective:{weights:{flow:.6,lake:.4}}}
+ current.request.calibrationConfigurationSHA256='frozen-configuration'
+ current.result.calibrationWorkflow.selection={totalGenerated:36000,totalRescored:0,selectedForBasin:512,
+  basinCandidatesEvaluated:4500,refinement:{evaluations:4000}}
+ const exported=recordDownload(current,definitions)
+ assert.deepEqual(exported.objectiveSpec,{weights:{flow:.6,lake:.4}})
+ assert.equal(exported.calibrationConfigurationSHA256,'frozen-configuration')
+ assert.equal(exported.counts.generated,36000)
+ assert.equal(exported.counts.rescored,0)
+ assert.equal(exported.counts.eligible,undefined)
+})
+
 test('frozen objective and actual initial conditions are exported without using current configuration',()=>{
  const objectiveSpec={flowWeights:{nse:.5,logNse:.25,volume:.25},
   lakeWeights:{rmse:.25,trend:.25,amplitude:.25,peakTiming:.25},

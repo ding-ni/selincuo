@@ -1,0 +1,402 @@
+{
+  "sourceEntry": "http://127.0.0.1:8882",
+  "backendIdentity": {
+    "backendSourceSHA256": "49e29fa590de8e11172eaeee894113362d9e4f0f182579fee65a0e1df5c064ad",
+    "instanceId": "03e086679dfe499688948b67157298db",
+    "projectId": "selinco",
+    "version": "0.12.0",
+    "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+  },
+  "adoptedResultDuringCheck": "JOB-88b35b44b27d4e15840c",
+  "adoptionNote": "验收时保留原采用结果；本次页面核验未选择新的正式成果。",
+  "screenCheck": {
+    "frontendAsset": "/assets/index-Bl51UKN0.js",
+    "startedAt": "2026-10-30T19:51:56.847954",
+    "finishedAt": "2026-10-30T19:53:35.034724",
+    "activeTasks": [
+      {
+        "id": "JOB-933eb812f12549e8a5b0",
+        "kind": "two-stage-calibration",
+        "status": "running"
+      }
+    ],
+    "layout": [
+      {
+        "name": "模拟回放-普通-1366",
+        "viewport": [
+          1366,
+          768
+        ],
+        "geometry": {
+          "width": 1130,
+          "height": 740,
+          "scrollWidth": 1130,
+          "scrollHeight": 740
+        }
+      },
+      {
+        "name": "模拟回放-全屏-1366",
+        "viewport": [
+          1366,
+          768
+        ],
+        "geometry": {
+          "width": 1366,
+          "height": 768,
+          "scrollWidth": 1366,
+          "scrollHeight": 768
+        }
+      },
+      {
+        "name": "站点监测-普通-1366",
+        "viewport": [
+          1366,
+          768
+        ],
+        "geometry": {
+          "width": 1130,
+          "height": 740,
+          "scrollWidth": 1130,
+          "scrollHeight": 740
+        }
+      },
+      {
+        "name": "站点监测-全屏-1366",
+        "viewport": [
+          1366,
+          768
+        ],
+        "geometry": {
+          "width": 1366,
+          "height": 768,
+          "scrollWidth": 1366,
+          "scrollHeight": 768
+        }
+      },
+      {
+        "name": "模拟回放-普通-1920",
+        "viewport": [
+          1920,
+          1080
+        ],
+        "geometry": {
+          "width": 1684,
+          "height": 1052,
+          "scrollWidth": 1684,
+          "scrollHeight": 1052
+        }
+      },
+      {
+        "name": "模拟回放-全屏-1920",
+        "viewport": [
+          1920,
+          1080
+        ],
+        "geometry": {
+          "width": 1920,
+          "height": 1080,
+          "scrollWidth": 1920,
+          "scrollHeight": 1080
+        }
+      },
+      {
+        "name": "站点监测-普通-1920",
+        "viewport": [
+          1920,
+          1080
+        ],
+        "geometry": {
+          "width": 1684,
+          "height": 1052,
+          "scrollWidth": 1684,
+          "scrollHeight": 1052
+        }
+      },
+      {
+        "name": "站点监测-全屏-1920",
+        "viewport": [
+          1920,
+          1080
+        ],
+        "geometry": {
+          "width": 1920,
+          "height": 1080,
+          "scrollWidth": 1920,
+          "scrollHeight": 1080
+        }
+      }
+    ],
+    "checks": {
+      "fixedGeographicLabels": [
+        {
+          "id": "lake",
+          "anchor": "89.05,31.759498",
+          "text": "<text x=\"246.51702917982283\" y=\"132.77831863601298\" text-anchor=\"middle\"><tspan x=\"246.51702917982283\" dy=\"0\">色林错</tspan></text>"
+        },
+        {
+          "id": "zajia",
+          "anchor": "91.2175028040074,32.8465323355393",
+          "text": "<text x=\"362.4845891391948\" y=\"64.4263237546194\" text-anchor=\"middle\"><tspan x=\"362.4845891391948\" dy=\"0\">扎加藏布</tspan></text>"
+        },
+        {
+          "id": "zagen",
+          "anchor": "88.4153183995355,30.753855719538137",
+          "text": "<text x=\"212.55975981855732\" y=\"196.01243531415827\" text-anchor=\"middle\"><tspan x=\"212.55975981855732\" dy=\"0\">扎根藏布</tspan></text>"
+        },
+        {
+          "id": "boqu",
+          "anchor": "89.44627175904056,31.348741902266394",
+          "text": "<text x=\"267.71869447491645\" y=\"151.60638843277763\" text-anchor=\"middle\"><tspan x=\"267.71869447491645\" dy=\"0\">波曲</tspan><tspan x=\"267.71869447491645\" dy=\"13\">藏布</tspan></text>"
+        },
+        {
+          "id": "ali",
+          "anchor": "88.61037766717594,31.30629809582074",
+          "text": "<text x=\"222.99598498694115\" y=\"154.27522670777182\" text-anchor=\"middle\"><tspan x=\"222.99598498694115\" dy=\"0\">阿里</tspan><tspan x=\"222.99598498694115\" dy=\"13\">藏布</tspan></text>"
+        }
+      ],
+      "monitorAutoQueryNoStaleStation": true,
+      "processDropdownsAndTrueGeometry": true,
+      "currentResultsRows": [
+        "色林错湖位联合优选 · 2017预热 / 2021—2026连续模拟当前成果\t色林错流量与湖位联合优选\t2017-01-01 — 2026-10-20\t两阶段率定\n2026-10-29 12:46\n\t导出"
+      ],
+      "historyReturnsToOfficial": {
+        "historical": "站点暖雨订正固定参数对照",
+        "official": "色林错湖位联合优选 · 2017预热 / 2021—2026连续模拟",
+        "taskRows": [
+          "\t站点暖雨订正固定参数对照\t见成果详情\t2017-01-01 — 2026-10-20\t试算\n2026-10-30 06:04\n\t命名保存导出移入回收站",
+          "\t正式率定复现\t色林错流量与湖位联合优选\t2017-01-01 — 2026-10-20\t率定复现\n2026-10-30 05:27\n\t命名保存导出移入回收站",
+          "\t站点暖雨订正固定参数对照\t见成果详情\t2017-01-01 — 2026-10-20\t试算\n2026-10-30 05:18\n\t命名保存导出移入回收站",
+          "\t界面验收 · 湖泊人工微调 · 20261029 · 人工试算\t界面验收 · 湖泊人工微调 · 20261029\t2020-01-01 — 2026-10-20\t试算\n2026-10-29 05:12\n\t命名保存导出移入回收站",
+          "\t完整状态续算核验\t杜加流量分阶段率定方案\t2026-10-21 — 2026-10-21\t续算\n2026-10-28 15:06\n\t命名保存导出移入回收站",
+          "\t杜加流量率定后历史模拟 · 2021—2026\t杜加流量分阶段率定方案\t2020-01-01 — 2026-10-20\t历史模拟\n2026-10-28 14:59\n\t命名保存导出移入回收站",
+          "\t杜加流量分阶段率定\t杜加流量分阶段率定方案\t2020-01-01 — 2026-10-20\t率定\n2026-10-28 14:25\n\t命名保存导出移入回收站",
+          "\t面积尺度参数对照方案 · 2021—2026\t面积尺度参数对照方案\t2020-01-01 — 2026-10-20\t历史模拟\n2026-10-28 13:53\n\t命名保存导出移入回收站",
+          "\t杜加共享与固定湖面蒸发方案 · 2021—2026\t杜加共享与固定湖面蒸发方案\t2020-01-01 — 2026-10-20\t历史模拟\n2026-10-28 13:53\n\t命名保存导出移入回收站",
+          "\t杜加参数共享方案 · 2021—2026\t杜加参数共享方案\t2020-01-01 — 2026-10-20\t历史模拟\n2026-10-28 13:53\n\t命名保存导出移入回收站"
+        ]
+      }
+    },
+    "screenshotFiles": [
+      {
+        "path": "build/地图监测验收-20261030-195156-60819584/模拟回放-普通-1366.png",
+        "bytes": 185028,
+        "sha256": "acb66a3804a0bf6e007795d41197dc528a703bbac8c68d493a5edce5604facd4"
+      },
+      {
+        "path": "build/地图监测验收-20261030-195156-60819584/模拟回放-全屏-1366.png",
+        "bytes": 171072,
+        "sha256": "2840187a8ad6717970a0043cb2590524bd2aa0ca98542d55b174dcb0830370d6"
+      },
+      {
+        "path": "build/地图监测验收-20261030-195156-60819584/站点监测-普通-1366.png",
+        "bytes": 168835,
+        "sha256": "9ba7ed4bb3917963c8919fd9ad191477766ae531889228c01c12ba1a5bd82101"
+      },
+      {
+        "path": "build/地图监测验收-20261030-195156-60819584/站点监测-全屏-1366.png",
+        "bytes": 157612,
+        "sha256": "d982e0a695ced787f8547627daaa8601cd633b344cd3194a1e5e907522be6ed6"
+      },
+      {
+        "path": "build/地图监测验收-20261030-195156-60819584/模拟回放-普通-1920.png",
+        "bytes": 263527,
+        "sha256": "5cd76d7b02e0908bf996283782370ffed3718df5653defa109835cdaa06c74e0"
+      },
+      {
+        "path": "build/地图监测验收-20261030-195156-60819584/模拟回放-全屏-1920.png",
+        "bytes": 251162,
+        "sha256": "f8818c55c77853aaeab7d555519c1f0c95651d5cc319598d322bfd73c00c9119"
+      },
+      {
+        "path": "build/地图监测验收-20261030-195156-60819584/站点监测-普通-1920.png",
+        "bytes": 249808,
+        "sha256": "8edcbe0082a1a9bbdc0b760de4b025d9fad399684c7b77dab95845cb2f83879c"
+      },
+      {
+        "path": "build/地图监测验收-20261030-195156-60819584/站点监测-全屏-1920.png",
+        "bytes": 239484,
+        "sha256": "fce970ac23aa2b520d4437e8650d58a1ce454c9e7bb2018b9ff115fbc507467c"
+      },
+      {
+        "path": "build/地图监测验收-20261030-195156-60819584/监测资料-1366.png",
+        "bytes": 68978,
+        "sha256": "ec0ad849dce1effa76faca2057f268dac65d328b0425cffbff64cfc45a081b3f"
+      },
+      {
+        "path": "build/地图监测验收-20261030-195156-60819584/监测资料-1920.png",
+        "bytes": 105728,
+        "sha256": "04f88da5541fb6969b9e3b34dbe6e191fc41014fa5bda3a3b5390ae5e1ad6d3e"
+      },
+      {
+        "path": "build/地图监测验收-20261030-195156-60819584/过程状态-1366.png",
+        "bytes": 72189,
+        "sha256": "8b27832d4e8ced9b66c728bcd279f2f9fef788f0eea2b64b6afcca364ec57d9b"
+      },
+      {
+        "path": "build/地图监测验收-20261030-195156-60819584/过程状态-1920.png",
+        "bytes": 141443,
+        "sha256": "41c10483141f6c7899a29c4964f9f35116440cd6d4e71b772f9a6d3c6f6a9f16"
+      }
+    ],
+    "fullReport": {
+      "path": "build/地图监测验收-20261030-195156-60819584/验收记录.json",
+      "bytes": 11101,
+      "sha256": "87e496d53f0ecd7b91d88015dd075d0482b694f3baa1cb494f809fb1aa141b0a"
+    }
+  },
+  "timingMethod": "2025-07-15；同一浏览器页面首次及重复切层，后台当时有计算任务；不是干净操作系统冷启动。接口时间包含返回解析，DOM时间包含几何；呈现延迟含帧调度，不是GPU纯绘制时间。",
+  "timings": [
+    {
+      "variable": "temperature",
+      "iteration": 1,
+      "switchToDisplayedMs": 474.2999999523163,
+      "entries": [
+        {
+          "name": "selinco-map:api:temperature",
+          "duration": 316.60000002384186,
+          "startTime": 26471.700000047684
+        },
+        {
+          "name": "selinco-map:geometry:temperature",
+          "duration": 5.800000190734863,
+          "startTime": 26802.300000071526
+        },
+        {
+          "name": "selinco-map:dom:temperature",
+          "duration": 41.09999990463257,
+          "startTime": 26802.300000071526
+        },
+        {
+          "name": "selinco-map:present:temperature",
+          "duration": 16,
+          "startTime": 26843.399999976158
+        }
+      ]
+    },
+    {
+      "variable": "snow",
+      "iteration": 1,
+      "switchToDisplayedMs": 1227.5,
+      "entries": [
+        {
+          "name": "selinco-map:api:snow",
+          "duration": 762.5999999046326,
+          "startTime": 27235.800000071526
+        },
+        {
+          "name": "selinco-map:geometry:snow",
+          "duration": 326.80000030994415,
+          "startTime": 28009.399999976158
+        },
+        {
+          "name": "selinco-map:dom:snow",
+          "duration": 345.8000000715256,
+          "startTime": 28009.399999976158
+        },
+        {
+          "name": "selinco-map:present:snow",
+          "duration": 57.699999928474426,
+          "startTime": 28355.200000047684
+        }
+      ]
+    },
+    {
+      "variable": "temperature",
+      "iteration": 2,
+      "switchToDisplayedMs": 160.5,
+      "entries": [
+        {
+          "name": "selinco-map:geometry:temperature",
+          "duration": 0,
+          "startTime": 28788.600000023842
+        },
+        {
+          "name": "selinco-map:dom:temperature",
+          "duration": 16,
+          "startTime": 28788.600000023842
+        },
+        {
+          "name": "selinco-map:present:temperature",
+          "duration": 38.60000002384186,
+          "startTime": 28804.600000023842
+        }
+      ]
+    },
+    {
+      "variable": "snow",
+      "iteration": 2,
+      "switchToDisplayedMs": 138.60000002384186,
+      "entries": [
+        {
+          "name": "selinco-map:geometry:snow",
+          "duration": 0,
+          "startTime": 29245.200000047684
+        },
+        {
+          "name": "selinco-map:dom:snow",
+          "duration": 9.100000023841858,
+          "startTime": 29245.200000047684
+        },
+        {
+          "name": "selinco-map:present:snow",
+          "duration": 16.699999928474426,
+          "startTime": 29254.300000071526
+        }
+      ]
+    }
+  ],
+  "resultCoverageCheck": {
+    "frontendAsset": "/assets/index-Cv5RD9bN.js",
+    "backendIdentity": {
+      "backendSourceSHA256": "af0869c4f5917cef32a2c933c0d80f143e0b44a88c2231f684a14a13f1543fa8",
+      "instanceId": "c46101ea17df4301b6766f5f2c1f2863",
+      "projectId": "selinco",
+      "version": "0.12.0",
+      "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+    },
+    "startedAt": "2026-10-30T20:14:56.780161",
+    "finishedAt": "2026-10-30T20:15:40.162969",
+    "visibleRow": "色林错湖位联合优选 · 2017预热 / 2021—2026连续模拟当前成果\t色林错流量与湖位联合优选\t2021-04-23 — 2026-10-20\t两阶段率定\n2026-10-29 12:46\n\t导出",
+    "evaluationHeading": "模拟评价\n31 个计算单元 · 2021-04-23 — 2026-10-20",
+    "evaluationYears": [
+      "2021",
+      "2022",
+      "2023",
+      "2024",
+      "2025",
+      "2026"
+    ],
+    "processResultChoices": [
+      "色林错湖位联合优选 · 2017预热 / 2021—2026连续模拟"
+    ],
+    "selectedObject": "AGG-31e99f1ddca23dcb7ee6",
+    "screenshotFiles": [
+      {
+        "path": "build/成果时段核验-20261030-201456-663a1393/当前成果-1366.png",
+        "bytes": 77883,
+        "sha256": "0d1b7219e18c204403ac452bbef5afe09e4e6092aede6255d0985a1ee98015a2"
+      },
+      {
+        "path": "build/成果时段核验-20261030-201456-663a1393/当前成果-1920.png",
+        "bytes": 107825,
+        "sha256": "05d8b1f29447474bc8672c8383fa670ec97109b33e9bea08c5cd4687aa0b19e8"
+      },
+      {
+        "path": "build/成果时段核验-20261030-201456-663a1393/计算单元地图-1366.png",
+        "bytes": 139845,
+        "sha256": "7dbf06634867571ce75d875fb57a2e7e7ba20d9e97d7bbebd369e22708ed1140"
+      },
+      {
+        "path": "build/成果时段核验-20261030-201456-663a1393/计算单元地图-1920.png",
+        "bytes": 186458,
+        "sha256": "aa585e11a4cdf278cdc37360d73f103145ed8005f33ba3308416af4faa315499"
+      }
+    ],
+    "fullReport": {
+      "path": "build/成果时段核验-20261030-201456-663a1393/验收记录.json",
+      "bytes": 1631,
+      "sha256": "4f9255656e1f47f16ea33d2731e3e7b405fca0ab2a60f05932c287268b258277"
+    }
+  },
+  "fileAvailability": "截图与完整验收报告位于本机build目录，未纳入Git；此索引记录路径和摘要。"
+}

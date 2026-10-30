@@ -271,6 +271,10 @@ class Handler(SimpleHTTPRequestHandler):
         if path == 'schemes':
             from .research_schemes import list_schemes
             return self.send_json({'schemes': list_schemes(self.db, query.get('includeTrashed') == 'true', query.get('includeExperiments')=='true')})
+        if path.startswith('schemes/') and path.endswith('/calibration-configuration'):
+            from .calibration_configuration import configuration
+            with self.server.jobs.lock:
+                return self.send_json(configuration(self.db,path.split('/')[1]))
         if path == 'calibration-data':
             from .observation_profiles import quality_series
             from .model_forcing import current_summary
@@ -575,6 +579,15 @@ class Handler(SimpleHTTPRequestHandler):
         if path == 'data-import-preview':
             from .data_exchange import preview_file
             return self.send_json(preview_file(self.db, value))
+        if path == 'native-observation-preview':
+            from .native_observation_import import preview
+            return self.send_json(preview(self.db,value))
+        if path == 'native-observation-import':
+            from .native_observation_import import commit
+            with self.server.jobs.lock:
+                if self.server.jobs.active():
+                    raise ValueError('请等待计算结束后更新资料')
+                return self.send_json(commit(self.db,value))
         if path in ('data-import', 'data-import-file'):
             if self.server.jobs.active():
                 raise ValueError('请等待计算结束后更新资料')

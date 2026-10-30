@@ -1,0 +1,50 @@
+{
+  "recordedAt": "2026-10-30T20:27:47.224454+08:00",
+  "tasks": [
+    "JOB-6536f36e07cc46868255",
+    "JOB-05c3f62282ce4239aed1"
+  ],
+  "service": {
+    "backendSourceSHA256": "af0869c4f5917cef32a2c933c0d80f143e0b44a88c2231f684a14a13f1543fa8",
+    "instanceId": "c46101ea17df4301b6766f5f2c1f2863",
+    "projectId": "selinco",
+    "version": "0.12.0",
+    "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+  },
+  "probe": {
+    "python": "3.9.17",
+    "pythonVersion": "3.9.17 (main, Jul  5 2023, 20:47:11) [MSC v.1916 64 bit (AMD64)]",
+    "executable": "D:\\miniconda3\\python.exe",
+    "executableSHA256": "4083de838be94764a717aa233109033db8fd3ae142a44904cd2f72299632d190",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "packages": {
+      "numpy": "1.26.4",
+      "pandas": "2.2.2",
+      "scipy": "1.13.0",
+      "numba": "0.60.0",
+      "llvmlite": "0.43.0",
+      "zarr": "2.18.2",
+      "numcodecs": "0.12.1",
+      "openpyxl": "3.1.5",
+      "xlrd": "2.0.2",
+      "shapely": "2.0.2",
+      "pyproj": "3.6.1"
+    },
+    "binaryModules": {
+      "numpy.core._multiarray_umath": {
+        "path": "D:\\miniconda3\\Lib\\site-packages\\numpy\\core\\_multiarray_umath.cp39-win_amd64.pyd",
+        "sha256": "174fa7b850775f0224764bb754d4c0ca5515885480aac14a08a2ea8c305aac16"
+      },
+      "numba._dispatcher": {
+        "path": "D:\\miniconda3\\Lib\\site-packages\\numba\\_dispatcher.cp39-win_amd64.pyd",
+        "sha256": "bfc090d0b903c7e0e313002577758010ec856191e40222c5018f9e58191fd5dd"
+      },
+      "numcodecs.blosc": {
+        "path": "D:\\miniconda3\\Lib\\site-packages\\numcodecs\\blosc.cp39-win_amd64.pyd",
+        "sha256": "16e0b3ba83c400c7a84be88b4495fbfe4326d4d09af4f34147fba187e9509528"
+      }
+    }
+  },
+  "scope": "同一解释器启动的独立只读探测进程；服务PID及模块列表另存。不把探测进程的系统版本报告当作模型进程的直接报告。",
+  "requirementsLockSHA256": "295e3533cab3d3ecc126733bf749c5c0214565329f6d6a7147c41e5e80c63a91"
+}

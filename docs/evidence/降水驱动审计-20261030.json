@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "project": "selinco",
+  "date": "2026-10-30",
+  "scope": "真实站点资料、ERA5-Land累计、暖雨订正与冻结输入；不包含尚在运行的完整率定结果",
+  "baselineInputId": "INPUT-c00df956d638351ebeb4e96e",
+  "correctedInputId": "INPUT-67a56a9abcc50dc4a9033ab6",
+  "forcingDataSHA256": "ec25016799f8d2585f1569d5710b56c0ae40d5017a743660cb6ed258ec1f0574",
+  "observationSnapshotSHA256": "d667ce519c586be5e630a8a0ee0eba94fd182d5510ce66ea80f8eb0be27b77c7",
+  "landTransformationSHA256": "081be24a01852ffb7bc3e7a86b01a0f85c32dd49ff7cb147e19ea13124fe0079",
+  "lakeTransformationSHA256": "bd68020214925a91d24667579ff550c1f09e2f7502bf5bf271f03650c6d43fda",
+  "excelAndSQLite": {
+    "files": 15,
+    "records": 4333,
+    "archiveSHA256Mismatches": 0,
+    "excelOnlyRecords": 0,
+    "sqliteOnlyRecords": 0,
+    "unresolvedDailyEventConflictDaysExcluded": 12,
+    "additionalAnomalyExcluded": "DUJA 2025-01-01 847.1 mm"
+  },
+  "eraSourceSample": {
+    "years": [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026],
+    "month": 7,
+    "sampleStations": ["SLC", "DUJA", "BLQ"],
+    "comparedHourlyValues": 22290,
+    "maximumInputAbsoluteDifferenceMm": 0,
+    "allSampleDigestsRegistered": true,
+    "requestProvenanceAbsentYears": [2023, 2024, 2025]
+  },
+  "externalEvidence": [
+    {
+      "path": "build/grid-revision-20261026/workspace/diagnostics/降水驱动核对-4ad06c28cd64/降水资料核对与驱动对照.json",
+      "sha256": "f2a0cbd3865d3526edd869fcc84b6ec35b377252235a726d2d5de845328619df",
+      "contents": "来源逐条核查、分站分季覆盖与倍率、2025估计/2026时间对照、空间敏感性和118个月驱动对照"
+    },
+    {
+      "path": "build/grid-revision-20261026/workspace/diagnostics/ERA5原始累计核对-e2fb474dbf34/ERA5原始累计与冻结输入.json",
+      "sha256": "8bdc7fedf84082c472b93eb6da5b5724250d0fabbf5baf5527f2d2e9b7e23c71",
+      "contents": "各年原始NetCDF属性、累计行为及与冻结逐小时输入的抽样比对"
+    },
+    {
+      "path": "build/grid-revision-20261026/workspace/diagnostics/站雨年际分析-4cb2e9602c03/站点与ERA暖雨过程对照.json",
+      "sha256": "956a2a44f714c8ce305886ec6c05ef8bfbba745b5a67e8ea4641c688e167538e",
+      "contents": "按站、季、月配对统计雨日及降水量，并列出日尺度最大差异"
+    }
+  ],
+  "limitations": [
+    "2017—2023暖雨规则由后期资料外推。",
+    "2026年9—10月三站逐次零雨按已确认连续覆盖口径处理；2026年SON未进入倍率估计。",
+    "诊断差异不能直接归因于ERA偏差；2025和2026已用于开发和最终倍率。"
+  ]
+}

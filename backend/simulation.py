@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from .common import ROOT, CONTEXT_KEY, digest, model_identity, read_json, write_json
-from .forcing import load_input, lake_precipitation_factor
+from .forcing import load_input, lake_precipitation_series
 from .model_core import (DEFAULT_PARAMETERS, DIAGNOSTIC_NAMES, PARAMETER_NAMES, STATE_NAMES,
                          initial_states, parameters, route_series, run_kernel)
 from .observations import daily_series
@@ -134,7 +134,7 @@ def prepare(db, input_id):
                                     'precipitation': forcing['precipitation'] @ weights.T,
                                     'temperature': unit_temperature,
                                     'evaporation': forcing['evaporation'] @ weights.T,
-                                    'lakeRain': (forcing['precipitation'] @ lake_weights) * lake_precipitation_factor(manifest),
+                                    'lakeRain': lake_precipitation_series(manifest, spatial, forcing, forcing['time'], np.arange(len(forcing['time']))),
                                     'lakeEvaporation': forcing['evaporation'] @ lake_weights,
                                     'deltaElevation': np.array([u['elevation'] for u in spatial['units']]) - reference_z}
     return _prepared_cache[cache_key]

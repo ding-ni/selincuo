@@ -1,0 +1,37 @@
+{
+  "recordedAt": "2026-10-30T20:28:24.2010831+08:00",
+  "process": {
+    "id": 42824,
+    "parentId": 31340,
+    "executable": "D:\\miniconda3\\python.exe",
+    "commandLine": "\"D:\\miniconda3\\python.exe\" -B \"F:\\色林错预警预报平台\\app_entry.py\" --port 8882 --workspace \"F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace\" --no-browser "
+  },
+  "modules": [
+    {
+      "name": "python39.dll",
+      "path": "D:\\miniconda3\\python39.dll",
+      "sha256": "95f6d13519191d14ccb781bd3bff0b4dc976f94a34bac490d74b861a15a0c687"
+    },
+    {
+      "name": "_multiarray_umath.cp39-win_amd64.pyd",
+      "path": "D:\\miniconda3\\lib\\site-packages\\numpy\\core\\_multiarray_umath.cp39-win_amd64.pyd",
+      "sha256": "174fa7b850775f0224764bb754d4c0ca5515885480aac14a08a2ea8c305aac16"
+    },
+    {
+      "name": "llvmlite.dll",
+      "path": "D:\\miniconda3\\lib\\site-packages\\llvmlite\\binding\\llvmlite.dll",
+      "sha256": "d430b531fe90eb28e2b25dff18f09e899362ed9fe1f854e7e3cae24325e50d1e"
+    },
+    {
+      "name": "_dispatcher.cp39-win_amd64.pyd",
+      "path": "D:\\miniconda3\\lib\\site-packages\\numba\\_dispatcher.cp39-win_amd64.pyd",
+      "sha256": "bfc090d0b903c7e0e313002577758010ec856191e40222c5018f9e58191fd5dd"
+    },
+    {
+      "name": "blosc.cp39-win_amd64.pyd",
+      "path": "D:\\miniconda3\\lib\\site-packages\\numcodecs\\blosc.cp39-win_amd64.pyd",
+      "sha256": "16e0b3ba83c400c7a84be88b4495fbfe4326d4d09af4f34147fba187e9509528"
+    }
+  ],
+  "note": "只读查询8882运行进程；不注入代码、不停止或重启任务。"
+}

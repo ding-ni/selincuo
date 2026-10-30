@@ -4,7 +4,7 @@ from threading import RLock
 from copy import deepcopy
 import numpy as np
 import pandas as pd
-from .common import ROOT,read_json,model_identity,within
+from .common import ROOT,read_json,model_identity,within,digest
 from .simulation import RIVERS,PARTITIONS
 STATE=[('swe','雪水当量','mm'),('snowLiquid','雪层液水','mm'),('WU','上层土壤含水量','mm'),('WL','下层土壤含水量','mm'),('WD','深层土壤含水量','mm'),('freeWater','自由水蓄量','mm'),('FR','产流面积比例',''),('glacierStorage','冰川融水调蓄','mm')]
 DIAG=[('RS','地表产流','mm'),('RI','壤中产流','mm'),('RG','地下产流','mm'),('glacierRunoff','冰川出流','mm'),('snowmelt','融雪','mm'),('icemelt','融冰','mm'),('actualEt','实际蒸散发','mm'),('balanceError','水量平衡误差','mm'),('iceSublimation','冰面升华','mm')]
@@ -197,47 +197,64 @@ def range_for(db, query):
         cache = entry.setdefault('ranges', {})
         if (key, step) in cache:
             return deepcopy(cache[key, step])
-        times, data = entry['times'], entry['data']
-        minimum, maximum, count = np.inf, -np.inf, 0
+    identity=digest({'version':'result-range-v1','source':entry['key'],'variable':key,'step':step}) if 'key' in entry else None
+    cache_path=db.workspace/'cache'/'result-ranges'/f'{identity}.json' if identity else None
+    try:
+        saved=read_json(cache_path) if cache_path else None
+        if saved and saved.get('identity')==identity:
+            with _lock:cache[key,step]=saved['range']
+            return deepcopy(saved['range'])
+    except (OSError,ValueError,KeyError,TypeError):
+        pass
+    # Do not hold the global source lock while scanning. A cold period range
+    # must never block the current frame or series from becoming visible.
+    times, data = entry['times'], entry['data']
+    minimum, maximum, count = np.inf, -np.inf, 0
 
-        def collect(block):
-            nonlocal minimum, maximum, count
-            finite = np.asarray(block).ravel()
-            finite = finite[np.isfinite(finite)]
-            if finite.size:
-                minimum = min(minimum, float(finite.min()))
-                maximum = max(maximum, float(finite.max()))
-                count += finite.size
+    def collect(block):
+        nonlocal minimum, maximum, count
+        finite = np.asarray(block).ravel()
+        finite = finite[np.isfinite(finite)]
+        if finite.size:
+            minimum = min(minimum, float(finite.min()))
+            maximum = max(maximum, float(finite.max()))
+            count += finite.size
 
-        if step == 'hour' or definition['kind'] == 'state':
-            for first in range(0, len(times), 744):
-                last = min(first + 744, len(times))
-                block = values(data, key, slice(first, last))
-                if step == 'day':
-                    block = block[(times[first:last].hour == 0) & (times[first:last] > times[0])]
-                collect(block)
-        else:
-            # End each day at its actual local midnight. Missing hours must
-            # not shift subsequent 24-row groups into another calendar day.
-            ends = np.flatnonzero((times.hour == 0) & (times > times[0]))
-            valid = [int(i) for i in ends if i >= 23 and
-                     np.all(np.diff(times.asi8[i-23:i+1]) == 3600 * 10**9)]
-            for first in range(0, len(valid), 31):
-                batch = valid[first:first+31]
-                offset, last = batch[0]-23, batch[-1]+1
-                block = np.asarray(values(data, key, slice(offset, last)))
-                shaped = np.stack([block[i-23-offset:i+1-offset] for i in batch])
-                aggregate = shaped.mean(axis=1) if definition['kind'] == 'flow' else shaped.sum(axis=1)
-                collect(aggregate)
-        result = {'variable': key, 'unit': definition['unit'], 'step': step,
-                  'minimum': minimum if count else None, 'maximum': maximum if count else None,
-                  'count': int(count), 'scope': 'result-period',
-                  'start': times[0].isoformat(), 'end': times[-1].isoformat(),
-                  'aggregation': definition['aggregation'] if step == 'day' else '逐时保存值',
-                  'spatialVersion': entry['task']['result'].get('spatialVersion'),
-                  'source': '所选成果全部对象、完整已保存时段', 'exact': True}
-        cache[key, step] = result
-        return deepcopy(result)
+    if step == 'hour' or definition['kind'] == 'state':
+        for first in range(0, len(times), 744):
+            last = min(first + 744, len(times))
+            block = values(data, key, slice(first, last))
+            if step == 'day':
+                block = block[(times[first:last].hour == 0) & (times[first:last] > times[0])]
+            collect(block)
+    else:
+        ends = np.flatnonzero((times.hour == 0) & (times > times[0]))
+        valid = [int(i) for i in ends if i >= 23 and
+                 np.all(np.diff(times.asi8[i-23:i+1]) == 3600 * 10**9)]
+        for first in range(0, len(valid), 31):
+            batch = valid[first:first+31]
+            offset, last = batch[0]-23, batch[-1]+1
+            block = np.asarray(values(data, key, slice(offset, last)))
+            shaped = np.stack([block[i-23-offset:i+1-offset] for i in batch])
+            aggregate = shaped.mean(axis=1) if definition['kind'] == 'flow' else shaped.sum(axis=1)
+            collect(aggregate)
+    result = {'variable': key, 'unit': definition['unit'], 'step': step,
+              'minimum': minimum if count else None, 'maximum': maximum if count else None,
+              'count': int(count), 'scope': 'result-period',
+              'start': times[0].isoformat(), 'end': times[-1].isoformat(),
+              'aggregation': definition['aggregation'] if step == 'day' else '逐时保存值',
+              'spatialVersion': entry['task']['result'].get('spatialVersion'),
+              'source': '所选成果全部对象、完整已保存时段', 'exact': True}
+    with _lock:cache[key, step] = result
+    try:
+        import json
+        if cache_path:
+            cache_path.parent.mkdir(parents=True,exist_ok=True)
+            with cache_path.open('x',encoding='utf-8',newline='\n') as stream:
+                json.dump({'identity':identity,'range':result},stream,ensure_ascii=False,allow_nan=False)
+    except (FileExistsError,OSError):
+        pass
+    return deepcopy(result)
 
 def values(data,key,rows=slice(None),column=slice(None)):
     if key in [r[0] for r in STATE]:return data['unitStates'][rows,column,[r[0] for r in STATE].index(key)]

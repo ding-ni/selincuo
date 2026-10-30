@@ -67,13 +67,11 @@ export function timelineDates(mode,monitor,result){
 }
 export function balanceTerms(row){return [{key:'lakeInflowM3',label:'入湖来水',sign:1},{key:'lakePrecipitationM3',label:'湖面降水',sign:1},{key:'lakeEvaporationM3',label:'湖面蒸发',sign:-1},{key:'lakeDeltaVolumeM3',label:'蓄水变化',sign:1}].map(t=>({...t,value:row?.[t.key]==null?null:row[t.key]/1e6}))}
 export function defaultReplayDay(dates,result){const latest=replayRows(result).filter(r=>r.lakeLevel!=null).at(-1);return latest?.date.slice(0,10)||dates.at(-1)||''}
-// Only the adopted result and results the user explicitly saved belong on the overview.
-// Callers verify the latter's full display capabilities before offering them.
+// The overview displays the single adopted working result.
 export function screenResults(published=[],tasks=[],homeId=''){
  const home=published.find(r=>r.id===homeId)||tasks.find(r=>r.id===homeId)
  const adopted=home&&!home.trashed?[{...home,builtin:published.some(r=>r.id===homeId)}]:homeId?[{id:homeId}]:[]
- const saved=tasks.filter(t=>t.id!==homeId&&t.status==='succeeded'&&!t.trashed&&['simulation','continuation','two-stage-calibration','trial'].includes(t.kind)&&!!t.userSaved)
- return [...adopted,...saved]
+ return adopted
 }
 export function replayResultName(t,homeId,loaded){
  if(t.id!==homeId)return t.name||t.displayName||'已保存模拟'

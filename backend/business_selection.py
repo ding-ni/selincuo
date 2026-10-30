@@ -84,6 +84,8 @@ def adopt_result(db, task_id, name=None):
     newer=any(r['payload'].get('familyId')==family and r['payload'].get('revision',1)>source['payload'].get('revision',1)
               for r in db.items('schemes'))
     saved=save(db,payload,None if newer else source_id)
+    from .calibration_configuration import inherit
+    inherit(db,source_id,saved['id'])
     selection={'schemeId':saved['id'],'familyId':saved['payload']['familyId'],
                'parameterId':parameter['id'],'resultId':task_id,'name':payload['name'],
                'adoptedAt':now(),'spatialVersion':result['spatialVersion'],'inputId':result['inputId']}

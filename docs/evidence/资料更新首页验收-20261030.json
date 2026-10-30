@@ -1,0 +1,56 @@
+{
+  "url": "http://127.0.0.1:8882/?page=model",
+  "scope": "实际服务只读页面检查；没有上传或导入资料。",
+  "screens": [
+    {
+      "viewport": [
+        1366,
+        768
+      ],
+      "defaultObservationTab": true,
+      "fileSelectionVisible": true,
+      "checkButtonVisible": true,
+      "stationCards": 8,
+      "outdatedTextAbsent": true,
+      "noHorizontalOverflow": true,
+      "errors": [],
+      "detailsExpanded": true,
+      "stationRecordsVisible": true,
+      "fileSelectionDisabledWhileJobsActive": false,
+      "screenshot": "build/资料更新首页验收-c58beaf0c8/资料更新-1366x768.png",
+      "screenshotSHA256": "44b7cc85e16dc14d199a707ea7ce1584e7b65de2b0a658cd1b28a7399786f0a1",
+      "dimensions": {
+        "width": 1366,
+        "scrollWidth": 1366,
+        "height": 768,
+        "scrollHeight": 991
+      }
+    },
+    {
+      "viewport": [
+        1920,
+        1080
+      ],
+      "defaultObservationTab": true,
+      "fileSelectionVisible": true,
+      "checkButtonVisible": true,
+      "stationCards": 8,
+      "outdatedTextAbsent": true,
+      "noHorizontalOverflow": true,
+      "errors": [],
+      "detailsExpanded": true,
+      "stationRecordsVisible": true,
+      "fileSelectionDisabledWhileJobsActive": false,
+      "screenshot": "build/资料更新首页验收-c58beaf0c8/资料更新-1920x1080.png",
+      "screenshotSHA256": "d5996da94f2daeae0e97992a84039a1766142f390dac4433a59ec8c11cee728b",
+      "dimensions": {
+        "width": 1920,
+        "scrollWidth": 1920,
+        "height": 1080,
+        "scrollHeight": 1080
+      }
+    }
+  ],
+  "recordedAt": "2026-10-30T21:14:52.656822+08:00",
+  "passed": true
+}

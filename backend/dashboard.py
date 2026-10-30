@@ -11,7 +11,7 @@ import pandas as pd
 
 from .common import ROOT, read_json, digest
 from .observations import daily_series
-from .forcing import load_input, lake_precipitation_factor
+from .forcing import load_input, lake_precipitation_factor, lake_precipitation_series
 
 _lock = threading.RLock()
 _observations = {}
@@ -110,6 +110,11 @@ def map_frame(db, input_id, day, variable='precipitation',spatial_version=None):
     lake_raw=float(lake_weights@values)
     lake_factor=lake_precipitation_factor(manifest) if variable=='precipitation' else 1.
     lake_used=lake_raw*lake_factor
+    if variable=='precipitation' and (manifest.get('lakePrecipitationCorrection') or {}).get('method')=='station-warm-rain-grid-v1':
+        times=pd.DatetimeIndex(arrays['time']); start=parse_day(day)
+        ids=times.get_indexer(pd.date_range(start+pd.Timedelta(hours=1),start+pd.Timedelta(days=1),freq='h'))
+        if np.any(ids<0):raise ValueError('湖面暖雨订正缺少完整日气象')
+        lake_used=float(lake_precipitation_series(manifest,spatial,arrays,times,ids).sum())
     domain_used=float(domain_weights@values)+(lake_used-lake_raw)*spatial['lakeAreaKm2']/(areas.sum()+spatial['lakeAreaKm2'])
     unit_values=weights@values
     if variable=='precipitation' and manifest.get('landPrecipitationCorrection') is not None:

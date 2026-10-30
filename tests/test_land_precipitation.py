@@ -100,6 +100,30 @@ class WarmRainTests(unittest.TestCase):
             mask=a.notna()&b.notna()
             np.testing.assert_allclose(a[mask],b[mask],atol=1e-9)
 
+    def test_lake_warm_rain_uses_raw_cold_precip_once_and_fast_matches(self):
+        from backend.fast_basin_calibration import BasinEvaluator
+        from backend.forcing import lake_precipitation_series
+        rule={'method':'station-warm-rain-grid-v1','scope':'lake-warm-rain',
+              'landTransformationSHA256':digest(self.profile),'temperatureThresholdC':5.0}
+        source=deepcopy(self.source)
+        source['manifest']['lakePrecipitationCorrection']=rule
+        source['manifest']['transformationSHA256']=digest(rule)
+        ids=np.arange(len(self.times))
+        rain=lake_precipitation_series(source['manifest'],self.spatial,self.arrays,self.times,ids)
+        factor=factors_for_points(self.profile,[(89.,32.)])[2,0]
+        self.assertAlmostEqual(rain[0],.5*(factor+1.))
+        cold=deepcopy(self.arrays);cold['temperature'][:]=0.
+        np.testing.assert_array_equal(lake_precipitation_series(source['manifest'],self.spatial,cold,self.times,ids),np.ones(len(ids)))
+        request={**self.request,'parameterTransfer':{'mode':'duja-shared'},'partitionParameters':{}}
+        fast=BasinEvaluator(source,request).daily(request['parameters'])
+        full=run(None,request,prepared=source)
+        full_rows=pd.DataFrame(full['daily']);full_rows.index=pd.to_datetime(full_rows.date)
+        for col in ('duja','total','lakeLevel','lakeRainMm'):
+            a=fast[col].reindex(full_rows.index);b=full_rows[col];mask=a.notna()&b.notna()
+            np.testing.assert_allclose(a[mask],b[mask],atol=1e-9)
+        broken=deepcopy(source['manifest']);broken['lakePrecipitationCorrection']['landTransformationSHA256']='different'
+        with self.assertRaises(ValueError):lake_precipitation_series(broken,self.spatial,self.arrays,self.times,ids)
+
     def test_range_and_seasons(self):
         validate_parameters(self.profile,self.request['parameters'])
         for key,value in [('lapseRate',-.011),('rainTemperature',5.1)]:
@@ -189,6 +213,27 @@ class RainCoverageTests(unittest.TestCase):
 
 
 class EventHourPairingTests(unittest.TestCase):
+    def test_disagreeing_daily_and_event_totals_excluded_from_factor(self):
+        stations=('SLC','DUJA','BLQ','115DB')
+        locations=[{'id':s,'lon':89.+i,'lat':32.} for i,s in enumerate(stations)]
+        class FakeDb:
+            def rows(self,sql,args=()):
+                return locations if 'FROM stations' in sql else []
+            def observations(self,station,*args,**kwargs):
+                return ([{'source_id':'daily','time':'2025-01-01T00:00:00','step':'day',
+                          'value':1.,'quality':'valid'}] if station=='SLC' else [])
+        times=pd.date_range('2025-01-01',periods=25,freq='h')
+        source={'times':times,'spatial':{'grids':locations},
+                'arrays':{'temperature':np.full((25,4),10.),'precipitation':np.ones((25,4))},
+                'manifest':{'dataSHA256':'forcing'}}
+        coverage=[{'station':'SLC','sourceId':'confirmed','start':'2025-01-01T00:00:00',
+                   'endExclusive':'2025-01-02T00:00:00'}]
+        samples,conflicts,_=station_samples(FakeDb(),source,coverage)
+        row=next(r for r in samples['SLC']['days'] if r['date']==pd.Timestamp('2025-01-01'))
+        self.assertFalse(row['eligible'])
+        self.assertEqual(row['source'],'excluded-unresolved-daily-event-conflict')
+        self.assertEqual(len(conflicts),1)
+
     def test_occurrence_hour_endpoint_including_exact_hour_and_midnight(self):
         examples={'2025-01-01T00:00:00':'2025-01-01T01:00:00',
                   '2025-01-01T01:00:00':'2025-01-01T02:00:00',

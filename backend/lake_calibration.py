@@ -133,8 +133,18 @@ def _joint_scores(frame, coefficients, baseline_coefficient, window):
         timings.append(np.abs(day_numbers[sim_peaks] - day_numbers[obs_peak]))
     amplitude = np.mean(np.vstack(amplitudes), axis=0)
     peak = np.mean(np.vstack(timings), axis=0)
-    score = (rmse / JOINT_SCALES['rmseM'] + trend_error / JOINT_SCALES['trendErrorM'] +
-             amplitude / JOINT_SCALES['amplitudeErrorM'] + peak / JOINT_SCALES['peakTimingErrorDays']) / 4.
+    objective = window.get('objective') or {}
+    scales = objective.get('lakeScales', JOINT_SCALES)
+    weights = objective.get('lakeWeights', {'rmse': .25, 'trend': .25, 'amplitude': .25, 'peakTiming': .25})
+    if not objective:
+        # Preserve the operation order of archived four-criterion fits.
+        score = (rmse / JOINT_SCALES['rmseM'] + trend_error / JOINT_SCALES['trendErrorM'] +
+                 amplitude / JOINT_SCALES['amplitudeErrorM'] + peak / JOINT_SCALES['peakTimingErrorDays']) / 4.
+    else:
+        score = (weights['rmse'] * rmse / scales['rmseM'] +
+                 weights['trend'] * trend_error / scales['trendErrorM'] +
+                 weights['amplitude'] * amplitude / scales['amplitudeErrorM'] +
+                 weights['peakTiming'] * peak / scales['peakTimingErrorDays'])
     return {'score': score, 'rmse': rmse, 'trendErrorM': trend_error,
             'amplitudeErrorM': amplitude, 'peakTimingErrorDays': peak,
             'observedTrendMPerYear': observed_trend, 'simulatedTrendMPerYear': simulated_trend,
@@ -146,12 +156,15 @@ def joint_assess(frame, coefficient, baseline_coefficient, window):
     raw = _joint_scores(frame, [coefficient], baseline_coefficient, window)
     result = {k: float(v[0]) if isinstance(v, np.ndarray) else float(v)
               for k, v in raw.items()}
+    scales = (window.get('objective') or {}).get('lakeScales', JOINT_SCALES)
     result.update(count=len(window['dates']), seasonYears=list(window['seasonYears']),
-                  fixedObservationSHA256=window['observationSHA256'], scales=dict(JOINT_SCALES))
-    result['scoreComponents'] = {'rmse': result['rmse']/JOINT_SCALES['rmseM'],
-        'trend': result['trendErrorM']/JOINT_SCALES['trendErrorM'],
-        'amplitude': result['amplitudeErrorM']/JOINT_SCALES['amplitudeErrorM'],
-        'peakTiming': result['peakTimingErrorDays']/JOINT_SCALES['peakTimingErrorDays']}
+                  fixedObservationSHA256=window['observationSHA256'], scales=dict(scales))
+    result['scoreComponents'] = {'rmse': result['rmse']/scales['rmseM'],
+        'trend': result['trendErrorM']/scales['trendErrorM'],
+        'amplitude': result['amplitudeErrorM']/scales['amplitudeErrorM'],
+        'peakTiming': result['peakTimingErrorDays']/scales['peakTimingErrorDays']}
+    if window.get('objective'):
+        result['weights'] = deepcopy(window['objective']['lakeWeights'])
     return result
 
 

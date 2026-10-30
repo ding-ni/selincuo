@@ -5,7 +5,7 @@ export function createFrameCache(limit=36,concurrency=3){
  function pump(){
   while(!closed&&active<concurrency&&queue.length){
    const job=queue.shift();active++;job.started=true
-   Promise.resolve().then(()=>job.loader(job.controller.signal)).then(value=>{job.done=true;job.resolve(value)},error=>{entries.delete(job.key);job.reject(error)}).finally(()=>{active--;trim();pump()})
+   Promise.resolve().then(()=>job.loader(job.controller.signal)).then(value=>{job.done=true;job.resolve(value)},error=>{if(entries.get(job.key)===job)entries.delete(job.key);job.reject(error)}).finally(()=>{active--;trim();pump()})
   }
  }
  function get(key,loader,prefetch=false){
@@ -17,5 +17,9 @@ export function createFrameCache(limit=36,concurrency=3){
   trim();pump();return promise
  }
  function clear(){closed=true;for(const job of queue.splice(0)){job.reject(new DOMException('画面已关闭','AbortError'))}for(const job of entries.values())if(!job.done)job.controller.abort();entries.clear()}
- return {get,clear,size:()=>entries.size}
+ function cancelPending(){
+  for(const job of queue.splice(0)){if(entries.get(job.key)===job)entries.delete(job.key);job.reject(new DOMException('已选择其他日期','AbortError'))}
+  for(const [key,job] of entries){if(!job.done){entries.delete(key);job.controller.abort()}}
+ }
+ return {get,clear,cancelPending,size:()=>entries.size}
 }

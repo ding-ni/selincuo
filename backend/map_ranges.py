@@ -1,14 +1,40 @@
 """Small range summaries; never keep a full state cube in memory."""
 from collections import OrderedDict
+import json
 import numpy as np
 import pandas as pd
 from .dashboard import aggregate_frame
+from .common import digest, read_json
 _cache=OrderedDict()
 
 def range_for(db,q):
-    key=('raw-grid-v1',str(db.workspace),q.get('inputId'),q.get('resultId'),q.get('spatialVersion'),q.get('variable'),q.get('start'),q.get('end'))
+    product=db.workspace/'inputs/products'/str(q.get('inputId') or '')
+    def stamp(path):
+        try:
+            s=path.stat()
+            return [s.st_size,s.st_mtime_ns]
+        except FileNotFoundError:return None
+    variable=q['variable']
+    # The inputs are immutable versions; include their actual manifest/data
+    # descriptors as well as the result manifest for cache invalidation.
+    identity={'version':'raw-grid-v2','workspace':str(db.workspace),'inputId':q.get('inputId'),
+              'spatialVersion':q.get('spatialVersion'),'variable':variable,'start':q.get('start'),
+              'end':q.get('end'),'manifest':stamp(product/'manifest.json'),
+              'forcing':stamp(product/'forcing.npz')}
+    if variable=='snow':
+        from .result_query import _descriptor
+        identity['result']=_descriptor(db,q['resultId'])
+    key=digest(identity)
     if key in _cache:return _cache[key]
-    variable=q['variable'];lo=np.inf;hi=-np.inf;count=0;samples=[]
+    cache_path=db.workspace/'cache'/'map-ranges'/f'{key}.json'
+    try:
+        saved=read_json(cache_path)
+        if saved and saved.get('identity')==key:
+            _cache[key]=saved['range']
+            return saved['range']
+    except (OSError,ValueError,KeyError,TypeError):
+        pass
+    lo=np.inf;hi=-np.inf;count=0;samples=[]
     def collect(a):
         nonlocal lo,hi,count
         values=np.asarray(a).ravel();values=values[np.isfinite(values)]
@@ -29,7 +55,6 @@ def range_for(db,q):
     else:
         if variable not in ('precipitation','temperature','evaporation'):raise ValueError('不支持的地图变量')
         from .grid_simulation import prepare
-        from .common import read_json
         manifest=read_json(db.workspace/'inputs/products'/q['inputId']/'manifest.json')
         source=prepare(db,q['inputId'],q.get('spatialVersion') or manifest['spatialVersion']);times=source['times']
         for day in pd.date_range(pd.Timestamp(q.get('start') or times[0]).normalize(),pd.Timestamp(q.get('end') or times[-1]).normalize(),freq='D'):
@@ -42,4 +67,12 @@ def range_for(db,q):
             'displaySupport':'model-units' if variable=='snow' else 'raw-grid'}
     _cache[key]=result
     while len(_cache)>32:_cache.popitem(last=False)
+    # Cache files are append-only: concurrent calculations may race to create
+    # the same identity, but never overwrite a result or remove a file.
+    try:
+        cache_path.parent.mkdir(parents=True,exist_ok=True)
+        with cache_path.open('x',encoding='utf-8',newline='\n') as stream:
+            json.dump({'identity':key,'range':result},stream,ensure_ascii=False,allow_nan=False)
+    except (FileExistsError,OSError):
+        pass
     return result

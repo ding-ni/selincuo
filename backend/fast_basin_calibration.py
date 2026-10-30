@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from .fast_calibration import _sources
-from .forcing import lake_precipitation_factor
+from .forcing import lake_precipitation_series
 from .grid_simulation import PARTITIONS, anchor, unit_forcing
 from .lake_calibration import response_slope
 from .model_core import PARAMETER_NAMES, initial_states, parameters
@@ -61,8 +61,8 @@ class BasinEvaluator:
                 'glaciers': np.array([u['kind'] == 'glacier' for u in units]),
                 'areas': np.array([u['areaKm2'] for u in units])}
         weights = np.asarray(self.spatial['lakeWeights'])
-        self.lake_rain = (source['arrays']['precipitation'][ids] @ weights *
-                          lake_precipitation_factor(source['manifest']))
+        self.lake_rain = lake_precipitation_series(source['manifest'], self.spatial,
+                                                   source['arrays'], source['times'], ids)
         self.lake_evaporation = source['arrays']['evaporation'][ids] @ weights
         self.lake_area = float(self.spatial['lakeAreaKm2']) * 1e6
         self.slope = response_slope(source, self.start, self.end, self.initial)

@@ -1,0 +1,936 @@
+{
+  "type": "ordinary-calibration-configuration-integration",
+  "evidenceTag": "8764102228",
+  "formalTask": "JOB-6536f36e07cc46868255",
+  "note": "Only request/configuration binding was tested; no numerical reproduction.",
+  "testTasks": [
+    {
+      "id": "JOB-e32b9599c6444b4e9ab0",
+      "stopStatus": "stopping"
+    },
+    {
+      "id": "JOB-518351dfb6e948e092f6",
+      "stopStatus": "stopping"
+    },
+    {
+      "id": "JOB-81badd13c5e6404b92a6",
+      "stopStatus": "stopping"
+    }
+  ],
+  "screenshots": [
+    "docs/evidence/普通率定绑定-参数-8764102228.png",
+    "docs/evidence/普通率定绑定-设置-8764102228.png"
+  ],
+  "formalTaskStatuses": {
+    "JOB-6536f36e07cc46868255": "queued",
+    "JOB-05c3f62282ce4239aed1": "running"
+  },
+  "acceptanceSchemeId": "SCHEME-52217987e8444c649112",
+  "acceptanceFamilyId": "FAMILY-99ff96503d2d4263",
+  "sourceConditionMatches": true,
+  "configurationChecks": [
+    {
+      "label": "initial-api-task",
+      "checks": {
+        "configurationSHA256": true,
+        "inputId": true,
+        "start": true,
+        "end": true,
+        "initialParameters": true,
+        "search": true,
+        "twoStage": true,
+        "periods": true,
+        "initialHydrology": true,
+        "adoptOnSuccess": true
+      },
+      "scheme": "SCHEME-52217987e8444c649112",
+      "configSHA256": "45a1da0fc9068eb8e813a80442dec24ceccfedccce5155ae415c152f0cc194e1",
+      "parameters": {
+        "B": 0.12362853524917454,
+        "C": 0.26189116640935695,
+        "EX": 1.016782036689256,
+        "IM": 0.019203505157108544,
+        "KC": 0.7143539894250547,
+        "KG": 0.03597564102910988,
+        "KI": 0.05453408467128742,
+        "SM": 60.05529043123532,
+        "WM": 180.10725576074435,
+        "baseflowTauHours": 2159.2085189377794,
+        "glacierRecessionDay": 0.9367280321216869,
+        "iceDdf": 11.064146446235254,
+        "iceSublimationFraction": 0.25,
+        "iceSublimationMaxMmHour": 0.08,
+        "interflowTauHours": 6.0,
+        "lagHours": 30.79296214670429,
+        "lakeCoefficient": 1.4969999999999999,
+        "lapseRate": -0.01,
+        "liquidCapacity": 0.1166055718935576,
+        "rainTemperature": 5.0,
+        "refreezeFactor": 1.809162003816423,
+        "snowDdf": 8.21922005394951,
+        "snowSublimation": 0.38972750370326054,
+        "snowTemperature": 0.9925266183579309,
+        "tauHours": 103.16477670006633
+      },
+      "search": {
+        "bounds": {
+          "B": [
+            0.02,
+            0.8
+          ],
+          "C": [
+            0.01,
+            0.5
+          ],
+          "EX": [
+            0.1,
+            2.5
+          ],
+          "IM": [
+            0,
+            0.2
+          ],
+          "KC": [
+            0.2,
+            1.5
+          ],
+          "KG": [
+            0.0001,
+            0.1
+          ],
+          "KI": [
+            0.001,
+            0.15
+          ],
+          "SM": [
+            5,
+            100
+          ],
+          "WM": [
+            40,
+            300
+          ],
+          "baseflowTauHours": [
+            168,
+            2160
+          ],
+          "glacierRecessionDay": [
+            0.05,
+            3
+          ],
+          "iceDdf": [
+            2,
+            14
+          ],
+          "iceSublimationFraction": [
+            0,
+            1
+          ],
+          "iceSublimationMaxMmHour": [
+            0,
+            0.4
+          ],
+          "interflowTauHours": [
+            6,
+            240
+          ],
+          "lagHours": [
+            0,
+            72
+          ],
+          "lakeCoefficient": [
+            0.2,
+            1.5
+          ],
+          "lapseRate": [
+            -0.01,
+            -0.002
+          ],
+          "liquidCapacity": [
+            0.01,
+            0.15
+          ],
+          "rainTemperature": [
+            0,
+            5
+          ],
+          "refreezeFactor": [
+            0,
+            3
+          ],
+          "snowDdf": [
+            1,
+            10
+          ],
+          "snowSublimation": [
+            0,
+            1
+          ],
+          "snowTemperature": [
+            -5,
+            1
+          ],
+          "tauHours": [
+            1,
+            168
+          ]
+        },
+        "budgets": {
+          "lake": 30,
+          "routing": 120,
+          "runoff": 120,
+          "snow": 120
+        },
+        "keys": [
+          "KC",
+          "WM",
+          "B",
+          "C",
+          "SM",
+          "EX",
+          "KI",
+          "KG",
+          "IM",
+          "snowDdf",
+          "iceDdf",
+          "snowTemperature",
+          "rainTemperature",
+          "liquidCapacity",
+          "refreezeFactor",
+          "snowSublimation",
+          "glacierRecessionDay",
+          "lapseRate",
+          "tauHours",
+          "lagHours",
+          "interflowTauHours",
+          "baseflowTauHours"
+        ],
+        "objectiveProfile": "balanced",
+        "scope": "duja",
+        "seed": 42,
+        "seeds": [
+          42,
+          142,
+          242
+        ]
+      },
+      "twoStage": {
+        "allowExtension": true,
+        "baselineTaskId": "JOB-88b35b44b27d4e15840c",
+        "budgets": {
+          "joint": 3000,
+          "routing": 3000,
+          "runoff": 6000,
+          "snow": 6000
+        },
+        "candidateLimit": 256,
+        "candidateSourceTaskId": null,
+        "finalRefit": true,
+        "flowConstraints": null,
+        "jointBudget": 2000,
+        "lakePeriods": {
+          "evaluationEnd": "2026-10-21T00:00:00",
+          "evaluationStart": "2025-01-01T00:00:00",
+          "trainingEnd": "2025-01-01T00:00:00",
+          "trainingStart": "2021-04-23T00:00:00"
+        },
+        "mode": "both",
+        "objective": {
+          "flowWeights": {
+            "logNse": 0.25,
+            "nse": 0.5,
+            "volume": 0.25
+          },
+          "lakeScales": {
+            "amplitudeErrorM": 0.1,
+            "peakTimingErrorDays": 14.0,
+            "rmseM": 0.1,
+            "trendErrorM": 0.1
+          },
+          "lakeWeights": {
+            "amplitude": 0.25,
+            "peakTiming": 0.25,
+            "rmse": 0.25,
+            "trend": 0.25
+          },
+          "version": "continuous-flow-lake-v1",
+          "weights": {
+            "flow": 0.5,
+            "lake": 0.5
+          }
+        },
+        "reverseCheck": false,
+        "seeds": [
+          42,
+          142,
+          242
+        ],
+        "selectionMode": "continuous-dual",
+        "version": 1
+      }
+    },
+    {
+      "label": "ordinary-first",
+      "checks": {
+        "configurationSHA256": true,
+        "inputId": true,
+        "start": true,
+        "end": true,
+        "initialParameters": true,
+        "search": true,
+        "twoStage": true,
+        "periods": true,
+        "initialHydrology": true,
+        "adoptOnSuccess": true
+      },
+      "scheme": "SCHEME-52217987e8444c649112",
+      "configSHA256": "45a1da0fc9068eb8e813a80442dec24ceccfedccce5155ae415c152f0cc194e1",
+      "parameters": {
+        "B": 0.12362853524917454,
+        "C": 0.26189116640935695,
+        "EX": 1.016782036689256,
+        "IM": 0.019203505157108544,
+        "KC": 0.7143539894250547,
+        "KG": 0.03597564102910988,
+        "KI": 0.05453408467128742,
+        "SM": 60.05529043123532,
+        "WM": 180.10725576074435,
+        "baseflowTauHours": 2159.2085189377794,
+        "glacierRecessionDay": 0.9367280321216869,
+        "iceDdf": 11.064146446235254,
+        "iceSublimationFraction": 0.25,
+        "iceSublimationMaxMmHour": 0.08,
+        "interflowTauHours": 6.0,
+        "lagHours": 30.79296214670429,
+        "lakeCoefficient": 1.4969999999999999,
+        "lapseRate": -0.01,
+        "liquidCapacity": 0.1166055718935576,
+        "rainTemperature": 5.0,
+        "refreezeFactor": 1.809162003816423,
+        "snowDdf": 8.21922005394951,
+        "snowSublimation": 0.38972750370326054,
+        "snowTemperature": 0.9925266183579309,
+        "tauHours": 103.16477670006633
+      },
+      "search": {
+        "bounds": {
+          "B": [
+            0.02,
+            0.8
+          ],
+          "C": [
+            0.01,
+            0.5
+          ],
+          "EX": [
+            0.1,
+            2.5
+          ],
+          "IM": [
+            0,
+            0.2
+          ],
+          "KC": [
+            0.2,
+            1.5
+          ],
+          "KG": [
+            0.0001,
+            0.1
+          ],
+          "KI": [
+            0.001,
+            0.15
+          ],
+          "SM": [
+            5,
+            100
+          ],
+          "WM": [
+            40,
+            300
+          ],
+          "baseflowTauHours": [
+            168,
+            2160
+          ],
+          "glacierRecessionDay": [
+            0.05,
+            3
+          ],
+          "iceDdf": [
+            2,
+            14
+          ],
+          "iceSublimationFraction": [
+            0,
+            1
+          ],
+          "iceSublimationMaxMmHour": [
+            0,
+            0.4
+          ],
+          "interflowTauHours": [
+            6,
+            240
+          ],
+          "lagHours": [
+            0,
+            72
+          ],
+          "lakeCoefficient": [
+            0.2,
+            1.5
+          ],
+          "lapseRate": [
+            -0.01,
+            -0.002
+          ],
+          "liquidCapacity": [
+            0.01,
+            0.15
+          ],
+          "rainTemperature": [
+            0,
+            5
+          ],
+          "refreezeFactor": [
+            0,
+            3
+          ],
+          "snowDdf": [
+            1,
+            10
+          ],
+          "snowSublimation": [
+            0,
+            1
+          ],
+          "snowTemperature": [
+            -5,
+            1
+          ],
+          "tauHours": [
+            1,
+            168
+          ]
+        },
+        "budgets": {
+          "lake": 30,
+          "routing": 120,
+          "runoff": 120,
+          "snow": 120
+        },
+        "keys": [
+          "KC",
+          "WM",
+          "B",
+          "C",
+          "SM",
+          "EX",
+          "KI",
+          "KG",
+          "IM",
+          "snowDdf",
+          "iceDdf",
+          "snowTemperature",
+          "rainTemperature",
+          "liquidCapacity",
+          "refreezeFactor",
+          "snowSublimation",
+          "glacierRecessionDay",
+          "lapseRate",
+          "tauHours",
+          "lagHours",
+          "interflowTauHours",
+          "baseflowTauHours"
+        ],
+        "objectiveProfile": "balanced",
+        "scope": "duja",
+        "seed": 42,
+        "seeds": [
+          42,
+          142,
+          242
+        ]
+      },
+      "twoStage": {
+        "allowExtension": true,
+        "baselineTaskId": "JOB-88b35b44b27d4e15840c",
+        "budgets": {
+          "joint": 3000,
+          "routing": 3000,
+          "runoff": 6000,
+          "snow": 6000
+        },
+        "candidateLimit": 256,
+        "candidateSourceTaskId": null,
+        "finalRefit": true,
+        "flowConstraints": null,
+        "jointBudget": 2000,
+        "lakePeriods": {
+          "evaluationEnd": "2026-10-21T00:00:00",
+          "evaluationStart": "2025-01-01T00:00:00",
+          "trainingEnd": "2025-01-01T00:00:00",
+          "trainingStart": "2021-04-23T00:00:00"
+        },
+        "mode": "both",
+        "objective": {
+          "flowWeights": {
+            "logNse": 0.25,
+            "nse": 0.5,
+            "volume": 0.25
+          },
+          "lakeScales": {
+            "amplitudeErrorM": 0.1,
+            "peakTimingErrorDays": 14.0,
+            "rmseM": 0.1,
+            "trendErrorM": 0.1
+          },
+          "lakeWeights": {
+            "amplitude": 0.25,
+            "peakTiming": 0.25,
+            "rmse": 0.25,
+            "trend": 0.25
+          },
+          "version": "continuous-flow-lake-v1",
+          "weights": {
+            "flow": 0.5,
+            "lake": 0.5
+          }
+        },
+        "reverseCheck": false,
+        "seeds": [
+          42,
+          142,
+          242
+        ],
+        "selectionMode": "continuous-dual",
+        "version": 1
+      }
+    },
+    {
+      "label": "ordinary-changed",
+      "checks": {
+        "configurationSHA256": true,
+        "inputId": true,
+        "start": true,
+        "end": true,
+        "initialParameters": true,
+        "search": true,
+        "twoStage": true,
+        "periods": true,
+        "initialHydrology": true,
+        "adoptOnSuccess": true
+      },
+      "scheme": "SCHEME-30aa47f410424b1f8140",
+      "configSHA256": "5aa9bb0c72fb8adcc5b49067cc8dd835d570332b014579647ceb8d50cf6408ca",
+      "parameters": {
+        "B": 0.12362853524917454,
+        "C": 0.26189116640935695,
+        "EX": 1.016782036689256,
+        "IM": 0.019203505157108544,
+        "KC": 0.7143539894250547,
+        "KG": 0.03597564102910988,
+        "KI": 0.05453408467128742,
+        "SM": 60.05529043123532,
+        "WM": 180.10725576074435,
+        "baseflowTauHours": 2159.2085189377794,
+        "glacierRecessionDay": 0.9367280321216869,
+        "iceDdf": 11.064146446235254,
+        "iceSublimationFraction": 0.25,
+        "iceSublimationMaxMmHour": 0.08,
+        "interflowTauHours": 6,
+        "lagHours": 30.79296214670429,
+        "lakeCoefficient": 1.4969999999999999,
+        "lapseRate": -0.01,
+        "liquidCapacity": 0.1166055718935576,
+        "rainTemperature": 5,
+        "refreezeFactor": 1.809162003816423,
+        "snowDdf": 8.21922005394951,
+        "snowSublimation": 0.38972750370326054,
+        "snowTemperature": 0.9925266183579309,
+        "tauHours": 103.16477670006633
+      },
+      "search": {
+        "bounds": {
+          "B": [
+            0.02,
+            0.8
+          ],
+          "C": [
+            0.01,
+            0.5
+          ],
+          "EX": [
+            0.1,
+            2.5
+          ],
+          "IM": [
+            0,
+            0.2
+          ],
+          "KC": [
+            0.2,
+            1.5
+          ],
+          "KG": [
+            0.0001,
+            0.1
+          ],
+          "KI": [
+            0.001,
+            0.15
+          ],
+          "SM": [
+            5,
+            100
+          ],
+          "WM": [
+            41,
+            300
+          ],
+          "baseflowTauHours": [
+            168,
+            2160
+          ],
+          "glacierRecessionDay": [
+            0.05,
+            3
+          ],
+          "iceDdf": [
+            2,
+            14
+          ],
+          "iceSublimationFraction": [
+            0,
+            1
+          ],
+          "iceSublimationMaxMmHour": [
+            0,
+            0.4
+          ],
+          "interflowTauHours": [
+            6,
+            240
+          ],
+          "lagHours": [
+            0,
+            72
+          ],
+          "lakeCoefficient": [
+            0.2,
+            1.5
+          ],
+          "lapseRate": [
+            -0.01,
+            -0.002
+          ],
+          "liquidCapacity": [
+            0.01,
+            0.15
+          ],
+          "rainTemperature": [
+            0,
+            5
+          ],
+          "refreezeFactor": [
+            0,
+            3
+          ],
+          "snowDdf": [
+            1,
+            10
+          ],
+          "snowSublimation": [
+            0,
+            1
+          ],
+          "snowTemperature": [
+            -5,
+            1
+          ],
+          "tauHours": [
+            1,
+            168
+          ]
+        },
+        "budgets": {
+          "lake": 30,
+          "routing": 120,
+          "runoff": 120,
+          "snow": 120
+        },
+        "keys": [
+          "KC",
+          "WM",
+          "B",
+          "C",
+          "SM",
+          "EX",
+          "KI",
+          "KG",
+          "IM",
+          "snowDdf",
+          "iceDdf",
+          "snowTemperature",
+          "rainTemperature",
+          "liquidCapacity",
+          "refreezeFactor",
+          "snowSublimation",
+          "glacierRecessionDay",
+          "lapseRate",
+          "tauHours",
+          "lagHours",
+          "interflowTauHours",
+          "baseflowTauHours"
+        ],
+        "objectiveProfile": "balanced",
+        "scope": "duja",
+        "seed": 42,
+        "seeds": [
+          42,
+          142,
+          242
+        ]
+      },
+      "twoStage": {
+        "allowExtension": true,
+        "baselineTaskId": "JOB-88b35b44b27d4e15840c",
+        "budgets": {
+          "joint": 3000,
+          "routing": 3000,
+          "runoff": 5999,
+          "snow": 6000
+        },
+        "candidateLimit": 256,
+        "candidateSourceTaskId": null,
+        "finalRefit": true,
+        "flowConstraints": null,
+        "jointBudget": 2000,
+        "lakePeriods": {
+          "evaluationEnd": "2026-10-21T00:00:00",
+          "evaluationStart": "2025-01-01T00:00:00",
+          "trainingEnd": "2025-01-01T00:00:00",
+          "trainingStart": "2021-04-23T00:00:00"
+        },
+        "mode": "both",
+        "objective": {
+          "flowWeights": {
+            "logNse": 0.25,
+            "nse": 0.5,
+            "volume": 0.25
+          },
+          "lakeScales": {
+            "amplitudeErrorM": 0.1,
+            "peakTimingErrorDays": 14,
+            "rmseM": 0.1,
+            "trendErrorM": 0.1
+          },
+          "lakeWeights": {
+            "amplitude": 0.25,
+            "peakTiming": 0.25,
+            "rmse": 0.25,
+            "trend": 0.25
+          },
+          "version": "continuous-flow-lake-v1",
+          "weights": {
+            "flow": 0.6,
+            "lake": 0.4
+          }
+        },
+        "reverseCheck": false,
+        "seeds": [
+          42,
+          142,
+          242
+        ],
+        "selectionMode": "continuous-dual",
+        "version": 1
+      }
+    }
+  ],
+  "uiParameterRows": {
+    "KC": {
+      "key": "KC",
+      "selected": true,
+      "initial": "0.7143539894250547",
+      "lower": "0.2",
+      "upper": "1.5"
+    },
+    "WM": {
+      "key": "WM",
+      "selected": true,
+      "initial": "180.10725576074435",
+      "lower": "40",
+      "upper": "300"
+    },
+    "B": {
+      "key": "B",
+      "selected": true,
+      "initial": "0.12362853524917454",
+      "lower": "0.02",
+      "upper": "0.8"
+    },
+    "C": {
+      "key": "C",
+      "selected": true,
+      "initial": "0.26189116640935695",
+      "lower": "0.01",
+      "upper": "0.5"
+    },
+    "SM": {
+      "key": "SM",
+      "selected": true,
+      "initial": "60.05529043123532",
+      "lower": "5",
+      "upper": "100"
+    },
+    "EX": {
+      "key": "EX",
+      "selected": true,
+      "initial": "1.016782036689256",
+      "lower": "0.1",
+      "upper": "2.5"
+    },
+    "KI": {
+      "key": "KI",
+      "selected": true,
+      "initial": "0.05453408467128742",
+      "lower": "0.001",
+      "upper": "0.15"
+    },
+    "KG": {
+      "key": "KG",
+      "selected": true,
+      "initial": "0.03597564102910988",
+      "lower": "0.0001",
+      "upper": "0.1"
+    },
+    "IM": {
+      "key": "IM",
+      "selected": true,
+      "initial": "0.019203505157108544",
+      "lower": "0",
+      "upper": "0.2"
+    },
+    "snowDdf": {
+      "key": "snowDdf",
+      "selected": true,
+      "initial": "8.21922005394951",
+      "lower": "1",
+      "upper": "10"
+    },
+    "iceDdf": {
+      "key": "iceDdf",
+      "selected": true,
+      "initial": "11.064146446235254",
+      "lower": "2",
+      "upper": "14"
+    },
+    "snowTemperature": {
+      "key": "snowTemperature",
+      "selected": true,
+      "initial": "0.9925266183579309",
+      "lower": "-5",
+      "upper": "1"
+    },
+    "rainTemperature": {
+      "key": "rainTemperature",
+      "selected": true,
+      "initial": "5",
+      "lower": "0",
+      "upper": "5"
+    },
+    "liquidCapacity": {
+      "key": "liquidCapacity",
+      "selected": true,
+      "initial": "0.1166055718935576",
+      "lower": "0.01",
+      "upper": "0.15"
+    },
+    "refreezeFactor": {
+      "key": "refreezeFactor",
+      "selected": true,
+      "initial": "1.809162003816423",
+      "lower": "0",
+      "upper": "3"
+    },
+    "snowSublimation": {
+      "key": "snowSublimation",
+      "selected": true,
+      "initial": "0.38972750370326054",
+      "lower": "0",
+      "upper": "1"
+    },
+    "glacierRecessionDay": {
+      "key": "glacierRecessionDay",
+      "selected": true,
+      "initial": "0.9367280321216869",
+      "lower": "0.05",
+      "upper": "3"
+    },
+    "lapseRate": {
+      "key": "lapseRate",
+      "selected": true,
+      "initial": "-0.01",
+      "lower": "-0.01",
+      "upper": "-0.002"
+    },
+    "tauHours": {
+      "key": "tauHours",
+      "selected": true,
+      "initial": "103.16477670006633",
+      "lower": "1",
+      "upper": "168"
+    },
+    "lagHours": {
+      "key": "lagHours",
+      "selected": true,
+      "initial": "30.79296214670429",
+      "lower": "0",
+      "upper": "72"
+    },
+    "interflowTauHours": {
+      "key": "interflowTauHours",
+      "selected": true,
+      "initial": "6",
+      "lower": "6",
+      "upper": "240"
+    },
+    "baseflowTauHours": {
+      "key": "baseflowTauHours",
+      "selected": true,
+      "initial": "2159.2085189377794",
+      "lower": "168",
+      "upper": "2160"
+    },
+    "lakeCoefficient": {
+      "key": "lakeCoefficient",
+      "selected": null,
+      "initial": "1.4969999999999999",
+      "lower": "0.2",
+      "upper": "1.5"
+    }
+  },
+  "uiObjectiveSeedsBudgetsMatch": true,
+  "modifiedRevision": {
+    "schemeId": "SCHEME-30aa47f410424b1f8140",
+    "familyId": "FAMILY-99ff96503d2d4263",
+    "revision": 2,
+    "wmLowerBefore": 40,
+    "wmLowerAfter": 41,
+    "runoffBudgetBefore": 6000,
+    "runoffBudgetAfter": 5999,
+    "weightsBefore": {
+      "flow": 0.5,
+      "lake": 0.5
+    },
+    "weightsAfter": {
+      "flow": 0.6,
+      "lake": 0.4
+    },
+    "initialParametersPreserved": true
+  },
+  "success": true
+}

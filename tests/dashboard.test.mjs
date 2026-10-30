@@ -27,13 +27,13 @@ test('overview excludes internal warmup by declared display coverage, without ch
  assert.equal(defaultReplayDay(timelineDates('model',null,result),result),'2021-04-24')
  assert.equal(timelineDates('model',null,{daily:result.daily}).length,4)
 })
-test('dashboard offers the adopted result and explicitly saved simulations only',()=>{
+test('dashboard offers only the adopted result',()=>{
  const rows=screenResults([{id:'old-publication'},{id:'final'}],[{id:'trial',kind:'trial',status:'succeeded',userSaved:1},
   {id:'automatic',kind:'simulation',collection:'历史模拟',favorite:1,status:'succeeded'},
   {id:'user',kind:'simulation',userSaved:1,status:'succeeded'},
   {id:'continued',kind:'continuation',userSaved:1,status:'succeeded'},
   {id:'deleted',kind:'simulation',userSaved:1,status:'succeeded',trashed:1}], 'final')
- assert.deepEqual(rows.map(r=>r.id),['final','trial','user','continued'])
+ assert.deepEqual(rows.map(r=>r.id),['final'])
  assert.equal(rows[0].builtin,true)
  assert.equal(replayResultName(rows[0],'final',{id:'final',result:{daily:[{date:'2021-04-23'},{date:'2026-10-20'}]}}),'历史模拟 · 2021—2026')
  const task={status:'succeeded',result:{daily:[{date:'2025-01-01',lakeLevel:4540,total:5}],units:[{id:'unit'}],inputId:'input'}}

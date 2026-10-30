@@ -1,13 +1,18 @@
 <script setup>
 import {ref,computed,watch,onMounted} from 'vue'
 import DataImport from './DataImport.vue'
+import NativeObservationImport from './NativeObservationImport.vue'
 import {api,number} from './api.mjs'
 import {variableDefinitions} from './business-view.mjs'
 const props=defineProps({boot:Object,busy:Boolean,active:Array})
 const emit=defineEmits(['navigate','refresh','error','submit','station'])
-const tab=ref('forcing'),catalog=ref(null),coverage=ref(null),files=ref([]),station=ref('SLC'),working=ref(false),message=ref(''),startDate=ref(''),endDate=ref('')
+const tab=ref('observations'),catalog=ref(null),coverage=ref(null),working=ref(false),message=ref(''),startDate=ref(''),endDate=ref('')
 const activeUpdate=computed(()=>(props.active||[]).find(t=>t.kind==='update-forcing'))
 const label=v=>variableDefinitions.find(x=>x.id===v)?.label||v
+const stationSummary=computed(()=>(catalog.value?.stations||[]).filter(s=>s.variables?.length).map(s=>({
+ id:s.id,name:s.name,variables:s.variables.map(v=>label(v.id)).join(' / '),
+ latest:s.variables.map(v=>v.validEnd||v.end||'').sort().at(-1)?.slice(0,10)||'暂无记录'
+})))
 async function imported(){
  emit('refresh')
  try{catalog.value=await api('observation-catalog')}catch(e){emit('error',e.message)}
@@ -21,18 +26,6 @@ function update(range=false){
  if(range&&(!startDate.value||!endDate.value||endDate.value<startDate.value)){message.value='请选择有效的起止日期。';return}
  emit('submit',{kind:'update-forcing',...(range?{startDate:startDate.value,endDate:endDate.value}:{})})
 }
-async function upload(){
- working.value=true;message.value=''
- try{
-  const uploaded=[]
-  for(const file of files.value){
-   const response=await fetch('/api/model/upload?'+new URLSearchParams({filename:file.name,station:station.value}),{method:'PUT',body:file})
-   const data=await response.json();if(!response.ok)throw Error(data.error);uploaded.push('incoming/'+data.filename)
-  }
-  emit('submit',{kind:'import-observations'})
-  message.value='资料已上传，正在校验和登记。';files.value=[]
- }catch(e){emit('error',e.message)}finally{working.value=false}
-}
 onMounted(async()=>{
  const results=await Promise.allSettled([api('observation-catalog'),api('forcing-coverage')])
  if(results[0].status==='fulfilled')catalog.value=results[0].value
@@ -41,7 +34,7 @@ onMounted(async()=>{
 watch(()=>props.boot,async()=>{try{coverage.value=await api('forcing-coverage')}catch(e){emit('error',e.message)}})
 </script>
 <template>
- <nav class="workspace-tabs"><button v-for="t in [['forcing','模型气象资料'],['observations','观测资料']]" :key="t[0]" :class="{active:tab===t[0]}" @click="tab=t[0]">{{t[1]}}</button></nav>
+ <nav class="workspace-tabs"><button v-for="t in [['observations','观测资料'],['forcing','模型气象资料']]" :key="t[0]" :class="{active:tab===t[0]}" @click="tab=t[0]">{{t[1]}}</button></nav>
  <template v-if="tab==='forcing'">
   <section class="panel">
    <div class="panel-title"><h3>更新气象资料</h3><span class="badge">ERA5-Land</span><button :disabled="working||busy" @click="checkCoverage">{{working?'检查中…':'检查官方可用范围'}}</button></div>
@@ -58,12 +51,14 @@ watch(()=>props.boot,async()=>{try{coverage.value=await api('forcing-coverage')}
  </template>
  <template v-if="tab==='observations'">
   <section class="panel"><div class="panel-title"><h3>更新观测资料</h3><button class="link" @click="emit('navigate','monitor')">查询监测资料 →</button></div>
-   <DataImport :stations="boot.stations" :disabled="busy||working||active.length>0" @imported="imported" @error="emit('error',$event)"/>
-   <details><summary>导入原格式观测表</summary><div class="result-toolbar"><label>所属站点<select v-model="station"><option v-for="s in boot.stations.filter(s=>['SLC','DUJA','BLQ','115DB'].includes(s.id))" :key="s.id" :value="s.id">{{s.name}}</option></select></label><label class="grow">Excel 文件<input type="file" multiple accept=".xls,.xlsx" @change="files=Array.from($event.target.files)"></label><button :disabled="working||busy||active.length>0||!files.length" @click="upload()">导入</button></div></details>
-   <details><summary>站点降水的用途</summary><p class="note">当前采用成果保留原驱动：主站2024年降水用于湖面降水比例订正。本站雨量同时用于陆域暖时降雨订正对照，水文及湖泊参数保持不变。</p><template v-if="coverage?.precipitationCorrection"><p class="note">独立订正对照已生成；主站、杜加、巴勒切用于具备足够样本的季节估计，115道班参与资料对照。冬季降水保持原驱动。</p><p>对照输入 {{coverage.precipitationCorrection.inputId}} · {{coverage.precipitationCorrection.createdAt?.slice(0,10)}}</p><a v-if="coverage.precipitationCorrection.reportUrl" class="button" :href="coverage.precipitationCorrection.reportUrl" download>下载降水订正对照</a><button v-if="coverage.precipitationCorrection.comparisonTaskId" class="link" @click="emit('navigate','results',coverage.precipitationCorrection.comparisonTaskId)">查看固定参数试算 →</button></template><p v-else class="muted">订正输入和对照成果另存，完成登记后在此提供。</p></details>
-   <div class="actions"><button @click="emit('navigate','simulation')">前往历史模拟 →</button><button @click="emit('navigate','calibration')">前往方案与率定 →</button></div>
+   <NativeObservationImport :stations="boot.stations" :disabled="busy||working||active.length>0" @imported="imported" @error="emit('error',$event)"/>
+   <details><summary>其他格式导入</summary><DataImport :stations="boot.stations" :disabled="busy||working||active.length>0" @imported="imported" @error="emit('error',$event)"/></details>
+   <details><summary>观测资料与模型驱动</summary><p class="muted">站点更新用于监测查询和后续降水订正。率定采用方案绑定的气象与观测版本；新增资料经整编后用于新的方案修订。</p><p v-if="boot.currentBusiness?.inputId">当前方案：{{boot.currentBusiness.name}}<br>驱动版本：{{boot.currentBusiness.inputId}}</p></details>
   </section>
-  <section class="panel"><div class="panel-title"><h3>站点资料范围</h3></div><div class="table-wrap"><table><thead><tr><th>站点 / 要素</th><th>资料时段</th><th>有值记录</th><th>状态</th></tr></thead><tbody><template v-for="s in catalog?.stations||[]" :key="s.id"><tr v-for="v in s.variables" :key="v.id"><td><button class="link" @click="emit('station',s.id)">{{s.name}} · {{label(v.id)}}</button></td><td>{{v.start.slice(0,10)}} — {{v.end.slice(0,10)}}</td><td>{{v.valid.toLocaleString()}}</td><td>{{s.kind==='lake'?(s.id==='SLC'?'主站工作基准':'基准待核'):'观测资料'}}</td></tr></template></tbody></table></div></section>
+  <section class="panel"><div class="panel-title"><h3>站点更新概况</h3><span class="muted">最近有效记录</span></div>
+   <div class="station-summary"><button v-for="s in stationSummary" :key="s.id" @click="emit('station',s.id)"><strong>{{s.name}}</strong><span>{{s.variables}}</span><time>{{s.latest}}</time></button></div>
+   <details><summary>查看各站资料范围</summary><div class="table-wrap"><table><thead><tr><th>站点 / 要素</th><th>有效资料时段</th><th>有值记录</th></tr></thead><tbody><template v-for="s in catalog?.stations||[]" :key="s.id"><tr v-for="v in s.variables" :key="v.id"><td>{{s.name}} · {{label(v.id)}}</td><td>{{v.start.slice(0,10)}} — {{v.end.slice(0,10)}}</td><td>{{v.valid.toLocaleString()}}</td></tr></template></tbody></table></div></details>
+  </section>
  </template>
 </template>
-<style scoped>.resource-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin:18px 0}.resource-summary>div{display:grid;gap:4px;padding:16px;background:#f3f7f8;border-radius:6px}.resource-summary span,.resource-summary small{font-size:12px;color:var(--muted)}.resource-summary b{font-size:19px;font-variant-numeric:tabular-nums}@media(max-width:700px){.resource-summary{grid-template-columns:1fr}}</style>
+<style scoped>.resource-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin:18px 0}.resource-summary>div{display:grid;gap:4px;padding:16px;background:#f3f7f8;border-radius:6px}.resource-summary span,.resource-summary small{font-size:12px;color:var(--muted)}.resource-summary b{font-size:19px;font-variant-numeric:tabular-nums}.station-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}.station-summary button{display:grid;gap:7px;text-align:left;padding:16px;background:#f5f8f9;border-color:#e2ebed}.station-summary button:hover{border-color:var(--accent);background:#eef5f5}.station-summary span{font-size:12px;color:var(--muted)}.station-summary time{font-size:16px;font-variant-numeric:tabular-nums}.panel>details{margin-top:18px}.panel>details>summary{cursor:pointer;color:var(--muted);font-size:13px}@media(max-width:1000px){.station-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:700px){.resource-summary{grid-template-columns:1fr}}</style>

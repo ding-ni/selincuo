@@ -1,14 +1,15 @@
 <script setup>
-import {ref,computed,onMounted,onBeforeUnmount,watch} from 'vue'
+import {ref,computed,onMounted,onBeforeUnmount,watch,nextTick} from 'vue'
 import {colorFor,layers,rivers} from './dashboard.mjs'
 import {projector,placeLabels,placeGeographicLabels,leaderEnd,detailMapUrl,geographicAnchorOverrides} from './map-view.mjs'
 import {selectedGeometry,geometryBounds} from './state-map.mjs'
+import {recordMapTiming} from './map-performance.mjs'
 const props=defineProps({stations:Array,selected:String,focus:String,frame:Object,gridFrame:Object,snow:Object,variable:String,showIce:Boolean,showRivers:Boolean,showTerrain:Boolean,showStations:Boolean,showControl:Boolean,showNames:Boolean,showBoundaries:{type:Boolean,default:true},stateLayer:Object,lakeState:Object,selectedUnit:String,selectedObject:Object,rangeLabel:String,spatialBase:{default:'/spatial/'},showGrid:Boolean,showUnits:Boolean,rangeLayer:Object,reducedMotion:Boolean})
 const emit=defineEmits(['select','feature','failure','unit'])
 const displayFeatures=ref([]),detailedFeatures=ref(null),riverFeatures=ref([]),unitFeatures=ref([]),detailedUnits=ref(null),gridFeatures=ref([]),context=ref(null),presentation=ref(null),terrain=ref(null),spatial=ref(null),loadedBase=ref(''),zoom=ref(1),pan=ref([0,0]),drag=ref(null),moved=ref(false),root=ref(),size=ref({width:800,height:500}),target=ref('domain')
 const legendKey=ref(),legendGroup=ref(),mapTools=ref(),overlayBoxes=ref([])
-let observer,overlayObserver,loadTicket=0,detailTicket=0,hasGeometry=false
-const geometryPaths=new WeakMap()
+let observer,overlayObserver,loadTicket=0,detailTicket=0,paintTicket=0,geometryWorkMs=0,hasGeometry=false
+const geometryPaths=new WeakMap(),fallbackGridGeometry=new Map()
 const fallback=[87.39456665,30.05430052,92.23041647,33.33041666]
 const bounds=computed(()=>presentation.value?.domainBounds||context.value?.domainBounds||fallback),project=computed(()=>projector(bounds.value))
 const xy=p=>project.value(p)
@@ -22,7 +23,17 @@ const fit=computed(()=>{const b=viewBounds.value,a=xy([b[0],b[3]]),z=xy([b[2],b[
 // All views use the same projection origin, including object and lake focus.
 const camera=computed(()=>{const k=fit.value.scale*zoom.value;const offset=xy([viewBounds.value[0],viewBounds.value[3]]);return{k,x:fit.value.x-offset[0]*k+pan.value[0],y:fit.value.y-offset[1]*k+pan.value[1]}})
 const screen=p=>{const a=xy(p),c=camera.value;return[a[0]*c.k+c.x,a[1]*c.k+c.y]}
-function path(g){if(!g)return '';const old=geometryPaths.get(g);if(old?.projection===project.value)return old.value;let value;if(g.type==='LineString')value=g.coordinates.map((c,i)=>`${i?'L':'M'}${xy(c).map(v=>v.toFixed(3)).join(',')}`).join(' ');else if(g.type==='MultiLineString')value=g.coordinates.map(c=>path({type:'LineString',coordinates:c})).join(' ');else{const ps=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[];value=ps.map(p=>p.map(r=>path({type:'LineString',coordinates:r})+'Z').join(' ')).join(' ')}geometryPaths.set(g,{projection:project.value,value});return value}
+function path(g){
+ if(!g)return ''
+ const old=geometryPaths.get(g);if(old?.projection===project.value)return old.value
+ const started=performance.now(),line=coordinates=>coordinates.map((c,i)=>`${i?'L':'M'}${xy(c).map(v=>v.toFixed(3)).join(',')}`).join(' ')
+ let value
+ if(g.type==='LineString')value=line(g.coordinates)
+ else if(g.type==='MultiLineString')value=g.coordinates.map(line).join(' ')
+ else{const polygons=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[];value=polygons.map(p=>p.map(r=>line(r)+'Z').join(' ')).join(' ')}
+ geometryPaths.set(g,{projection:project.value,value});geometryWorkMs+=performance.now()-started
+ return value
+}
 const basins=computed(()=>features.value.filter(f=>f.properties.kind==='basin'))
 const displayedBasinIds=new Set(['zajia','zagen','boqu','ali','fringe'])
 const namedBasinIds=new Set(['zajia','zagen','boqu','ali'])
@@ -48,7 +59,6 @@ const stationLabels=computed(()=>{
 const stationLabel=id=>stationLabels.value.find(s=>s.id===id)
 // Names remain on their geographic interior points, regardless of stations.
 const labels=computed(()=>placeGeographicLabels((presentation.value?.labels||context.value?.labels||[]).filter(l=>l.kind==='lake'||l.kind==='basin'&&namedBasinIds.has(l.id)).map(l=>{const anchor=geographicAnchorOverrides[l.id]||l.anchor||l.coordinate,geo=namedBasins.value.find(f=>f.properties.id===l.id),[x,y]=screen(anchor);return{...l,anchor,areaKm2:geo?.properties.areaKm2??l.areaKm2,x,y,fontSize:l.kind==='lake'?16:13}}).filter(l=>l.x>=0&&l.y>=0&&l.x<=size.value.width&&l.y<=size.value.height)))
-const selectionPins=computed(()=>geometryReady.value?selectedFeatures.value.flatMap(f=>(f.geometry?.type==='MultiPolygon'?f.geometry.coordinates.map(c=>({geometry:{type:'Polygon',coordinates:c}})):[f])).map(f=>geometryBounds([f])).filter(Boolean).map(b=>{const a=screen([b[0],b[3]]),z=screen([b[2],b[1]]);return{x:(a[0]+z[0])/2,y:(a[1]+z[1])/2,small:Math.max(z[0]-a[0],z[1]-a[1])<9}}).filter(p=>p.small):[])
 const terrainLevel=computed(()=>[...(terrain.value?.levels||[])].sort((a,b)=>(a.minZoom||0)-(b.minZoom||0)).filter(level=>zoom.value>=(level.minZoom||0)).at(-1))
 const terrainBox=computed(()=>{const b=terrainLevel.value?.bounds||terrain.value?.bounds||context.value?.bounds||[87.1,29.8,92.5,33.6],p=xy([b[0],b[3]]),q=xy([b[2],b[1]]);return{x:p[0],y:p[1],width:q[0]-p[0],height:q[1]-p[1]}})
 const terrainImage=computed(()=>terrainLevel.value?.image||terrain.value?.image||props.spatialBase+'terrain-display.png')
@@ -76,6 +86,17 @@ function selectBasin(id){const f=basins.value.find(f=>f.properties.id===id);if(f
 const weatherFrame=computed(()=>['precipitation','temperature','evaporation'].includes(props.variable)?props.frame:props.gridFrame)
 const weatherLayer=computed(()=>layers.find(l=>l.id===weatherFrame.value?.variable)||layers[0])
 const cellValues=computed(()=>new Map((weatherFrame.value?.complete?(weatherFrame.value.cells||[]):[]).map(c=>[c.id,c.value])))
+const gridGeometry=computed(()=>{
+ const geometries=new Map()
+ // ERA cells are rectangles clipped to the domain by the SVG. Reuse those
+ // rectangles: grid.geojson is already clipped and can have many vertices.
+ for(const c of props.frame?.cells||[]){
+  const key=[c.id,c.lon,c.lat].join('|')
+  if(!fallbackGridGeometry.has(key))fallbackGridGeometry.set(key,{type:'Polygon',coordinates:[[[c.lon-.05,c.lat-.05],[c.lon+.05,c.lat-.05],[c.lon+.05,c.lat+.05],[c.lon-.05,c.lat+.05],[c.lon-.05,c.lat-.05]]]})
+  geometries.set(c.id,fallbackGridGeometry.get(key))
+ }
+ return geometries
+})
 const gridPaint=computed(()=>['basin','terrain'].includes(props.variable))
 function gridSelect(f){if(moved.value)return;const p=f.properties,index=spatial.value?.grids?.findIndex(g=>g.id===p.id),ids=new Set((spatial.value?.aggregation||[]).filter(g=>g.members.some(m=>m.gridIndex===index)).map(g=>g.unitId));const members=unitFeatures.value.filter(u=>u.properties.grid===p.id||ids.has(u.properties.id)).map(f=>f.properties);emit('feature',{...p,name:'气象格网 · '+(weatherFrame.value?.variable==='precipitation'?'日降水':weatherLayer.value.label),value:cellValues.value.get(p.id),unit:weatherLayer.value.unit,unitCount:members.length,members})}
 async function loadGeometry(){
@@ -130,6 +151,17 @@ function observeOverlays(){
  updateOverlayBoxes()
 }
 watch([legendKey,legendGroup,mapTools],observeOverlays,{flush:'post'})
+watch(()=>[props.variable,props.frame,props.snow,loadedBase.value],async()=>{
+ const ticket=++paintTicket,started=performance.now(),geometryBefore=geometryWorkMs,variable=props.variable||'basin'
+ await nextTick()
+ if(ticket!==paintTicket)return
+ const committed=performance.now()
+ recordMapTiming('geometry:'+variable,started,geometryWorkMs-geometryBefore)
+ recordMapTiming('dom:'+variable,started,committed-started)
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  if(ticket===paintTicket)recordMapTiming('present:'+variable,committed,performance.now()-committed)
+ }))
+},{flush:'pre'})
 watch(()=>props.spatialBase,loadGeometry,{immediate:true})
 watch(zoom,value=>{if(value>=2&&!detailedFeatures.value&&!detailedUnits.value)loadDetail()})
 onMounted(()=>{observer=new ResizeObserver(([e])=>{
@@ -144,14 +176,14 @@ onMounted(async()=>{
  try{let r=await fetch('/spatial/presentation.json');if(!r.ok)r=await fetch('/spatial/display-context.json');if(r.ok)presentation.value=await r.json()}catch{}
  try{let r=await fetch('/spatial/terrain-current.json');if(!r.ok)r=await fetch('/spatial/terrain-elevation.json');if(r.ok)terrain.value=await r.json()}catch{}
 })
-onBeforeUnmount(()=>{observer?.disconnect();overlayObserver?.disconnect();loadTicket++;detailTicket++})
+onBeforeUnmount(()=>{observer?.disconnect();overlayObserver?.disconnect();loadTicket++;detailTicket++;paintTicket++})
 </script>
 <template><div class="screen-map" :class="{'basin-view':variable==='basin'}" :style="{'--map-label-stroke':(presentation?.symbols?.labelStrokeWidth||2)+'px','--map-station-stroke':(presentation?.symbols?.stationStrokeWidth||1)+'px'}" :data-spatial-ready="geometryReady" :data-spatial-base="loadedBase" :data-boundary-detail="zoom>=2&&!!detailedFeatures" :data-unit-detail="zoom>=2&&!!detailedUnits"><svg ref="root" :viewBox="`0 0 ${size.width} ${size.height}`" :data-zoom="zoom" role="img" aria-label="色林错全流域、四河分区及测站地图" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up" @wheel.prevent="focusAt($event.deltaY<0?1.15:1/1.15,point($event))"><defs><pattern id="screen-graticule" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M50 0H0V50" fill="none" stroke="currentColor" stroke-width=".5"/></pattern><clipPath id="screen-domain"><path v-for="(f,i) in features.filter(f=>f.properties.kind==='domain')" :key="i" :d="path(f.geometry)"/></clipPath><pattern id="fringe-hatch" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 5L5 0" stroke="var(--basin-fringe)" stroke-width=".5" opacity=".55"/></pattern></defs>
  <rect :width="size.width" :height="size.height" fill="url(#screen-graticule)" class="graticule"/>
  <g class="map-world" :transform="`translate(${camera.x},${camera.y}) scale(${camera.k})`">
   <image v-if="showTerrain||variable==='terrain'" :href="terrainImage" v-bind="terrainBox" class="terrain-image" clip-path="url(#screen-domain)"/>
   <path v-for="f in basins" :key="f.properties.id" :d="path(f.geometry)" :data-basin="f.properties.id" :class="['screen-geo','basin',f.properties.id,{'basin-background':!displayedBasinIds.has(f.properties.id),focused:focus===f.properties.id}]" fill-rule="evenodd" @click="displayedBasinIds.has(f.properties.id)&&selectFeature(f)"><title v-if="displayedBasinIds.has(f.properties.id)">{{f.properties.name}}流域 · {{f.properties.areaKm2.toFixed(1)}} km²</title></path>
-  <g v-if="geometryReady&&rawGrid" class="thematic-grid" clip-path="url(#screen-domain)"><path v-for="c in frame.cells" :key="c.id" :data-grid="c.id" :data-value="c.value" :d="path({type:'Polygon',coordinates:[[[c.lon-.05,c.lat-.05],[c.lon+.05,c.lat-.05],[c.lon+.05,c.lat+.05],[c.lon-.05,c.lat+.05],[c.lon-.05,c.lat-.05]]]})" :fill="colorFor(c.value,currentLayer)" class="grid-cell" @click.stop="gridSelect({properties:c})"><title>{{c.id}}：{{c.value?.toFixed(2)??'缺测'}} {{currentLayer.unit}} · 再分析格网原值</title></path></g>
+  <g v-if="geometryReady&&rawGrid" class="thematic-grid" clip-path="url(#screen-domain)"><path v-for="c in frame.cells" :key="c.id" :data-grid="c.id" :data-value="c.value" :d="path(gridGeometry.get(c.id))" :fill="colorFor(c.value,currentLayer)" class="grid-cell" @click.stop="gridSelect({properties:c})"><title>{{c.id}}：{{c.value?.toFixed(2)??'缺测'}} {{currentLayer.unit}} · 再分析格网原值</title></path></g>
   <g v-if="geometryReady&&variable==='snow'&&snow?.complete"><path v-for="f in shownUnits" :key="f.properties.id" :d="path(f.geometry)" :fill="colorFor(snowIndex.get(f.properties.id),currentLayer)" class="snow-unit" :class="{chosen:selectedUnit===f.properties.id}" fill-rule="evenodd" @click.stop="emit('unit',f.properties.id)"/></g>
   <g v-if="geometryReady&&showUnits" class="calculation-unit-edges"><path v-for="f in shownUnits" :key="f.properties.id" :d="path(f.geometry)" :class="{chosen:selectedUnit===f.properties.id}" fill-rule="evenodd" @click.stop="!moved&&emit('unit',f.properties.id)"><title>{{f.properties.id}} · {{f.properties.areaKm2.toFixed(3)}} km² · {{f.properties.partition}} · {{f.properties.elevationBandMin}}—{{f.properties.elevationBandMax}}m</title></path></g>
   <g v-if="geometryReady&&showGrid" class="meteorological-grid" :data-variable="weatherFrame?.variable" clip-path="url(#screen-domain)"><path v-for="f in gridFeatures" :key="f.properties.id" :d="path(f.geometry)" :data-grid="f.properties.id" :data-value="cellValues.get(f.properties.id)" :style="{fill:gridPaint?colorFor(cellValues.get(f.properties.id),weatherLayer):'transparent',fillOpacity:gridPaint?0.4:1}" fill-rule="evenodd" @click.stop="gridSelect(f)"><title>{{f.properties.id}} · {{weatherFrame?.variable==='precipitation'?'日降水':weatherLayer.label}} {{cellValues.get(f.properties.id)?.toFixed(2)??'缺测'}} {{weatherLayer.unit}} · 再分析格网原值</title></path></g>
@@ -165,7 +197,6 @@ onBeforeUnmount(()=>{observer?.disconnect();overlayObserver?.disconnect();loadTi
   <path v-for="f in namedBasins.filter(f=>f.properties.id===focus)" :key="'focus'+f.properties.id" :d="path(f.geometry)" class="basin-selection" fill="url(#fringe-hatch)" fill-rule="evenodd" pointer-events="none"/>
   <g v-if="geometryReady&&selectedObject" class="selected-object-layer" :data-object="selectedObject.id" :data-scope="selectedObject.scope"><path v-for="f in selectedFeatures" :key="'selected-'+f.properties.id" :d="path(f.geometry)" class="selected-object-highlight" fill-rule="evenodd"/></g>
  </g>
- <g class="selected-location-markers"><circle v-for="(pin,i) in selectionPins" :key="i" :cx="pin.x" :cy="pin.y" r="7" class="selected-object-pin"><title>微小片区位置标记，原几何面积未放大</title></circle></g>
  <g v-if="showStations" v-for="s in positioned" :key="s.id" :data-station="s.id" :transform="`translate(${screen([s.lon,s.lat]).join(',')})`" :class="['screen-station',s.kind,{chosen:selected===s.id}]" @click.stop="emit('select',s.id)" @keydown.enter="emit('select',s.id)" @keydown.space.prevent="emit('select',s.id)" role="button" tabindex="0" :aria-label="'查看'+s.name"><title>{{s.name}} · {{s.id.startsWith('SLC-')?'用户GCJ-02坐标近似转换至WGS84':'已登记站点位置'}}</title><path v-if="stationLabel(s.id)" :d="`M0 0L${stationLabel(s.id).leaderEnd[0]-stationLabel(s.id).anchor[0]},${stationLabel(s.id).leaderEnd[1]-stationLabel(s.id).anchor[1]}`" class="label-leader"/><circle class="station-halo" :r="selected===s.id?11:8"/><path v-if="s.kind==='rain'" :d="`M0 ${-stationRadius-1}L${stationRadius+1} ${stationRadius}H${-stationRadius-1}Z`"/><rect v-else-if="s.kind==='river'" :x="-stationRadius" :y="-stationRadius" :width="2*stationRadius" :height="2*stationRadius" transform="rotate(45)"/><circle v-else :r="stationRadius"/><text v-if="stationLabel(s.id)" :x="stationLabel(s.id).cx-stationLabel(s.id).anchor[0]" :y="stationLabel(s.id).cy-stationLabel(s.id).anchor[1]+4" text-anchor="middle">{{s.name.replace('色林错','')}}</text></g>
  <g v-if="showNames" class="basin-labels"><g v-for="l in labels" :key="l.id||l.kind" :data-label="l.id||l.kind" :data-anchor="l.anchor.join(',')" :class="['basin-map-label',l.id||l.kind,{focused:focus===l.id}]" role="button" tabindex="0" :aria-label="l.kind==='lake'?'色林错':l.name+'流域'" @click.stop="emit('feature',l)" @keydown.enter="emit('feature',l)"><text :x="l.cx" :y="l.cy+(l.lines.length===1?4:-3)" text-anchor="middle"><tspan v-for="(line,i) in l.lines" :key="i" :x="l.cx" :dy="i?13:0">{{line}}</tspan></text></g></g>
  <text x="18" y="25" class="north-label">↑ N</text><g class="scale-bar" :transform="`translate(18,${size.height-45})`"><path :d="`M0 -5V0H${scaleKm*camera.k}V-5`"/><text x="0" y="15">{{scaleKm}} km</text></g></svg>

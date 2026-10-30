@@ -25,6 +25,15 @@ STATIONS = [
 ]
 
 
+def shore_station(sheet):
+    """Map the monitoring system's shore sheet names to their own stations."""
+    title = re.sub(r'[\s_\-（）()]+', '', str(sheet))
+    match = re.fullmatch(r'(?:色林错|色|\d{2,4})?([东南西北])(?:岸|站)?(?:水位)?(?:数据|资料|表)?', title)
+    if not match:
+        return None
+    return 'SLC-' + {'东': 'E', '南': 'S', '西': 'W', '北': 'N'}[match.group(1)]
+
+
 def station_for(path, sheet=''):
     parts = str(path).replace('\\', '/').lower()
     if '115daoban/' in parts:
@@ -34,9 +43,9 @@ def station_for(path, sheet=''):
     if 'dj/' in parts:
         return 'DUJA'
     if '东南西北' in parts:
-        for char, suffix in [('东', 'E'), ('南', 'S'), ('西', 'W'), ('北', 'N')]:
-            if char in sheet:
-                return 'SLC-' + suffix
+        station = shore_station(sheet)
+        if station:
+            return station
         raise ValueError(f'四岸水位工作表缺少明确方位：{sheet}')
     return 'SLC'
 
@@ -82,12 +91,17 @@ def scan(root):
             for p in sorted(root.rglob('*')) if p.suffix.lower() in ('.xls', '.xlsx') and not p.name.startswith('~$')]
 
 
-def xlsx_records(path):
+def xlsx_records(path, station_override=None, variable_override=None):
     from openpyxl import load_workbook
     wb = load_workbook(path, read_only=True, data_only=True)
-    variable = variable_for(path)
+    variable = variable_override or variable_for(path)
     for sheet in wb:
-        station = station_for(path, sheet.title)
+        if station_override == 'SHORES':
+            station = shore_station(sheet.title)
+            if station is None:
+                continue
+        else:
+            station = station_for(path, sheet.title) if station_override is None else station_override
         previous_level = None
         for index, values in enumerate(sheet.iter_rows(values_only=True), 1):
             if not values or not isinstance(values[0], datetime):
@@ -105,17 +119,49 @@ def xlsx_records(path):
     wb.close()
 
 
-def xls_records(path):
+def _xls_report_year(wb):
+    """Read only an explicitly labelled report year, not its creation date."""
+    years = set()
+    for sheet in wb.sheets():
+        for r in range(min(8, sheet.nrows)):
+            row = [str(sheet.cell_value(r, c)).strip() for c in range(min(16, sheet.ncols))]
+            for index, cell in enumerate(row):
+                if '年份' not in cell and '年度' not in cell:
+                    continue
+                for text in row[index:min(len(row), index + 4)]:
+                    match = re.search(r'(?<!\d)(20\d{2})(?!\d)', text)
+                    if match:
+                        years.add(int(match.group(1)))
+                        break
+    if len(years) > 1:
+        raise ValueError('工作表中的年度不一致，请核对原表')
+    return next(iter(years), None)
+
+
+def xls_records(path, station_override=None, variable_override=None, source_name=None):
     import xlrd
     wb = xlrd.open_workbook(str(path), on_demand=True)
-    variable = variable_for(path)
-    match = re.search(r'(20\d{2})', Path(path).name)
-    if not match or not variable:
+    variable = variable_override or variable_for(path)
+    # Incoming files have random prefixes that can themselves contain 20xx.
+    # Only the user's original file name (or a labelled report year) is data.
+    name = Path(path).name if source_name is None else Path(source_name).name
+    match = re.search(r'(?<!\d)(20\d{2})(?!\d)', name)
+    name_year = int(match.group(1)) if match else None
+    report_year = _xls_report_year(wb)
+    if name_year and report_year and name_year != report_year:
+        wb.release_resources()
+        raise ValueError('文件名年度与工作表年度不一致，请核对原表')
+    year = name_year or report_year
+    if not year or not variable:
         wb.release_resources()
         return
-    year = int(match.group(1))
     for sheet in wb.sheets():
-        station = station_for(path, sheet.name)
+        if station_override == 'SHORES':
+            station = shore_station(sheet.name)
+            if station is None:
+                continue
+        else:
+            station = station_for(path, sheet.name) if station_override is None else station_override
         monthly_headers = None
         for r in range(min(8, sheet.nrows)):
             row = [str(sheet.cell_value(r, c)).strip() for c in range(sheet.ncols)]
@@ -268,6 +314,20 @@ def daily_series(db, station, variable, start=None, end=None):
             source_rows = db.rows('''SELECT time,value,quality FROM observations
                 WHERE source_id=? AND station_id=? AND variable=? AND step='irregular'
                 ORDER BY time,id''', (c['source_id'], station, variable))
+            # Native increments update individual event times without claiming
+            # new coverage. Overlay them only inside this already-confirmed
+            # coverage; missing days outside it must never become zero.
+            increments = db.rows('''SELECT * FROM (SELECT o.time,o.value,o.quality,
+                    ROW_NUMBER() OVER(PARTITION BY o.time ORDER BY s.imported_at DESC,o.id DESC) rn
+                    FROM observations o JOIN sources s ON s.id=o.source_id
+                    WHERE o.station_id=? AND o.variable=? AND o.step='irregular'
+                    AND o.time>=? AND o.time<? AND s.path LIKE 'native-excel/%'
+                    AND s.rowid>(SELECT rowid FROM sources WHERE id=?)) WHERE rn=1''',
+                    (station, variable, a.isoformat(), b.isoformat(), c['source_id']))
+            if increments:
+                merged = {r['time']: r for r in source_rows}
+                merged.update({r['time']: r for r in increments})
+                source_rows = list(merged.values())
             values = pd.Series(0., index=days)
             if source_rows:
                 source = pd.DataFrame(source_rows)

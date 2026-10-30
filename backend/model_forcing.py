@@ -68,11 +68,15 @@ def verify_product(db, product, spatial=None):
             or m.get('timeMeaning') != 'end of hourly accumulation interval'
             or m.get('units') != UNITS):
         raise ValueError('气象资料的变量、单位、时区或累计量处理不一致')
-    if (m.get('transformationSHA256') != _required_correction()
-            or digest(m.get('lakePrecipitationCorrection')) != m.get('transformationSHA256')):
+    lake_rule=m.get('lakePrecipitationCorrection') or {}
+    if (digest(lake_rule) != m.get('transformationSHA256') or
+            (m.get('transformationSHA256') != _required_correction() and
+             lake_rule.get('method') != 'station-warm-rain-grid-v1')):
         raise ValueError('气象资料缺少当前方案的湖面降水处理规则')
     from .land_precipitation import validate_manifest
     validate_manifest(m)
+    from .forcing import lake_precipitation_factor
+    lake_precipitation_factor(m)
     source_spatial = grid_spatial.load(m['spatialVersion'])
     if spatial is not None and digest(source_spatial['grids']) != spatial.get('forcingGridVersion', digest(spatial['grids'])):
         raise ValueError('模型气象格网与方案计算格网不一致')

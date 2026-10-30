@@ -41,14 +41,21 @@ def validate_options(options):
     for key in ('reverseCheck','finalRefit','allowExtension'):
         if type(value[key])!=bool:
             raise ValueError('率定流程选项无效')
-    if value['selectionMode'] not in ('flow-only','flow-constrained-lake'):
+    if value['selectionMode'] not in ('flow-only','flow-constrained-lake','continuous-dual'):
         raise ValueError('请选择有效的共享参数筛选方式')
-    if not isinstance(value['candidateSourceTaskId'],str) or not value['candidateSourceTaskId'].strip():
+    continuous=value['selectionMode']=='continuous-dual'
+    if continuous:
+        from .calibration_objective import validate_objective
+        value['objective']=validate_objective(value.get('objective'))
+        value['flowConstraints']=None
+        value['candidateSourceTaskId']=None
+        value['reverseCheck']=False
+    if not continuous and (not isinstance(value['candidateSourceTaskId'],str) or not value['candidateSourceTaskId'].strip()):
         raise ValueError('参考候选任务编号无效')
     if value['baselineTaskId'] is not None and (not isinstance(value['baselineTaskId'],str) or not value['baselineTaskId'].strip()):
         raise ValueError('基准成果编号无效')
     constraints=value['flowConstraints']
-    if (not isinstance(constraints,dict) or set(constraints)!={'minNse','maxAbsPbias'} or
+    if not continuous and (not isinstance(constraints,dict) or set(constraints)!={'minNse','maxAbsPbias'} or
             any(isinstance(constraints[k],bool) or not isinstance(constraints[k],(int,float)) or
                 not np.isfinite(constraints[k]) for k in constraints) or
             not -1<=constraints['minNse']<=1 or not 0<=constraints['maxAbsPbias']<=100):
@@ -87,13 +94,14 @@ def prepare(db,payload):
     prepared.update(twoStage=options,end=last.isoformat(),evaluationStart=options['lakePeriods']['trainingStart'],
                     evaluationEnd=last.isoformat(),purpose='business')
     prepared['parameters']=deepcopy(prepared['schemeSnapshot'].get('calibrationInitialParameters',prepared['parameters'])) if options['mode']!='lake' else prepared['parameters']
-    if options['mode']=='both' and options['selectionMode']=='flow-constrained-lake':
+    if options['mode']=='both' and options['selectionMode'] in ('flow-constrained-lake','continuous-dual'):
         from .business_selection import current
         from .lake_constrained_calibration import candidate_source
         if not prepared['search']['keys']:
             raise ValueError('湖位联合筛选需要选择水文参数')
-        _,path=candidate_source(db,options['candidateSourceTaskId'])
-        prepared['_candidateSourceTraceSHA256']=sha_file(path)
+        if options['selectionMode']=='flow-constrained-lake':
+            _,path=candidate_source(db,options['candidateSourceTaskId'])
+            prepared['_candidateSourceTraceSHA256']=sha_file(path)
         baseline=options.get('baselineTaskId') or current(db).get('resultId')
         if baseline:
             task=db.task(baseline)
@@ -134,10 +142,14 @@ def run(db,request,folder,progress,cancelled):
     state=read_json(state_path,{'phase':'flow','completed':[]})
     fits=[]
     periods=request['periods']
-    joint=options['mode']=='both' and options.get('selectionMode')=='flow-constrained-lake'
+    continuous=options.get('selectionMode')=='continuous-dual'
+    joint=options['mode']=='both' and options.get('selectionMode') in ('flow-constrained-lake','continuous-dual')
     selection=None
     if joint:
-        from .lake_constrained_calibration import run_selection
+        if continuous:
+            from .dual_calibration import run_selection
+        else:
+            from .lake_constrained_calibration import run_selection
         state.update(phase='joint',fit='joint')
         write_json(state_path,state)
         selection=run_selection(db,request,source,folder/'joint',progress,cancelled)
@@ -158,7 +170,7 @@ def run(db,request,folder,progress,cancelled):
              'converged':selection['refinement']['converged'],
              'termination':selection['refinement']['termination'],
              'validationExcludedFromSearch':False}
-        flow_records.append(fit)
+        flow_records.extend(selection['flowFits'] if continuous else [fit])
         state['completed']=['joint']
         write_json(state_path,state)
     elif options['mode']!='lake':
@@ -254,6 +266,10 @@ def run(db,request,folder,progress,cancelled):
     if cancelled():
         raise InterruptedError('已停止，率定结果与来水基准已保存，可继续')
     state.update(phase='final-simulation')
+    if continuous and joint and baseline['parameters']==selected:
+        # Joint selection already supplied the final conditional lake value.
+        # Its full baseline is the required formal run, including all states.
+        state['finalFolder']=state['baselineFolder']
     write_json(state_path,state)
     working['parameters']=selected
     output_folder=within(folder,state.get('finalFolder','final-output'))
@@ -291,14 +307,14 @@ def run(db,request,folder,progress,cancelled):
         'stationAfterRouting':'Duja included once within Zajia; existing partition routing retained'}
     if joint:
         final['calibrationWorkflow']['selection']=selection
-    final['calibration']={'algorithm':'flow-constrained-lake-v1' if joint else 'flow-then-lake-v1','evaluations':sum(r['evaluations'] for r in flow_records),
+    final['calibration']={'algorithm':('fresh-grouped-continuous-dual-v1' if continuous else 'flow-constrained-lake-v1') if joint else 'flow-then-lake-v1','evaluations':sum(r['evaluations'] for r in flow_records),
         'stages':[{'stage':r['fit'],'evaluations':r['evaluations'],'bestObjective':r['bestObjective'],
                    'converged':r['converged'],'termination':r['termination']} for r in flow_records],
         'seeds':options['seeds'],'trace':[],'traceExternal':True,'objectiveProfile':request['search']['objectiveProfile'],
         'converged':(not flow_records or flow_records[-1]['converged']) and (lake_record is None or lake_record['final']['converged']),
         'termination':'completed-with-recorded-search-status',
         'bestObjective':flow_records[-1]['bestObjective'] if flow_records else lake_record['final']['training']['rmse']}
-    hydrology_source=({'method':('Duja-flow-constrained-lake-selection' if joint else
+    hydrology_source=({'method':(('continuous-flow-lake-calibration' if continuous else 'Duja-flow-constrained-lake-selection') if joint else
                                   'Duja-flow-all-data-refit' if options['finalRefit'] else 'Duja-flow-split-fit'),
                        'keys':request['search']['keys'],'periods':periods} if flow_records else
                       deepcopy(request.get('_fixedHydrologySource') or request['schemeSnapshot'].get('parameterSources',{}).get('hydrology',

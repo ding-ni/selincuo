@@ -132,8 +132,11 @@ def station_samples(db, source, confirmed):
             event_sum=sum(float(r['value']) for r in events) if valid_events else None
             disagreement=(daily_value is not None and coverage is not None and
                           (event_sum is None or abs(daily_value-event_sum)>1e-6))
-            if disagreement:conflicts.append({'station':station,'date':day,'dailyMm':daily_value,'eventMm':event_sum})
-            if coverage is None or disagreement or not valid_events:
+            if disagreement:
+                conflicts.append({'station':station,'date':day,'dailyMm':daily_value,'eventMm':event_sum})
+                item['source']='excluded-unresolved-daily-event-conflict'
+                rows.append(item);continue
+            if coverage is None or not valid_events:
                 # A daily-only or conflicting day can be paired only if the
                 # entire day is warm; the daily report keeps precedence.
                 if daily_value is not None and tmin.at[date,station]>=5.:

@@ -30,6 +30,7 @@ export function calibrationCounts(task) {
  const selection = workflow.selection
  const fits = workflow.flowFits || []
  if (selection) return {
+  ...(selection.totalGenerated!=null?{generated:selection.totalGenerated}:{}),
   rescored: selection.totalRescored,
   eligible: selection.eligibleRescored,
   selectedForBasin: selection.selectedForBasin,
@@ -48,7 +49,7 @@ function replayConfiguration(task, replayPlan) {
 }
 
 export function calibrationRecordObjective(task, replayPlan) {
- const frozen = task?.result?.objectiveSpec ?? task?.result?.calibration?.objectiveSpec ??
+ const frozen = task?.request?.twoStage?.objective ?? task?.result?.objectiveSpec ?? task?.result?.calibration?.objectiveSpec ??
   task?.result?.calibrationWorkflow?.objectiveSpec ?? task?.result?.replay?.configuration?.objectiveSpec ??
   task?.request?.replayConfiguration?.objectiveSpec ?? replayConfiguration(task,replayPlan)?.objectiveSpec
  // Older records may contain only a profile name. Current profile settings are
@@ -68,6 +69,7 @@ export function recordDownload(task, definitions = [], replayPlan) {
   initialization: task?.result?.initialization ?? replayResult.initialization ?? replayRequest.initialization ?? plan.initialization ?? request.initialization ?? null,
   objectiveSpec: calibrationRecordObjective(task,replayPlan),
   inputId: request.inputId, spatialVersion: request.spatialVersion, search: request.search,
+  calibrationConfigurationSHA256: request.calibrationConfigurationSHA256,
   twoStage: request.twoStage, counts: calibrationCounts(task),
   parameterSources: task?.result?.parameterSources,
   workflow: task?.result?.calibrationWorkflow, replay: task?.result?.replay }

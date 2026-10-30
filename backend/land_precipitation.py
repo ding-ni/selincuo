@@ -17,6 +17,7 @@ import pandas as pd
 from .common import canonical, digest, now, read_json, sha_file, within
 
 METHOD = 'station-warm-rain-spatial-v1'
+LAKE_METHOD = 'station-warm-rain-grid-v1'
 SEASONS = ('DJF', 'MAM', 'JJA', 'SON')
 _factor_cache = {}
 
@@ -138,7 +139,7 @@ def corrected_member_precipitation(profile, grids, times, raw_precip, raw_temp, 
     return np.where(mask, raw_precip*factors, raw_precip)
 
 
-def register_product(db, parent_id, profile):
+def register_product(db, parent_id, profile, lake_warm_rain=False):
     """Register a new immutable input whose forcing bytes are a hard link/copy."""
     validate_profile(profile)
     rows = [x for x in db.items('input_products') if x['id'] == parent_id]
@@ -150,8 +151,15 @@ def register_product(db, parent_id, profile):
     if profile.get('parentDataSHA256') != parent.get('dataSHA256'):
         raise ValueError('站雨订正与来源气象摘要不一致')
     land_sha = digest(profile)
+    lake_rule = ({'method': LAKE_METHOD, 'scope': 'lake-warm-rain',
+                  'landTransformationSHA256': land_sha, 'temperatureThresholdC': 5.0,
+                  'definitionVersion': 2,
+                  'note': '格网暖时降雨逐格订正，冷时保持原始降水；不叠加旧全年倍率'}
+                 if lake_warm_rain else None)
     identity = {'parentInputId': parent_id, 'parentDataSHA256': parent['dataSHA256'],
                 'landTransformationSHA256': land_sha}
+    if lake_rule is not None:
+        identity['lakePrecipitationCorrection'] = lake_rule
     identifier = 'INPUT-' + digest(identity)[:24]
     folder = within(db.workspace / 'inputs/products', identifier)
     previous = [x for x in db.items('input_products') if x['id'] == identifier]
@@ -176,6 +184,13 @@ def register_product(db, parent_id, profile):
     manifest = {**deepcopy(parent), 'id': identifier, 'name': 'ERA5-Land · 站点暖雨订正对照',
                 'createdAt': now(), 'parentInputId': parent_id,
                 'landPrecipitationCorrection': deepcopy(profile), 'landTransformationSHA256': land_sha}
+    if lake_rule is not None:
+        manifest.update(name='ERA5-Land · 陆域与湖面暖雨订正',
+                        lakePrecipitationCorrection=lake_rule, transformationSHA256=digest(lake_rule),
+                        assumptions=[x for x in parent.get('assumptions', [])
+                                     if not x.startswith(('仅湖面降水乘','单站代表湖面'))] +
+                                    ['陆域与湖面依据固定暖时及站点季节倍率订正；冷时保持原始降水',
+                                     '格点气温代理降水相态；湖面不叠加既有全年倍率'])
     path = folder/'manifest.json'
     if path.exists():
         stored = read_json(path)

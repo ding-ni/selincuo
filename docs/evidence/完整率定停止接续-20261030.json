@@ -1,0 +1,24 @@
+{
+  "taskId": "JOB-6536f36e07cc46868255",
+  "before": {
+    "status": "running",
+    "progress": 14.585399999999998,
+    "message": "分期率定与检验 · 水文参数 · runoff · 27010次 · 最优 0.15689"
+  },
+  "stoppedStatus": "cancelled",
+  "resumedStatus": "queued",
+  "configurationSHA256": "51a6c27f9579b83948a74beff3f3c21bb9eef0bd2abd3c1457b71dd6f6aad7c8",
+  "requestUnchanged": true,
+  "phase": {
+    "phase": "continuous-dual",
+    "completed": [],
+    "fit": "joint/training/flow",
+    "phaseLabel": "分期率定与检验",
+    "fitIndex": 0,
+    "fitCount": 2
+  },
+  "savedEvaluations": 27016,
+  "savedOptimizerSHA256": "49b61feb54589cddf306342d18c3b12cd3f6fd3d3f4a98e1879ce24094d59c78",
+  "optimizerUnchangedWhileQueued": true,
+  "scope": "实际任务停止和接续；继续使用原轨迹、种群、随机状态和冻结资料"
+}

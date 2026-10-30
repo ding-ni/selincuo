@@ -7,7 +7,7 @@ from .common import ROOT,digest,sha_file,read_json,write_json,within
 from .model_core import parameters,PARAMETER_NAMES,STATE_NAMES,initial_states,normalize_initial_hydrology
 from .parameter_regions import resolve_regions,region_initial_states,run_region_kernel
 from .routing import route_partition
-from .forcing import load_input,lake_precipitation_factor
+from .forcing import load_input,lake_precipitation_series
 from .simulation import metrics,RIVERS
 from .observation_profiles import quality_series,QUALITY_VERSION
 from . import grid_spatial
@@ -227,7 +227,7 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None,land_r
         if state.shape!=(len(units),8) or not np.isfinite(state).all() or np.min(state)<-1e-8:raise ValueError('父状态单元形状或数值错误')
     else:state=region_initial_states(units,p,regions,initial_hydrology)
     areas=np.array([u['areaKm2'] for u in units]);glaciers=np.array([u['kind']=='glacier' for u in units])
-    lake_weights=np.array(spatial['lakeWeights']);lake_area=spatial['lakeAreaKm2']*1e6;lake_factor=lake_precipitation_factor(source['manifest'])
+    lake_weights=np.array(spatial['lakeWeights']);lake_area=spatial['lakeAreaKm2']*1e6
     old_routing=deepcopy((parent or {}).get('routing',{}));lake=deepcopy((parent or {}).get('lake',{}));continuous=float((parent or {}).get('continuousLakeVolume',0.))
     total_hours=len(times);output={k:np.full(total_hours,np.nan) for k in [*RIVERS,'lakeLevel','volumeChange','continuousLakeVolumeChange','lakeFlux','lakeRainMm','lakeEvaporationMm','excludedRunoff','externalRunoffM3','unresolvedRunoffM3','snowmeltMm','icemeltMm','etMm','RS M3','RI M3','RG M3','glacierRunoffM3']}
     writer=None
@@ -258,7 +258,7 @@ def run(db,request,folder=None,progress=None,cancelled=None,prepared=None,land_r
             partition_totals[partition]['generatedM3']+=float(volume.sum());partition_totals[partition]['routedM3']+=float(flow.sum()*3600)
         q={'duja':routed['duja'],'zajia':routed['duja']+routed['zajia_rest'],**{k:routed[k] for k in ('zagen','boqu','ali','fringe')}}
         q['total']=sum(q[k] for k in ('zajia','zagen','boqu','ali','fringe'))
-        lake_rain=arrays['precipitation'][ids]@lake_weights*lake_factor;lake_evap=arrays['evaporation'][ids]@lake_weights*p['lakeCoefficient']
+        lake_rain=lake_precipitation_series(source['manifest'],spatial,arrays,all_times,ids);lake_evap=arrays['evaporation'][ids]@lake_weights*p['lakeCoefficient']
         levels,lake_vol,cv,flux,lake,continuous=lake_balance_hourly(
             local_times,q['total'],lake_rain,lake_evap,lake_area,initial,lake,continuous)
         local={**q,'lakeLevel':levels,'volumeChange':lake_vol,'continuousLakeVolumeChange':cv,'lakeFlux':flux,'lakeRainMm':lake_rain,'lakeEvaporationMm':lake_evap,

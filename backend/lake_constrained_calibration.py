@@ -101,7 +101,7 @@ def _flow(evaluator, candidate, mask):
     metric = array_metrics(evaluator.observed[mask], daily[mask])
     metric['countByYear'] = {str(year): int(np.sum(evaluator.days[mask].year == year))
                              for year in sorted(set(evaluator.days[mask].year))}
-    objective, _ = flow_objective(metric, evaluator.profile)
+    objective, _ = flow_objective(metric, evaluator.profile, getattr(evaluator, 'objective_weights', None))
     return float(objective), metric
 
 
@@ -360,12 +360,20 @@ def _evaluate_candidate(record, request, basin, train_window, folder, cached, ca
 def _refine(evaluator, basin, request, mask, train_window, folder, records, cached, progress, cancelled):
     """Three deterministic DE starts with a single total candidate budget."""
     options = request['twoStage']
+    continuous = options.get('selectionMode') == 'continuous-dual'
+    def score(row):
+        if continuous:
+            from .calibration_objective import combined_score
+            return combined_score(row['flowObjective'], row['trainingLake']['jointScore'], options['objective'])
+        return row['trainingLake']['jointScore']
+    def target_met(row):
+        return not continuous and _target_met(row['trainingLake'])
     budget = options['jointBudget']
     keys, bounds = request['search']['keys'], request['search']['bounds']
     box = np.asarray([bounds[k] for k in keys], dtype=float)
-    ranked = sorted(records, key=lambda r: (r['trainingLake']['jointScore'], r['candidateId']))
-    if not ranked or _target_met(ranked[0]['trainingLake']) or budget == 0:
-        reached = bool(ranked and _target_met(ranked[0]['trainingLake']))
+    ranked = sorted(records, key=lambda r: (score(r), r['candidateId']))
+    if not ranked or target_met(ranked[0]) or budget == 0:
+        reached = bool(ranked and target_met(ranked[0]))
         return {'evaluations': 0, 'converged': False, 'trainingTargetReached': reached,
                 'termination': 'training-target-reached' if reached else 'no-budget'}
     path = folder / 'refinement-state.json'
@@ -386,10 +394,10 @@ def _refine(evaluator, basin, request, mask, train_window, folder, records, cach
             if quota <= 0:
                 break
             rng = np.random.default_rng(seed)
-            ranked = sorted(cached.values(), key=lambda r: (r['trainingLake']['jointScore'], r['candidateId']))
+            ranked = sorted(cached.values(), key=lambda r: (score(r), r['candidateId']))
             population_size = min(len(ranked), max(12, 2*len(keys)))
             if population_size < 4:
-                state['starts'].append({'seed': seed, 'used': 0, 'termination': 'insufficient-population'})
+                state['starts'].append({'seed': seed, 'used': 0, 'converged': False, 'termination': 'insufficient-population'})
                 state['seedIndex'] += 1
                 write_json(path, state)
                 continue
@@ -400,7 +408,7 @@ def _refine(evaluator, basin, request, mask, train_window, folder, records, cach
                 'generation': 0, 'generationBest': [], 'pending': None,
                 'population': [{k: row['parameters'][k] for k in keys} for row in pop],
                 'candidateIds': [row['candidateId'] for row in pop],
-                'scores': [row['trainingLake']['jointScore'] for row in pop],
+                'scores': [score(row) for row in pop],
                 'rng': rng.bit_generator.state, 'proposals': 0, 'converged': False,
                 'termination': 'budget-exhausted'}
             write_json(path, state)
@@ -438,16 +446,16 @@ def _refine(evaluator, basin, request, mask, train_window, folder, records, cach
             identifier = digest({k: candidate[k] for k in keys})
             objective, metric = _flow(evaluator, candidate, mask)
             result = None
-            if _eligible(metric, constraints):
+            if continuous or _eligible(metric, constraints):
                 record = {'candidateId': identifier, 'parameters': {k: candidate[k] for k in keys},
                           'flow': metric, 'flowObjective': objective, 'sourceEvaluation': None}
                 result = _evaluate_candidate(record, request, basin, train_window, folder, cached, cancelled)
-                if result['trainingLake']['jointScore'] < active['scores'][pending['slot']]:
+                if score(result) < active['scores'][pending['slot']]:
                     slot = pending['slot']
                     active['population'][slot] = pending['parameters']
                     active['candidateIds'][slot] = identifier
-                    active['scores'][slot] = result['trainingLake']['jointScore']
-                if result['trainingLake']['jointScore'] < cached[state['bestCandidateId']]['trainingLake']['jointScore']:
+                    active['scores'][slot] = score(result)
+                if score(result) < score(cached[state['bestCandidateId']]):
                     state['bestCandidateId'] = identifier
             active['slot'] = (pending['slot'] + 1) % size
             active['used'] += 1
@@ -464,8 +472,10 @@ def _refine(evaluator, basin, request, mask, train_window, folder, records, cach
                     active['termination'] = 'converged'
             trace = {'evaluation': state['evaluations'], 'stage': 'joint', 'seed': seed,
                      'candidateId': identifier, 'parameters': pending['parameters'], 'flow': metric,
-                     'eligible': bool(result), 'objective': result['trainingLake']['jointScore'] if result else None,
-                     'bestObjective': cached[state['bestCandidateId']]['trainingLake']['jointScore']}
+                     'eligible': bool(result), 'objective': score(result) if result else None,
+                     'flowObjective': objective,
+                     'lakeObjective': result['trainingLake']['jointScore'] if result else None,
+                     'bestObjective': score(cached[state['bestCandidateId']])}
             _append(folder / 'search-trace.jsonl', trace)
             active['pending'] = None
             write_json(path, state)
@@ -473,11 +483,11 @@ def _refine(evaluator, basin, request, mask, train_window, folder, records, cach
                 write_json(folder / 'search-progress.json', {'phase': 'joint-refinement',
                     'evaluations': state['evaluations'], 'maxEvaluations': budget,
                     'bestObjective': trace['bestObjective'], 'currentStage': 'joint',
-                    'traceCount': state['evaluations'], 'message': '流量约束下的湖位筛选'})
+                    'traceCount': state['evaluations'], 'message': '流量与湖位联合优化' if continuous else '流量约束下的湖位筛选'})
                 progress(62. + 18.*state['evaluations']/max(1, budget),
                          '湖位联合筛选 · %d/%d' % (state['evaluations'], budget))
-            if active['converged'] or _target_met(cached[state['bestCandidateId']]['trainingLake']):
-                if _target_met(cached[state['bestCandidateId']]['trainingLake']):
+            if active['converged'] or target_met(cached[state['bestCandidateId']]):
+                if target_met(cached[state['bestCandidateId']]):
                     active['termination'] = 'training-target-reached'
                 break
         state['starts'].append({'seed': seed, 'evaluations': active['used'], 'budget': active['quota'],

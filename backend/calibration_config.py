@@ -13,10 +13,10 @@ PROFILES = {
 }
 
 
-def flow_objective(metric, profile='balanced'):
+def flow_objective(metric, profile='balanced', weights=None):
     if profile not in PROFILES:
         raise ValueError('未知率定目标')
-    weights = PROFILES[profile]['weights']
+    weights = PROFILES[profile]['weights'] if weights is None else weights
     if metric.get('nse') is None or metric.get('pbias') is None:
         raise ValueError('流量率定需要有效NSE和径流量偏差')
     if weights['logNse'] and metric.get('logNse') is None:

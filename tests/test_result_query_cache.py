@@ -93,6 +93,33 @@ class ResultQueryCacheTests(unittest.TestCase):
         with patch.object(query,'values',side_effect=AssertionError('cached range read arrays')):
             self.assertEqual(query.range_for(self.db, {'resultId':'same','variable':'swe','step':'day'}),prior)
 
+    def test_range_cache_survives_source_cache_reset(self):
+        self.fixture()
+        request={'resultId':'same','variable':'swe','step':'day'}
+        expected=query.range_for(self.db,request)
+        self.assertEqual(len(list((self.db.workspace/'cache'/'result-ranges').glob('*.json'))),1)
+        query.clear_source_cache()
+        with patch.object(query,'values',side_effect=AssertionError('persistent range cache missed')):
+            self.assertEqual(query.range_for(self.db,request),expected)
+
+    def test_range_scan_does_not_block_current_frame(self):
+        self.fixture();query.source(self.db,'same')
+        started=threading.Event();release=threading.Event();real_values=query.values
+        def gated(data,key,rows=slice(None),column=slice(None)):
+            if isinstance(rows,slice) and key=='swe':
+                started.set()
+                if not release.wait(5):raise AssertionError('range scan was not released')
+            return real_values(data,key,rows,column)
+        with patch.object(query,'values',side_effect=gated),ThreadPoolExecutor(max_workers=2) as executor:
+            scan=executor.submit(query.range_for,self.db,{'resultId':'same','variable':'swe','step':'day'})
+            try:
+                self.assertTrue(started.wait(2),'range scan did not start')
+                frame=executor.submit(query.read,self.db,{'resultId':'same','variable':'swe','time':'2024-01-02T00:00:00','step':'day'},True)
+                self.assertEqual(frame.result(timeout=2)['values'][0]['id'],'u1')
+            finally:
+                release.set()
+            self.assertEqual(scan.result(timeout=5)['count'],4)
+
     def test_concurrent_same_cold_source_builds_once_and_capacity_is_eight(self):
         self.fixture();real=query._open_source;barrier=threading.Barrier(8)
         def slow(*args):time.sleep(.04);return real(*args)

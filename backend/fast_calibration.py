@@ -96,6 +96,7 @@ class DujaEvaluator:
         self.mode = request.get('routingMode','source-separated')
         self.initial_hydrology = normalize_initial_hydrology(request.get('initialHydrology'))
         self.profile = request['search'].get('objectiveProfile','balanced')
+        self.objective_weights = (request.get('twoStage', {}).get('objective') or {}).get('flowWeights')
         self._sources_cache = OrderedDict()
         self.source_evaluations = 0
         self.routing_evaluations = 0
@@ -140,7 +141,7 @@ class DujaEvaluator:
 
     def objective(self, candidate, mask):
         metric = array_metrics(self.observed[mask], self.daily(candidate)[mask])
-        return flow_objective(metric, self.profile)[0], metric
+        return flow_objective(metric, self.profile, getattr(self, 'objective_weights', None))[0], metric
 
     def evidence(self, mask):
         pairs = [{'date':t.isoformat(),'observed':float(v)}

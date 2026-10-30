@@ -30,9 +30,11 @@ def _current_workflow_defaults(db, value):
     from .two_stage_calibration import defaults
     from .model_forcing import current_summary
     options = {**defaults(), **deepcopy(value.get('twoStage') or {})}
-    options.update(selectionMode='flow-constrained-lake', candidateLimit=256, jointBudget=2000,
-                   flowConstraints={'minNse': .70, 'maxAbsPbias': 5.0})
-    options.setdefault('candidateSourceTaskId', 'JOB-4934a5d35c9344a59353')
+    if not value.get('twoStage'):
+        from .calibration_objective import validate_objective
+        options.update(selectionMode='continuous-dual', reverseCheck=False, finalRefit=True,
+                       candidateLimit=256, jointBudget=2000, flowConstraints=None,
+                       candidateSourceTaskId=None, objective=validate_objective())
     value['twoStage'] = options
     coverage = current_summary(db) or {}
     if (coverage.get('firstCompleteDay') or '9999') <= '2019-01-01':
@@ -99,8 +101,8 @@ def template(db):
             value.pop(key,None)
         value['name']='我的色林错方案'
         value['purpose']='business'
-        value['calibrationInitialParameters']=deepcopy(value['parameters'])
-        value['calibrationInitialPartitionParameters']={}
+        value.setdefault('calibrationInitialParameters',deepcopy(value['parameters']))
+        value.setdefault('calibrationInitialPartitionParameters',{})
         source=db.task(selection['resultId']).get('result') or {}
         value['parameterSources']={**deepcopy(source.get('parameterSources',{})),
                                    'sourceTaskId':selection['resultId']}
@@ -238,6 +240,14 @@ def _compatible_input(value, product, spatial, end):
 
 
 def _input(db, value, spatial, end, identifier=None):
+    if value.get('inputBinding')=='frozen':
+        frozen=value.get('inputId')
+        if identifier and identifier!=frozen:
+            raise ValueError('驱动与方案配置不一致，请保存新的方案修订')
+        product=next((r for r in db.items('input_products') if r['id']==frozen),None)
+        if not product or not _compatible_input(value,product,spatial,end):
+            raise ValueError('方案绑定的气象驱动不存在或不覆盖所选时空范围')
+        return product
     from .model_forcing import resolve
     product, _ = resolve(db, value['periods']['warmupStart'], end, spatial)
     if identifier and identifier != product['id']:
@@ -365,7 +375,8 @@ def save(db, payload, parent_id=None):
     for key in ('configurationSHA256', 'revision', 'familyId', 'parentRevisionId', 'id', 'created_at', 'builtin', 'resultId'):
         value.pop(key, None)
     # Input identity belongs to a run, not to a mutable user scheme.
-    value.pop('inputId', None)
+    if value.get('inputBinding')!='frozen':
+        value.pop('inputId', None)
     if parent and not parent.get('builtin'):
         latest_revision = max((r['payload'].get('revision', 1) for r in db.items('schemes')
                                if _family(r) == _family(parent)), default=1)

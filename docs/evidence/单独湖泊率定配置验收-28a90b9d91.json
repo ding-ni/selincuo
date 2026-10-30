@@ -1,0 +1,48 @@
+{
+  "type": "lake-only-configuration-ui-integration",
+  "tag": "28a90b9d91",
+  "scope": "queued request/configuration verification; no numerical run",
+  "testTasks": [
+    {
+      "id": "JOB-424e5741f2bb466dac95",
+      "stopStatus": "stopping"
+    },
+    {
+      "id": "JOB-0dff0c1586ae4e28bf6a",
+      "stopStatus": "stopping"
+    },
+    {
+      "id": "JOB-ea1c56dc212d48d4af17",
+      "stopStatus": "stopping"
+    }
+  ],
+  "formalStatuses": {
+    "JOB-6536f36e07cc46868255": "queued",
+    "JOB-05c3f62282ce4239aed1": "running"
+  },
+  "schemeId": "SCHEME-d9d21da761434ec390c3",
+  "familyId": "FAMILY-5f520a73a1f84757",
+  "switchBackPreservesCompleteInitial": true,
+  "screenshots": [
+    "docs/evidence/单独湖泊率定-湖泊初值-28a90b9d91.png",
+    "docs/evidence/单独湖泊率定-运行-28a90b9d91.png"
+  ],
+  "lakeCalibration": {
+    "taskId": "JOB-0dff0c1586ae4e28bf6a",
+    "revision": 2,
+    "configSHA256": "7071e95e0adbe0fa28b70226605a085d3a1e836e00d4619e1cdc68d655ca1d9c",
+    "uiInitial": 0.9,
+    "requestLakeInitial": 0.9,
+    "formLakeInitial": 0.9,
+    "hydrologyFixedToResult": true,
+    "hydrologySearchInitialPreserved": true,
+    "resultWM": 180.10725576074435,
+    "searchInitialWM": 181.10725576074435
+  },
+  "lakeTrial": {
+    "taskId": "JOB-ea1c56dc212d48d4af17",
+    "requestLakeCoefficient": 0.95,
+    "hydrologyFixedToResult": true
+  },
+  "success": true
+}

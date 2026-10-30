@@ -6,7 +6,7 @@ from unittest.mock import patch
 import numpy as np
 import pandas as pd
 from backend.dashboard import map_frame
-from backend.map_ranges import range_for
+from backend.map_ranges import range_for, _cache
 from backend.common import digest
 from backend.grid_spatial import AGGREGATE_STRATEGY
 
@@ -46,6 +46,9 @@ class MapRainfallTests(unittest.TestCase):
             frame=range_for(SimpleNamespace(workspace=temp),{'inputId':'input','variable':'precipitation','start':'2024-02-29','end':'2024-02-29'})
         self.assertEqual(frame['displaySupport'],'raw-grid')
         self.assertEqual((frame['minimum'],frame['maximum'],frame['count']),(24.,48.,2))
+        _cache.clear()
+        with patch('backend.grid_simulation.prepare',side_effect=AssertionError('persistent cache missed')):
+            self.assertEqual(range_for(SimpleNamespace(workspace=temp),{'inputId':'input','variable':'precipitation','start':'2024-02-29','end':'2024-02-29'}),frame)
 
     def test_station_corrected_land_uses_model_unit_forcing_but_grid_stays_raw(self):
         from tempfile import mkdtemp

@@ -21,12 +21,35 @@ def lake_precipitation_factor(manifest):
     correction = manifest.get('lakePrecipitationCorrection')
     if correction is None:
         return 1.
+    if correction.get('method') == 'station-warm-rain-grid-v1' and correction.get('scope') == 'lake-warm-rain':
+        from .land_precipitation import validate_manifest
+        profile = validate_manifest(manifest)
+        if (profile is None or correction.get('landTransformationSHA256') != manifest.get('landTransformationSHA256')
+                or correction.get('temperatureThresholdC') != profile.get('temperatureThresholdC')
+                or digest(correction) != manifest.get('transformationSHA256')):
+            raise ValueError('湖面暖雨订正与陆域订正规则不一致')
+        return 1.
     if correction.get('method') != 'station-point-annual-ratio-v1' or correction.get('scope') != 'lake-only':
         raise ValueError('不支持的湖面降水订正定义')
     factor = correction.get('factor')
     if isinstance(factor, bool) or not isinstance(factor, (int, float)) or not np.isfinite(factor) or not 0 < factor <= 2:
         raise ValueError('湖面降水订正比例无效')
     return float(factor)
+
+
+def lake_precipitation_series(manifest, spatial, arrays, times, indexes):
+    """Area-weighted lake precipitation using this input's frozen rule."""
+    ids = np.asarray(indexes, dtype=int)
+    rain = np.asarray(arrays['precipitation'][ids])
+    weights = np.asarray(spatial['lakeWeights'])
+    factor = lake_precipitation_factor(manifest)
+    correction = manifest.get('lakePrecipitationCorrection') or {}
+    if correction.get('method') == 'station-warm-rain-grid-v1':
+        from .land_precipitation import grid_factors, season_labels, validate_manifest
+        profile = validate_manifest(manifest)
+        factors = grid_factors(profile, spatial['grids'])[season_labels(pd.DatetimeIndex(times)[ids])]
+        rain = np.where(np.asarray(arrays['temperature'][ids]) >= profile['temperatureThresholdC'], rain * factors, rain)
+    return rain @ weights * factor
 
 
 def register_lake_correction(db, baseline_id, correction):
