@@ -1,0 +1,117 @@
+{
+  "createdAt": "2026-10-30T17:10:25+00:00",
+  "before": {
+    "recordedAt": "2026-10-31T00:59:58.3777784+08:00",
+    "health": {
+      "backendSourceSHA256": "af0869c4f5917cef32a2c933c0d80f143e0b44a88c2231f684a14a13f1543fa8",
+      "instanceId": "c46101ea17df4301b6766f5f2c1f2863",
+      "projectId": "selinco",
+      "version": "0.12.0",
+      "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+    },
+    "implementation": {
+      "algorithm": {
+        "calibration_config.py": "2478ac8809f57ec494247934d1532c3596b21f97c617f9828780f30860566e35",
+        "calibration_configuration.py": "b22149298924fe9c74dbb8d1e0dda5a64d5a186b08c1f602cac6d4f9db675243",
+        "calibration_objective.py": "d09a6aa54b1d80b41598f36bb4f43cf8d3b202578851769c35bac1babcb75358",
+        "calibration_search.py": "ad67d0448833609fda60f013df1575331af431dd75c65221bd4b3e28c150135b",
+        "dual_calibration.py": "598bfc80e7ec5c421299cee1bf467462338a7832651fd14fd289f6a30905cf0d",
+        "fast_basin_calibration.py": "c0c8bde6831cd40786771d062ee537f64bb45acead5b5b7c3023fdcc3df4ba9f",
+        "fast_calibration.py": "a59f8e9677c6669cfc8bd45193f1a467887a1a3148e49c18545a441cdc6b586a",
+        "lake_calibration.py": "8e045fffdaa998ed97044be3028e90cc9eca744be23c7f39681d27f06b3e0782",
+        "lake_constrained_calibration.py": "fdddb3e5d8ccb677579ac1768edc8435cd2b210f1f705cc688d8e9416bfa1079",
+        "two_stage_calibration.py": "904d8378f15cca1efc593e35dc98243576437dbd349805d790110bad3451e75a",
+        "warmup_workflow.py": "29da4f10df9dcf36e9dad8b8b66645b29d95359233744648c3724f133050ae14"
+      },
+      "model": "add1e581be4154dc22df6ae1a9f6765e2fff8bffd4f6075dfa61107d3bf8c549"
+    },
+    "currentBusiness": {
+      "adoptedAt": "2026-10-31T00:58:02+08:00",
+      "familyId": "FAMILY-b350350cca224ab2",
+      "inputId": "INPUT-67a56a9abcc50dc4a9033ab6",
+      "name": "色林错连续模拟方案",
+      "parameterId": "PARAM-1bccaba37f764ddbb89e",
+      "resultId": "JOB-05c3f62282ce4239aed1",
+      "schemeId": "SCHEME-2c4816223d4b47cfb3cd",
+      "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6"
+    },
+    "matchesCurrentImplementation": true,
+    "configurationSHA256": "e78c9a83751992ff8c9881dff59a9b921348b3e923db4a53a2d4bb534bb3f62d"
+  },
+  "after": {
+    "health": {
+      "backendSourceSHA256": "cf07d65e30b25008de484b8f095cd9eb0f3fd30c2a0f6141f23500d8a195ccbb",
+      "instanceId": "7d72c6e8297c497383cdf691aa50d9cb",
+      "projectId": "selinco",
+      "version": "0.12.0",
+      "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+    },
+    "currentBusiness": {
+      "adoptedAt": "2026-10-30T16:58:02+00:00",
+      "familyId": "FAMILY-b350350cca224ab2",
+      "inputId": "INPUT-67a56a9abcc50dc4a9033ab6",
+      "name": "色林错连续模拟方案",
+      "parameterId": "PARAM-1bccaba37f764ddbb89e",
+      "resultId": "JOB-05c3f62282ce4239aed1",
+      "schemeId": "SCHEME-2c4816223d4b47cfb3cd",
+      "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6"
+    },
+    "configurationSHA256": "e78c9a83751992ff8c9881dff59a9b921348b3e923db4a53a2d4bb534bb3f62d"
+  },
+  "checks": {
+    "newServiceInstance": true,
+    "sameWorkspace": true,
+    "adoptionPersisted": true,
+    "sameExecutableConfiguration": true,
+    "frozenNumericalImplementation": true,
+    "configurationStillExecutable": true,
+    "noActiveTasks": true,
+    "allHistoricResultsRetained": true,
+    "originalResultBytesUnchanged": true,
+    "warmRainSelected": true
+  },
+  "historicalTasks": [
+    [
+      "JOB-05c3f62282ce4239aed1",
+      "succeeded",
+      0
+    ],
+    [
+      "JOB-6536f36e07cc46868255",
+      "succeeded",
+      0
+    ],
+    [
+      "JOB-88b35b44b27d4e15840c",
+      "succeeded",
+      0
+    ]
+  ],
+  "resultBytesChecks": {
+    "previous": true,
+    "baseline_recalibrated": true,
+    "warm_rain_recalibrated": true
+  },
+  "adoptionComparison": {
+    "sameFieldsExceptTimestamp": true,
+    "sameTimestampInstant": true,
+    "timestampRepresentation": "原始前后记录均保留；采用时刻按带时区的同一时刻比较，允许北京时间与UTC表示。"
+  },
+  "comparison": {
+    "path": "docs/evidence/双驱动完整率定对比-20261030-e35e1a5019f0.json",
+    "sha256": "cac600c29be05bffdf0861fd5ff66f36e6eea8019bdeb98192358f4276296e9c"
+  },
+  "adoptionReason": "暖雨方案通过最终预热和干湿初态检查，湖面与陆域液态暖雨处理一致；原驱动联合分数虽低，最终参数预热未通过并有11项边界参数，保留为对照。",
+  "reportedLimitations": [
+    "暖雨正式杜加PBIAS为−21.9188%，流量拟合弱于旧采用。",
+    "分期暖雨2025流量NSE为−0.136674，2025—2026湖位时间检验RMSE为0.392511m。",
+    "两套原冻结目标和优化最优结果均保留，采用判断未改写优化评分。"
+  ],
+  "resumeRepairChecks": {
+    "testFile": "tests/test_calibration_resume_trace.py",
+    "testFileSHA256": "fbaa3ec3c959f0b6863644c6d79f5f6e15d63af91a00cc553380c4048b52baa4",
+    "command": "python -B -X utf8 -m unittest discover -s tests -p test_calibration_resume_trace.py -v",
+    "passedTests": 7,
+    "scope": "已实际运行的隔离检查；不重新运行生产率定。"
+  }
+}

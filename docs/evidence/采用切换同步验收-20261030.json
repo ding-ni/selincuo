@@ -1,0 +1,33 @@
+{
+  "type": "mock-adoption-with-real-result-read",
+  "scope": "在隔离浏览器模拟已采用成果切换，并读取真实已完成结果；未修改生产采用关系、未提交模型任务。",
+  "oldTaskId": "JOB-88b35b44b27d4e15840c",
+  "newTaskId": "JOB-05c3f62282ce4239aed1",
+  "beforeFix": {
+    "schemeAfterSwitch": "SCHEME-be92c204cd7e4ea89ca9",
+    "chartAfterSwitch": "JOB-88b35b44b27d4e15840c:lake",
+    "evidence": "build/采用切换核验-stale-9de7cc142d/验收记录.json",
+    "sha256": "615f819ffd5c0a6c0ee7218bd785b85454e86103eaeb978e294bc80dcd87d752"
+  },
+  "afterFix": {
+    "schemeAfterSwitch": "SCHEME-be92c204cd7e4ea89ca9",
+    "chartAfterSwitch": "JOB-05c3f62282ce4239aed1:lake",
+    "urlResultId": "JOB-05c3f62282ce4239aed1",
+    "evidence": "build/采用切换核验-synchronized-ca5f9a6758/验收记录.json",
+    "sha256": "70f00e6e6d00810c3e1b6085cc68fb3cacc62e1765c1b8e9b5fcd266c5d7ca42",
+    "screenshot": "build/采用切换核验-synchronized-ca5f9a6758/切换后.png",
+    "screenshotSha256": "13c4178b422bf593b89d42f790c8661d0e4ed1e9ce08f4f4591a9153417aca88"
+  },
+  "preserveUserHistory": {
+    "chartBeforeAndAfter": "JOB-3354c8660e854cbfa96f:lake",
+    "method": "模拟页面正在查看已完成非默认历史成果，同时模拟当前采用更换。",
+    "evidence": "build/采用切换核验-synchronized-55d90674a8/验收记录.json",
+    "sha256": "ac32231a0890c87df9fc0213787511f9cef727248c610cb55a5f370b0f840510"
+  },
+  "browser": "Playwright Chromium headless 1366×768",
+  "frontend": "index-7a3hZ_l1.js / index-DVR_r_K6.css",
+  "sourceSha256": "bd7a8125f09e4b7c5995a6cb1593d83fbc74d721385d76bc5a4dba8f19114ae4",
+  "script": "scripts/验收采用切换默认.py",
+  "scriptSha256": "fba0e1634470c612ebf3bb455825929917cf22b36b0240b6a596d8f94ad96280",
+  "checks": "两次修复后浏览器核验通过，页面错误为空，模型API调用均为GET；构建保留emptyOutDir=false。"
+}

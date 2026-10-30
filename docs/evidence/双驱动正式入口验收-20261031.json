@@ -1,0 +1,276 @@
+{
+  "createdAt": "2026-10-31T01:23:44+08:00",
+  "scope": "正式方案、冻结配置和业务页面的只读核对，不提交率定或其他写入请求。",
+  "passed": true,
+  "taskId": "JOB-05c3f62282ce4239aed1",
+  "schemeId": "SCHEME-2c4816223d4b47cfb3cd",
+  "inputId": "INPUT-67a56a9abcc50dc4a9033ab6",
+  "configurationSHA256": "e78c9a83751992ff8c9881dff59a9b921348b3e923db4a53a2d4bb534bb3f62d",
+  "configurationFileSHA256": "8a844e12bd1e8b1275bf204fdc1f01e01fd59b6d9a93ed316925699d86149906",
+  "unchangedAfterViewing": {
+    "configurationSHA256": "e78c9a83751992ff8c9881dff59a9b921348b3e923db4a53a2d4bb534bb3f62d",
+    "configurationFileSHA256": "8a844e12bd1e8b1275bf204fdc1f01e01fd59b6d9a93ed316925699d86149906",
+    "matchesBefore": true
+  },
+  "health": {
+    "backendSourceSHA256": "cf07d65e30b25008de484b8f095cd9eb0f3fd30c2a0f6141f23500d8a195ccbb",
+    "instanceId": "7d72c6e8297c497383cdf691aa50d9cb",
+    "projectId": "selinco",
+    "version": "0.12.0",
+    "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+  },
+  "taskStatuses": {
+    "JOB-05c3f62282ce4239aed1": "succeeded",
+    "JOB-6536f36e07cc46868255": "succeeded"
+  },
+  "configurationChecks": {
+    "twoTasksSucceeded": true,
+    "adoptedTask": true,
+    "adoptedScheme": true,
+    "adoptedInput": true,
+    "adoptedSpatialVersion": true,
+    "configuredSchemeVisible": true,
+    "configurationIdentity": true,
+    "implementationMatches": true,
+    "inputManifestIdentity": true,
+    "observationSnapshotIdentity": true,
+    "all25InitialParameters": true,
+    "all25FinalParameters": true,
+    "all22SelectedAndBounds": true,
+    "periods": true,
+    "initialSoil": true,
+    "lakeInitialization": true,
+    "simulationRange": true,
+    "displayCoverage": true,
+    "objectiveSearchAndLakeStages": true,
+    "sharedParameterTransfer": true,
+    "routingMode": true
+  },
+  "coverage": {
+    "start": "2021-04-23T00:00:00",
+    "endExclusive": "2026-10-21T00:00:00"
+  },
+  "screens": [
+    {
+      "page": "overview",
+      "viewport": [
+        1366,
+        768
+      ],
+      "selectedResult": "JOB-05c3f62282ce4239aed1",
+      "resultOptions": 1,
+      "bundle": "/assets/index-DuDvPOHJ.js"
+    },
+    {
+      "page": "results",
+      "viewport": [
+        1366,
+        768
+      ],
+      "resultRows": 1,
+      "chartTaskId": "JOB-05c3f62282ce4239aed1",
+      "annualTable": {
+        "years": [
+          "2021",
+          "2022",
+          "2023",
+          "2024",
+          "2025",
+          "2026"
+        ],
+        "lastTwoRowsFullyVisible": true,
+        "top": 63,
+        "height": 220,
+        "contentHeight": 283
+      }
+    },
+    {
+      "page": "calibration",
+      "viewport": [
+        1366,
+        768
+      ],
+      "parameterCount": 23,
+      "rawInitialFocusChecked": true,
+      "viewingDidNotEnableSave": true,
+      "searchControls": {
+        "controls": {
+          "杜加流量目标权重": 0.5,
+          "主站湖位目标权重": 0.5,
+          "陆面产流搜索次数": 6000,
+          "积雪与冰川搜索次数": 6000,
+          "汇流搜索次数": 3000,
+          "水文联合细化搜索次数": 3000,
+          "全流域代表候选 · 组": 256,
+          "流量—湖位联合评价 · 次": 2000
+        },
+        "objectiveDetails": {
+          "流量过程权重": 0.5,
+          "低流量过程权重": 0.25,
+          "径流总量权重": 0.25,
+          "湖位过程权重": 0.25,
+          "累计趋势权重": 0.25,
+          "季节涨幅权重": 0.25,
+          "高点日期权重": 0.25,
+          "湖位误差尺度 · m": 0.1,
+          "趋势误差尺度 · m": 0.1,
+          "涨幅误差尺度 · m": 0.1,
+          "高点误差尺度 · 天": 14.0
+        },
+        "seeds": [
+          42,
+          142,
+          242
+        ],
+        "allowExtension": true
+      }
+    },
+    {
+      "page": "simulation",
+      "viewport": [
+        1366,
+        768
+      ],
+      "selectedScheme": "SCHEME-2c4816223d4b47cfb3cd",
+      "chartTaskId": "JOB-05c3f62282ce4239aed1",
+      "annualTable": {
+        "years": [
+          "2021",
+          "2022",
+          "2023",
+          "2024",
+          "2025",
+          "2026"
+        ],
+        "lastTwoRowsFullyVisible": true,
+        "top": 63,
+        "height": 220,
+        "contentHeight": 283
+      }
+    },
+    {
+      "page": "overview",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "selectedResult": "JOB-05c3f62282ce4239aed1",
+      "resultOptions": 1,
+      "bundle": "/assets/index-DuDvPOHJ.js"
+    },
+    {
+      "page": "results",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "resultRows": 1,
+      "chartTaskId": "JOB-05c3f62282ce4239aed1",
+      "annualTable": {
+        "years": [
+          "2021",
+          "2022",
+          "2023",
+          "2024",
+          "2025",
+          "2026"
+        ],
+        "lastTwoRowsFullyVisible": true,
+        "top": 63,
+        "height": 220,
+        "contentHeight": 283
+      }
+    },
+    {
+      "page": "calibration",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "parameterCount": 23,
+      "rawInitialFocusChecked": true,
+      "viewingDidNotEnableSave": true,
+      "searchControls": {
+        "controls": {
+          "杜加流量目标权重": 0.5,
+          "主站湖位目标权重": 0.5,
+          "陆面产流搜索次数": 6000,
+          "积雪与冰川搜索次数": 6000,
+          "汇流搜索次数": 3000,
+          "水文联合细化搜索次数": 3000,
+          "全流域代表候选 · 组": 256,
+          "流量—湖位联合评价 · 次": 2000
+        },
+        "objectiveDetails": {
+          "流量过程权重": 0.5,
+          "低流量过程权重": 0.25,
+          "径流总量权重": 0.25,
+          "湖位过程权重": 0.25,
+          "累计趋势权重": 0.25,
+          "季节涨幅权重": 0.25,
+          "高点日期权重": 0.25,
+          "湖位误差尺度 · m": 0.1,
+          "趋势误差尺度 · m": 0.1,
+          "涨幅误差尺度 · m": 0.1,
+          "高点误差尺度 · 天": 14.0
+        },
+        "seeds": [
+          42,
+          142,
+          242
+        ],
+        "allowExtension": true
+      }
+    },
+    {
+      "page": "simulation",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "selectedScheme": "SCHEME-2c4816223d4b47cfb3cd",
+      "chartTaskId": "JOB-05c3f62282ce4239aed1",
+      "annualTable": {
+        "years": [
+          "2021",
+          "2022",
+          "2023",
+          "2024",
+          "2025",
+          "2026"
+        ],
+        "lastTwoRowsFullyVisible": true,
+        "top": 63,
+        "height": 220,
+        "contentHeight": 283
+      }
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "apiErrors": [],
+  "nonGetRequests": [],
+  "screenshots": [
+    {
+      "path": "docs\\evidence\\双驱动正式入口验收-20261031\\湖情总览-1366x768.png",
+      "sha256": "3c6e7ad24683cc4cfc3762e3750b4bafe97d84303c868ea929c0fa4f1a2d9c4f"
+    },
+    {
+      "path": "docs\\evidence\\双驱动正式入口验收-20261031\\湖情总览-1920x1080.png",
+      "sha256": "ab29415551ab5f5262f23d6a0ab3df277d4e46df2ae0a2d65454483e68d8a495"
+    },
+    {
+      "path": "docs\\evidence\\双驱动正式入口验收-20261031\\率定参数-1920x1080.png",
+      "sha256": "7c49b9f4289b167a40b4b6002d5cfe18e176634fc519ea0cfffc2e911c84addd"
+    },
+    {
+      "path": "docs\\evidence\\双驱动正式入口验收-20261031\\历史模拟-1366x768.png",
+      "sha256": "9a396bdde064237a8a6904dde4014a988d9999f4c7d24b0de9b89ce93ce389bf"
+    }
+  ],
+  "fullReport": {
+    "path": "build\\双驱动正式入口验收-20261031-05\\正式入口核验.json",
+    "sha256": "d78e34dd7d0ff6069a4e2add5b94b1219df8b50648601f80104e6e5fc89dd615",
+    "note": "完整逐参数、界面和截图核对保留在本机build目录。"
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "scope": "真实冻结暖雨输入，两次独立重复两期小预算数值选择；没有重复正式18000次预算、生成逐时工件或重跑预热诊断。",
+  "verificationScript": "scripts/核验连续双目标数值复现.py",
+  "verificationScriptSHA256": "9198801f70998c698dfdffb5b07ce9a5ee40192b5b5081442853fb1bc9301d9b",
+  "passed": true,
+  "startedFromTask": "JOB-05c3f62282ce4239aed1",
+  "sourceRequestSHA256": "607a76210b424a8d0bad4fc0f8dca08802a02ed37ca12938af23df67689a1acb",
+  "testRequest": "build/真实输入缩额率定复现-e6e9c23278a6/缩额请求.json",
+  "testRequestSHA256": "53d9af0d1bdb9827e82108842f28898838411a4dd0e01ab587def9cc1c064f4c",
+  "unchangedExcept": [
+    "allowExtension",
+    "budgets",
+    "candidateLimit",
+    "jointBudget"
+  ],
+  "inputId": "INPUT-67a56a9abcc50dc4a9033ab6",
+  "inputDataSHA256": "ec25016799f8d2585f1569d5710b56c0ae40d5017a743660cb6ed258ec1f0574",
+  "inputTransformationSHA256": "bd68020214925a91d24667579ff550c1f09e2f7502bf5bf271f03650c6d43fda",
+  "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6",
+  "modelImplementation": "add1e581be4154dc22df6ae1a9f6765e2fff8bffd4f6075dfa61107d3bf8c549",
+  "sourceCodeSHA256": "598bfc80e7ec5c421299cee1bf467462338a7832651fd14fd289f6a30905cf0d",
+  "observationSHA256": "d5871d988ca451820df0508982ce2646b7cb071f0e32ae678d779effb91f2dd9",
+  "seeds": [
+    42,
+    142,
+    242
+  ],
+  "budgetsPerPhase": {
+    "runoff": 18,
+    "snow": 18,
+    "routing": 12,
+    "joint": 12
+  },
+  "candidateLimitPerPhase": 8,
+  "jointBudgetPerPhase": 6,
+  "counts": {
+    "generated": 120,
+    "basinCandidates": 28,
+    "jointEvaluations": 12,
+    "selectedForBasin": 16,
+    "byPhase": [
+      {
+        "phase": "training",
+        "generated": 60,
+        "selectedForBasin": 8,
+        "basinCandidatesEvaluated": 14,
+        "jointEvaluations": 6
+      },
+      {
+        "phase": "all-data",
+        "generated": 60,
+        "selectedForBasin": 8,
+        "basinCandidatesEvaluated": 14,
+        "jointEvaluations": 6
+      }
+    ]
+  },
+  "checks": {
+    "parametersEqual": true,
+    "selectedIdsEqual": true,
+    "countsEqual": true,
+    "metricMaxAbsoluteDifference": 0.0,
+    "parameterMaxAbsoluteDifference": 0.0,
+    "candidateOrder": {
+      "training": {
+        "initialBasinCandidates": 8,
+        "basinCandidateOrderEqual": true,
+        "computedBasinOrderEqual": true,
+        "jointProposalOrderEqual": true,
+        "waterSearchTraceEqual": true
+      },
+      "all-data": {
+        "initialBasinCandidates": 8,
+        "basinCandidateOrderEqual": true,
+        "computedBasinOrderEqual": true,
+        "jointProposalOrderEqual": true,
+        "waterSearchTraceEqual": true
+      }
+    },
+    "dailySeries": {
+      "training": {
+        "days": 3580,
+        "validFlowDays": 3580,
+        "validLakeDays": 2006,
+        "flowMaxAbsoluteDifferenceM3s": {
+          "duja": 0.0,
+          "zajia": 0.0,
+          "zagen": 0.0,
+          "boqu": 0.0,
+          "ali": 0.0,
+          "fringe": 0.0,
+          "total": 0.0
+        },
+        "lakeMaxAbsoluteDifferenceM": 0.0
+      },
+      "all-data": {
+        "days": 3580,
+        "validFlowDays": 3580,
+        "validLakeDays": 2006,
+        "flowMaxAbsoluteDifferenceM3s": {
+          "duja": 0.0,
+          "zajia": 0.0,
+          "zagen": 0.0,
+          "boqu": 0.0,
+          "ali": 0.0,
+          "fringe": 0.0,
+          "total": 0.0
+        },
+        "lakeMaxAbsoluteDifferenceM": 0.0
+      }
+    }
+  },
+  "python": "3.9.17",
+  "numpy": "1.26.4",
+  "pandas": "2.2.2",
+  "elapsedSeconds": 505.52
+}

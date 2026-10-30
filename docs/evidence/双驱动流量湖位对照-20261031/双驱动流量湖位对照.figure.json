@@ -1,0 +1,68 @@
+{
+  "figureContract": "对照三套正式拟合日过程，展示流量与湖位的共同表现",
+  "panelRoles": {
+    "a": "2021年以来湖位过程",
+    "b": "2024—2025杜加流量过程"
+  },
+  "fieldMapping": {
+    "lakeLevel": "日湖位 m",
+    "observedLevel": "主站观测湖位 m",
+    "duja": "杜加日均流量 m³/s",
+    "observedFlow": "杜加实测日均流量 m³/s"
+  },
+  "dateRange": [
+    "2021-04-24",
+    "2026-10-20"
+  ],
+  "counts": {
+    "湖位": {
+      "共同有效观测日": 1304,
+      "观测日": 1304
+    },
+    "流量": {
+      "共同有效观测日": 440,
+      "观测日": 440
+    }
+  },
+  "missing": "缺测断线，无插值；仅展示三套共有完整驱动日",
+  "evaluation": "各方案为全部资料正式拟合；2025—2026已参与开发和资料订正，不称独立验证。",
+  "uncertainty": "确定性过程线，无置信区间；日值具有时间相关性。",
+  "sources": {
+    "previous": {
+      "taskId": "JOB-88b35b44b27d4e15840c",
+      "file": "build\\grid-revision-20261026\\workspace\\tasks\\JOB-88b35b44b27d4e15840c\\result.json",
+      "sha256": "4af2c70536f3a6f8e6f056190a92427ac4167d5dcf3ce44cba64a50a80cd78ec",
+      "inputId": "INPUT-c00df956d638351ebeb4e96e"
+    },
+    "baseline": {
+      "taskId": "JOB-6536f36e07cc46868255",
+      "file": "build\\grid-revision-20261026\\workspace\\tasks\\JOB-6536f36e07cc46868255\\result.json",
+      "sha256": "852a4387cf535190b8055c93b1abf52b5883ea42b88a2710546f30b25c5b1091",
+      "inputId": "INPUT-c00df956d638351ebeb4e96e"
+    },
+    "warm": {
+      "taskId": "JOB-05c3f62282ce4239aed1",
+      "file": "build\\grid-revision-20261026\\workspace\\tasks\\JOB-05c3f62282ce4239aed1\\result.json",
+      "sha256": "9dc613227953527c856da85cecc1d790c62ab82dfe42d575d9453b322f68c83a",
+      "inputId": "INPUT-67a56a9abcc50dc4a9033ab6"
+    }
+  },
+  "outputs": {
+    "png": {
+      "file": "双驱动流量湖位对照.png",
+      "sha256": "9a8da7ba3437fbdda9c612523e7e6aa722c420ec8abc7af70eeca85c91946dbc"
+    },
+    "svg": {
+      "file": "双驱动流量湖位对照.svg",
+      "sha256": "c072f975edc72a675fab641eba4eef076330530f19f81ad932ca5313ab31aede"
+    },
+    "pdf": {
+      "file": "双驱动流量湖位对照.pdf",
+      "sha256": "b985f40edc7bbd33f7a9a1475fbbb46da3b36f233fe472123f1567652f339d0e"
+    },
+    "csv": {
+      "file": "日过程对照.csv",
+      "sha256": "cee3857cbdd0b5cad5eb72e4a32db25306df2945ea790130e5f7ff43b6406508"
+    }
+  }
+}

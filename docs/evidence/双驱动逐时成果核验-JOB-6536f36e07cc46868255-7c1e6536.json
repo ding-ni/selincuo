@@ -1,0 +1,663 @@
+{
+  "createdAt": "2026-10-30T16:56:43+00:00",
+  "taskId": "JOB-6536f36e07cc46868255",
+  "inputId": "INPUT-c00df956d638351ebeb4e96e",
+  "scope": "对完成成果只读核验；不新增数值模拟或改写工件。",
+  "requestSHA256": "ec2a917d37d43fe5787a91c2e9cd5643bc9d405d3e957b168b97057e89fb76f2",
+  "resultSHA256": "852a4387cf535190b8055c93b1abf52b5883ea42b88a2710546f30b25c5b1091",
+  "hourly": {
+    "manifestSHA256": "3e588d9aad05ca89526f7b62fed36627052e035eb75a81c4602f0fb0f5fc0546",
+    "manifestFiles": 6671,
+    "hourlyHours": 85921,
+    "hourlyArtifactsVerified": true,
+    "maximumTotalFlowSummationDifferenceM3s": 0.0,
+    "excludedBackgroundRunoffM3s": 0.0,
+    "flowVolumesM3": {
+      "duja": 13856109931.926697,
+      "zajia": 14016084757.256344,
+      "zagen": 9329213893.340986,
+      "boqu": 478078949.034835,
+      "ali": 2083662636.6833987,
+      "fringe": 573184716.1154364,
+      "total": 26480224952.43099
+    }
+  },
+  "aggregation": {
+    "dujaIncludedOnceVolumeErrorM3": -1.1444091796875e-05,
+    "partitionRoutedM3": {
+      "duja": 13856109931.926697,
+      "zajia_rest": 159974825.32965764,
+      "zagen": 9329213893.340984,
+      "boqu": 478078949.034835,
+      "ali": 2083662636.6833992,
+      "fringe": 573184716.1154366,
+      "external": 0.0,
+      "unresolved": 0.0
+    },
+    "backgroundRunoffExcluded": true
+  },
+  "formalParity": {
+    "duja": 5.256595159153221e-11,
+    "zajia": 5.2025939112354536e-11,
+    "zagen": 5.127276381244883e-11,
+    "boqu": 5.000444502911705e-11,
+    "ali": 5.01654273676877e-11,
+    "fringe": 5.001155045647465e-11,
+    "total": 5.4654947234666906e-11,
+    "lakeLevel": 1.2641976354643703e-10
+  },
+  "diagnostics": {
+    "landGlacierMaxBalanceErrorMm": 9.418954418499714e-11,
+    "routingMaxBalanceErrorM3": 1.1920928955078125e-06,
+    "lakeAreaKm2": 2422.199823361506,
+    "lakeWindows": [
+      {
+        "start": "2021-04-23T12:00:00",
+        "initialization": "user-known-level"
+      }
+    ],
+    "lakeCumulativeBalanceErrorM3": 1.27e-08
+  },
+  "completeDayBalanceErrorM3": -1.430511474609375e-06,
+  "waterBudget": {
+    "anchorDayExcluded": "2021-04-23",
+    "firstCompleteDay": "2021-04-24",
+    "lastCompleteDay": "2026-10-20",
+    "completeDays": 2006,
+    "total": {
+      "lakeInflowM3": 13261419476.314878,
+      "lakePrecipitationM3": 4100211609.054063,
+      "lakeEvaporationM3": 16188030734.856497,
+      "lakeDeltaVolumeM3": 1173600350.512444,
+      "completeDays": 2006
+    },
+    "monthly": [
+      {
+        "lakeInflowM3": 7566337.604748584,
+        "lakePrecipitationM3": 368941.67634925747,
+        "lakeEvaporationM3": 45535223.86044309,
+        "lakeDeltaVolumeM3": -37599944.579345256,
+        "completeDays": 7,
+        "period": "2021-04"
+      },
+      {
+        "lakeInflowM3": 168301286.6745073,
+        "lakePrecipitationM3": 72825385.56345622,
+        "lakeEvaporationM3": 152361455.9761163,
+        "lakeDeltaVolumeM3": 88765216.26184723,
+        "completeDays": 31,
+        "period": "2021-05"
+      },
+      {
+        "lakeInflowM3": 384038404.6966754,
+        "lakePrecipitationM3": 74543953.61793946,
+        "lakeEvaporationM3": 189440508.86610007,
+        "lakeDeltaVolumeM3": 269141849.44851476,
+        "completeDays": 30,
+        "period": "2021-06"
+      },
+      {
+        "lakeInflowM3": 564884103.271967,
+        "lakePrecipitationM3": 176468479.14293477,
+        "lakeEvaporationM3": 424805185.85239637,
+        "lakeDeltaVolumeM3": 316547396.5625055,
+        "completeDays": 31,
+        "period": "2021-07"
+      },
+      {
+        "lakeInflowM3": 600958580.4771779,
+        "lakePrecipitationM3": 268592251.11632323,
+        "lakeEvaporationM3": 396316834.0059269,
+        "lakeDeltaVolumeM3": 473233997.5875742,
+        "completeDays": 31,
+        "period": "2021-08"
+      },
+      {
+        "lakeInflowM3": 462686367.81632864,
+        "lakePrecipitationM3": 143240011.18938506,
+        "lakeEvaporationM3": 342587865.3424423,
+        "lakeDeltaVolumeM3": 263338513.66327143,
+        "completeDays": 30,
+        "period": "2021-09"
+      },
+      {
+        "lakeInflowM3": 234960197.82460666,
+        "lakePrecipitationM3": 16351605.730166303,
+        "lakeEvaporationM3": 360176483.7624103,
+        "lakeDeltaVolumeM3": -108864680.2076374,
+        "completeDays": 31,
+        "period": "2021-10"
+      },
+      {
+        "lakeInflowM3": 121515835.45909968,
+        "lakePrecipitationM3": 7926392.328906799,
+        "lakeEvaporationM3": 282514912.6661385,
+        "lakeDeltaVolumeM3": -153072684.87813205,
+        "completeDays": 30,
+        "period": "2021-11"
+      },
+      {
+        "lakeInflowM3": 91927604.16499865,
+        "lakePrecipitationM3": 9967727.734100282,
+        "lakeEvaporationM3": 141246346.51007795,
+        "lakeDeltaVolumeM3": -39351014.61097903,
+        "completeDays": 31,
+        "period": "2021-12"
+      },
+      {
+        "lakeInflowM3": 63384346.540618345,
+        "lakePrecipitationM3": 2204458.115206175,
+        "lakeEvaporationM3": 52291467.72532502,
+        "lakeDeltaVolumeM3": 13297336.930499492,
+        "completeDays": 31,
+        "period": "2022-01"
+      },
+      {
+        "lakeInflowM3": 41212718.63764598,
+        "lakePrecipitationM3": 7967924.656735236,
+        "lakeEvaporationM3": 81963531.54778746,
+        "lakeDeltaVolumeM3": -32782888.25340624,
+        "completeDays": 28,
+        "period": "2022-02"
+      },
+      {
+        "lakeInflowM3": 71483533.50433348,
+        "lakePrecipitationM3": 1109384.409764695,
+        "lakeEvaporationM3": 131733140.75340198,
+        "lakeDeltaVolumeM3": -59140222.83930379,
+        "completeDays": 31,
+        "period": "2022-03"
+      },
+      {
+        "lakeInflowM3": 49051034.67418368,
+        "lakePrecipitationM3": 8313009.077405307,
+        "lakeEvaporationM3": 188394448.6855538,
+        "lakeDeltaVolumeM3": -131030404.93396483,
+        "completeDays": 30,
+        "period": "2022-04"
+      },
+      {
+        "lakeInflowM3": 120387267.27357541,
+        "lakePrecipitationM3": 28629175.72987391,
+        "lakeEvaporationM3": 154216138.85096082,
+        "lakeDeltaVolumeM3": -5199695.847511502,
+        "completeDays": 31,
+        "period": "2022-05"
+      },
+      {
+        "lakeInflowM3": 294943732.73481005,
+        "lakePrecipitationM3": 36891594.051234625,
+        "lakeEvaporationM3": 283724296.0683476,
+        "lakeDeltaVolumeM3": 48111030.71769705,
+        "completeDays": 30,
+        "period": "2022-06"
+      },
+      {
+        "lakeInflowM3": 393808617.70752656,
+        "lakePrecipitationM3": 111056945.29012072,
+        "lakeEvaporationM3": 509184025.8722376,
+        "lakeDeltaVolumeM3": -4318462.874590341,
+        "completeDays": 31,
+        "period": "2022-07"
+      },
+      {
+        "lakeInflowM3": 471082131.5061762,
+        "lakePrecipitationM3": 187060381.3095447,
+        "lakeEvaporationM3": 448557861.4316893,
+        "lakeDeltaVolumeM3": 209584651.38403177,
+        "completeDays": 31,
+        "period": "2022-08"
+      },
+      {
+        "lakeInflowM3": 359652784.9791452,
+        "lakePrecipitationM3": 130625295.34561162,
+        "lakeEvaporationM3": 373757427.2029191,
+        "lakeDeltaVolumeM3": 116520653.12183768,
+        "completeDays": 30,
+        "period": "2022-09"
+      },
+      {
+        "lakeInflowM3": 148740159.54469356,
+        "lakePrecipitationM3": 68667932.09465282,
+        "lakeEvaporationM3": 312245786.6267663,
+        "lakeDeltaVolumeM3": -94837694.98741998,
+        "completeDays": 31,
+        "period": "2022-10"
+      },
+      {
+        "lakeInflowM3": 57254239.95887102,
+        "lakePrecipitationM3": 6680387.774799467,
+        "lakeEvaporationM3": 271657474.87568283,
+        "lakeDeltaVolumeM3": -207722847.14201233,
+        "completeDays": 30,
+        "period": "2022-11"
+      },
+      {
+        "lakeInflowM3": 40047485.66155048,
+        "lakePrecipitationM3": 1203159.975131553,
+        "lakeEvaporationM3": 142484119.06557405,
+        "lakeDeltaVolumeM3": -101233473.42889205,
+        "completeDays": 31,
+        "period": "2022-12"
+      },
+      {
+        "lakeInflowM3": 28463170.11069908,
+        "lakePrecipitationM3": 387110.92213117157,
+        "lakeEvaporationM3": 70171981.0845361,
+        "lakeDeltaVolumeM3": -41321700.05170587,
+        "completeDays": 31,
+        "period": "2023-01"
+      },
+      {
+        "lakeInflowM3": 21224547.00621147,
+        "lakePrecipitationM3": 636371.4498874974,
+        "lakeEvaporationM3": 99437736.84078406,
+        "lakeDeltaVolumeM3": -77576818.38468505,
+        "completeDays": 28,
+        "period": "2023-02"
+      },
+      {
+        "lakeInflowM3": 21741515.89618333,
+        "lakePrecipitationM3": 9846231.060554996,
+        "lakeEvaporationM3": 123300015.95064966,
+        "lakeDeltaVolumeM3": -91712268.99391131,
+        "completeDays": 31,
+        "period": "2023-03"
+      },
+      {
+        "lakeInflowM3": 33352957.916802477,
+        "lakePrecipitationM3": 10301674.970799051,
+        "lakeEvaporationM3": 189426491.88080502,
+        "lakeDeltaVolumeM3": -145771858.9932035,
+        "completeDays": 30,
+        "period": "2023-04"
+      },
+      {
+        "lakeInflowM3": 51027006.760989375,
+        "lakePrecipitationM3": 23787954.32314737,
+        "lakeEvaporationM3": 197236134.36844927,
+        "lakeDeltaVolumeM3": -122421173.28431258,
+        "completeDays": 31,
+        "period": "2023-05"
+      },
+      {
+        "lakeInflowM3": 271784943.130437,
+        "lakePrecipitationM3": 50597176.411336266,
+        "lakeEvaporationM3": 195215188.2096499,
+        "lakeDeltaVolumeM3": 127166931.3321234,
+        "completeDays": 30,
+        "period": "2023-06"
+      },
+      {
+        "lakeInflowM3": 546640810.8898468,
+        "lakePrecipitationM3": 189594066.14560696,
+        "lakeEvaporationM3": 369707811.562756,
+        "lakeDeltaVolumeM3": 366527065.4726977,
+        "completeDays": 31,
+        "period": "2023-07"
+      },
+      {
+        "lakeInflowM3": 722492176.5706987,
+        "lakePrecipitationM3": 280329477.90368164,
+        "lakeEvaporationM3": 389163159.229516,
+        "lakeDeltaVolumeM3": 613658495.2448645,
+        "completeDays": 31,
+        "period": "2023-08"
+      },
+      {
+        "lakeInflowM3": 451174065.4543045,
+        "lakePrecipitationM3": 121896454.65571818,
+        "lakeEvaporationM3": 371925989.0950828,
+        "lakeDeltaVolumeM3": 201144531.01493984,
+        "completeDays": 30,
+        "period": "2023-09"
+      },
+      {
+        "lakeInflowM3": 238660668.65013012,
+        "lakePrecipitationM3": 46257780.01186261,
+        "lakeEvaporationM3": 330486205.38561594,
+        "lakeDeltaVolumeM3": -45567756.72362327,
+        "completeDays": 31,
+        "period": "2023-10"
+      },
+      {
+        "lakeInflowM3": 130187633.26106791,
+        "lakePrecipitationM3": 14516880.382138789,
+        "lakeEvaporationM3": 193211133.63543388,
+        "lakeDeltaVolumeM3": -48506619.99222719,
+        "completeDays": 30,
+        "period": "2023-11"
+      },
+      {
+        "lakeInflowM3": 93721151.49971159,
+        "lakePrecipitationM3": 5664991.7390286615,
+        "lakeEvaporationM3": 151012972.71141297,
+        "lakeDeltaVolumeM3": -51626829.472672716,
+        "completeDays": 31,
+        "period": "2023-12"
+      },
+      {
+        "lakeInflowM3": 65981393.970944576,
+        "lakePrecipitationM3": 3930308.145789951,
+        "lakeEvaporationM3": 44466535.561274424,
+        "lakeDeltaVolumeM3": 25445166.555460095,
+        "completeDays": 31,
+        "period": "2024-01"
+      },
+      {
+        "lakeInflowM3": 44199047.68065436,
+        "lakePrecipitationM3": 3322635.7688407796,
+        "lakeEvaporationM3": 95176254.34442173,
+        "lakeDeltaVolumeM3": -47654570.89492657,
+        "completeDays": 29,
+        "period": "2024-02"
+      },
+      {
+        "lakeInflowM3": 64227804.2000364,
+        "lakePrecipitationM3": 2283445.9106905935,
+        "lakeEvaporationM3": 148249635.46494806,
+        "lakeDeltaVolumeM3": -81738385.35422108,
+        "completeDays": 31,
+        "period": "2024-03"
+      },
+      {
+        "lakeInflowM3": 45913495.968897425,
+        "lakePrecipitationM3": 10327879.14625208,
+        "lakeEvaporationM3": 205170210.05534002,
+        "lakeDeltaVolumeM3": -148928834.9401905,
+        "completeDays": 30,
+        "period": "2024-04"
+      },
+      {
+        "lakeInflowM3": 148369100.8865252,
+        "lakePrecipitationM3": 28396214.008231226,
+        "lakeEvaporationM3": 172018902.8849859,
+        "lakeDeltaVolumeM3": 4746412.009770505,
+        "completeDays": 31,
+        "period": "2024-05"
+      },
+      {
+        "lakeInflowM3": 300033025.22355306,
+        "lakePrecipitationM3": 65336131.54169649,
+        "lakeEvaporationM3": 255322456.5328679,
+        "lakeDeltaVolumeM3": 110046700.23238161,
+        "completeDays": 30,
+        "period": "2024-06"
+      },
+      {
+        "lakeInflowM3": 618393652.7707411,
+        "lakePrecipitationM3": 205941183.74814034,
+        "lakeEvaporationM3": 415667354.4808978,
+        "lakeDeltaVolumeM3": 408667482.03798383,
+        "completeDays": 31,
+        "period": "2024-07"
+      },
+      {
+        "lakeInflowM3": 423685760.11914074,
+        "lakePrecipitationM3": 117644073.78172217,
+        "lakeEvaporationM3": 450847132.90480536,
+        "lakeDeltaVolumeM3": 90482700.99605757,
+        "completeDays": 31,
+        "period": "2024-08"
+      },
+      {
+        "lakeInflowM3": 395234550.21590143,
+        "lakePrecipitationM3": 163269764.036651,
+        "lakeEvaporationM3": 352734583.24953526,
+        "lakeDeltaVolumeM3": 205769731.00301716,
+        "completeDays": 30,
+        "period": "2024-09"
+      },
+      {
+        "lakeInflowM3": 138938607.32327935,
+        "lakePrecipitationM3": 7540725.594391269,
+        "lakeEvaporationM3": 381403048.83262086,
+        "lakeDeltaVolumeM3": -234923715.91495022,
+        "completeDays": 31,
+        "period": "2024-10"
+      },
+      {
+        "lakeInflowM3": 66659458.258101985,
+        "lakePrecipitationM3": 3681875.6504138317,
+        "lakeEvaporationM3": 297859365.89794904,
+        "lakeDeltaVolumeM3": -227518031.98943326,
+        "completeDays": 30,
+        "period": "2024-11"
+      },
+      {
+        "lakeInflowM3": 46611499.83372332,
+        "lakePrecipitationM3": 1928713.9426066661,
+        "lakeEvaporationM3": 163380479.40186334,
+        "lakeDeltaVolumeM3": -114840265.62553333,
+        "completeDays": 31,
+        "period": "2024-12"
+      },
+      {
+        "lakeInflowM3": 32554721.26435622,
+        "lakePrecipitationM3": 1486057.1945400373,
+        "lakeEvaporationM3": 73827215.60275519,
+        "lakeDeltaVolumeM3": -39786437.14385893,
+        "completeDays": 31,
+        "period": "2025-01"
+      },
+      {
+        "lakeInflowM3": 21305499.340186767,
+        "lakePrecipitationM3": 3934018.820070821,
+        "lakeEvaporationM3": 97650866.98380524,
+        "lakeDeltaVolumeM3": -72411348.82354765,
+        "completeDays": 28,
+        "period": "2025-02"
+      },
+      {
+        "lakeInflowM3": 23635901.815623622,
+        "lakePrecipitationM3": 3658205.731850112,
+        "lakeEvaporationM3": 185196423.63400173,
+        "lakeDeltaVolumeM3": -157902316.086528,
+        "completeDays": 31,
+        "period": "2025-03"
+      },
+      {
+        "lakeInflowM3": 36761498.21848043,
+        "lakePrecipitationM3": 5493044.527003797,
+        "lakeEvaporationM3": 194349262.41671127,
+        "lakeDeltaVolumeM3": -152094719.67122707,
+        "completeDays": 30,
+        "period": "2025-04"
+      },
+      {
+        "lakeInflowM3": 83616653.6483401,
+        "lakePrecipitationM3": 28910820.142203856,
+        "lakeEvaporationM3": 161232444.12516046,
+        "lakeDeltaVolumeM3": -48704970.33461646,
+        "completeDays": 31,
+        "period": "2025-05"
+      },
+      {
+        "lakeInflowM3": 244168492.6407339,
+        "lakePrecipitationM3": 87338346.9918945,
+        "lakeEvaporationM3": 239714331.98075137,
+        "lakeDeltaVolumeM3": 91792507.65187705,
+        "completeDays": 30,
+        "period": "2025-06"
+      },
+      {
+        "lakeInflowM3": 408017057.07199603,
+        "lakePrecipitationM3": 212089711.61243522,
+        "lakeEvaporationM3": 423468431.6653503,
+        "lakeDeltaVolumeM3": 196638337.019081,
+        "completeDays": 31,
+        "period": "2025-07"
+      },
+      {
+        "lakeInflowM3": 530809017.367163,
+        "lakePrecipitationM3": 200951067.5989571,
+        "lakeEvaporationM3": 439109641.8408013,
+        "lakeDeltaVolumeM3": 292650443.1253189,
+        "completeDays": 31,
+        "period": "2025-08"
+      },
+      {
+        "lakeInflowM3": 274668209.0917547,
+        "lakePrecipitationM3": 96114814.76374313,
+        "lakeEvaporationM3": 363732863.5556943,
+        "lakeDeltaVolumeM3": 7050160.299803479,
+        "completeDays": 30,
+        "period": "2025-09"
+      },
+      {
+        "lakeInflowM3": 111118393.42498174,
+        "lakePrecipitationM3": 32178002.86858157,
+        "lakeEvaporationM3": 361228745.8433595,
+        "lakeDeltaVolumeM3": -217932349.5497961,
+        "completeDays": 31,
+        "period": "2025-10"
+      },
+      {
+        "lakeInflowM3": 48553911.60177394,
+        "lakePrecipitationM3": 11269637.493738107,
+        "lakeEvaporationM3": 240936343.2215528,
+        "lakeDeltaVolumeM3": -181112794.1260408,
+        "completeDays": 30,
+        "period": "2025-11"
+      },
+      {
+        "lakeInflowM3": 31291201.030271728,
+        "lakePrecipitationM3": 1619447.691592125,
+        "lakeEvaporationM3": 127929583.22575039,
+        "lakeDeltaVolumeM3": -95018934.50388658,
+        "completeDays": 31,
+        "period": "2025-12"
+      },
+      {
+        "lakeInflowM3": 20482758.21497504,
+        "lakePrecipitationM3": 844325.1713491137,
+        "lakeEvaporationM3": 66619848.65881847,
+        "lakeDeltaVolumeM3": -45292765.272494316,
+        "completeDays": 31,
+        "period": "2026-01"
+      },
+      {
+        "lakeInflowM3": 13282426.50383176,
+        "lakePrecipitationM3": 657488.3508302495,
+        "lakeEvaporationM3": 77975943.34574628,
+        "lakeDeltaVolumeM3": -64036028.49108428,
+        "completeDays": 28,
+        "period": "2026-02"
+      },
+      {
+        "lakeInflowM3": 33024531.448990386,
+        "lakePrecipitationM3": 3586684.28279233,
+        "lakeEvaporationM3": 156525673.15868703,
+        "lakeDeltaVolumeM3": -119914457.4269043,
+        "completeDays": 31,
+        "period": "2026-03"
+      },
+      {
+        "lakeInflowM3": 27931259.83030722,
+        "lakePrecipitationM3": 16669578.87425962,
+        "lakeEvaporationM3": 183459321.1983651,
+        "lakeDeltaVolumeM3": -138858482.49379817,
+        "completeDays": 30,
+        "period": "2026-04"
+      },
+      {
+        "lakeInflowM3": 95844479.10437971,
+        "lakePrecipitationM3": 27675441.437541183,
+        "lakeEvaporationM3": 171304687.98329937,
+        "lakeDeltaVolumeM3": -47784767.44137848,
+        "completeDays": 31,
+        "period": "2026-05"
+      },
+      {
+        "lakeInflowM3": 223565256.3040149,
+        "lakePrecipitationM3": 87164740.93152277,
+        "lakeEvaporationM3": 223590122.58318132,
+        "lakeDeltaVolumeM3": 87139874.65235636,
+        "completeDays": 30,
+        "period": "2026-06"
+      },
+      {
+        "lakeInflowM3": 446181123.35896343,
+        "lakePrecipitationM3": 223136622.4800274,
+        "lakeEvaporationM3": 416882508.3469683,
+        "lakeDeltaVolumeM3": 252435237.4920227,
+        "completeDays": 31,
+        "period": "2026-07"
+      },
+      {
+        "lakeInflowM3": 468221214.36653423,
+        "lakePrecipitationM3": 162833523.67118526,
+        "lakeEvaporationM3": 445752551.1438779,
+        "lakeDeltaVolumeM3": 185302186.8938415,
+        "completeDays": 31,
+        "period": "2026-08"
+      },
+      {
+        "lakeInflowM3": 306094615.82946205,
+        "lakePrecipitationM3": 151018590.1147965,
+        "lakeEvaporationM3": 350349276.584964,
+        "lakeDeltaVolumeM3": 106763929.35929462,
+        "completeDays": 30,
+        "period": "2026-09"
+      },
+      {
+        "lakeInflowM3": 63686440.525936104,
+        "lakePrecipitationM3": 13467921.122186398,
+        "lakeEvaporationM3": 239409332.64239678,
+        "lakeDeltaVolumeM3": -162254970.9942743,
+        "completeDays": 20,
+        "period": "2026-10"
+      }
+    ],
+    "yearly": [
+      {
+        "lakeInflowM3": 2636838717.9901104,
+        "lakePrecipitationM3": 770284748.0995613,
+        "lakeEvaporationM3": 2334984816.8420515,
+        "lakeDeltaVolumeM3": 1072138649.2476194,
+        "completeDays": 252,
+        "period": "2021"
+      },
+      {
+        "lakeInflowM3": 2111048052.7231302,
+        "lakePrecipitationM3": 590409647.8300809,
+        "lakeEvaporationM3": 2950209718.7062464,
+        "lakeDeltaVolumeM3": -248752018.1530351,
+        "completeDays": 365,
+        "period": "2022"
+      },
+      {
+        "lakeInflowM3": 2610470647.147083,
+        "lakePrecipitationM3": 753816169.9758931,
+        "lakeEvaporationM3": 2680294819.954692,
+        "lakeDeltaVolumeM3": 683991997.1682839,
+        "completeDays": 365,
+        "period": "2023"
+      },
+      {
+        "lakeInflowM3": 2358247396.451499,
+        "lakePrecipitationM3": 613602951.2754264,
+        "lakeEvaporationM3": 2982295959.61151,
+        "lakeDeltaVolumeM3": -10445611.884584218,
+        "completeDays": 366,
+        "period": "2024"
+      },
+      {
+        "lakeInflowM3": 1846500556.5156622,
+        "lakePrecipitationM3": 685043175.4366105,
+        "lakeEvaporationM3": 2908376154.0956936,
+        "lakeDeltaVolumeM3": -376832422.1434212,
+        "completeDays": 365,
+        "period": "2025"
+      },
+      {
+        "lakeInflowM3": 1698314105.4873948,
+        "lakePrecipitationM3": 687054916.4364908,
+        "lakeEvaporationM3": 2331869265.6463046,
+        "lakeDeltaVolumeM3": 53499756.277581215,
+        "completeDays": 293,
+        "period": "2026"
+      }
+    ]
+  }
+}

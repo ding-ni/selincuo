@@ -27,6 +27,39 @@ def grid_observation_snapshot(db):
     return snapshot
 
 
+def prepare_calibration_resume_trace(folder):
+    """Keep an interrupted JSONL tail separate from the next resumed record."""
+    state = read_json(folder / 'pipeline-state.json', {})
+    fit = state.get('fit')
+    if fit not in ('forward', 'reverse', 'all-data',
+                   'joint/training/flow', 'joint/all-data/flow'):
+        return None
+    fit_folder = common.within(folder, fit)
+    if (fit_folder / 'fit-result.json').is_file():
+        return None
+    trace = fit_folder / 'search-trace.jsonl'
+    if not trace.is_file() or not trace.stat().st_size:
+        return None
+    with trace.open('rb') as stream:
+        stream.seek(-1, 2)
+        if stream.read(1) == b'\n':
+            return None
+    # A malformed JSON fragment is retained and ignored by the existing reader.
+    # Invalid UTF-8 cannot be handled by that reader: preserve it for recovery.
+    try:
+        with trace.open(encoding='utf-8') as stream:
+            for _ in stream:
+                pass
+    except UnicodeDecodeError as error:
+        raise ValueError('率定轨迹含截断的UTF-8字符，原文件已保留；请先恢复该条记录后再接续。') from error
+    original_bytes, original_sha = trace.stat().st_size, common.sha_file(trace)
+    with trace.open('ab') as stream:
+        stream.write(b'\n')
+    return {'traceFile': trace.relative_to(folder).as_posix(),
+            'originalBytes': original_bytes, 'originalSHA256': original_sha,
+            'resumedSHA256': common.sha_file(trace), 'action': 'append-newline'}
+
+
 class Jobs:
     def __init__(self, database):
         self.db = database
@@ -344,6 +377,10 @@ class Jobs:
             else:
                 from .calibration_replay import verify_inputs
                 verify_inputs(self.db, task['request'], self.db.workspace / 'tasks' / identifier)
+            if task['kind'] == 'two-stage-calibration':
+                repair = prepare_calibration_resume_trace(self.db.workspace / 'tasks' / identifier)
+                if repair:
+                    self.db.log('calibration.resume-trace-separator', {'taskId': identifier, **repair})
             self.cancelled.discard(identifier)
             with self.db.connect() as connection:
                 connection.execute("UPDATE tasks SET status='queued',message='继续已保存的率定搜索',updated_at=? WHERE id=?",(now(),identifier))

@@ -42,9 +42,17 @@ async function restoreRoute(){const q=new URLSearchParams(location.search);page.
 const resultTickets={detail:0,history:0,calibration:0}
 async function action(fn){busy.value=true;error.value='';try{return await fn()}catch(e){error.value=e.message}finally{busy.value=false}}
 async function refresh(){
+ const previousHome=boot.value?.homeResultId
  const responses=await Promise.allSettled([api('bootstrap'),api('tasks'),api('states'),api('trashed-results')])
  const [b,t,s,tr]=responses
- if(b.status==='fulfilled')boot.value=b.value;else if(!boot.value&&page.value!=='monitor')throw b.reason
+ if(b.status==='fulfilled'){
+  boot.value=b.value
+  const nextHome=boot.value.homeResultId
+  if(previousHome&&nextHome&&previousHome!==nextHome){
+   if(selectedId.value===previousHome){selectedId.value=nextHome;syncUrl(true)}
+   if(!historyDetail.value||historyDetail.value.id===previousHome){resultTickets.history++;historyDetail.value=null}
+  }
+ }else if(!boot.value&&page.value!=='monitor')throw b.reason
  if(t.status==='fulfilled')tasks.value=t.value.tasks
  if(s.status==='fulfilled')states.value=s.value.states
  if(tr.status==='fulfilled')trashedResults.value=tr.value.tasks
