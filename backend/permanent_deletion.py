@@ -189,7 +189,7 @@ def _snapshot(conn):
             'builtin': _current_config(), 'published': sorted(r['id'] for r in catalog.get('results', []))}
 
 
-def _build_plan(db, conn, requested, include_files=True):
+def _build_plan(db, conn, requested, include_files=True, recyclable_parameters=()):
     snapshot = _snapshot(conn)
     schemes = {row['id']: row for row in snapshot['schemes']}
     parameters = {row['id']: row for row in snapshot['parameters']}
@@ -232,7 +232,7 @@ def _build_plan(db, conn, requested, include_files=True):
                 if row['favorite']:
                     item['blocked'].append(_blocked('成果仍被收藏', '先取消收藏'))
             elif kind == 'parameter':
-                if not snapshot['settings'].get('parameter-hidden:' + identifier, False):
+                if not snapshot['settings'].get('parameter-hidden:' + identifier, False) and identifier not in recyclable_parameters:
                     item['blocked'].append(_blocked('参数不在回收站', '先移入回收站'))
             else:
                 family = row['family']
@@ -464,6 +464,8 @@ def guard_pending(db, kind, identifier):
     """Protect incomplete objects from restoration or new runtime references."""
     if kind not in KINDS or not identifier:
         return
+    from .windows_recycle import guard_available
+    guard_available(db, kind, identifier)
     with db.connect() as conn:
         for row in _pending(conn):
             plan = row['plan']
@@ -489,6 +491,8 @@ def guard_parameter_source(db, identifier):
 
 
 def guard_no_pending(db):
+    from .windows_recycle import guard_no_pending as guard_windows
+    guard_windows(db)
     with db.connect() as conn:
         if _pending(conn):
             raise ValueError('有未完成的彻底删除，请先在回收站重试，确保资料和索引一致')
@@ -551,6 +555,9 @@ def _result(plan, status, error='', remaining=None):
 def execute(db, objects, token):
     """Execute an approved plan. The server must hold the shared Jobs.lock."""
     requested = _requests(objects)
+    from .windows_recycle import guard_available
+    for obj in requested:
+        guard_available(db, obj['kind'], obj['id'])
     if not isinstance(token, str) or not re.fullmatch(r'[0-9a-f]{64}', token):
         raise ValueError('删除预览令牌无效')
     with db.connect() as conn:

@@ -173,7 +173,7 @@ def check_parameters(page, config, request, result):
     keys = {row['key'] for row in rows}
     if len(rows) != 23 or keys != selected | {'lakeCoefficient'}:
         raise ValueError('常规率定表未完整显示22项水文参数和湖泊系数。')
-    if not page.get_by_role('button', name='保存修订', exact=True).is_disabled():
+    if not page.get_by_role('button', name='保存方案', exact=True).is_disabled():
         raise ValueError('仅查看和聚焦初值后，方案被错误标记为已修改。')
     return rows
 
@@ -303,7 +303,7 @@ def check_pages(base, expected, context, output, report):
                     # Loading the adopted task selects its result step. Wait for
                     # that asynchronous selection before returning to settings.
                     page.locator('.calibration-adopted').wait_for()
-                    page.locator('.calibration-scheme-bar').get_by_role('button', name='调整设置', exact=True).click()
+                    page.locator('.calibration-steps').get_by_role('button', name='资料与时段', exact=False).click()
                     if page.get_by_label('预热起日', exact=True).input_value() != request['periods']['warmupStart'][:10]:
                         raise ValueError('前端预热日期与任务不一致。')
                     lake_line = page.locator('.calibration-data-line').inner_text()

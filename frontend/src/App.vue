@@ -10,6 +10,9 @@ import ResultWorkspace from './ResultWorkspace.vue'
 import ModelStates from './ModelStates.vue'
 import ModelResources from './ModelResources.vue'
 import {api,number} from './api.mjs'
+import {connectBrowserSession} from './browser-session.mjs'
+let disconnectBrowserSession=()=>{}
+connectBrowserSession().then(stop=>{disconnectBrowserSession=stop}).catch(()=>{})
 const route=new URLSearchParams(location.search)
 const selectedId=ref(route.get('result')||''),viewDay=ref(route.get('date')||''),context=ref(null),tasksOpen=ref(false)
 const pages=[['overview','⌂','湖情总览'],['monitor','≋','监测资料'],['calibration','⌘','模型方案与率定'],['simulation','▷','历史模拟'],['results','▥','成果中心'],['process','⊞','过程与状态'],['model','◇','资料更新']]
@@ -76,7 +79,7 @@ async function submit(request){
 function simulateWith(selection){simulationSelection.value=selection;navigate('simulation')}
 async function stop(id){await action(async()=>{await api('tasks/'+id+'/stop',{});await refresh()})}
 async function metadata(t,change){await action(async()=>{await api('tasks/'+t.id+'/metadata',change);if(change.trashed&&detail.value?.id===t.id){detail.value=null;const fallback=boot.value.homeResultId;if(fallback&&fallback!==t.id)await selectContext(fallback);else{selectedId.value='';context.value=null;syncUrl(true)}}await refresh();if(detail.value?.id===t.id&&!change.trashed)await openResult(t.id)})}
-async function deletedResults(result){await action(async()=>{const removed=new Set(result.deletedObjects.filter(item=>item.kind==='task').map(item=>item.id));if(removed.has(detail.value?.id))detail.value=null;if(removed.has(historyDetail.value?.id))historyDetail.value=null;if(removed.has(calibrationDetail.value?.id))calibrationDetail.value=null;if(removed.has(selectedId.value)){selectedId.value=boot.value.homeResultId||'';context.value=null;resultWindow.value=null;syncUrl(true)}await refresh();if(page.value==='results'&&!detail.value&&selectedId.value)await openResult(selectedId.value);notice.value='已彻底删除所选可删除对象。'})}
+async function deletedResults(result){await action(async()=>{const removed=new Set((result.recycledObjects||result.deletedObjects||[]).filter(item=>item.kind==='task').map(item=>item.id));if(removed.has(detail.value?.id))detail.value=null;if(removed.has(historyDetail.value?.id))historyDetail.value=null;if(removed.has(calibrationDetail.value?.id))calibrationDetail.value=null;if(removed.has(selectedId.value)){selectedId.value=boot.value.homeResultId||'';context.value=null;resultWindow.value=null;syncUrl(true)}await refresh();if(page.value==='results'&&!detail.value&&selectedId.value)await openResult(selectedId.value);notice.value=result.destination==='windows-recycle-bin'?'本地文件已移入Windows回收站，关联记录已保留。':'所选记录已整理。'})}
 function showState(t){if(!t)return;stateResultId.value=t.id;navigate('process',t.id)}
 async function resume(s){await action(async()=>{const [saved,coverage]=await Promise.all([api('states/'+s.id),api('forcing-coverage')]);const state=saved.state,current=coverage.current;continuationCoverage.value=current;if(!current?.end)throw Error(current?.message||'暂无完整气象资料，请先更新资料');continuation.value={kind:'continuation',name:'状态续算',stateId:s.id,parameters:state.parameters,partitionParameters:state.partitionParameters||{},routingMode:state.identity.routingMode,start:new Date(Date.parse(s.valid_at+'Z')+3600000).toISOString().slice(0,16),end:current.end.slice(0,16)}})}
 async function renameState(s){const name=prompt('状态名称',s.name||'');if(name===null)return;await action(async()=>{await api('states/'+s.id,{name,favorite:true});await refresh()})}
@@ -93,7 +96,7 @@ const beijingTime=value=>value?new Date(value).toLocaleString('zh-CN',{timeZone:
 function dashboardStation(id,day,comparison=false){monitorInitial.value={station:id,variable:boot.value.stations.find(s=>s.id===id)?.kind==='rain'?'precipitation':id==='DUJA'?'flow':'level',day,comparison};navigate('monitor')}
 watch(collapsed,v=>localStorage.setItem('selinco:nav-collapsed',String(v)))
 onMounted(async()=>{window.addEventListener('popstate',restoreRoute);window.addEventListener('resize',resizeNavigation);await action(async()=>{await refresh();if(page.value==='results')await openResult(selectedId.value||boot.value.homeResultId);syncUrl(true)});timer=setInterval(async()=>{if(!active.value.length||busy.value)return;try{const ids=active.value.map(t=>t.id);tasks.value=(await api('tasks')).tasks;for(const [r,key] of [[historyDetail,'history'],[calibrationDetail,'calibration'],[detail,'detail']])if(r.value&&ids.includes(r.value.id))await openResult(r.value.id,key);if(ids.some(id=>!active.value.some(t=>t.id===id)))await refresh()}catch(e){error.value=e.message}},2500)})
-onBeforeUnmount(()=>{clearInterval(timer);window.removeEventListener('popstate',restoreRoute);window.removeEventListener('resize',resizeNavigation)})
+onBeforeUnmount(()=>{disconnectBrowserSession();clearInterval(timer);window.removeEventListener('popstate',restoreRoute);window.removeEventListener('resize',resizeNavigation)})
 </script>
 <template>
  <div class="app-shell" :class="{'dashboard-host':page==='overview','nav-collapsed':collapsed}">

@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import threading
+import sys
 import uuid
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -27,7 +28,7 @@ def upload_size_limit(extension):
 def guard_restore_writes(jobs, path, uploading=False):
     if not (getattr(jobs,'restore_pending',False) or getattr(jobs,'restart_required',False)):
         return
-    allowed=path in ('tasks','restore-preview','shutdown') or bool(re.fullmatch(r'tasks/[^/]+/stop',path))
+    allowed=path in ('tasks','restore-preview','shutdown','browser-session') or bool(re.fullmatch(r'tasks/[^/]+/stop',path))
     if uploading or not allowed:
         raise ValueError('恢复已排队或完成，旧工作区暂停写入；请等待恢复结束并重启后继续')
 
@@ -126,6 +127,10 @@ class Handler(SimpleHTTPRequestHandler):
         try:
             self.guard()
             fn()
+        except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
+            # Navigation/closing a page can end a response; do not turn a
+            # disconnected reader into a second, impossible error response.
+            return
         except FileNotFoundError as exc:
             self.send_json({'code': 'RESULT_NOT_FOUND', 'error': str(exc)}, 404)
         except (ValueError, KeyError, TypeError) as exc:
@@ -140,6 +145,9 @@ class Handler(SimpleHTTPRequestHandler):
         url = urlsplit(self.path)
         query = {k: v[-1] for k, v in parse_qs(url.query).items()}
         path = url.path.removeprefix('/api/model/')
+        if path == 'browser-session':
+            return self.send_json({'enabled': bool(getattr(self.server, 'browser_lifetime', None)),
+                                   'instanceId': self.server.instance_id})
         if url.path == '/api/health':
             return self.send_json({'projectId': 'selinco', 'version': VERSION, 'instanceId': self.server.instance_id,
                                    'backendSourceSHA256': self.server.jobs.backend_source_identity,
@@ -569,6 +577,17 @@ class Handler(SimpleHTTPRequestHandler):
         path = urlsplit(self.path).path.removeprefix('/api/model/')
         guard_restore_writes(self.server.jobs,path)
         value = self.document()
+        if path == 'browser-session':
+            lifetime = getattr(self.server, 'browser_lifetime', None)
+            if not lifetime or value.get('instanceId') != self.server.instance_id:
+                raise ValueError('浏览器会话已变更，请刷新页面')
+            lifetime.update(value.get('sessionId'), value.get('action'))
+            return self.send_json({'status': 'ok'})
+        if path in ('windows-recycle/preview', 'windows-recycle/execute'):
+            from .windows_recycle import preview, execute
+            with self.server.jobs.lock:
+                return self.send_json(preview(self.db, value.get('objects')) if path.endswith('preview')
+                                      else execute(self.db, value.get('objects'), value.get('token')))
         if path in ('permanent-delete/preview','permanent-delete/execute'):
             from .permanent_deletion import preview, execute
             with self.server.jobs.lock:
@@ -816,8 +835,13 @@ def main():
     parser.add_argument('--port', type=int, default=8882)
     parser.add_argument('--workspace', type=Path)
     parser.add_argument('--no-browser', action='store_true')
+    parser.add_argument('--close-with-browser', action='store_true', default=bool(getattr(sys, 'frozen', False)))
     args = parser.parse_args()
     server = Platform(('127.0.0.1', args.port), args.workspace)
+    if args.close_with_browser:
+        from .browser_lifetime import BrowserLifetime
+        server.browser_lifetime = BrowserLifetime(server.jobs, server.shutdown)
+        threading.Thread(target=server.browser_lifetime.watch, daemon=True).start()
     print(f'色林错预警预报平台 {VERSION}\n工作区：{server.db.workspace}\nhttp://127.0.0.1:{server.server_port}/', flush=True)
     if not args.no_browser:
         threading.Timer(.7, lambda: webbrowser.open(f'http://127.0.0.1:{server.server_port}/')).start()

@@ -52,9 +52,14 @@ def _family_entry(db, family, revisions, tasks, protected):
 
 
 def catalog(db):
+    from .windows_recycle import states
+    file_states = states(db)
     families, tasks, protected = _inventory(db)
     rows = [_family_entry(db, family, revisions, tasks, protected)
             for family, revisions in families.items()]
+    for row in rows:
+        row['fileRecycleStatus'] = next((file_states['scheme:' + identifier] for identifier in row['revisionIds']
+                                         if 'scheme:' + identifier in file_states), '')
     batches = [json.loads(row['value']) for row in db.rows(
         'SELECT value FROM settings WHERE key LIKE ? ORDER BY key DESC', (PREFIX + '%',))]
     return {'schemes': sorted(rows, key=lambda row: (not row['current'], row['name'], row['id'])),

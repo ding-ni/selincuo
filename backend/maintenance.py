@@ -57,12 +57,6 @@ def recycle_native(path):
     """Recycle only via the Shell undo service; failure never falls back to unlink."""
     if os.name != 'nt':
         raise RuntimeError('仅Windows回收站支持最终移走；文件仍保留在平台回收站')
-    import ctypes
-    from ctypes import wintypes
-    class SHFILEOPSTRUCTW(ctypes.Structure):
-        _fields_ = [('hwnd', wintypes.HWND), ('wFunc', wintypes.UINT), ('pFrom', wintypes.LPCWSTR),
-                    ('pTo', wintypes.LPCWSTR), ('fFlags', wintypes.WORD), ('fAnyOperationsAborted', wintypes.BOOL),
-                    ('hNameMappings', ctypes.c_void_p), ('lpszProgressTitle', wintypes.LPCWSTR)]
     path = Path(path).resolve()
     drive = path.drive
     bin_root = Path(drive + '\\') / '$Recycle.Bin'
@@ -81,18 +75,16 @@ def recycle_native(path):
             pass
     if not readable:
         raise RuntimeError('无法核验当前用户回收站，未执行移走')
-    operation = SHFILEOPSTRUCTW()
-    operation.wFunc = 3
-    operation.pFrom = str(path) + '\0\0'
-    # ALLOWUNDO + WANTNUKEWARNING. Never suppress a warning when a device
-    # cannot recycle an object; never request a permanent-delete fallback.
-    operation.fFlags = 0x0040 | 0x4000
-    code = ctypes.windll.shell32.SHFileOperationW(ctypes.byref(operation))
-    if code or operation.fAnyOperationsAborted or path.exists():
-        raise RuntimeError(f'Windows未确认移入回收站（代码{code}），索引仍保留')
+    previous = {str(info) for folder in readable for info in folder.glob('$I*')}
+    from .windows_shell import recycle
+    recycle(path)
+    if path.exists():
+        raise RuntimeError('Windows未确认移入回收站，索引仍保留')
     import struct
     for folder in readable:
         for info in folder.glob('$I*'):
+            if str(info) in previous:
+                continue
             try:
                 raw = info.read_bytes()
                 version = struct.unpack_from('<Q', raw)[0]

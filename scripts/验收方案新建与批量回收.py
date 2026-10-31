@@ -39,6 +39,12 @@ def production_snapshot(workspace):
 class IsolatedHandler(Handler):
     def post(self):
         path = urlsplit(self.path).path.removeprefix('/api/model/')
+        if path in ('windows-recycle/preview', 'windows-recycle/execute'):
+            from backend.windows_recycle import preview, execute
+            value = self.document()
+            with self.server.jobs.lock:
+                return self.send_json(preview(self.server.recycle_db, value.get('objects')) if path.endswith('preview')
+                                      else execute(self.server.recycle_db, value.get('objects'), value.get('token')))
         if path not in ('schemes', 'schemes/recycle-preview', 'schemes/recycle', 'schemes/restore-batch'):
             raise ValueError('该隔离验收只允许方案保存与可恢复回收；不创建任务或更改采用')
         super().post()
@@ -67,6 +73,8 @@ def main():
         return old if old.is_file() else args.output / 'calibration-configurations' / old.name
     server = __import__('http.server', fromlist=['ThreadingHTTPServer']).ThreadingHTTPServer(('127.0.0.1', 0), IsolatedHandler)
     server.db = db
+    server.recycle_db = Database.__new__(Database)
+    server.recycle_db.path, server.recycle_db.workspace = db.path, args.output
     server.jobs = SimpleNamespace(lock=threading.RLock(), restore_pending=False, restart_required=False,
                                   backend_source_identity=model_identity(), public=Jobs.public)
     server.instance_id = 'isolated-scheme-management'
@@ -76,6 +84,14 @@ def main():
               'isolatedDatabase': str(db.path), 'passed': False}
     with ExitStack() as stack:
         stack.enter_context(patch.object(calibration_configuration, '_path', configuration_path))
+        def fake_bin(path):
+            destination = args.output / '模拟系统回收站' / path.name
+            destination.parent.mkdir(exist_ok=True)
+            path.rename(destination)
+            metadata = destination.with_suffix('.json')
+            metadata.write_text(str(path), encoding='utf-8')
+            return {'metadata': str(metadata), 'recoverable': str(destination), 'original': str(path)}
+        stack.enter_context(patch('backend.maintenance.recycle_native', side_effect=fake_bin))
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         try:
@@ -91,7 +107,7 @@ def main():
                         page.on('request', lambda request: posts.append(request.url) if request.method == 'POST' else None)
                         page.goto(base + '/?page=calibration', wait_until='networkidle', timeout=90000)
                         page.locator('.calibration-workbench[data-coverage-ready="true"]').wait_for(timeout=90000)
-                        page.get_by_role('button', name='新建方案', exact=True).click()
+                        page.get_by_role('button', name='＋ 新建方案', exact=True).click()
                         field = page.get_by_label('方案名称', exact=True)
                         field.wait_for()
                         name = '界面验收方案-' + str(width)
@@ -101,9 +117,9 @@ def main():
                         first = response.value.json()
                         assert 'id' in first, first
                         print('已新建 ' + first['id'], flush=True)
-                        page.get_by_role('button', name='保存修订', exact=True).wait_for()
+                        expect(page.get_by_role('button', name='保存方案', exact=True)).to_be_disabled(timeout=60000)
                         page.wait_for_function('()=>document.querySelector(".calibration-workbench .message.success")?.textContent.includes("已保存")')
-                        page.get_by_role('button', name='复制为我的方案', exact=True).click()
+                        page.get_by_role('button', name='复制方案', exact=True).click()
                         copied_name = name + '-副本'
                         field.fill(copied_name)
                         page.get_by_role('button', name='参数与范围', exact=False).click()
@@ -124,15 +140,18 @@ def main():
                                 connection.execute('''INSERT INTO tasks(id,kind,status,created_at,updated_at,request,trashed,name)
                                     VALUES(?,?,?,?,?,?,?,?)''', (identifier, 'trial', 'cancelled', now(), now(),
                                     canonical({'researchSchemeId': row['id']}), 0, name + ' · 隔离取消记录' + str(index)))
+                            folder = args.output / 'tasks' / identifier
+                            folder.mkdir(parents=True)
+                            (folder / '核验.txt').write_bytes(b'isolated UI recycle bytes')
                         old_trash = 'JOB-ui-scheme-pretrashed-' + str(width)
                         with db.connect() as connection:
                             connection.execute('''INSERT INTO tasks(id,kind,status,created_at,updated_at,request,trashed,name)
                                 VALUES(?,?,?,?,?,?,?,?)''', (old_trash, 'trial', 'cancelled', now(), now(),
                                 canonical({'researchSchemeId': first['id']}), 1, name + ' · 原已回收记录'))
-                        page.get_by_role('button', name='我的方案', exact=True).click()
-                        dialog = page.get_by_role('dialog', name='我的方案', exact=True)
+                        page.get_by_role('button', name='管理方案', exact=True).click()
+                        dialog = page.get_by_role('dialog', name='管理方案', exact=True)
                         dialog.locator('[data-scheme="' + first['id'] + '"]').wait_for(timeout=60000)
-                        current = dialog.locator('tr').filter(has_text='当前正式方案').get_by_role('checkbox')
+                        current = dialog.locator('[data-scheme="SCHEME-2c4816223d4b47cfb3cd"]').get_by_role('checkbox')
                         assert current.is_disabled()
                         for row in (first, second):
                             dialog.get_by_role('checkbox', name='选择方案 ' + row['name'], exact=True).check()
@@ -145,7 +164,7 @@ def main():
                         page.screenshot(path=str(preview_file), full_page=True)
                         screens.append(preview_file)
                         dialog.get_by_role('button', name='确认移入回收站', exact=True).click()
-                        restore_button = dialog.get_by_role('button', name='恢复方案与结果', exact=True).last
+                        restore_button = dialog.locator('.scheme-trash-batch').filter(has_text=name).get_by_role('button', name='恢复方案与结果', exact=True)
                         restore_button.wait_for(timeout=60000)
                         assert all(db.task(identifier)['trashed'] for identifier in ids)
                         assert all(db.setting('scheme-hidden:' + row['payload']['familyId']) for row in (first, second))
@@ -155,28 +174,48 @@ def main():
                         assert db.task(old_trash)['trashed']
                         dialog.get_by_role('button', name='已保存方案', exact=True).click()
                         row = dialog.locator('[data-scheme="' + first['id'] + '"]')
-                        row.get_by_role('button', name='打开设置', exact=True).click()
+                        row.get_by_role('button', name='打开方案', exact=True).click()
                         page.get_by_label('方案名称', exact=True).wait_for()
                         assert page.get_by_label('方案名称', exact=True).input_value() == name
                         page.get_by_role('button', name='参数与范围', exact=False).click()
                         assert float(page.get_by_label('张力水容量下界', exact=True).input_value()) == 40
-                        expect(page.get_by_role('button', name='新建方案', exact=True)).to_be_enabled(timeout=60000)
+                        expect(page.get_by_role('button', name='＋ 新建方案', exact=True)).to_be_enabled(timeout=60000)
                         saved_file = args.output / ('独立方案-' + str(width) + '.png')
                         page.screenshot(path=str(saved_file), full_page=True)
                         screens.append(saved_file)
+                        page.get_by_role('button', name='管理方案', exact=True).click()
+                        dialog = page.get_by_role('dialog', name='管理方案', exact=True)
+                        for row in (first, second):
+                            dialog.get_by_role('checkbox', name='选择方案 ' + row['name'], exact=True).check()
+                        dialog.get_by_role('button', name='移入回收站（含关联结果）', exact=True).click()
+                        dialog.get_by_role('button', name='确认移入回收站', exact=True).click()
+                        batch_row = dialog.locator('.scheme-trash-batch').filter(has_text=name)
+                        batch_row.get_by_role('checkbox').check()
+                        dialog.get_by_role('button', name='移入Windows回收站', exact=True).click()
+                        native_dialog = page.get_by_role('dialog', name='将本地文件移入Windows回收站', exact=True)
+                        expect(native_dialog).to_be_visible(timeout=60000)
+                        file_preview = args.output / ('系统回收站预览-' + str(width) + '.png')
+                        page.screenshot(path=str(file_preview));screens.append(file_preview)
+                        native_dialog.get_by_role('button', name='确认移入Windows回收站', exact=True).click()
+                        expect(native_dialog).not_to_be_visible(timeout=60000)
+                        expect(batch_row.get_by_text('文件已在Windows回收站', exact=True)).to_be_visible(timeout=60000)
+                        assert all(not (args.output / 'tasks' / identifier).exists() for identifier in ids)
+                        assert all((args.output / '模拟系统回收站' / identifier / '核验.txt').read_bytes() == b'isolated UI recycle bytes' for identifier in ids)
                         overflow = page.evaluate('document.documentElement.scrollWidth>innerWidth')
                         assert not overflow
                         cases.append({'viewport': [width, height], 'firstScheme': first['id'], 'copiedScheme': second['id'],
                                       'independentFamilies': True, 'independentBounds': True, 'currentProtected': True,
                                       'recycledAndRestoredResults': ids, 'previouslyRecycledResultStayedRecycled': True,
-                                      'restoredSchemeReopened': True, 'horizontalOverflow': False})
+                                      'restoredSchemeReopened': True, 'windowsRecycleEndToEnd': True,
+                                      'recycleBackend': 'retained isolated fake bin; real Windows Shell tested separately',
+                                      'horizontalOverflow': False})
                         page.wait_for_load_state('networkidle', timeout=90000)
                         page.close()
                 finally:
                     browser.close()
             assert not errors, errors
             assert not api_errors, api_errors
-            assert all(any(path in url for path in ('/schemes',)) for url in posts), posts
+            assert all(any(path in url for path in ('/schemes', '/windows-recycle/')) for url in posts), posts
             after = production_snapshot(workspace)
             assert before == after, '生产库或配置目录被验收改变'
             report.update(passed=True, cases=cases, pageErrors=errors, apiErrors=api_errors,

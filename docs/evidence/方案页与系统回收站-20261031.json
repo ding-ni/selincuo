@@ -1,0 +1,259 @@
+{
+  "at": "2026-10-31T05:00:19+00:00",
+  "scope": "方案页整理、可核验Windows回收站、安装版浏览器生命周期准备；本轮不打包",
+  "checks": {
+    "backend": {
+      "windowsRecycle": 6,
+      "browserLifetime": 6,
+      "schemeManagement": 9,
+      "schemeWorkflow": 23,
+      "passedTotal": 44
+    },
+    "build": {
+      "passed": true,
+      "emptyOutDir": false,
+      "javascript": "index-DXo4vFko.js",
+      "stylesheet": "index-BC8yFTZR.css"
+    }
+  },
+  "liveEntry": {
+    "at": "2026-10-31T04:52:42+00:00",
+    "passed": true,
+    "health": {
+      "backendSourceSHA256": "a7f1f10c37036d1f66c93891ffe3af41d36fc4a23bd5911ccbab0ac7b8e573e9",
+      "instanceId": "b384fad8dcb348d38ddaec0313d2bcb2",
+      "projectId": "selinco",
+      "version": "0.12.0",
+      "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+    },
+    "currentBusiness": {
+      "adoptedAt": "2026-10-30T16:58:02+00:00",
+      "familyId": "FAMILY-b350350cca224ab2",
+      "inputId": "INPUT-67a56a9abcc50dc4a9033ab6",
+      "name": "色林错连续模拟方案",
+      "parameterId": "PARAM-1bccaba37f764ddbb89e",
+      "resultId": "JOB-05c3f62282ce4239aed1",
+      "schemeId": "SCHEME-2c4816223d4b47cfb3cd",
+      "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6"
+    },
+    "configurationSHA256": "e78c9a83751992ff8c9881dff59a9b921348b3e923db4a53a2d4bb534bb3f62d",
+    "numericalModelSHA256": "add1e581be4154dc22df6ae1a9f6765e2fff8bffd4f6075dfa61107d3bf8c549",
+    "checks": {
+      "newInstance": true,
+      "newCodeLoaded": true,
+      "sameAdoption": true,
+      "sameConfiguration": true,
+      "sameProductionTables": true,
+      "sameResultFiles": true,
+      "sameNumericalModel": true,
+      "noActiveTasks": true,
+      "developmentServicePersistent": true
+    },
+    "configurationChecks": {
+      "twoTasksSucceeded": true,
+      "adoptedTask": true,
+      "adoptedScheme": true,
+      "adoptedInput": true,
+      "adoptedSpatialVersion": true,
+      "configuredSchemeVisible": true,
+      "configurationIdentity": true,
+      "implementationMatches": true,
+      "inputManifestIdentity": true,
+      "observationSnapshotIdentity": true,
+      "all25InitialParameters": true,
+      "all25FinalParameters": true,
+      "all22SelectedAndBounds": true,
+      "periods": true,
+      "initialSoil": true,
+      "lakeInitialization": true,
+      "simulationRange": true,
+      "displayCoverage": true,
+      "objectiveSearchAndLakeStages": true,
+      "sharedParameterTransfer": true,
+      "routingMode": true
+    },
+    "sizes": [
+      {
+        "viewport": [
+          1366,
+          768
+        ],
+        "singleSchemeHeading": true,
+        "noRevisionOrAdjustButton": true,
+        "saveDisabledWithoutChanges": true,
+        "windowsRecycleEntry": true,
+        "currentProtected": true,
+        "horizontalOverflow": false
+      },
+      {
+        "viewport": [
+          1920,
+          1080
+        ],
+        "singleSchemeHeading": true,
+        "noRevisionOrAdjustButton": true,
+        "saveDisabledWithoutChanges": true,
+        "windowsRecycleEntry": true,
+        "currentProtected": true,
+        "horizontalOverflow": false
+      }
+    ],
+    "pageErrors": [],
+    "apiErrors": [],
+    "nonGetRequests": [],
+    "screenshots": [
+      {
+        "path": "build/方案页面与系统回收站正式入口-20261031-01/方案页-1366.png",
+        "sha256": "abf4e7a52568b5721ca155d020eb47194fd1cdbb0abfca1412be342ed9f6c0ae"
+      },
+      {
+        "path": "build/方案页面与系统回收站正式入口-20261031-01/方案回收站-1366.png",
+        "sha256": "088d4720cd1aa41e02cd163896896a7fd29b5f2d8751584a33520d45edfabf1f"
+      },
+      {
+        "path": "build/方案页面与系统回收站正式入口-20261031-01/方案页-1920.png",
+        "sha256": "0441a3251963a9b6873f513a06f163cd3b80c4a1053f0a48ab102955f6233b10"
+      },
+      {
+        "path": "build/方案页面与系统回收站正式入口-20261031-01/方案回收站-1920.png",
+        "sha256": "d969a12787d4a1e199b97328e4e8fb3aced88d69cfffa809e3bfcf2458a7cff0"
+      }
+    ]
+  },
+  "isolatedUI": {
+    "createdAt": "2026-10-31T04:52:44+00:00",
+    "scope": "真实页面与接口验收；写入仅发生在SQLite快照，生产资料只读引用。",
+    "productionHealth": {
+      "backendSourceSHA256": "a7f1f10c37036d1f66c93891ffe3af41d36fc4a23bd5911ccbab0ac7b8e573e9",
+      "instanceId": "b384fad8dcb348d38ddaec0313d2bcb2",
+      "projectId": "selinco",
+      "version": "0.12.0",
+      "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+    },
+    "isolatedDatabase": "F:\\色林错预警预报平台\\build\\系统回收站与方案页面-20261031-04\\isolated.sqlite3",
+    "passed": true,
+    "cases": [
+      {
+        "viewport": [
+          1366,
+          768
+        ],
+        "firstScheme": "SCHEME-f8fb90fcf249462c8d35",
+        "copiedScheme": "SCHEME-ed34d36aa7a9491e9089",
+        "independentFamilies": true,
+        "independentBounds": true,
+        "currentProtected": true,
+        "recycledAndRestoredResults": [
+          "JOB-ui-scheme-1366-0",
+          "JOB-ui-scheme-1366-1"
+        ],
+        "previouslyRecycledResultStayedRecycled": true,
+        "restoredSchemeReopened": true,
+        "windowsRecycleEndToEnd": true,
+        "recycleBackend": "retained isolated fake bin; real Windows Shell tested separately",
+        "horizontalOverflow": false
+      },
+      {
+        "viewport": [
+          1920,
+          1080
+        ],
+        "firstScheme": "SCHEME-eeb3288365124e94ba98",
+        "copiedScheme": "SCHEME-70912f735b7541f9a241",
+        "independentFamilies": true,
+        "independentBounds": true,
+        "currentProtected": true,
+        "recycledAndRestoredResults": [
+          "JOB-ui-scheme-1920-0",
+          "JOB-ui-scheme-1920-1"
+        ],
+        "previouslyRecycledResultStayedRecycled": true,
+        "restoredSchemeReopened": true,
+        "windowsRecycleEndToEnd": true,
+        "recycleBackend": "retained isolated fake bin; real Windows Shell tested separately",
+        "horizontalOverflow": false
+      }
+    ],
+    "pageErrors": [],
+    "apiErrors": [],
+    "postCount": 18,
+    "productionUnchanged": true,
+    "screenshots": [
+      {
+        "path": "build\\系统回收站与方案页面-20261031-04\\回收预览-1366.png",
+        "sha256": "adeac5f332c9ea9ddb891d34dbc15cf9c944eeb965b9811956765325389cfebc"
+      },
+      {
+        "path": "build\\系统回收站与方案页面-20261031-04\\独立方案-1366.png",
+        "sha256": "ae6f252ceb52a999f9196a143dcb408f19c2976a0e5a0977864d9ad2c2b8ed60"
+      },
+      {
+        "path": "build\\系统回收站与方案页面-20261031-04\\系统回收站预览-1366.png",
+        "sha256": "a1b1ea7d8bcaa5f274bba9cccead745f10590713bcfd3a55a6191fd591107c48"
+      },
+      {
+        "path": "build\\系统回收站与方案页面-20261031-04\\回收预览-1920.png",
+        "sha256": "447afc72b9c30a14c511f506f947c20a1ddd6e389bee6dd40f51fb111fe7c05f"
+      },
+      {
+        "path": "build\\系统回收站与方案页面-20261031-04\\独立方案-1920.png",
+        "sha256": "f7a2a9801b694f80e633dd194424bf60dd3f69e039368d266c0dfb1cf526109a"
+      },
+      {
+        "path": "build\\系统回收站与方案页面-20261031-04\\系统回收站预览-1920.png",
+        "sha256": "00ae14a34fb712a74740eb75f1154a93ed1ed695dbff21f5e444bf132f776a01"
+      }
+    ]
+  },
+  "nativeWindowsRecycle": {
+    "passed": true,
+    "scope": "新建隔离临时方案与一个小文件，实际Windows IFileOperation回收；未选择真实旧方案",
+    "evidenceDirectory": "build/系统回收站真实业务核验/aa6667d026334ea3ab683eed6ea6021c",
+    "selectedObjects": [
+      {
+        "kind": "scheme",
+        "id": "SCHEME-native-isolated"
+      }
+    ],
+    "fileCount": 1,
+    "fileBytes": 58,
+    "originalFolderAbsent": true,
+    "recoverableSHA256": "a0d280410118e4034345e177def64268e9aa22f9b383c64413037b253dba24bb",
+    "recordsRetained": true,
+    "productionUntouched": true,
+    "metadataAndRecoverableEntryVerified": true
+  },
+  "browserLifetime": {
+    "passed": true,
+    "actualBrowser": true,
+    "refreshKeptService": true,
+    "secondTabKeptService": true,
+    "lastPageClosedServer": true,
+    "portClosed": true,
+    "shutdownSeconds": 5.625,
+    "packagedInstallerBuilt": false
+  },
+  "screenshots": [
+    {
+      "path": "docs/evidence/方案页精简1366-20261031.png",
+      "source": "build/方案页面与系统回收站正式入口-20261031-01/方案页-1366.png",
+      "sha256": "abf4e7a52568b5721ca155d020eb47194fd1cdbb0abfca1412be342ed9f6c0ae",
+      "bytes": 66156
+    },
+    {
+      "path": "docs/evidence/方案页精简1920-20261031.png",
+      "source": "build/方案页面与系统回收站正式入口-20261031-01/方案页-1920.png",
+      "sha256": "0441a3251963a9b6873f513a06f163cd3b80c4a1053f0a48ab102955f6233b10",
+      "bytes": 86158
+    },
+    {
+      "path": "docs/evidence/系统回收站预览1366-20261031.png",
+      "source": "build/系统回收站与方案页面-20261031-04/系统回收站预览-1366.png",
+      "sha256": "a1b1ea7d8bcaa5f274bba9cccead745f10590713bcfd3a55a6191fd591107c48",
+      "bytes": 129528
+    }
+  ],
+  "productionObjectsPhysicallyRecycled": false,
+  "exeOrInstallerBuilt": false,
+  "originalUntrackedFilesRetained": 18
+}

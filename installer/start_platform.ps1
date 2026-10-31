@@ -7,8 +7,10 @@ if (Test-Path -LiteralPath $activeConfiguration) {
     $activeWorkspace = (Get-Content -LiteralPath $activeConfiguration -Raw -Encoding UTF8 | ConvertFrom-Json).workspace
     if ($activeWorkspace) { $workspacePath = [IO.Path]::GetFullPath((Join-Path $applicationRoot $activeWorkspace)) }
 }
-$platformUrl = 'http://127.0.0.1:8879'
-$expectedVersion = (Get-Content -LiteralPath (Join-Path $applicationRoot 'config/platform.json') -Raw -Encoding UTF8 | ConvertFrom-Json).version
+$platformConfiguration = Get-Content -LiteralPath (Join-Path $applicationRoot 'config/platform.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+$platformPort = if ($platformConfiguration.port) { [int]$platformConfiguration.port } else { 8882 }
+$platformUrl = 'http://127.0.0.1:' + $platformPort
+$expectedVersion = $platformConfiguration.version
 function Test-SelincoService {
     try {
         $health = Invoke-RestMethod -Uri "$platformUrl/api/health" -TimeoutSec 2
@@ -21,14 +23,14 @@ try {
         New-Item -ItemType Directory -Path $logFolder -Force | Out-Null
         $stdoutPath = Join-Path $logFolder 'service.stdout.log'
         $stderrPath = Join-Path $logFolder 'service.stderr.log'
-        $process = Start-Process -FilePath (Join-Path $applicationRoot 'SelincoPlatform.exe') -ArgumentList '--no-browser' -WorkingDirectory $applicationRoot -WindowStyle Hidden -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath -PassThru
+        $process = Start-Process -FilePath (Join-Path $applicationRoot 'SelincoPlatform.exe') -ArgumentList @('--no-browser', '--close-with-browser', '--port', $platformPort) -WorkingDirectory $applicationRoot -WindowStyle Hidden -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath -PassThru
         $serviceReady = $false
         for ($attempt = 0; $attempt -lt 100; $attempt++) {
             if (Test-SelincoService) { $serviceReady = $true; break }
             if ($process.HasExited) { break }
             Start-Sleep -Milliseconds 300
         }
-        if (-not $serviceReady) { $failureDetail = Get-Content -LiteralPath $stderrPath -Tail 1 -Encoding UTF8 -ErrorAction SilentlyContinue; throw "平台未能启动。$failureDetail 请检查8879端口，详细记录：$stderrPath" }
+        if (-not $serviceReady) { $failureDetail = Get-Content -LiteralPath $stderrPath -Tail 1 -Encoding UTF8 -ErrorAction SilentlyContinue; throw "平台未能启动。$failureDetail 请检查${platformPort}端口，详细记录：$stderrPath" }
     }
     if (-not $NoBrowser) { Start-Process $platformUrl }
 } catch {
