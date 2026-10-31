@@ -2,6 +2,7 @@
 import {ref,computed,watch,onMounted,onBeforeUnmount,nextTick} from 'vue'
 import Chart from './Chart.vue'
 import ParameterTransferAudit from './ParameterTransferAudit.vue'
+import SchemeManager from './SchemeManager.vue'
 import {api,number} from './api.mjs'
 import {shiftCalendarDay} from './history-workflow.mjs'
 import {liftDujaToShared,transferMode} from './parameter-transfer.mjs'
@@ -14,10 +15,11 @@ const step=ref(0),schemeId=ref(''),draft=ref(null),saved=ref(''),group=ref('land
 let timer,progressTicket=0,replayTicket=0,recordTicket=0,disposed=false
 const replayDialog=ref(null)
 const editingInitial=ref('')
+const managerOpen=ref(false),managedSchemes=ref([])
 const recordedPlan=ref(null)
 const replayHistory=ref([]),replayHistoryOpen=ref(false),replayHistoryLoading=ref(false)
 const copy=v=>JSON.parse(JSON.stringify(v))
-const schemes=computed(()=>props.boot.schemes||[])
+const schemes=computed(()=>[...new Map([...managedSchemes.value,...(props.boot.schemes||[])].map(row=>[row.id,row])).values()])
 const dirty=computed(()=>draft.value&&(JSON.stringify(draft.value)!==saved.value||JSON.stringify(seedsText.value.split(/[,，\s]+/).filter(Boolean).map(Number))!==JSON.stringify(draft.value.twoStage.seeds)||(draft.value.twoStage.mode==='lake'&&lakeOnlyInitial.value!==draft.value.parameters.lakeCoefficient)))
 const locked=computed(()=>props.busy||working.value)
 const selectedScheme=computed(()=>schemes.value.find(s=>s.id===schemeId.value))
@@ -112,16 +114,37 @@ watch(()=>[draft.value,draft.value?.twoStage?.mode],([value,mode])=>{
  else if(mode==='flow'&&group.value==='lake')group.value='land'
 })
 async function fresh(){
+ if(dirty.value&&!confirm('当前设置尚未保存，仍要新建方案吗？'))return
  working.value=true;error.value=''
- try{draft.value=prepare(await api('research-template'));draft.value.name='我的色林错方案';schemeId.value='';saved.value='';manualBase.value=null;step.value=0;seedsText.value=draft.value.twoStage.seeds.join(', ')}
+ try{draft.value=prepare(await api('research-template'));draft.value.name='我的色林错方案';schemeId.value='';saved.value='';executable.value=null;manualBase.value=null;step.value=0;seedsText.value=draft.value.twoStage.seeds.join(', ');autoAdopt.value=false;emit('select','');message.value='新方案已建立，填写名称后保存。'}
  catch(e){error.value=e.message}finally{working.value=false}
 }
 function duplicate(){
  if(!draft.value)return
+ const source={schemeId:schemeId.value||null,configurationSHA256:executable.value?.configurationSHA256||draft.value.configurationSHA256||null}
  draft.value=prepare(draft.value)
  if(transferMode(draft.value)==='legacy')draft.value=liftDujaToShared(draft.value,'duja-shared',{schemeId:schemeId.value,configurationSHA256:draft.value.configurationSHA256})
- draft.value.name+=' · 副本';schemeId.value='';saved.value=''
- for(const key of ['builtin','id','familyId','revision','configurationSHA256','adoptedParameterId'])delete draft.value[key]
+ draft.value.name+=' · 副本';draft.value.purpose='business';draft.value.origin='user';draft.value.sourceCopy=source
+ schemeId.value='';saved.value='';executable.value=null;manualBase.value=null;step.value=0;autoAdopt.value=false
+ for(const key of ['builtin','id','familyId','revision','parentRevisionId','configurationSHA256','adoptedParameterId','resultId'])delete draft.value[key]
+ emit('select','');message.value='副本已建立，修改名称后保存为独立方案。'
+}
+async function openManaged(row,asCopy=false){
+ if(dirty.value&&!confirm('当前设置尚未保存，仍要切换方案吗？'))return
+ managedSchemes.value=[...managedSchemes.value.filter(item=>item.id!==row.id),row]
+ await choose(row.id);managerOpen.value=false;step.value=0;emit('select','')
+ if(asCopy)duplicate()
+}
+async function schemesChanged(){
+ try{
+  const catalog=await api('scheme-management');managedSchemes.value=catalog.schemes.filter(row=>!row.trashed)
+  if(schemeId.value&&!managedSchemes.value.some(row=>row.id===schemeId.value)){
+   draft.value=null;schemeId.value='';executable.value=null;emit('select','')
+   const row=catalog.schemes.find(item=>item.current&&!item.trashed)
+   if(row){managedSchemes.value.push(row);await choose(row.id);step.value=0}
+  }
+  emit('refresh')
+ }catch(e){error.value=e.message}
 }
 function day(period,key){const d=period?.[key]?.slice(0,10)||'';return d&&key.endsWith('End')?shiftCalendarDay(d,-1):d}
 function setDay(period,key,value){if(value)period[key]=(key.endsWith('End')?shiftCalendarDay(value,1):value)+'T00:00:00'}
@@ -235,7 +258,6 @@ function downloadSettings(){
  const url=URL.createObjectURL(new Blob([JSON.stringify(recordDownload(props.detail,definitions.value,recordedPlan.value||replayPlan.value),null,2)],{type:'application/json;charset=utf-8'}))
  const link=document.createElement('a');link.href=url;link.download='本次率定记录-'+props.detail.id+'.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)
 }
-async function recycleScheme(){if(!schemeId.value)return;working.value=true;error.value='';try{await api('schemes/'+schemeId.value+'/metadata',{trashed:true});draft.value=null;schemeId.value='';emit('refresh')}catch(e){error.value=e.message}finally{working.value=false}}
 onMounted(async()=>{
  try{
   const [coverage,flow,lake]=await Promise.all([api('calibration-data'),api('observation-series?station=DUJA&variable=flow&profile=quality-v2'),api('observation-series?station=SLC&variable=level&profile=quality-v2')])
@@ -251,7 +273,9 @@ onBeforeUnmount(()=>{disposed=true;clearInterval(timer);progressTicket++;replayT
 <template>
  <section class="panel calibration-workbench" :data-coverage-ready="!!data">
   <div class="calibration-top"><div><span class="calibration-eyebrow">色林错流域 · 参数与计算</span><h2>模型方案与率定</h2><p>水文参数率定 → 流量与湖位联合优选 → 连续模拟</p></div><div class="calibration-current"><small>当前正式方案</small><b>{{currentName}}</b><span>陆域共享参数</span></div></div>
-  <div class="calibration-scheme-bar"><b>{{draft?.name||currentName}}</b><span class="muted">修订 {{draft?.revision||1}}</span><button :disabled="locked" @click="step=0">调整设置</button><button :disabled="locked||!dirty" @click="saveOnly">保存修订</button><button class="link" @click="showHistory">{{historyOpen?'收起记录':'历史与试算记录'}}</button></div>
+  <div class="calibration-scheme-bar"><b>{{draft?.name||currentName}}</b><span class="muted">{{schemeId?'修订 '+(draft?.revision||1):'尚未保存'}}</span><button :disabled="locked" @click="step=0">调整设置</button><button :disabled="locked||!dirty" @click="saveOnly">{{schemeId?'保存修订':'保存方案'}}</button></div>
+  <div class="calibration-scheme-actions"><button :disabled="locked" @click="fresh">新建方案</button><button :disabled="locked||!draft" @click="duplicate">复制为我的方案</button><button :disabled="locked" @click="managerOpen=true">我的方案</button><button class="link" @click="showHistory">{{historyOpen?'收起记录':'历史与试算记录'}}</button></div>
+  <SchemeManager v-if="managerOpen" @close="managerOpen=false" @open="openManaged($event)" @copy="openManaged($event,true)" @changed="schemesChanged"/>
   <div v-if="historyOpen" class="calibration-history"><button v-for="t in records" :key="t.id" :class="{selected:t.id===detail?.id}" @click="openRecord(t.id)"><span>{{t.name}}</span><small>{{status(t)}} · {{(t.created_at||'').slice(0,10)}}</small></button><p v-if="!records.length" class="muted">暂无计算记录。</p></div>
   <nav class="calibration-steps" aria-label="率定步骤"><button v-for="(label,i) in steps" :key="i" :class="{active:step===i,passed:step>i}" :aria-current="step===i?'step':undefined" @click="step=i"><span>{{i+1}}</span><b>{{label}}</b></button></nav>
   <p v-if="error" class="message error" role="alert">{{error}}</p><p v-if="message" class="message success" role="status">{{message}}</p>
@@ -303,7 +327,6 @@ onBeforeUnmount(()=>{disposed=true;clearInterval(timer);progressTicket++;replayT
     </template><p v-else class="empty">开始一次率定，或从“我的计算记录”选择成果。</p>
    </div>
   </template>
-  <div v-if="step===0&&schemeId&&schemeId!==boot.homeSchemeId" class="calibration-secondary"><button class="link" :disabled="locked" @click="recycleScheme">将该方案移入回收站</button></div>
  </section>
  <Teleport to="body"><div v-if="replayPlan" class="calibration-replay-shade" @click.self="!working&&(replayPlan=null)"><section ref="replayDialog" class="calibration-replay-dialog" role="dialog" aria-modal="true" aria-labelledby="replay-title" tabindex="-1" @keydown.esc="!working&&(replayPlan=null)">
   <div class="calibration-section-heading"><div><span class="calibration-eyebrow">本次实际运行条件</span><h2 id="replay-title">复现本次率定</h2></div><button aria-label="关闭复现设置" :disabled="working" @click="replayPlan=null">×</button></div>
@@ -318,6 +341,7 @@ onBeforeUnmount(()=>{disposed=true;clearInterval(timer);progressTicket++;replayT
 </template>
 
 <style scoped>
+.calibration-scheme-bar{flex-wrap:wrap}.calibration-scheme-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}.calibration-scheme-actions>.link{margin-left:auto}
 .workflow-phases{display:flex;gap:20px;align-items:center;margin-top:24px;padding:18px 22px;background:#edf5f4;color:#276e76;font-size:14px}.objective-settings{margin-top:24px}.objective-settings h3{font-size:16px}.objective-settings .query-grid{max-width:600px}.calibration-workbench input[type=number],.calibration-workbench input[type=date]{min-height:38px}.calibration-scheme-bar{align-items:center}.inline-option{display:flex;align-items:center;gap:8px}.calibration-details input:not([type=checkbox]){max-width:280px}
 .calibration-record-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:15px 18px;background:#edf5f4;border-left:3px solid var(--accent);margin:16px 0}.calibration-record-heading p{margin:7px 0 0}.calibration-record-table{max-height:430px;overflow:auto}.calibration-record-table th{position:sticky;top:0;background:#edf4f5;z-index:1}.calibration-record-table small{display:block;color:var(--muted);font-size:11px}.calibration-record-table td{font-variant-numeric:tabular-nums;white-space:nowrap}.calibration-replay-comparison{display:flex;gap:14px;flex-wrap:wrap;padding:16px;border:1px solid #d9bd8d;background:#fff9ef;margin:16px 0}.calibration-replay-comparison.passed{border-color:#a7c9bb;background:#f0f8f4}.calibration-replay-comparison p{width:100%;margin:0;color:var(--muted);font-size:12px}.calibration-replay-shade{position:fixed;inset:0;background:#071e2ca6;z-index:150;display:flex;align-items:center;justify-content:center;padding:24px}.calibration-replay-dialog{width:min(1120px,100%);max-height:calc(100dvh - 48px);overflow:auto;background:var(--panel,#fff);border-radius:10px;padding:26px 30px;box-shadow:0 20px 70px #001a354d;outline:none}.calibration-replay-dialog h2{margin:6px 0}.calibration-replay-dialog pre{max-height:280px;overflow:auto;background:#f0f5f6;padding:12px;font-size:12px}.calibration-replay-dialog .calibration-details p{overflow-wrap:anywhere}.calibration-replay-dialog .actions{position:sticky;bottom:-26px;background:var(--panel,#fff);padding:14px 0 4px;margin-top:16px}.calibration-replay-dialog>.calibration-run-summary{grid-template-columns:repeat(4,minmax(0,1fr))}@media(max-width:760px){.calibration-replay-shade{padding:10px}.calibration-replay-dialog{padding:18px;max-height:calc(100dvh - 20px)}.calibration-replay-dialog>.calibration-run-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.calibration-record-heading{align-items:flex-start;flex-direction:column}}
 .calibration-selection-mode{max-width:620px;display:flex;flex-direction:column;gap:8px;margin:20px 0;font-size:13px}.calibration-selection-mode select{width:100%}

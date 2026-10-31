@@ -271,6 +271,10 @@ class Handler(SimpleHTTPRequestHandler):
         if path == 'schemes':
             from .research_schemes import list_schemes
             return self.send_json({'schemes': list_schemes(self.db, query.get('includeTrashed') == 'true', query.get('includeExperiments')=='true')})
+        if path == 'scheme-management':
+            from .scheme_management import catalog
+            with self.server.jobs.lock:
+                return self.send_json(catalog(self.db))
         if path.startswith('schemes/') and path.endswith('/calibration-configuration'):
             from .calibration_configuration import configuration
             with self.server.jobs.lock:
@@ -628,6 +632,14 @@ class Handler(SimpleHTTPRequestHandler):
             with self.server.jobs.lock:
                 guard_pending(self.db,'parameter',parts[1])
                 return self.send_json(parameter_metadata(self.db, parts[1], value['trashed']))
+        if path in ('schemes/recycle-preview', 'schemes/recycle', 'schemes/restore-batch'):
+            from .scheme_management import preview, recycle, restore
+            with self.server.jobs.lock:
+                if path == 'schemes/recycle-preview':
+                    return self.send_json(preview(self.db, value.get('schemeIds')))
+                if path == 'schemes/recycle':
+                    return self.send_json(recycle(self.db, value.get('schemeIds'), value.get('token')))
+                return self.send_json(restore(self.db, value.get('batchId')))
         if path.startswith('schemes/'):
             parts = path.split('/')
             if len(parts) != 3:

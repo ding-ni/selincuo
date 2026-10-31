@@ -1,0 +1,187 @@
+{
+  "createdAt": "2026-10-31T03:58:33+00:00",
+  "scope": "新建及复制独立方案、方案及关联结果可恢复批量回收；保持正式数值结果。",
+  "checks": {
+    "backend": {
+      "newSuite": "tests/test_scheme_management.py",
+      "newPassed": 9,
+      "regressionSuite": "tests/test_scheme_workflow.py",
+      "regressionPassed": 23
+    },
+    "build": {
+      "passed": true,
+      "emptyOutDir": false,
+      "javascript": "index-Dwcl95KK.js",
+      "stylesheet": "index-DYB4yWC7.css"
+    }
+  },
+  "isolatedUI": {
+    "createdAt": "2026-10-31T03:50:01+00:00",
+    "scope": "真实页面与接口验收；写入仅发生在SQLite快照，生产资料只读引用。",
+    "productionHealth": {
+      "backendSourceSHA256": "cf07d65e30b25008de484b8f095cd9eb0f3fd30c2a0f6141f23500d8a195ccbb",
+      "instanceId": "7d72c6e8297c497383cdf691aa50d9cb",
+      "projectId": "selinco",
+      "version": "0.12.0",
+      "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+    },
+    "isolatedDatabase": "F:\\色林错预警预报平台\\build\\方案新建回收界面-20261031-04\\isolated.sqlite3",
+    "passed": true,
+    "cases": [
+      {
+        "viewport": [
+          1366,
+          768
+        ],
+        "firstScheme": "SCHEME-d385fbbee01a404384ce",
+        "copiedScheme": "SCHEME-d42c3a2c15a84392b06a",
+        "independentFamilies": true,
+        "independentBounds": true,
+        "currentProtected": true,
+        "recycledAndRestoredResults": [
+          "JOB-ui-scheme-1366-0",
+          "JOB-ui-scheme-1366-1"
+        ],
+        "previouslyRecycledResultStayedRecycled": true,
+        "restoredSchemeReopened": true,
+        "horizontalOverflow": false
+      },
+      {
+        "viewport": [
+          1920,
+          1080
+        ],
+        "firstScheme": "SCHEME-184560239e344b08a8df",
+        "copiedScheme": "SCHEME-0ab2ce7c01ce438383f5",
+        "independentFamilies": true,
+        "independentBounds": true,
+        "currentProtected": true,
+        "recycledAndRestoredResults": [
+          "JOB-ui-scheme-1920-0",
+          "JOB-ui-scheme-1920-1"
+        ],
+        "previouslyRecycledResultStayedRecycled": true,
+        "restoredSchemeReopened": true,
+        "horizontalOverflow": false
+      }
+    ],
+    "pageErrors": [],
+    "apiErrors": [],
+    "postCount": 10,
+    "productionUnchanged": true,
+    "screenshots": [
+      {
+        "path": "build\\方案新建回收界面-20261031-04\\回收预览-1366.png",
+        "sha256": "e5cd417169cb8782460a08c1f397ef5c86ad173e20e795c45a4ef21551a18ecd"
+      },
+      {
+        "path": "build\\方案新建回收界面-20261031-04\\独立方案-1366.png",
+        "sha256": "0b95a2601c3abe0ee0564a249f1ae6f8de004cadeba4c4894c2c0e006ee701d3"
+      },
+      {
+        "path": "build\\方案新建回收界面-20261031-04\\回收预览-1920.png",
+        "sha256": "ca574b1d76b3f844ad69c8abc3f340e62e6754d166377f0ac5f5902f7e7f7a83"
+      },
+      {
+        "path": "build\\方案新建回收界面-20261031-04\\独立方案-1920.png",
+        "sha256": "7fa99bf962c49bef07f9bc36a2af5ba903466f350c49370c892054bf7a69944d"
+      }
+    ]
+  },
+  "liveEntry": {
+    "createdAt": "2026-10-31T03:55:55+00:00",
+    "passed": true,
+    "health": {
+      "backendSourceSHA256": "b73ce576e41d30dc4c7737ed87b2e7e62a8d427b5c9a3cb148b3f117b3d1ec90",
+      "instanceId": "3f0aa3ca9df84dc5ad8717579af9fe3a",
+      "projectId": "selinco",
+      "version": "0.12.0",
+      "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+    },
+    "currentBusiness": {
+      "adoptedAt": "2026-10-30T16:58:02+00:00",
+      "familyId": "FAMILY-b350350cca224ab2",
+      "inputId": "INPUT-67a56a9abcc50dc4a9033ab6",
+      "name": "色林错连续模拟方案",
+      "parameterId": "PARAM-1bccaba37f764ddbb89e",
+      "resultId": "JOB-05c3f62282ce4239aed1",
+      "schemeId": "SCHEME-2c4816223d4b47cfb3cd",
+      "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6"
+    },
+    "configurationSHA256": "e78c9a83751992ff8c9881dff59a9b921348b3e923db4a53a2d4bb534bb3f62d",
+    "numericalModelSHA256": "add1e581be4154dc22df6ae1a9f6765e2fff8bffd4f6075dfa61107d3bf8c549",
+    "restartChecks": {
+      "newService": true,
+      "backendSourceLoaded": true,
+      "adoptionUnchanged": true,
+      "configurationUnchanged": true,
+      "productionSchemesTasksSettingsUnchanged": true,
+      "currentTaskFilesUnchanged": true,
+      "numericalModelUnchanged": true,
+      "noActiveTasks": true,
+      "readonlyLiveUI": true
+    },
+    "configurationChecks": {
+      "twoTasksSucceeded": true,
+      "adoptedTask": true,
+      "adoptedScheme": true,
+      "adoptedInput": true,
+      "adoptedSpatialVersion": true,
+      "configuredSchemeVisible": true,
+      "configurationIdentity": true,
+      "implementationMatches": true,
+      "inputManifestIdentity": true,
+      "observationSnapshotIdentity": true,
+      "all25InitialParameters": true,
+      "all25FinalParameters": true,
+      "all22SelectedAndBounds": true,
+      "periods": true,
+      "initialSoil": true,
+      "lakeInitialization": true,
+      "simulationRange": true,
+      "displayCoverage": true,
+      "objectiveSearchAndLakeStages": true,
+      "sharedParameterTransfer": true,
+      "routingMode": true
+    },
+    "pageErrors": [],
+    "apiErrors": [],
+    "nonGetRequests": [],
+    "schemeFamilyCount": 26,
+    "screenshots": [
+      {
+        "path": "build\\方案管理正式入口-20261031-01\\正式方案管理-1366.png",
+        "sha256": "352e9f14c959ab688ce83e17b51ca39ceeb48339b8d6c470c851b70f1adab852"
+      },
+      {
+        "path": "build\\方案管理正式入口-20261031-01\\正式方案管理-1920.png",
+        "sha256": "2519baee50ab218abd940255385e686ad075514a22fb79bfcab38aa53346aa4a"
+      }
+    ]
+  },
+  "screenshots": [
+    {
+      "path": "docs/evidence/方案批量回收预览1366-20261031.png",
+      "source": "build/方案新建回收界面-20261031-04/回收预览-1366.png",
+      "sha256": "e5cd417169cb8782460a08c1f397ef5c86ad173e20e795c45a4ef21551a18ecd",
+      "bytes": 144480
+    },
+    {
+      "path": "docs/evidence/独立方案1920-20261031.png",
+      "source": "build/方案新建回收界面-20261031-04/独立方案-1920.png",
+      "sha256": "7fa99bf962c49bef07f9bc36a2af5ba903466f350c49370c892054bf7a69944d",
+      "bytes": 119494
+    },
+    {
+      "path": "docs/evidence/方案管理正式入口1920-20261031.png",
+      "source": "build/方案管理正式入口-20261031-01/正式方案管理-1920.png",
+      "sha256": "2519baee50ab218abd940255385e686ad075514a22fb79bfcab38aa53346aa4a",
+      "bytes": 144089
+    }
+  ],
+  "productionRecyclingPerformed": false,
+  "fullEvidenceDirectories": [
+    "build/方案新建回收界面-20261031-04",
+    "build/方案管理正式入口-20261031-01"
+  ]
+}
