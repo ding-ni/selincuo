@@ -1,4 +1,4 @@
-param(
+﻿param(
     [Parameter(Mandatory=$true)][string]$Application,
     [Parameter(Mandatory=$true)][string]$VerificationRoot,
     [string]$Python = 'python',

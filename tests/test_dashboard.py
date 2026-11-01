@@ -8,7 +8,7 @@ from openpyxl import Workbook
 
 from backend.common import ROOT
 from backend.database import Database
-from backend.observations import import_observations
+from backend.observations import confirm_coverage, import_observations
 from backend.dashboard import aggregate_frame, monitoring, map_frame, parse_day
 from backend.forcing import register_era5, register_lake_correction
 
@@ -33,13 +33,19 @@ class DashboardTests(unittest.TestCase):
             raw=Path(temp)/'raw/blq';raw.mkdir(parents=True)
             path=raw/'2024_雨量.xlsx'
             wb=Workbook();wb.active.append(['时间','雨量']);wb.active.append([pd.Timestamp('2024-01-01T10:15').to_pydatetime(),2.5]);wb.save(path)
-            import_observations(db,Path(temp)/'raw')
+            report=import_observations(db,Path(temp)/'raw')
+            confirm_coverage(db, {'sourceId': report['files'][0]['sourceId'], 'station': 'BLQ',
+                                  'variable': 'precipitation', 'start': '2024-01-01',
+                                  'end': '2024-01-02'})
             first=monitoring(db)
             station=next(s for s in first['stations'] if s['id']=='BLQ')
             self.assertEqual(station['daily'][0]['value'],2.5)
             self.assertFalse(first['liveConnected'])
             wb.active.cell(2,2,3.5);wb.save(path)
-            import_observations(db,Path(temp)/'raw')
+            report=import_observations(db,Path(temp)/'raw')
+            confirm_coverage(db, {'sourceId': report['files'][0]['sourceId'], 'station': 'BLQ',
+                                  'variable': 'precipitation', 'start': '2024-01-01',
+                                  'end': '2024-01-02'})
             second=monitoring(db)
             self.assertEqual(next(s for s in second['stations'] if s['id']=='BLQ')['daily'][0]['value'],3.5)
             shores=[s for s in second['stations'] if s['id'].startswith('SLC-')]
