@@ -80,4 +80,36 @@ class MapRainfallTests(unittest.TestCase):
         expected=(10*frame['unitValues'][0]['value']+30*frame['unitValues'][1]['value']+20*21.6)/60
         self.assertAlmostEqual(frame['domainMean'],expected)
 
+    def test_monthly_total_correction_keeps_raw_grid_and_corrects_units_and_lake(self):
+        from tempfile import mkdtemp
+        from backend.land_precipitation import TOTAL_METHOD,LAKE_TOTAL_METHOD
+        temp=Path(mkdtemp(prefix='selinco-map-monthly-total-'))
+        product=temp/'inputs/products/monthly';product.mkdir(parents=True)
+        spatial={'version':'monthly-space','schemaVersion':3,'unitStrategy':AGGREGATE_STRATEGY,
+                 'grids':[{'id':'a','lon':89.,'lat':32.},{'id':'b','lon':95.,'lat':32.}],
+                 'units':[{'id':'u1','areaKm2':10.,'partition':'duja'},{'id':'u2','areaKm2':30.,'partition':'ali'}],
+                 'weights':[[1.,0.],[0.,1.]],'lakeWeights':[.2,.8],'lakeAreaKm2':20.,
+                 'aggregation':[{'unitId':'u1','members':[{'gridIndex':0,'areaWeight':1.,'elevationOffsetM':0.}]},
+                                {'unitId':'u2','members':[{'gridIndex':1,'areaWeight':1.,'elevationOffsetM':0.}]}]}
+        profile={'method':TOTAL_METHOD,'scope':'land-monthly-total','parentDataSHA256':'source',
+                 'radiusKm':100.,'distanceRegularizationKm':5.,'minimumCoverageFraction':.8,
+                 'minimumWetDays':5,'minimumEraMonthlyMm':20.,
+                 'stations':{'station':{'lon':89.,'lat':32.,'monthFactors':{'01':2.}}}}
+        rule={'method':LAKE_TOTAL_METHOD,'scope':'lake-monthly-total',
+              'landTransformationSHA256':digest(profile),'definitionVersion':2}
+        manifest={'id':'monthly','spatialVersion':'monthly-space','dataSHA256':'source',
+                  'landPrecipitationCorrection':profile,'landTransformationSHA256':digest(profile),
+                  'lakePrecipitationCorrection':rule,'transformationSHA256':digest(rule)}
+        (product/'manifest.json').write_text(json.dumps(manifest),encoding='utf-8')
+        (product/'forcing.npz').write_bytes(b'identity fixture')
+        times=pd.date_range('2024-12-31','2025-01-02',freq='h');shape=(len(times),2)
+        arrays={'time':times,'precipitation':np.tile([1.,2.],(len(times),1)),
+                'temperature':np.zeros(shape),'evaporation':np.zeros(shape)}
+        with patch('backend.grid_spatial.load',return_value=spatial),patch('backend.dashboard.load_input',return_value=(manifest,arrays)):
+            frame=map_frame(SimpleNamespace(workspace=temp),'monthly','2025-01-01','precipitation','monthly-space')
+        self.assertEqual([cell['value'] for cell in frame['cells']],[24.,48.])
+        self.assertGreater(frame['unitValues'][0]['value'],24.)
+        self.assertEqual(frame['unitValues'][1]['value'],48.)
+        self.assertGreater(frame['lakeMean'],43.2)
+
 if __name__=='__main__':unittest.main()

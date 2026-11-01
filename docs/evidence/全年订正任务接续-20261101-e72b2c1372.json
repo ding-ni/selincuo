@@ -1,0 +1,63 @@
+{
+  "createdAt": "2026-11-01T12:26:26+00:00",
+  "taskId": "JOB-d3a61eeca6a34a228897",
+  "event": "recover-service-and-resume-existing-calibration",
+  "observedInterruption": {
+    "lastDatabaseHeartbeatUTC": "2026-11-01T11:45:16+00:00",
+    "savedJointEvaluations": 272,
+    "api8882": "connection-refused",
+    "pythonProcessFound": false,
+    "cause": "unknown; do not infer a numerical failure"
+  },
+  "resumedAtUTC": "2026-11-01T12:18:24+00:00",
+  "statusAfterResume": {
+    "id": "JOB-d3a61eeca6a34a228897",
+    "status": "running",
+    "progress": 29.696625000000004,
+    "message": "分期率定与检验 · 湖位联合筛选 · 590/2000",
+    "updated_at": "2026-11-01T12:26:25+00:00"
+  },
+  "jointEvaluationsAfterResume": 598,
+  "requestSHA256": "b9bf5603b582bd4ef511c852bf4c877e7fa87f700f2c4ffbb883f675d8ec1366",
+  "checks": {
+    "sameTaskId": true,
+    "requestBytesUnchanged": true,
+    "configurationContent": true,
+    "implementationMatchesFrozen": true,
+    "numericalIdentity": true,
+    "progressAdvanced": true,
+    "adoptedResultUnchanged": true
+  },
+  "configurationSHA256": "3ec2d1147a824bd4e58ab64707e943d26a430bf8e10ddaab45eb89cbb305c6c7",
+  "modelIdentity": "441620ba047b1ec8554b081f856123a92b33b9f19f005ed093153e4886e38486",
+  "health": {
+    "instanceId": "cec68eb870b84fc3ad28964e77b3a65c",
+    "version": "0.12.0",
+    "backendSourceSHA256": "7d180c5e05116e377ee97e1154913c525cdee97c6c901e0846989799af8567cc",
+    "workspace": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace"
+  },
+  "adopted": {
+    "adoptedAt": "2026-10-30T16:58:02+00:00",
+    "familyId": "FAMILY-b350350cca224ab2",
+    "inputId": "INPUT-67a56a9abcc50dc4a9033ab6",
+    "name": "色林错连续模拟方案",
+    "parameterId": "PARAM-1bccaba37f764ddbb89e",
+    "resultId": "JOB-05c3f62282ce4239aed1",
+    "schemeId": "SCHEME-2c4816223d4b47cfb3cd",
+    "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6"
+  },
+  "tests": {
+    "runner": "unittest discovery per file",
+    "files": [
+      "tests/test_land_precipitation.py",
+      "tests/test_map_rainfall.py"
+    ],
+    "testsRun": 21,
+    "passed": 21
+  },
+  "notes": [
+    "Original task resumed through POST /api/model/tasks/{id}/resume; no new task submitted.",
+    "No final metrics or adoption decision available while the corrected full task is running.",
+    "Original current scheme implementation is add1e581; do not silently rewrite its frozen configuration to the new implementation."
+  ]
+}

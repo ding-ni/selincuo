@@ -18,11 +18,36 @@ from .common import canonical, digest, now, read_json, sha_file, within
 
 METHOD = 'station-warm-rain-spatial-v1'
 LAKE_METHOD = 'station-warm-rain-grid-v1'
+TOTAL_METHOD = 'station-monthly-total-spatial-v1'
+LAKE_TOTAL_METHOD = 'station-monthly-total-grid-v1'
 SEASONS = ('DJF', 'MAM', 'JJA', 'SON')
 _factor_cache = {}
 
 
+def validate_total_profile(profile):
+    if not isinstance(profile, dict) or profile.get('method') != TOTAL_METHOD or profile.get('scope') != 'land-monthly-total':
+        raise ValueError('全年逐月降水订正规则无效')
+    if (profile.get('radiusKm') != 100.0 or profile.get('distanceRegularizationKm') != 5.0
+            or profile.get('minimumCoverageFraction') != .8 or profile.get('minimumWetDays') != 5
+            or profile.get('minimumEraMonthlyMm') != 20.0):
+        raise ValueError('全年逐月降水订正的固定空间或样本门槛无效')
+    months={f'{m:02d}' for m in range(1,13)}
+    if not isinstance(profile.get('stations'),dict) or not profile['stations']:
+        raise ValueError('全年逐月降水订正缺少站点')
+    for station in profile['stations'].values():
+        factors=station.get('monthFactors')
+        if (not isinstance(factors,dict) or any(k not in months for k in factors)
+                or not math.isfinite(float(station.get('lon',float('nan'))))
+                or not math.isfinite(float(station.get('lat',float('nan'))))):
+            raise ValueError('站点坐标或月订正倍率无效')
+        if any(isinstance(v,bool) or not isinstance(v,(float,int)) or not math.isfinite(v) or v<=0 for v in factors.values()):
+            raise ValueError('站点月订正倍率须为有限正数')
+    return profile
+
+
 def validate_profile(profile):
+    if isinstance(profile,dict) and profile.get('method')==TOTAL_METHOD:
+        return validate_total_profile(profile)
     if not isinstance(profile, dict) or profile.get('method') != METHOD or profile.get('scope') != 'land-warm-rain':
         raise ValueError('陆域暖雨订正规则无效')
     if (profile.get('temperatureThresholdC') != 5.0 or profile.get('memberLapseRateCPerM') != -0.0065
@@ -62,6 +87,8 @@ def validate_parameters(profile, base, regions=None):
     if profile is None:
         return
     validate_profile(profile)
+    if profile.get('method')==TOTAL_METHOD:
+        return
     lo, hi = profile['groupLapseRateBoundsCPerM']
     for p in [base, *(regions or {}).values()]:
         lapse = p['lapseRate']
@@ -111,6 +138,24 @@ def factors_for_points(profile, points, radius=None, excluded_stations=()):
     return np.exp(numerator/denominator)
 
 
+def monthly_grid_factors(profile, grids):
+    validate_total_profile(profile)
+    key=(digest(profile),digest(grids),'monthly')
+    if key not in _factor_cache:
+        points=np.asarray([(g['lon'],g['lat']) for g in grids],dtype=float)
+        numerator=np.zeros((12,len(points)))
+        denominator=np.full_like(numerator,1./profile['radiusKm']**2)
+        for station in profile['stations'].values():
+            distance=_distances_km(points[:,0],points[:,1],station['lon'],station['lat'])
+            weight=np.where(distance<profile['radiusKm'],np.maximum(0.,1.-(distance/profile['radiusKm'])**2)**2/(distance**2+profile['distanceRegularizationKm']**2),0.)
+            for month,factor in station['monthFactors'].items():
+                i=int(month)-1
+                numerator[i]+=weight*math.log(factor)
+                denominator[i]+=weight
+        _factor_cache[key]=np.exp(numerator/denominator)
+    return _factor_cache[key]
+
+
 def grid_factors(profile, grids):
     key = (digest(profile), digest(grids))
     if key not in _factor_cache:
@@ -121,6 +166,12 @@ def grid_factors(profile, grids):
 
 def corrected_member_precipitation(profile, grids, times, raw_precip, raw_temp, indexes, offsets, weights):
     """Correct eligible members before grouping; guard the group's snow phase."""
+    if profile.get('method')==TOTAL_METHOD:
+        validate_total_profile(profile)
+        indexes=np.asarray(indexes,dtype=int)
+        months=(pd.DatetimeIndex(times)-pd.Timedelta(nanoseconds=1)).month.to_numpy()-1
+        factors=monthly_grid_factors(profile,grids)[months[:,None],indexes[None,:]]
+        return raw_precip*factors
     validate_profile(profile)
     indexes = np.asarray(indexes, dtype=int)
     offsets = np.asarray(offsets, dtype=float)

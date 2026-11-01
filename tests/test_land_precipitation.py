@@ -135,6 +135,53 @@ class WarmRainTests(unittest.TestCase):
         self.assertLess(factors[2,0],1.)
 
 
+class MonthlyTotalCorrectionTests(unittest.TestCase):
+    def setUp(self):
+        from backend.land_precipitation import TOTAL_METHOD, LAKE_TOTAL_METHOD
+        from backend.common import digest
+        self.profile={'method':TOTAL_METHOD,'scope':'land-monthly-total',
+            'parentDataSHA256':'raw-forcing','radiusKm':100.,'distanceRegularizationKm':5.,
+            'minimumCoverageFraction':.8,'minimumWetDays':5,'minimumEraMonthlyMm':20.,
+            'stations':{'SLC':{'lon':89.,'lat':32.,'monthFactors':{'01':2.}}}}
+        self.grids=[{'lon':89.,'lat':32.},{'lon':95.,'lat':32.}]
+        self.rule={'method':LAKE_TOTAL_METHOD,'scope':'lake-monthly-total',
+            'landTransformationSHA256':digest(self.profile),'definitionVersion':2}
+        self.manifest={'id':'INPUT-monthly-test','projectId':'selinco','dataSHA256':'raw-forcing',
+            'landPrecipitationCorrection':self.profile,'landTransformationSHA256':digest(self.profile),
+            'lakePrecipitationCorrection':self.rule,'transformationSHA256':digest(self.rule)}
+
+    def test_only_supported_months_are_spatially_corrected_and_midnight_belongs_to_previous_month(self):
+        from backend.land_precipitation import corrected_member_precipitation,monthly_grid_factors
+        times=pd.date_range('2025-01-01T00:00:00',periods=3,freq='h')
+        raw=np.ones((3,1));temperature=np.zeros_like(raw)
+        factors=monthly_grid_factors(self.profile,self.grids)
+        self.assertGreater(factors[0,0],1.99)
+        self.assertEqual(factors[0,1],1.)
+        self.assertEqual(factors[1,0],1.)
+        corrected=corrected_member_precipitation(self.profile,self.grids,times,raw,temperature,
+            np.array([0]),np.array([0.]),np.array([1.]))
+        np.testing.assert_allclose(corrected[:,0],[1.,factors[0,0],factors[0,0]])
+
+    def test_month_start_hour_uses_previous_interval_month(self):
+        from backend.land_precipitation import corrected_member_precipitation,monthly_grid_factors
+        times=pd.to_datetime(['2025-01-01T00:00:00','2025-01-01T01:00:00'])
+        raw=np.ones((2,1));temperature=np.zeros_like(raw)
+        corrected=corrected_member_precipitation(self.profile,self.grids,times,raw,temperature,
+            np.array([0]),np.array([0.]),np.array([1.]))
+        january=monthly_grid_factors(self.profile,self.grids)[0,0]
+        np.testing.assert_allclose(corrected[:,0],[1.,january])
+
+    def test_lake_monthly_total_uses_same_factor_without_temperature_gate(self):
+        from backend.forcing import lake_precipitation_series
+        times=pd.date_range('2025-01-01T00:00:00',periods=3,freq='h')
+        arrays={'precipitation':np.ones((3,2)),'temperature':np.zeros((3,2))}
+        spatial={'lakeWeights':[1.,0.],'grids':self.grids}
+        values=lake_precipitation_series(self.manifest,spatial,arrays,times,np.arange(3))
+        self.assertEqual(values[0],1.)
+        self.assertGreater(values[1],1.99)
+        self.assertGreater(values[2],1.99)
+
+
 class RainCoverageTests(unittest.TestCase):
     def setUp(self):
         self.root=Path(tempfile.mkdtemp(prefix='selinco-rain-coverage-'))

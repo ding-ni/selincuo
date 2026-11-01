@@ -21,11 +21,15 @@ def lake_precipitation_factor(manifest):
     correction = manifest.get('lakePrecipitationCorrection')
     if correction is None:
         return 1.
-    if correction.get('method') == 'station-warm-rain-grid-v1' and correction.get('scope') == 'lake-warm-rain':
+    total_monthly = correction.get('method') == 'station-monthly-total-grid-v1'
+    expected_scope = 'lake-monthly-total' if total_monthly else 'lake-warm-rain'
+    if (correction.get('method') in ('station-warm-rain-grid-v1','station-monthly-total-grid-v1')
+            and correction.get('scope') == expected_scope):
         from .land_precipitation import validate_manifest
         profile = validate_manifest(manifest)
         if (profile is None or correction.get('landTransformationSHA256') != manifest.get('landTransformationSHA256')
-                or correction.get('temperatureThresholdC') != profile.get('temperatureThresholdC')
+                or (correction.get('method') == 'station-warm-rain-grid-v1' and
+                    correction.get('temperatureThresholdC') != profile.get('temperatureThresholdC'))
                 or digest(correction) != manifest.get('transformationSHA256')):
             raise ValueError('湖面暖雨订正与陆域订正规则不一致')
         return 1.
@@ -44,11 +48,16 @@ def lake_precipitation_series(manifest, spatial, arrays, times, indexes):
     weights = np.asarray(spatial['lakeWeights'])
     factor = lake_precipitation_factor(manifest)
     correction = manifest.get('lakePrecipitationCorrection') or {}
-    if correction.get('method') == 'station-warm-rain-grid-v1':
-        from .land_precipitation import grid_factors, season_labels, validate_manifest
+    if correction.get('method') in ('station-warm-rain-grid-v1','station-monthly-total-grid-v1'):
+        from .land_precipitation import grid_factors, monthly_grid_factors, season_labels, validate_manifest
         profile = validate_manifest(manifest)
-        factors = grid_factors(profile, spatial['grids'])[season_labels(pd.DatetimeIndex(times)[ids])]
-        rain = np.where(np.asarray(arrays['temperature'][ids]) >= profile['temperatureThresholdC'], rain * factors, rain)
+        if correction.get('method') == 'station-monthly-total-grid-v1':
+            month_ids = (pd.DatetimeIndex(times)[ids] - pd.Timedelta(nanoseconds=1)).month.to_numpy() - 1
+            factors = monthly_grid_factors(profile, spatial['grids'])[month_ids]
+            rain = rain * factors
+        else:
+            factors = grid_factors(profile, spatial['grids'])[season_labels(pd.DatetimeIndex(times)[ids])]
+            rain = np.where(np.asarray(arrays['temperature'][ids]) >= profile['temperatureThresholdC'], rain * factors, rain)
     return rain @ weights * factor
 
 

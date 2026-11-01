@@ -71,7 +71,7 @@ def verify_product(db, product, spatial=None):
     lake_rule=m.get('lakePrecipitationCorrection') or {}
     if (digest(lake_rule) != m.get('transformationSHA256') or
             (m.get('transformationSHA256') != _required_correction() and
-             lake_rule.get('method') != 'station-warm-rain-grid-v1')):
+             lake_rule.get('method') not in ('station-warm-rain-grid-v1','station-monthly-total-grid-v1'))):
         raise ValueError('气象资料缺少当前方案的湖面降水处理规则')
     from .land_precipitation import validate_manifest
     validate_manifest(m)

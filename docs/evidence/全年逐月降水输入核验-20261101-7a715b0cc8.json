@@ -1,0 +1,84 @@
+{
+  "createdAt": "2026-11-01T12:23:09+00:00",
+  "inputId": "INPUT-7e081ef81d2e24c22d80c5c4",
+  "checks": {
+    "inputIdentity": true,
+    "reportManifestCanonicalDigest": true,
+    "profileMatchesReport": true,
+    "landDigest": true,
+    "forcingDigestMatchesReport": true,
+    "forcingFileBytes": true,
+    "registeredManifestMatchesFile": true,
+    "parentRawForcingDigest": true,
+    "monthlyEligibility": true,
+    "pooledFactors": true,
+    "pooledFactorsMatchReport": true
+  },
+  "allChecksPass": true,
+  "reportPath": "F:\\色林错预警预报平台\\build\\grid-revision-20261026\\workspace\\diagnostics\\全年逐月总降水订正-b6008807351a\\全年逐月总降水订正报告.json",
+  "reportFileSHA256": "59c69540703ee503d044e9b2f0ab0e24bfff8617ec1e2245fdf12158f48e7c91",
+  "manifestFileSHA256": "8cecf30f74dbe6e10ae527ffe24d30f3fda4e863fc0433f1058dd1234341baab",
+  "manifestCanonicalSHA256": "8a3f6153ee99b01302a169fd8386c14e0ec1b4b35ad5e5bc78a42790c9c01dda",
+  "landTransformationSHA256": "03be2200d83b51bb509e952f8a9d9e6ec43f24ce1b166f5474556caea9b6df0f",
+  "lakeTransformationSHA256": "2a0719a0b1ae2e2f1a1dda8ef425d464bf683b044878e748d368260092bc6525",
+  "monthlyRecords": 107,
+  "eligibleStationYearMonths": 42,
+  "stationMonthFactorCount": 23,
+  "stationFactors": {
+    "115DB": {
+      "04": 0.13296846838937906,
+      "05": 0.5074436960957398,
+      "07": 0.8723796733673771,
+      "08": 0.6236314866813368,
+      "09": 0.774795404744674
+    },
+    "BLQ": {
+      "04": 0.24474647576871694,
+      "05": 0.5385053871375041,
+      "06": 0.5917686908776557,
+      "07": 0.7706498314705409,
+      "08": 0.6165018611597269,
+      "09": 0.7147434228338483,
+      "10": 0.6719647227049949
+    },
+    "DUJA": {
+      "05": 0.2771568209036128,
+      "06": 0.8242056851778778,
+      "07": 0.6117671705465925,
+      "08": 0.5080368893842914,
+      "09": 0.6336474586190004
+    },
+    "SLC": {
+      "05": 0.5070133938867825,
+      "06": 0.8016074082857833,
+      "07": 0.422727850652761,
+      "08": 0.6814442942074526,
+      "09": 0.6835712588182458,
+      "10": 0.22776378901461677
+    }
+  },
+  "monthsWithAtLeastOneStationFactor": [
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10"
+  ],
+  "monthsWithoutStationFactor": [
+    "01",
+    "02",
+    "03",
+    "11",
+    "12"
+  ],
+  "eligibilityMismatches": [],
+  "notes": [
+    "全年规则取消暖时门限；仅资料充分的月份存在实测估计倍率，其余月份保持ERA原值。",
+    "本检查从冻结月统计重建倍率；原报告未归档逐日配对样本，不宣称已重新复现日表整编。",
+    "设备类型未核实，按总降水水当量开展用户批准的试验。",
+    "原manifest继承的旧湖面全年倍率说明已失效；实际执行以新land/lake规则为准，冻结原件不改。",
+    "report.manifestSHA256为规范JSON内容摘要，与文件字节SHA256分别报告。"
+  ]
+}
