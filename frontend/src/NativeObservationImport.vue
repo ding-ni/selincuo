@@ -23,7 +23,10 @@ async function submit(){
  working.value=true;message.value=''
  try{
   const result=await api('native-observation-import',{...request(),previewToken:preview.value.previewToken})
-  message.value=result.status==='unchanged'?'资料已是最新，无需重复更新。':'更新完成：新增 '+result.new+' 条，更新 '+result.changed+' 条，相同 '+result.same+' 条。'
+  const updated='资料已是最新，无需重复更新。'
+  const imported='更新完成：新增 '+result.new+' 条，更新 '+result.changed+' 条，相同 '+result.same+' 条。'
+  const correction=result.precipitationCorrection
+  message.value=(result.status==='unchanged'?updated:imported)+(correction?' '+correction.message:'')
   preview.value=null;files.value=[];emit('imported')
  }catch(error){message.value=error.message;preview.value=null}finally{working.value=false}
 }

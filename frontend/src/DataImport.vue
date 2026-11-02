@@ -36,7 +36,8 @@ async function submit(){
  working.value=true;message.value=''
  try{
   const data=await api('data-import-file',settings.value)
-  message.value=data.status==='unchanged'?'资料已存在，无重复导入':`已导入 ${Number(data.records||0).toLocaleString()} 条记录。`
+  const correction=data.precipitationCorrection
+  message.value=(data.status==='unchanged'?'资料已存在，无重复导入':`已导入 ${Number(data.records||0).toLocaleString()} 条记录。`)+(correction?' '+correction.message:'')
   emit('imported')
  }catch(e){emit('error',e.message)}finally{working.value=false}
 }

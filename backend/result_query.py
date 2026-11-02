@@ -29,8 +29,12 @@ def _descriptor(db,identifier):
     row=next((r for r in catalog() if r['id']==identifier),None)
     if row:
         directory=within(ROOT/'data/final-results',row['directory'])
-        key=('published',str(ROOT.resolve()),identifier,_stat(ROOT/'data/final-results/catalog.json'),
-             tuple(_stat(directory/name) for name in ('result.json','hourly.npz','final-state.json')))
+        stamps=[_stat(directory/name) for name in ('result.json','hourly.npz','hourly-manifest.json','final-state.json',
+                                                    'hourly.zarr/.zattrs','hourly.zarr/.zgroup','hourly.zarr/time/.zarray')]
+        time_folder=directory/'hourly.zarr/time'
+        if time_folder.is_dir():
+            stamps.extend(_stat(path) for path in sorted(time_folder.iterdir()) if path.is_file() and not path.name.startswith('.'))
+        key=('published',str(ROOT.resolve()),identifier,_stat(ROOT/'data/final-results/catalog.json'),tuple(stamps))
         return key
     rows=db.rows("""SELECT status,updated_at,name,notes,favorite,trashed,collection,
                     json_extract(result,'$.identity') identity,
@@ -88,7 +92,14 @@ def source_cache_info():
 def _open_source(db,identifier):
     from .published_results import catalog,detail,result_file
     if any(r['id']==identifier for r in catalog()):
-        task=detail(identifier);path=result_file(identifier,'hourly.npz');checkpoint=read_json(result_file(identifier,'final-state.json'))
+        task=detail(identifier);checkpoint=read_json(result_file(identifier,'final-state.json'))
+        item=next(r for r in catalog() if r['id']==identifier)
+        if 'hourly-manifest.json' in item['files']:
+            from .published_results import hourly_zarr
+            from .grid_storage import open_arrays
+            folder=hourly_zarr(identifier,verify_files=True).parent
+            return task,open_arrays(folder),checkpoint
+        path=result_file(identifier,'hourly.npz')
     else:
         task=db.task(identifier)
         if task['status']!='succeeded' or not task.get('result',{}).get('units'):raise ValueError('请选择已完成的模型成果')

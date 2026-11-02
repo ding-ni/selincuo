@@ -72,6 +72,20 @@ class ReleaseBindingTests(unittest.TestCase):
         item={'id':'builtin','directory':'chosen','files':{'result.json':{'sha256':'fixture','bytes':1}}}
         return db,task,item
 
+    def test_all_sources_include_required_frozen_and_unobserved_sources(self):
+        from scripts.make_seed import copy_observations, ReadOnlySource
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            db,_,_=self.fixture(root/'source')
+            required,_=self.extra_source(db,'frozen-metadata')
+            self.extra_source(db,'other-original')
+            target=Database(root/'seed')
+            copied=copy_observations(ReadOnlySource(db.workspace),target,[required],include_all_sources=True)
+            self.assertEqual({item['sourceId'] for item in copied},
+                             {'source','frozen-metadata','other-original'})
+            self.assertEqual(len(target.rows('SELECT id FROM sources')),3)
+            self.assertEqual(len(target.rows('SELECT id FROM observations')),1)
+
     def test_frozen_result_input_wins_over_newer_catalog_and_source_is_read_only(self):
         with tempfile.TemporaryDirectory() as tmp:
             db,task,item=self.fixture(Path(tmp)/'source')
@@ -134,9 +148,12 @@ class ReleaseBindingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)
             for version in ('standard','selected','research'):
-                target=root/'data/derived/spatial/versions'/version/'units.geojson'
-                target.parent.mkdir(parents=True);target.write_text('{}')
+                folder=root/'data/derived/spatial/versions'/version
+                folder.mkdir(parents=True)
+                write_json(folder/'manifest.json',{'version':version})
+                (folder/'units.geojson').write_text('{}')
             write_json(root/'data/derived/spatial/manifest.json',{'version':'standard'})
+            write_json(root/'data/derived/spatial/grid-current.json',{'version':'standard'})
             write_json(root/'data/final-results/chosen/result.json',{'result':{'spatialVersion':'selected'}})
             with patch('scripts.assemble_release.ROOT',root):
                 paths={str(p.relative_to(root)).replace('\\','/') for p in selected_resources({'spatialVersion':'standard'},[{'directory':'chosen'}])}
@@ -227,6 +244,48 @@ class ReleaseBindingTests(unittest.TestCase):
                     connection.execute('DELETE FROM sources WHERE id=?',(required['id'],))
                 with self.assertRaisesRegex(ValueError,'冻结观测必需来源'):
                     inspect_seed(output)
+
+
+class BusinessForcingIdentityTests(unittest.TestCase):
+    def test_aggregated_grid_and_precipitation_identity(self):
+        from copy import deepcopy
+        from scripts.make_seed import verify_business_forcing_binding
+        source = {'grids': [{'id': 'g1'}, {'id': 'g2'}]}
+        calculation = {'grids': source['grids'], 'forcingGridVersion': digest(source['grids'])}
+        lake = {'method': 'lake'}
+        land = {'method': 'land'}
+        manifest = {'spatialVersion': 'source', 'dataSHA256': 'data',
+                    'lakePrecipitationCorrection': lake, 'transformationSHA256': digest(lake),
+                    'landPrecipitationCorrection': land, 'landTransformationSHA256': digest(land)}
+        identity = {'forcingGridSHA256': digest(source['grids']),
+                    'forcingTransformationSHA256': digest(lake),
+                    'landForcingTransformationSHA256': digest(land)}
+        spaces = {'source': source, 'aggregate': calculation}
+        with patch('backend.grid_spatial.load', side_effect=lambda version: spaces[version]):
+            verify_business_forcing_binding(manifest, 'aggregate', identity)
+            for key in identity:
+                with self.subTest(identity=key):
+                    altered = dict(identity, **{key: '0' * 64})
+                    with self.assertRaises(ValueError):
+                        verify_business_forcing_binding(manifest, 'aggregate', altered)
+            for key in ('lakePrecipitationCorrection', 'landPrecipitationCorrection'):
+                with self.subTest(manifest=key):
+                    altered = deepcopy(manifest)
+                    altered[key]['method'] = 'tampered'
+                    with self.assertRaises(ValueError):
+                        verify_business_forcing_binding(altered, 'aggregate', identity)
+            spaces['aggregate'] = dict(calculation, forcingGridVersion='0' * 64)
+            with self.assertRaises(ValueError):
+                verify_business_forcing_binding(manifest, 'aggregate', identity)
+
+    def test_legacy_digest_still_requires_matching_bytes_and_spatial_version(self):
+        from scripts.make_seed import verify_business_forcing_binding
+        manifest = {'dataSHA256': 'a', 'spatialVersion': 'space'}
+        verify_business_forcing_binding(manifest, 'space', {'inputSHA256': 'a'})
+        with self.assertRaises(ValueError):
+            verify_business_forcing_binding(manifest, 'space', {'inputSHA256': 'b'})
+        with self.assertRaises(ValueError):
+            verify_business_forcing_binding(manifest, 'other', {'inputSHA256': 'a'})
 
 
 if __name__=='__main__':

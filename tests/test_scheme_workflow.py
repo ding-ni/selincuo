@@ -107,6 +107,26 @@ class SchemeWorkflowTests(unittest.TestCase):
                        'budgets': {'runoff': 1, 'routing': 1, 'lake': 1}, 'seed': 42,
                        'objectiveProfile': 'balanced'}}
 
+    def test_template_uses_packaged_static_adopted_result(self):
+        original=schemes.save(self.db, self.config)
+        self.db.set_setting('business-adopted-scheme-v1',
+                            {'schemeId':original['id'],'resultId':'JOB-packaged'})
+        self.result_patch.stop()
+        try:
+            static={'id':'JOB-packaged','result':{'parameterSources':{'hydrology':'杜加率定'}}}
+            with patch('backend.published_results.catalog',return_value=[
+                    {'id':'JOB-packaged','directory':'packaged'}]), \
+                 patch('backend.business_context._packaged',return_value=static), \
+                 patch('backend.business_context.ROOT') as root, \
+                 patch.object(schemes,'_current_workflow_defaults',side_effect=lambda db,value:value):
+                root.__truediv__.return_value.__truediv__.return_value.__truediv__.return_value.__truediv__.return_value.stat.return_value.st_mtime_ns=1
+                draft=schemes.template(self.db)
+            self.assertEqual(draft['parameterSources']['sourceTaskId'],'JOB-packaged')
+            self.assertEqual(draft['parameterSources']['hydrology'],'杜加率定')
+            self.assertNotIn('id',draft)
+        finally:
+            self.result_patch.start()
+
     def test_initial_hydrology_is_saved_and_cannot_be_silently_overridden(self):
         value = deepcopy(self.config)
         value['initialHydrology'] = {'soilFraction': .1}

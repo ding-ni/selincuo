@@ -19,7 +19,10 @@ $buildRun = Get-Date -Format 'yyyyMMdd-HHmmss'
 $distributionRoot = Join-Path $projectRoot "build\release-$buildRun"
 & $Python -m PyInstaller --distpath $distributionRoot --workpath build/pyinstaller installer/selinco.spec
 if ($LASTEXITCODE -ne 0) { throw 'PyInstaller failed' }
-& $Python scripts/assemble_release.py --destination (Join-Path $distributionRoot 'SelincoPlatform')
+$packageSeed = Join-Path $distributionRoot 'package-seed'
+& $Python scripts/make_seed.py --output $packageSeed --business-scheme-id current
+if ($LASTEXITCODE -ne 0) { throw 'Best-scheme seed preparation failed' }
+& $Python scripts/assemble_release.py --destination (Join-Path $distributionRoot 'SelincoPlatform') --seed-workspace $packageSeed
 if ($LASTEXITCODE -ne 0) { throw 'Assembly failed' }
 $releaseSource = Join-Path $distributionRoot 'SelincoPlatform'
 $releaseExe = Join-Path $releaseSource 'SelincoPlatform.exe'
@@ -27,10 +30,10 @@ $releaseExe = Join-Path $releaseSource 'SelincoPlatform.exe'
 if ($LASTEXITCODE -ne 0) { throw 'Packaged runtime self-check failed' }
 & (Join-Path $PSScriptRoot 'verify_delivery.ps1') -Application $releaseExe -VerificationRoot (Join-Path $distributionRoot 'portable-verification') -Python $Python -ExpectedVersion $releaseVersion
 if ($LASTEXITCODE -ne 0) { throw 'Packaged workflow verification failed' }
-& $ISCC "/DAppSource=$releaseSource" "/DAppVersion=$releaseVersion" '/DVerificationInstall=1' installer/selinco.iss
+& $Python scripts/compile_installer.py --compiler $ISCC --source $releaseSource --version $releaseVersion --verification
 if ($LASTEXITCODE -ne 0) { throw 'Verification installer build failed' }
 $verificationSetup = Join-Path $projectRoot "releases/色林错预警预报平台-v$releaseVersion-Verification-Setup.exe"
 & (Join-Path $PSScriptRoot 'verify_installation.ps1') -Setup $verificationSetup -VerificationRoot (Join-Path $distributionRoot 'installed-verification') -Python $Python -ExpectedVersion $releaseVersion
 if ($LASTEXITCODE -ne 0) { throw 'Installed workflow verification failed' }
-& $ISCC "/DAppSource=$releaseSource" "/DAppVersion=$releaseVersion" installer/selinco.iss
+& $Python scripts/compile_installer.py --compiler $ISCC --source $releaseSource --version $releaseVersion
 if ($LASTEXITCODE -ne 0) { throw 'Installer failed' }

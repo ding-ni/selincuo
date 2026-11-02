@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import sys
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -29,6 +30,9 @@ CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY,at TEXT NOT NULL,action 
 class Database:
     def __init__(self, workspace=None):
         self.workspace = Path(workspace or WORKSPACE).resolve()
+        if getattr(sys, 'frozen', False):
+            from .workspace_upgrade import prepare_package_workspace
+            prepare_package_workspace(self.workspace)
         self.path = self.workspace / 'database' / 'hydrology.sqlite3'
         self.path.parent.mkdir(parents=True, exist_ok=True)
         marker = self.workspace / 'workspace-identity.json'

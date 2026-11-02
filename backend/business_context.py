@@ -6,7 +6,7 @@ from functools import lru_cache
 import json
 from pathlib import PurePosixPath
 import pandas as pd
-from .common import ROOT, digest, read_json, within
+from .common import ROOT, digest, read_json, sha_file, within
 
 
 @lru_cache(maxsize=8)
@@ -23,7 +23,32 @@ def result_task(db, identifier):
         # All callers in this module are read-only; avoid copying daily data on
         # every summary request. The packaged loader verifies file integrity.
         return _packaged(identifier, path.stat().st_mtime_ns)
+    index = read_json(ROOT / 'config/operational/calibration-baselines.json', {}) or {}
+    entry = (index.get('results') or {}).get(identifier)
+    if entry is not None:
+        if index.get('schemaVersion') != 1 or not isinstance(entry, dict):
+            raise ValueError('率定对照基准目录无效')
+        path = within(ROOT / 'config/operational', entry.get('file', ''))
+        if not path.is_file() or path.is_symlink() or sha_file(path) != entry.get('sha256'):
+            raise ValueError('率定对照基准缺失或摘要不符')
+        task = read_json(path)
+        if (not isinstance(task, dict) or task.get('id') != identifier or
+                task.get('status') != 'succeeded' or
+                not isinstance(task.get('result'), dict) or not task['result'].get('daily')):
+            raise ValueError('率定对照基准内容无效')
+        return task
     return db.task(identifier)
+
+
+def result_folder(db, identifier):
+    """Resolve actual hourly artifacts for workspace or packaged results."""
+    from .published_results import catalog
+    row = next ( (r for r in catalog() if r['id'] == identifier), None)
+    if row:
+        from .published_results import hourly_zarr
+        hourly_zarr(identifier)
+        return within(ROOT / 'data/final-results', row['directory'])
+    return within(db.workspace / 'tasks', identifier)
 
 
 def builtin_result_available(db, identifier):
@@ -33,8 +58,8 @@ def builtin_result_available(db, identifier):
     from .published_results import catalog
     item = next((row for row in catalog() if row['id'] == identifier), None)
     if item:
-        folder = within(ROOT / 'data/final-results', item['directory'])
-        return all((folder / name).is_file() for name in ('result.json', 'hourly.npz', 'final-state.json'))
+        from .published_results import available
+        return available(identifier)
     rows = db.rows('SELECT status,trashed,result FROM tasks WHERE id=?', (identifier,))
     if not rows or rows[0]['status'] != 'succeeded' or rows[0]['trashed'] or not rows[0]['result']:
         return False

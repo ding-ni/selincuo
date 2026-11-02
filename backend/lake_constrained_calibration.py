@@ -514,7 +514,8 @@ def _baseline_comparison(db, identifier, final_lake, window, constraints, flow):
         result['reason'] = '没有冻结当前采用成果'
         return result
     try:
-        task = db.task(identifier)
+        from .business_context import result_task
+        task = result_task(db, identifier)
         if task.get('status') != 'succeeded' or not (task.get('result') or {}).get('daily'):
             raise ValueError('当前成果没有可比较的湖位日过程')
         frame = pd.DataFrame(task['result']['daily'])

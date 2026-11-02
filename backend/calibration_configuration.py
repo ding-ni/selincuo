@@ -9,7 +9,8 @@ def implementation():
     names = ('calibration_configuration.py', 'two_stage_calibration.py', 'dual_calibration.py',
              'calibration_search.py', 'calibration_config.py', 'calibration_objective.py',
              'fast_calibration.py', 'fast_basin_calibration.py', 'lake_calibration.py',
-             'lake_constrained_calibration.py', 'warmup_workflow.py')
+             'lake_constrained_calibration.py', 'warmup_workflow.py',
+             'precipitation_updates.py', 'land_precipitation.py', 'model_forcing.py')
     return {'model': model_identity(), 'algorithm': {n: sha_file(ROOT/'backend'/n) for n in names}}
 
 

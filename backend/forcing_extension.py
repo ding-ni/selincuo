@@ -29,7 +29,9 @@ def extend(db,current):
     if not path.exists():
         np.savez_compressed(path,time=times.values.astype('datetime64[ns]').astype('int64'),**{k:np.concatenate([a[k],b[k][later]],axis=0) for k in ('precipitation','temperature','evaporation')})
     manifest={**current,'id':identifier,'name':'ERA5-Land连续气象驱动','createdAt':now(),'start':times[0].isoformat(),'end':times[-1].isoformat(),'hours':len(times),'data':'forcing.npz','dataSHA256':sha_file(path),'parentInputIds':[prior['id'],current['id']],'sources':prior.get('sources',[])+current.get('sources',[])}
-    for key in ('lakePrecipitationCorrection','transformationSHA256'):manifest.pop(key,None)
+    for key in ('landPrecipitationCorrection','landTransformationSHA256',
+                'lakePrecipitationCorrection','transformationSHA256','precipitationCorrectionUpdate'):
+        manifest.pop(key,None)
     write_json(folder/'manifest.json',manifest)
     with db.connect() as c:c.execute('INSERT OR IGNORE INTO input_products VALUES(?,?,?,?)',(identifier,manifest['name'],manifest['createdAt'],canonical(manifest)))
     db.log('inputs.extend',{'id':identifier,'parents':manifest['parentInputIds']})

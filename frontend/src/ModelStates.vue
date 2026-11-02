@@ -14,7 +14,7 @@ const scaleMode=ref('replay'),scaleLow=ref(0),scaleHigh=ref(1),scaleError=ref(''
 const tab=ref('space'),id=ref(props.initialId||props.boot.homeResultId||''),meta=ref(null),variable=ref('swe'),unit=ref(0),start=ref(''),end=ref(''),time=ref(''),step=ref('day'),rows=ref([]),frame=ref(null),error=ref(''),working=ref(false),geometry=ref([]),selectedState=ref(null),stateName=ref(''),showAllStates=ref(false)
 let sequence=0,controller,lastRangeKey=''
 const frames=createFrameCache(),rangeCache=new Map(),seriesCache=new Map()
-const choices=computed(()=>[...props.boot.publishedResults.map(t=>({...t,builtin:true})),...props.tasks.filter(t=>t.status==='succeeded'&&!t.trashed)].filter(t=>t.id===props.boot.homeResultId||t.id===props.initialId))
+const choices=computed(()=>[...props.boot.publishedResults.map(t=>({...t,builtin:true})),...props.tasks.filter(t=>t.status==='succeeded'&&!t.trashed)].filter(t=>t.id===props.boot.homeResultId))
 const library=computed(()=>props.states.filter(s=>showAllStates.value||s.name||s.favorite||props.tasks.some(t=>t.id===s.task_id&&['simulation','continuation'].includes(t.kind))))
 const definition=computed(()=>meta.value?.variables.find(v=>v.id===variable.value))
 const units=computed(()=>definition.value?.scope==='unit'?(meta.value?.units||[]).map(u=>({...u,label:unitName(u)})):(definition.value?.scope==='river'?meta.value?.rivers:definition.value?.scope==='partition'?meta.value?.partitions:['lake'])?.map(id=>({id,label:regionName(id)}))||[])

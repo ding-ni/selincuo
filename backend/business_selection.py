@@ -41,13 +41,10 @@ def purpose(db, row):
 def visible_tasks(db, rows, include_experiments=False):
     if include_experiments:
         return rows
-    hidden=set(db.setting('development-task-ids',[]))
-    development_schemes={row['id'] for row in db.items('schemes') if purpose(db,row)=='development'}
     chosen=current(db).get('resultId')
-    return [row for row in rows if row['id']==chosen or row.get('userSaved') or row.get('user_saved') or
-            (row.get('kind')=='calibration-replay' and row.get('status') in ('queued','running','stopping')) or
-            (row.get('kind')!='calibration-replay' and row['id'] not in hidden and row.get('request',{}).get('researchSchemeId') not in development_schemes
-             and row.get('request',{}).get('purpose')!='development')]
+    active = {'queued', 'running', 'stopping'}
+    return [row for row in rows if row['id'] == chosen or row.get('userSaved') or row.get('user_saved') or
+            row.get('status') in active]
 
 
 def adopt_result(db, task_id, name=None):

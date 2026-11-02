@@ -39,6 +39,9 @@ def merge_products(db,base_id,new_id):
         if coverage and all(pd.Timestamp(c['startUTC'])+pd.Timedelta(hours=8)>=b['time'][0] and pd.Timestamp(c['endUTC'])+pd.Timedelta(hours=8)<=b['time'][-1] for c in coverage):superseded.add(source['sha256'])
     source_digests=[{k:s[k] for k in ('sha256','variables','bytes')} for _,s in sorted(sources.items())]
     manifest={**base,'id':identifier,'parentInputId':base_id,'name':'ERA5-Land连续驱动 · 官方延伸与修订','createdAt':now(),'start':times[0].isoformat(),'end':times[-1].isoformat(),'hours':len(times),'sources':list(sources.values()),'sourceDigests':source_digests,'data':'forcing.npz','dataSHA256':sha_file(path),'revisionSelection':policy,'supersededSourceDigests':sorted(superseded)}
+    for key in ('landPrecipitationCorrection','landTransformationSHA256',
+                'lakePrecipitationCorrection','transformationSHA256','precipitationCorrectionUpdate'):
+        manifest.pop(key,None)
     write_json(folder/'manifest.json',manifest)
     with db.connect() as c:c.execute('INSERT INTO input_products VALUES(?,?,?,?)',(identifier,manifest['name'],manifest['createdAt'],canonical(manifest)))
     db.log('inputs.official-revision',{'inputId':identifier,**policy});return manifest

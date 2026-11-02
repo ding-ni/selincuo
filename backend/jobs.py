@@ -449,6 +449,17 @@ class Jobs:
                     # are committed in the same SQLite transaction.
                     connection.execute('INSERT OR REPLACE INTO settings VALUES(?,?)',
                                        (CURRENT_SETTING, canonical({'inputId': result['inputId'], 'taskId': identifier})))
+                    precipitation=result.get('precipitationCorrection')
+                    if precipitation is not None:
+                        if precipitation.get('status')=='insufficient' and precipitation.get('pendingInputId'):
+                            connection.execute('INSERT OR REPLACE INTO settings VALUES(?,?)',
+                                ('pending-precipitation-input',canonical({'inputId':precipitation['pendingInputId'],
+                                                                           'message':precipitation.get('message',''),
+                                                                           'at':now()})))
+                        elif precipitation.get('status') in ('updated','unchanged'):
+                            connection.execute('DELETE FROM settings WHERE key=?',('pending-precipitation-input',))
+                            if precipitation.get('status')=='updated':
+                                connection.execute("DELETE FROM settings WHERE key LIKE 'calibration-configuration:%'")
                     connection.execute("UPDATE tasks SET status='succeeded',result=?,progress=100,message=?,updated_at=? WHERE id=?",
                                        (canonical(public_result), status.get('message') or '气象资料已登记', now(), identifier))
                     connection.execute('INSERT INTO audit(at,action,payload) VALUES(?,?,?)',
@@ -569,11 +580,16 @@ class Jobs:
                 else:
                     from .forcing_extension import extend
                     result = extend(self.db, result)
-                from .forcing import register_lake_correction
-                from .operational_scheme import definition
-                correction = definition().get('inputRequirement', {}).get('lakePrecipitationCorrection')
-                if correction and not result.get('lakePrecipitationCorrection'):
-                    result = register_lake_correction(self.db, result['id'], correction)
+                from .precipitation_updates import activate, refresh
+                source_input_id=result['id']
+                precipitation=refresh(self.db,source_input_id,activate=False)
+                if precipitation['status']=='updated':
+                    result=next(x['manifest'] for x in self.db.items('input_products') if x['id']==precipitation['inputId'])
+                    activate(self.db,result['id'])
+                else:
+                    from .model_forcing import current_product
+                    result=current_product(self.db)['manifest']
+                result={**result,'sourceInputId':source_input_id,'precipitationCorrection':precipitation}
             elif kind == 'sensitivity':
                 from .sensitivity import analyze
                 result = analyze(self.db, request, folder, progress, is_cancelled)

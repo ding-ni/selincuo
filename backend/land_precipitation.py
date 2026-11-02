@@ -190,15 +190,13 @@ def corrected_member_precipitation(profile, grids, times, raw_precip, raw_temp, 
     return np.where(mask, raw_precip*factors, raw_precip)
 
 
-def register_product(db, parent_id, profile, lake_warm_rain=False):
+def register_product(db, parent_id, profile, lake_warm_rain=False, update_provenance=None):
     """Register a new immutable input whose forcing bytes are a hard link/copy."""
     validate_profile(profile)
     rows = [x for x in db.items('input_products') if x['id'] == parent_id]
     if len(rows) != 1:
         raise ValueError('站雨订正来源气象不存在')
     parent = rows[0]['manifest']
-    if parent.get('landPrecipitationCorrection') or parent.get('landTransformationSHA256'):
-        raise ValueError('不能叠加已有陆域降水订正')
     if profile.get('parentDataSHA256') != parent.get('dataSHA256'):
         raise ValueError('站雨订正与来源气象摘要不一致')
     land_sha = digest(profile)
@@ -216,8 +214,11 @@ def register_product(db, parent_id, profile, lake_warm_rain=False):
     previous = [x for x in db.items('input_products') if x['id'] == identifier]
     if previous:
         manifest = previous[0]['manifest']
-        if (manifest.get('landTransformationSHA256') != land_sha or
-                read_json(folder/'manifest.json') != manifest or sha_file(folder/manifest['data']) != parent['dataSHA256']):
+        stored = read_json(folder/'manifest.json')
+        if (manifest.get('landTransformationSHA256') != land_sha or not stored or
+                stored.get('id') != identifier or stored.get('landTransformationSHA256') != land_sha or
+                stored.get('dataSHA256') != parent['dataSHA256'] or
+                sha_file(folder/manifest['data']) != parent['dataSHA256']):
             raise ValueError('已有站雨订正输入与登记身份不一致')
         return manifest
     folder.mkdir(parents=True, exist_ok=True)
@@ -235,6 +236,8 @@ def register_product(db, parent_id, profile, lake_warm_rain=False):
     manifest = {**deepcopy(parent), 'id': identifier, 'name': 'ERA5-Land · 站点暖雨订正对照',
                 'createdAt': now(), 'parentInputId': parent_id,
                 'landPrecipitationCorrection': deepcopy(profile), 'landTransformationSHA256': land_sha}
+    if update_provenance is not None:
+        manifest['precipitationCorrectionUpdate'] = deepcopy(update_provenance)
     if lake_rule is not None:
         manifest.update(name='ERA5-Land · 陆域与湖面暖雨订正',
                         lakePrecipitationCorrection=lake_rule, transformationSHA256=digest(lake_rule),

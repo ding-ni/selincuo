@@ -114,6 +114,39 @@ class SchemeManagementTests(unittest.TestCase):
         catalog = management.catalog(self.db)
         self.assertEqual(next(row['resultCount'] for row in catalog['schemes'] if row['id'] == copied), 0)
 
+    def test_daily_catalog_hides_builtin_history_and_development_schemes(self):
+        business = self.scheme('business')
+        development = self.scheme('experiment', purpose='development')
+        builtin = {'id': 'selinco-historical-standard-v1', 'name': '历史内置方案', 'builtin': True,
+                   'trashed': False, 'payload': {'schemaVersion': 2, 'purpose': 'business',
+                                                'resultId': 'JOB-historical'}}
+        with patch('backend.scheme_management.builtin', return_value=builtin):
+            self.assertEqual([row['id'] for row in management.catalog(self.db)['schemes']], [business])
+            self.db.set_setting(CURRENT_SETTING, {'schemeId': business, 'familyId': 'FAMILY-business',
+                                                  'resultId': 'JOB-best'})
+            with patch('backend.published_results.catalog', return_value=[{'id': 'JOB-best'}]):
+                current = next(row for row in management.catalog(self.db)['schemes'] if row['id'] == business)
+                self.assertEqual(current['resultCount'], 1)
+            self.db.set_setting('scheme-hidden:selinco-historical-standard-v1', True)
+            builtin['trashed'] = True
+            rows = management.catalog(self.db)['schemes']
+            self.assertEqual({row['id'] for row in rows}, {business, builtin['id']})
+            self.assertNotIn(development, {row['id'] for row in rows})
+
+    def test_daily_task_list_keeps_only_current_saved_and_active_records(self):
+        from backend.business_selection import visible_tasks
+        db = self.db
+        db.set_setting(CURRENT_SETTING, {'resultId': 'JOB-current'})
+        rows = [
+            {'id': 'JOB-current', 'status': 'succeeded'},
+            {'id': 'JOB-saved', 'status': 'succeeded', 'user_saved': 1},
+            {'id': 'JOB-active', 'status': 'running'},
+            {'id': 'JOB-old-test', 'status': 'succeeded', 'request': {'purpose': 'development'}},
+        ]
+        self.assertEqual([row['id'] for row in visible_tasks(db, rows)],
+                         ['JOB-current', 'JOB-saved', 'JOB-active'])
+        self.assertEqual(visible_tasks(db, rows, include_experiments=True), rows)
+
     def test_sql_failure_rolls_back_family_and_all_results(self):
         scheme = self.scheme('old')
         a, b = self.task('a', scheme), self.task('b', scheme)

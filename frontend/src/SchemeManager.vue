@@ -28,7 +28,7 @@ onMounted(async()=>{working.value=true;try{await load();await nextTick();dialog.
 <template>
  <Teleport to="body"><div class="scheme-manager-shade" @click.self="!working&&emit('close')"><section ref="dialog" class="scheme-manager" role="dialog" aria-modal="true" aria-labelledby="scheme-manager-title" tabindex="-1" @keydown.esc="!working&&emit('close')">
   <header><div><small>方案与计算成果</small><h2 id="scheme-manager-title">管理方案</h2></div><button :disabled="working" aria-label="关闭方案管理" @click="emit('close')">×</button></header>
-  <nav aria-label="方案目录"><button v-for="item in [['business','已保存方案'],['development','开发试验'],['trash','回收站']]" :key="item[0]" :class="{active:tab===item[0]}" :disabled="working" @click="changeTab(item[0])">{{item[1]}}</button><input v-if="tab!=='trash'" v-model="query" aria-label="检索方案名称" placeholder="检索方案名称" :disabled="working"></nav>
+  <nav aria-label="方案目录"><button v-for="item in [['business','已保存方案'],['trash','回收站']]" :key="item[0]" :class="{active:tab===item[0]}" :disabled="working" @click="changeTab(item[0])">{{item[1]}}</button><input v-if="tab!=='trash'" v-model="query" aria-label="检索方案名称" placeholder="检索方案名称" :disabled="working"></nav>
   <p v-if="error" class="message error" role="alert">{{error}}</p><p v-if="message" class="message success" role="status">{{message}}</p>
   <template v-if="tab!=='trash'">
    <div class="scheme-manager-toolbar"><label><input type="checkbox" aria-label="全选可回收方案" :checked="available.length>0&&available.every(row=>selected.includes(row.id))" :disabled="working||!available.length" @change="toggleAll">全选可回收方案</label><span>已选 {{selected.length}} 个</span><button :disabled="working||!selected.length" @click="preview">移入回收站（含关联结果）</button></div>

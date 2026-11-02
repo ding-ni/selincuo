@@ -33,14 +33,14 @@ watch(tab,async value=>{
   return
  }
  historyLoading.value=true;historyError.value=''
- try{const rows=(await api('tasks?includeExperiments=true')).tasks||[];if(ticket===historyTicket)historyTasks.value=rows}
+ try{const rows=(await api('tasks')).tasks||[];if(ticket===historyTicket)historyTasks.value=rows}
  catch(e){if(ticket===historyTicket)historyError.value=e.message}finally{if(ticket===historyTicket)historyLoading.value=false}
 })
 watch(()=>[tab.value,props.homeId,props.selectedId],([current,home,selected])=>{
  if(current==='current'&&home&&selected!==home)emit('select',home)
 },{immediate:true})
 const period=t=>resultDisplayPeriod(t,props.selectedResult)
-const schemeName=t=>t.request?.schemeName||t.request?.schemeSnapshot?.name||t.scheme?.name||(t.id===props.homeId?'色林错综合模拟方案':t.builtin?'历史方案':'见成果详情')
+const schemeName=t=>t.request?.schemeName||t.request?.schemeSnapshot?.name||t.scheme?.name||(t.id===props.homeId?t.displayName||t.name||'当前采用方案':t.builtin?'历史方案':'见成果详情')
 const typeName=t=>({simulation:'历史模拟',continuation:'续算',trial:'试算',calibration:'率定','two-stage-calibration':'两阶段率定','calibration-replay':'率定复现','calibration-workflow':'率定',sensitivity:'敏感性分析'})[t.kind]||'历史模拟'
 const statusName=t=>({failed:'失败',cancelled:'已停止',interrupted:'已中断'})[t.status]||t.status
 const exportHref=t=>t.builtin?'/api/model/published-result?'+new URLSearchParams({id:t.id,file:'daily.csv'}):'/api/model/export?'+new URLSearchParams({taskId:t.id,format:'daily.csv'})

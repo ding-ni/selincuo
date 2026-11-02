@@ -104,7 +104,8 @@ def prepare(db,payload):
             prepared['_candidateSourceTraceSHA256']=sha_file(path)
         baseline=options.get('baselineTaskId') or current(db).get('resultId')
         if baseline:
-            task=db.task(baseline)
+            from .business_context import result_task
+            task=result_task(db,baseline)
             if task.get('status')!='succeeded' or not (task.get('result') or {}).get('daily'):
                 raise ValueError('对照基准须是已有湖位过程的成功成果')
         options['baselineTaskId']=baseline
@@ -112,7 +113,8 @@ def prepare(db,payload):
         from .business_selection import current
         base_id=payload.get('lakeOnlyBaseTaskId') or current(db).get('resultId')
         if base_id:
-            base=db.task(base_id);result=base.get('result') or {}
+            from .business_context import result_task
+            base=result_task(db,base_id);result=base.get('result') or {}
             land=lambda p:{k:v for k,v in p.items() if k!='lakeCoefficient'}
             compatible=(base['status']=='succeeded' and result.get('inputId')==prepared['inputId'] and
                 result.get('spatialVersion')==prepared['spatialVersion'] and
@@ -122,7 +124,8 @@ def prepare(db,payload):
                 result.get('parameterTransfer')==prepared['parameterTransfer'] and
                 normalize_initial_hydrology(result.get('initialHydrology'))==
                     normalize_initial_hydrology(prepared.get('initialHydrology')) and
-                result.get('routingMode')==prepared['routingMode'])
+                result.get('routingMode')==prepared['routingMode'] and
+                (result.get('identity') or {}).get('modelImplementation')==model_identity())
             if compatible:
                 prepared['lakeOnlyBaseTaskId']=base_id
                 prepared['_fixedHydrologySource']={**deepcopy(result.get('parameterSources',{}).get('hydrology',
@@ -228,8 +231,9 @@ def run(db,request,folder,progress,cancelled):
         write_json(state_path,state)
         land_reuse=None
         if options['mode']=='lake' and request.get('lakeOnlyBaseTaskId'):
-            base=db.task(request['lakeOnlyBaseTaskId'])
-            land_reuse=(within(db.workspace/'tasks',base['id']),base['result'])
+            from .business_context import result_task, result_folder
+            base=result_task(db,request['lakeOnlyBaseTaskId'])
+            land_reuse=(result_folder(db,base['id']),base['result'])
         baseline=simulate(db,working,baseline_folder,lambda p,m:progress(82+p*.05,m),cancelled,source,
                           land_reuse=land_reuse)
     else:

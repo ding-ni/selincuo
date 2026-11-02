@@ -59,6 +59,18 @@ async function refresh(){
  if(t.status==='fulfilled')tasks.value=t.value.tasks
  if(s.status==='fulfilled')states.value=s.value.states
  if(tr.status==='fulfilled')trashedResults.value=tr.value.tasks
+ // Links from an earlier installation can point at task IDs that are not in
+ // the clean business workspace.  Resolve those links to the adopted result
+ // before loading context, so the page never renders a misleading missing
+ // record error.
+ if(boot.value?.homeResultId && selectedId.value && selectedId.value!==boot.value.homeResultId){
+  const allowed=new Set([boot.value.homeResultId,...(boot.value.publishedResults||[]).map(row=>row.id)])
+  if(!allowed.has(selectedId.value)){
+   selectedId.value=boot.value.homeResultId
+   syncUrl(true)
+   historyDetail.value=null;detail.value=null;calibrationDetail.value=null
+  }
+ }
  const failed=responses.filter(r=>r.status==='rejected')
  if(failed.length&&page.value!=='monitor')error.value='部分内容读取失败：'+failed.map(r=>r.reason.message).join('；')
  if(page.value!=='monitor')await loadContext()
@@ -111,7 +123,7 @@ onBeforeUnmount(()=>{disconnectBrowserSession();clearInterval(timer);window.remo
  <MonitoringWorkspace v-if="page==='monitor'" :initial="monitorInitial" @navigate="navigate"/>
  <CalibrationWorkspace v-if="page==='calibration'" :boot="boot" :tasks="tasks" :detail="calibrationDetail" :busy="busy" :active="active" @refresh="action(refresh)" @deleted="deletedResults" @submit="submit" @stop="stop" @select="selectCalibration" @simulate="simulateWith" @replay="replayStarted" @state="showState(calibrationDetail)" @export="exportResult"/>
  <HistoricalSimulation v-if="page==='simulation'" :boot="boot" :selection="simulationSelection" :busy="busy" :active="active" @submit="submit" @navigate="navigate"><HistoricalResult :detail="historyDetail" :busy="busy" @stop="stop" @export="exportResult" @state="showState(historyDetail)" @retry="navigate('simulation')"/></HistoricalSimulation>
- <ResultWorkspace v-if="page==='results'" :tasks="resultRecords" :trashed-results="trashedResults" :published="boot.currentBusiness?.resultId?[]:boot.publishedResults.filter(t=>t.id===boot.homeResultId)" :standard-id="boot.standardResultId" :home-id="boot.homeResultId" :selected-id="detail?.id" :selected-result="detail" :busy="busy" @select="resultWindow=null;action(()=>openResult($event))" @metadata="metadata" @changed="deletedResults" @stop="stop"><HistoricalResult :detail="detail" :view-window="resultWindow?.id===detail?.id?resultWindow:null" :busy="busy" @stop="stop" @export="exportResult" @state="showState(detail)" @retry="navigate('simulation')"/></ResultWorkspace>
+ <ResultWorkspace v-if="page==='results'" :tasks="resultRecords" :trashed-results="trashedResults" :published="boot.publishedResults.filter(t=>t.id===boot.homeResultId)" :standard-id="boot.homeResultId" :home-id="boot.homeResultId" :selected-id="detail?.id" :selected-result="detail" :busy="busy" @select="resultWindow=null;action(()=>openResult($event))" @metadata="metadata" @changed="deletedResults" @stop="stop"><HistoricalResult :detail="detail" :view-window="resultWindow?.id===detail?.id?resultWindow:null" :busy="busy" @stop="stop" @export="exportResult" @state="showState(detail)" @retry="navigate('simulation')"/></ResultWorkspace>
  <ModelStates v-if="page==='process'" :boot="boot" :tasks="tasks" :states="states" :initial-id="selectedId||boot.homeResultId" :view-day="viewDay" @context="selectContext" :busy="busy" @resume="resume" @rename="renameState" @unprotect="unprotectState"><div v-if="continuation" class="result-toolbar"><span class="note">后台自动匹配气象资料，并核对已计算时段和完整末状态。</span><label>续算起点<input type="datetime-local" :value="continuation.start" readonly></label><label>结束时刻<input type="datetime-local" v-model="continuation.end" :max="continuationCoverage?.end?.slice(0,16)"></label><button class="primary" :disabled="busy||active.length>0||continuation.end<continuation.start" @click="submit(continuation)">开始续算</button></div></ModelStates>
  <ModelResources v-if="page==='model'" :boot="boot" :active="active" :busy="busy" @navigate="navigate" @refresh="action(refresh)" @error="error=$event" @submit="submit" @station="dashboardStation"/>
  </template></div></main>

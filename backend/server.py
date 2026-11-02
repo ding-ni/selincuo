@@ -50,6 +50,20 @@ def receive_upload(source, destination, length, extension):
     partial.replace(destination)
 
 
+def refresh_precipitation_after_sources(db, source_ids, force=False):
+    ids = [value for value in source_ids if isinstance(value, str) and value]
+    if not ids and not force:
+        return None
+    if ids:
+        placeholders = ','.join('?' for _ in ids)
+        found = db.rows(f'''SELECT 1 FROM observations WHERE source_id IN ({placeholders})
+            AND variable='precipitation' LIMIT 1''', ids)
+        if not found:
+            return None
+    from .precipitation_updates import refresh
+    return refresh(db)
+
+
 class Platform(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = False
@@ -226,6 +240,13 @@ class Handler(SimpleHTTPRequestHandler):
                     calibration_config['excludedYears'] = []
             builtin_result = selected_business.get('resultId') or (builtin_scheme or {}).get('payload', {}).get('resultId')
             builtin_available = builtin_result_available(self.db, builtin_result)
+            # The release catalog also contains protected comparison material
+            # used by the admission/audit code.  It is intentionally kept on
+            # disk, but the normal business UI must receive only the adopted
+            # result.  Otherwise old package links can expose historical
+            # records whose task files are not in the business workspace.
+            published_all = published_catalog()
+            published_business = [row for row in published_all if row.get('id') == builtin_result]
             return self.send_json({'projectId': 'selinco', 'name': '色林错预警预报平台', 'version': VERSION, 'gridSpatial':grid_summary,
                                    'spatialResourceMessage': spatial_message, 'operationalSchemesMessage': operational_message,
                                    'contextKey': CONTEXT_KEY, 'spatial': summary, 'database': self.db.summary(),
@@ -233,7 +254,7 @@ class Handler(SimpleHTTPRequestHandler):
                                    'inputs': inputs, 'parameters': list_parameters(self.db),
                                    'schemes': scheme_rows,
                                    'operationalSchemes': operational_schemes,
-                                   'publishedResults': published_catalog(), 'standardResultId': current_release(self.db)['resultId'],
+                                   'publishedResults': published_business, 'standardResultId': current_release(self.db)['resultId'],
                                    'homeResultId': builtin_result if builtin_available else None,
                                    'homeSchemeId':selected_business.get('schemeId') or (builtin_scheme or {}).get('id'),
                                    'currentBusiness':selected_business,
@@ -299,8 +320,9 @@ class Handler(SimpleHTTPRequestHandler):
                     'years':[{'year':int(y),'days':len(g),'start':g.index.min().isoformat(),'end':g.index.max().isoformat()}
                              for y,g in values.groupby(values.index.year)]}
             from .business_selection import current
+            from .business_context import result_task
             choice = current(self.db)
-            adopted = self.db.task(choice['resultId']) if choice.get('resultId') else {}
+            adopted = result_task(self.db, choice['resultId']) if choice.get('resultId') else {}
             adopted_request = adopted.get('request') or {}
             return self.send_json({**rows,'forcing':current_summary(self.db),'defaults':defaults(),
                 'warmup': {'start': adopted_request.get('start'),
@@ -320,7 +342,7 @@ class Handler(SimpleHTTPRequestHandler):
             if query.get('check')=='true':write_json(folder/'latest-catalog.json',meta)
             return self.send_json({'catalog':meta,'update':read_json(folder/'latest-status.json'),
                 'current':current_summary(self.db),
-                'precipitationCorrection':self.db.setting('rainfall-correction-comparison')})
+                'precipitationCorrection':self.db.setting('precipitation-correction-status')})
         if path == 'search-progress':
             task=self.db.task(query['taskId'])
             if task['kind'] in ('two-stage-calibration','calibration-replay'):
@@ -610,15 +632,31 @@ class Handler(SimpleHTTPRequestHandler):
             with self.server.jobs.lock:
                 if self.server.jobs.active():
                     raise ValueError('请等待计算结束后更新资料')
-                return self.send_json(commit(self.db,value))
+                result=commit(self.db,value)
+                update=refresh_precipitation_after_sources(self.db,result.get('sources',[]),
+                                                           force='precipitation' in result.get('variables',[]))
+                if update is not None:result['precipitationCorrection']=update
+                return self.send_json(result)
         if path in ('data-import', 'data-import-file'):
-            if self.server.jobs.active():
-                raise ValueError('请等待计算结束后更新资料')
-            from .data_exchange import import_records, import_file
-            return self.send_json((import_records if path == 'data-import' else import_file)(self.db, value))
+            with self.server.jobs.lock:
+                if self.server.jobs.active():
+                    raise ValueError('请等待计算结束后更新资料')
+                from .data_exchange import import_records, import_file
+                result=(import_records if path == 'data-import' else import_file)(self.db, value)
+                source_ids=[result.get('sourceId')]
+                update=refresh_precipitation_after_sources(self.db,source_ids)
+                if update is not None:result['precipitationCorrection']=update
+                return self.send_json(result)
         if path == 'coverage':
             from .observations import confirm_coverage
-            return self.send_json(confirm_coverage(self.db, value))
+            with self.server.jobs.lock:
+                if self.server.jobs.active():
+                    raise ValueError('请等待计算结束后更新资料')
+                result=confirm_coverage(self.db, value)
+                if value.get('variable')=='precipitation':
+                    from .precipitation_updates import refresh
+                    result['precipitationCorrection']=refresh(self.db)
+                return self.send_json(result)
         if path == 'tasks':
             from .permanent_deletion import guard_no_pending, guard_parameter_source, guard_pending, guard_state
             with self.server.jobs.lock:

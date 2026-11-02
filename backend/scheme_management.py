@@ -29,7 +29,7 @@ def _inventory(db):
     return families, tasks, protected - {None}
 
 
-def _family_entry(db, family, revisions, tasks, protected):
+def _family_entry(db, family, revisions, tasks, protected, published_ids=()):
     latest = max(revisions, key=lambda row: (row['payload'].get('revision', 1), row.get('created_at', '')))
     ids = {row['id'] for row in revisions}
     explicit_results = {row['payload'].get('resultId') for row in revisions} - {None}
@@ -38,6 +38,10 @@ def _family_entry(db, family, revisions, tasks, protected):
     results = [row for row in related if row['kind'] in RESULT_KINDS or row['id'] in explicit_results]
     reasons = []
     chosen = current(db)
+    current_published = ({chosen['resultId']} if
+                         (chosen.get('familyId') == family or chosen.get('schemeId') in ids) and
+                         chosen.get('resultId') in published_ids else set())
+    current_published -= explicit_results
     if family == chosen.get('familyId') or chosen.get('schemeId') in ids:
         reasons.append('当前正在采用')
     if any(row['status'] in ACTIVE for row in related):
@@ -48,15 +52,22 @@ def _family_entry(db, family, revisions, tasks, protected):
             'revisionIds': sorted(ids), 'purpose': purpose(db, latest),
             'current': family == chosen.get('familyId') or chosen.get('schemeId') in ids,
             'trashed': bool(db.setting('scheme-hidden:' + family, False)),
-            'resultCount': len(results), 'results': results, 'recycleBlocked': reasons}
+            'resultCount': len(results) + len(current_published), 'results': results,
+            'recycleBlocked': reasons}
 
 
 def catalog(db):
     from .windows_recycle import states
     file_states = states(db)
     families, tasks, protected = _inventory(db)
-    rows = [_family_entry(db, family, revisions, tasks, protected)
+    from .published_results import catalog as published_catalog
+    published_ids = {row['id'] for row in published_catalog()}
+    rows = [_family_entry(db, family, revisions, tasks, protected, published_ids)
             for family, revisions in families.items()]
+    # Built-in historical configurations stay addressable by their exact ID
+    # and can still be restored from the recycle bin, but are not user schemes.
+    rows = [row for row in rows if not row.get('builtin') or row['trashed']]
+    rows = [row for row in rows if row['purpose'] != 'development' or row['trashed']]
     for row in rows:
         row['fileRecycleStatus'] = next((file_states['scheme:' + identifier] for identifier in row['revisionIds']
                                          if 'scheme:' + identifier in file_states), '')
@@ -71,13 +82,15 @@ def preview(db, identifiers):
             or any(not isinstance(value, str) or not value for value in identifiers)):
         raise ValueError('请勾选1—100个方案')
     families, tasks, protected = _inventory(db)
+    from .published_results import catalog as published_catalog
+    published_ids = {row['id'] for row in published_catalog()}
     by_id = {row['id']: family for family, rows in families.items() for row in rows}
     if any(identifier not in by_id for identifier in identifiers):
         raise ValueError('所选方案已变化，请刷新列表')
     selected = sorted({by_id[identifier] for identifier in identifiers})
     items, result_rows = [], {}
     for family in selected:
-        item = _family_entry(db, family, families[family], tasks, protected)
+        item = _family_entry(db, family, families[family], tasks, protected, published_ids)
         for identifier in item['revisionIds']:
             guard_pending(db, 'scheme', identifier)
         if item['trashed']:

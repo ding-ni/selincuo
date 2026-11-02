@@ -158,7 +158,8 @@ def resolve(db, start=None, end=None, spatial=None):
 
 def current_summary(db):
     try:
-        _, coverage = resolve(db)
-        return coverage
+        product, coverage = resolve(db)
+        status=db.setting('precipitation-correction-status')
+        return {**coverage,'inputId':product['id'],'precipitationCorrection':status}
     except (OSError, ValueError, KeyError, TypeError) as exc:
         return {'complete': False, 'message': str(exc)}

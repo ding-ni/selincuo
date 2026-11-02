@@ -8,6 +8,7 @@ const props=defineProps({boot:Object,busy:Boolean,active:Array})
 const emit=defineEmits(['navigate','refresh','error','submit','station'])
 const tab=ref('observations'),catalog=ref(null),coverage=ref(null),working=ref(false),message=ref(''),startDate=ref(''),endDate=ref('')
 const activeUpdate=computed(()=>(props.active||[]).find(t=>t.kind==='update-forcing'))
+const correctionSummary=computed(()=>coverage.value?.precipitationCorrection||activeUpdate.value?.result?.precipitationCorrection||null)
 const label=v=>variableDefinitions.find(x=>x.id===v)?.label||v
 const stationSummary=computed(()=>(catalog.value?.stations||[]).filter(s=>s.variables?.length).map(s=>({
  id:s.id,name:s.name,variables:s.variables.map(v=>label(v.id)).join(' / '),
@@ -41,6 +42,7 @@ watch(()=>props.boot,async()=>{try{coverage.value=await api('forcing-coverage')}
    <div class="resource-summary"><div><span>当前可用的完整日</span><b>{{coverage?.current?.complete?coverage.current.firstCompleteDay+' 至 '+coverage.current.lastCompleteDay:'尚未确认'}}</b><small>{{coverage?.current?.complete?'降水、气温和蒸发能力完整':'请检查或补充气象资料'}}</small></div><div><span>官方目录</span><b>{{coverage?.catalog?.availableEndUTC?.slice(0,10)||'尚未检查'}}</b><small>以三变量实际覆盖校验为准</small></div></div>
    <p v-if="coverage?.current&&!coverage.current.complete" class="note warning">{{coverage.current.message}}</p>
    <p class="muted">按需下载、续传并登记气象资料；已有成果继续使用各自的输入。</p>
+   <p v-if="correctionSummary" class="note" role="status">{{correctionSummary.message}}<template v-if="correctionSummary.status==='updated'"> · 新输入 {{correctionSummary.inputId}}</template></p>
    <div class="query-grid"><label>补充起日<input type="date" v-model="startDate"></label><label>补充止日<input type="date" v-model="endDate"></label><button :disabled="working||busy||active.length>0" @click="update(true)">更新所选时段</button><button class="primary" :disabled="working||busy||active.length>0" @click="update(false)">更新至可用最新日期</button></div>
    <p v-if="message" class="note warning" role="status">{{message}}</p>
    <p v-if="activeUpdate" class="note">{{activeUpdate.message||'正在更新气象资料'}} · {{number(activeUpdate.progress,1)}}%</p>
@@ -53,7 +55,7 @@ watch(()=>props.boot,async()=>{try{coverage.value=await api('forcing-coverage')}
   <section class="panel"><div class="panel-title"><h3>更新观测资料</h3><button class="link" @click="emit('navigate','monitor')">查询监测资料 →</button></div>
    <NativeObservationImport :stations="boot.stations" :disabled="busy||working||active.length>0" @imported="imported" @error="emit('error',$event)"/>
    <details><summary>其他格式导入</summary><DataImport :stations="boot.stations" :disabled="busy||working||active.length>0" @imported="imported" @error="emit('error',$event)"/></details>
-   <details><summary>观测资料与模型驱动</summary><p class="muted">站点更新用于监测查询和后续降水订正。率定采用方案绑定的气象与观测版本；新增资料经整编后用于新的方案修订。</p><p v-if="boot.currentBusiness?.inputId">当前方案：{{boot.currentBusiness.name}}<br>驱动版本：{{boot.currentBusiness.inputId}}</p></details>
+   <details><summary>观测资料与模型驱动</summary><p class="muted">更新站点雨量后，自动按现行规则重算降水订正倍率。后续模拟和新率定使用更新后的驱动，已保存成果保留原资料版本。</p><p v-if="boot.currentBusiness?.inputId">当前方案：{{boot.currentBusiness.name}}<br>驱动版本：{{boot.currentBusiness.inputId}}</p></details>
   </section>
   <section class="panel"><div class="panel-title"><h3>站点更新概况</h3><span class="muted">最近有效记录</span></div>
    <div class="station-summary"><button v-for="s in stationSummary" :key="s.id" @click="emit('station',s.id)"><strong>{{s.name}}</strong><span>{{s.variables}}</span><time>{{s.latest}}</time></button></div>

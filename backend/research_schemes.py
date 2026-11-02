@@ -103,7 +103,8 @@ def template(db):
         value['purpose']='business'
         value.setdefault('calibrationInitialParameters',deepcopy(value['parameters']))
         value.setdefault('calibrationInitialPartitionParameters',{})
-        source=db.task(selection['resultId']).get('result') or {}
+        from .business_context import result_task
+        source=result_task(db,selection['resultId']).get('result') or {}
         value['parameterSources']={**deepcopy(source.get('parameterSources',{})),
                                    'sourceTaskId':selection['resultId']}
         return _current_workflow_defaults(db, value)
@@ -256,6 +257,23 @@ def _input(db, value, spatial, end, identifier=None):
     if required and required != product['manifest'].get('transformationSHA256'):
         raise ValueError('方案与当前气象资料的湖面降水处理不兼容')
     return product
+
+
+def _bind_current_precipitation_input(db, value):
+    """New runs follow a newly activated automatic warm-rain input."""
+    configured_input_id = value.get('inputId')
+    if value.get('inputBinding') != 'frozen':
+        return configured_input_id, False
+    from .model_forcing import current_product
+    current = current_product(db)
+    update = current['manifest'].get('precipitationCorrectionUpdate') or {}
+    if (current['id'] == configured_input_id or
+            update.get('method') != 'automatic-warm-rain-reestimate-v1'):
+        return configured_input_id, False
+    value['inputBinding'] = 'current'
+    value['inputId'] = current['id']
+    value.get('inputRequirement', {}).pop('transformationSHA256', None)
+    return configured_input_id, True
 
 
 def validate(db, payload, coverage_end=None):
@@ -492,6 +510,7 @@ def prepare_request(db, request, kind='simulation'):
     if db.setting('scheme-hidden:' + _family(row), False):
         raise ValueError('方案已移入回收站，请先恢复')
     value = deepcopy(row['payload'])
+    configured_input_id,refreshed_current_input=_bind_current_precipitation_input(db,value)
     hydrology_initial = normalize_initial_hydrology(value.get('initialHydrology'))
     if ('initialHydrology' in request and
             normalize_initial_hydrology(request['initialHydrology']) != hydrology_initial):
@@ -528,7 +547,8 @@ def prepare_request(db, request, kind='simulation'):
         original = next((r for r in db.items('input_products') if r['id'] == value.get('inputId')), None)
         if original:
             value['inputRequirement'] = {'transformationSHA256': original['manifest'].get('transformationSHA256')}
-    product = _input(db, value, spatial, requested_end, request.get('inputId'))
+    requested_input = None if refreshed_current_input else request.get('inputId')
+    product = _input(db, value, spatial, requested_end, requested_input)
     value['inputId'] = product['id']
     value = validate(db, value, requested_end)
     if start < warmup:
@@ -563,7 +583,7 @@ def prepare_request(db, request, kind='simulation'):
     # request after the effective initialization has been cleared above.
     fields = ('initialLakeLevel', 'initialLakeTime', 'initialLakeSource')
     base_request = {k: v for k, v in request.items() if k not in fields}
-    return {**base_request, **{k: v for k, v in initial.items() if k in fields},
+    prepared={**base_request, **{k: v for k, v in initial.items() if k in fields},
             'modelFamily': 'grid-continuous-v1', 'spatialVersion': value['spatialVersion'],
             'inputId': product['id'], 'parameters': run_parameters, 'partitionParameters': run_regions,
             'initialHydrology': hydrology_initial,
@@ -574,6 +594,9 @@ def prepare_request(db, request, kind='simulation'):
             'earliestCompleteLakeDay': earliest_lake_day.date().isoformat() if earliest_lake_day is not None else None,
             'schemeSnapshot': deepcopy({'id': identifier, **row['payload']}), 'researchConfiguration': value,
             'target': value['target'], 'periods': deepcopy(p), 'search': deepcopy(value['search']), 'origin': 'user-research'}
+    prepared['inputBindingSnapshot']={'configuredInputId':configured_input_id,
+        'inputId':product['id'],'source':'current-after-precipitation-update' if refreshed_current_input else 'scheme'}
+    return prepared
 
 
 def resolved_initialization(request, observation, kind='simulation'):

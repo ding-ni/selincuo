@@ -53,7 +53,7 @@ def release_selection(source):
     return release, item, task, product
 
 
-def copy_observations(source, target, required_sources=None):
+def copy_observations(source, target, required_sources=None, include_all_sources=False):
     """Keep current query observations and published-snapshot source files.
 
     Frozen observations remain a separately verified resource. A source without
@@ -71,7 +71,12 @@ def copy_observations(source, target, required_sources=None):
         origin.execute('BEGIN')
         required_ids=list(required)
         extra=' OR id IN ('+','.join('?' for _ in required_ids)+')' if required_ids else ''
-        sources = [dict(row) for row in origin.execute('SELECT * FROM sources WHERE id IN (SELECT DISTINCT source_id FROM observations)'+extra,required_ids)]
+        source_query = 'SELECT * FROM sources WHERE id IN (SELECT DISTINCT source_id FROM observations)'
+        if include_all_sources:
+            source_query = 'SELECT * FROM sources'
+            extra = ''
+            required_ids = []
+        sources = [dict(row) for row in origin.execute(source_query+extra,required_ids)]
         found={row['id']:row for row in sources}
         for identifier,expected in required.items():
             if identifier not in found or found[identifier]['sha256']!=expected:
@@ -100,6 +105,78 @@ def copy_observations(source, target, required_sources=None):
                     break
                 destination.executemany(sql, [tuple(row) for row in rows])
     return copied
+
+
+def business_default(source, scheme_id):
+    """Resolve one already-adopted business result without changing its identity."""
+    if scheme_id == 'current':
+        selected=source.rows('SELECT value FROM settings WHERE key=?',('business-adopted-scheme-v1',))
+        if not selected:raise ValueError('工作区没有当前采用方案，不能指定业务默认')
+        scheme_id=json.loads(selected[0]['value']).get('schemeId')
+    if not scheme_id:
+        return None
+    rows = source.rows('SELECT value FROM settings WHERE key=?', ('business-adopted-scheme-v1',))
+    if not rows:
+        raise ValueError('工作区没有当前采用方案，不能指定业务默认')
+    selection = json.loads(rows[0]['value'])
+    if selection.get('schemeId') != scheme_id:
+        raise ValueError('指定业务方案不是当前采用方案')
+    schemes = [row for row in source.items('schemes') if row['id'] == scheme_id]
+    parameters = [row for row in source.items('parameter_versions') if row['id'] == selection.get('parameterId')]
+    tasks = source.rows('SELECT id,status,request,result,trashed FROM tasks WHERE id=?', (selection.get('resultId'),))
+    if len(schemes) != 1 or len(parameters) != 1 or len(tasks) != 1:
+        raise ValueError('采用方案、参数或结果记录缺失')
+    scheme, parameter, task = schemes[0], parameters[0], tasks[0]
+    if task['status'] != 'succeeded' or task['trashed']:
+        raise ValueError('采用结果未成功完成或已回收')
+    result = json.loads(task['result'] or '{}')
+    payload, parameter_payload = scheme['payload'], parameters[0]['payload']
+    result_identity = result.get('identity') or {}
+    input_id = result.get('inputId') or result_identity.get('inputId')
+    if (not input_id or payload.get('inputId') != input_id or
+            payload.get('spatialVersion') != result.get('spatialVersion') or
+            payload.get('parameters') != result.get('parameters') or
+            payload.get('partitionParameters', {}) != result.get('partitionParameters', {}) or
+            parameter_payload.get('parameters') != result.get('parameters') or
+            parameter_payload.get('partitionParameters', {}) != result.get('partitionParameters', {}) or
+            parameter_payload.get('resultIdentitySHA256') not in (None, digest(result_identity)) or
+            selection.get('inputId') not in (None, input_id) or
+            selection.get('spatialVersion') not in (None, result.get('spatialVersion'))):
+        raise ValueError('采用方案、参数与结果数值身份不一致')
+    product = next((row for row in source.items('input_products') if row['id'] == input_id), None)
+    if not product:
+        raise ValueError('业务方案绑定的气象输入缺失或摘要不符')
+    verify_business_forcing_binding(product['manifest'], result['spatialVersion'], result_identity)
+    return {'selection': selection, 'scheme': scheme, 'parameter': parameter,
+            'task': {**task, 'result': result, 'request': json.loads(task['request'])},
+            'product': product, 'resultIdentitySHA256': digest(result_identity),
+            'schemePayloadSHA256': digest(payload), 'parameterPayloadSHA256': digest(parameter_payload)}
+
+
+def verify_business_forcing_binding(manifest, calculation_version, identity):
+    """Verify the recorded forcing identity and aggregated spatial lineage."""
+    if identity.get('inputSHA256') is not None:
+        if identity['inputSHA256'] != manifest.get('dataSHA256'):
+            raise ValueError('业务方案的气象输入摘要不同')
+        if manifest.get('spatialVersion') != calculation_version:
+            raise ValueError('业务方案的气象空间版本不同')
+        return
+    # Continuous results identify source grid and transformations; input file
+    # bytes are independently checked against the manifest when seed is copied.
+    from backend import grid_spatial
+    source = grid_spatial.load(manifest['spatialVersion'])
+    calculation = grid_spatial.load(calculation_version)
+    grid_hash = digest(source['grids'])
+    if (not identity.get('forcingGridSHA256') or
+            identity['forcingGridSHA256'] != grid_hash or
+            calculation.get('forcingGridVersion', digest(calculation['grids'])) != grid_hash or
+            not identity.get('forcingTransformationSHA256') or
+            identity['forcingTransformationSHA256'] != manifest.get('transformationSHA256') or
+            digest(manifest.get('lakePrecipitationCorrection')) != manifest.get('transformationSHA256') or
+            identity.get('landForcingTransformationSHA256') != manifest.get('landTransformationSHA256') or
+            (manifest.get('landTransformationSHA256') is not None and
+             digest(manifest.get('landPrecipitationCorrection')) != manifest.get('landTransformationSHA256'))):
+        raise ValueError('业务方案气象格网或降水处理身份不一致')
 
 
 def seed_registry(source, target, release, task):
@@ -139,19 +216,25 @@ def seed_registry(source, target, release, task):
     return revision_id
 
 
-def build_seed(source_workspace, output, standard_only=True):
+def build_seed(source_workspace, output, standard_only=True, business_scheme_id=None):
     source = ReadOnlySource(source_workspace)
     output = Path(output).resolve()
     if output.exists() and any(output.iterdir()):
         raise ValueError('种子目标非空，请指定新的空目录，不覆盖既有资料')
     release, item, task, product = release_selection(source)
+    selected_business = business_default(source, business_scheme_id)
     from backend.release_runtime import _packaged_observations
     expected_observation_sha=task['result'].get('identity',{}).get('observationSHA256')
     frozen_observation=_packaged_observations(task['id'],expected_observation_sha)
     required_sources=frozen_observation['sources'] if frozen_observation is not None else []
     target = Database(output)
-    sources = copy_observations(source, target,required_sources)
+    sources = copy_observations(source, target, required_sources, include_all_sources=bool(selected_business))
     products = [product] if standard_only else source.items('input_products')
+    if selected_business:
+        business_product = selected_business['product']
+        by_id = {row['id']: row for row in products}
+        by_id[business_product['id']] = business_product
+        products = list(by_id.values())
     for selected in products:
         origin = within(source.workspace/'inputs/products',selected['id'])
         data = within(origin,selected['manifest']['data'])
@@ -163,24 +246,57 @@ def build_seed(source_workspace, output, standard_only=True):
         with target.connect() as connection:
             connection.execute('INSERT INTO input_products VALUES(?,?,?,?)',
                                (selected['id'],selected['name'],selected['created_at'],canonical(selected['manifest'])))
+    if selected_business:
+        selection = selected_business['selection']
+        with target.connect() as connection:
+            connection.execute('INSERT INTO schemes VALUES(?,?,?,?)',
+                               (selected_business['scheme']['id'], selected_business['scheme']['name'],
+                                selected_business['scheme']['created_at'], canonical(selected_business['scheme']['payload'])))
+            connection.execute('INSERT INTO parameter_versions VALUES(?,?,?,?)',
+                               (selected_business['parameter']['id'], selected_business['parameter']['name'],
+                                selected_business['parameter']['created_at'], canonical(selected_business['parameter']['payload'])))
+            connection.execute('INSERT INTO settings VALUES(?,?)',
+                               ('business-adopted-scheme-v1', canonical(selection)))
+            connection.execute('INSERT INTO settings VALUES(?,?)',
+                               ('current-model-forcing', canonical({'inputId':selected_business['product']['id'],
+                                'source':'packaged-business-default'})))
+            connection.execute('INSERT INTO settings VALUES(?,?)',
+                               ('scheme-purpose:'+selection['familyId'], canonical('business')))
+            connection.execute('INSERT INTO audit(at,action,payload) VALUES(?,?,?)',
+                               (now(), 'business.package-seed', canonical({'schemeId': selection['schemeId'],
+                                'parameterId': selection['parameterId'], 'resultId': selection['resultId']})))
     revision_id = seed_registry(source,target,release,task)
     from backend.release_registry import current
     if current(source)['id'] != release['id']:
         raise ValueError('生成期间默认发布变化，禁止激活本次种子')
     counts = target.summary()['counts']
-    if any(counts[name] for name in ('tasks','states','parameter_versions')) or target.items('schemes'):
+    expected_business_count = 1 if selected_business else 0
+    if (counts['tasks'] or counts['states'] or counts['parameter_versions'] != expected_business_count or
+            len(target.items('schemes')) != expected_business_count):
         raise ValueError('种子含开发任务或研究方案')
     with target.connect() as connection:
         connection.execute('PRAGMA wal_checkpoint(TRUNCATE)')
         if connection.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
             raise ValueError('种子数据库完整性检查失败')
+    business_report = None
+    if selected_business:
+        selection = selected_business['selection']
+        business_report = {'schemeId': selection['schemeId'], 'familyId': selection['familyId'],
+                           'parameterId': selection['parameterId'], 'resultId': selection['resultId'],
+                           'name': selection.get('name') or selected_business['scheme']['payload'].get('name'),
+                           'inputId': selected_business['product']['id'],
+                           'spatialVersion': selected_business['task']['result']['spatialVersion'],
+                           'resultIdentitySHA256': selected_business['resultIdentitySHA256'],
+                           'schemePayloadSHA256': selected_business['schemePayloadSHA256'],
+                           'parameterPayloadSHA256': selected_business['parameterPayloadSHA256'],
+                           'inputManifestSHA256': digest(selected_business['product']['manifest'])}
     write_json(target.workspace/'seed-report.json',{'schemaVersion':2,'createdAt':now(),'projectId':'selinco','counts':counts,
                'databaseSHA256':sha_file(target.path),'standardOnly':standard_only,'release':{**release,'schemeRevisionId':revision_id},
                'resultId':task['id'],'resultIdentity':task['result']['identity'],'resultFiles':item['files'],
                'defaultInputId':product['id'],'inputManifest':product['manifest'],'spatialVersion':task['result']['scheme']['spatialVersion'],
                'observationSources':sources,'observationSnapshotPurpose':'current-query-ledger; frozen-result-evaluation-unchanged',
                'frozenObservationSHA256':digest(frozen_observation) if frozen_observation is not None else None,
-               'frozenObservationRequiredSourceCount':len(required_sources),
+               'frozenObservationRequiredSourceCount':len(required_sources),'businessDefault':business_report,
                'publicNetcdfOriginalsIncluded':False,'researchTasksIncluded':False,
                'scientificStatus':'protected-legacy' if not release.get('admissionPassed') else 'archived-release-evidence'})
     return target.workspace
@@ -193,10 +309,12 @@ def main():
     parser.add_argument('--activate', action='store_true')
     parser.add_argument('--source-workspace', type=Path, default=WORKSPACE)
     parser.add_argument('--standard-only', action='store_true', default=True, help='仅复制当前发布成果冻结输入（默认行为）')
+    parser.add_argument('--business-scheme-id', help='将当前已采用的这一条业务方案、参数和驱动加入发行种子')
     args = parser.parse_args()
     if args.activate and (ROOT/'seed').resolve() not in args.output.resolve().parents:
         raise ValueError('激活种子必须位于本工程seed目录')
-    output = build_seed(args.source_workspace,args.output,standard_only=args.standard_only)
+    output = build_seed(args.source_workspace,args.output,standard_only=args.standard_only,
+                        business_scheme_id=args.business_scheme_id)
     if args.activate:
         write_json(ROOT / 'seed/current.json', {'directory': output.relative_to(ROOT / 'seed').as_posix()})
     print(output)

@@ -62,7 +62,7 @@ function initialDisplay(d){
 }
 const currentResults=computed(()=>props.detail?.request?.calibrationConfigurationSHA256&&props.detail.request.calibrationConfigurationSHA256===executable.value?.configurationSHA256?finalParameters.value:selectedScheme.value?.payload?.parameters||{})
 const continuous=computed(()=>draft.value?.twoStage?.selectionMode==='continuous-dual')
-async function showHistory(){historyOpen.value=!historyOpen.value;if(historyOpen.value){try{allHistory.value=(await api('tasks?includeExperiments=true')).tasks}catch(e){error.value=e.message}}}
+async function showHistory(){historyOpen.value=!historyOpen.value;if(historyOpen.value){try{allHistory.value=(await api('tasks')).tasks}catch(e){error.value=e.message}}}
 function useFinalAsInitial(){
  if(draft.value.twoStage.mode==='lake'){
   const value=currentResults.value.lakeCoefficient??draft.value.parameters.lakeCoefficient
@@ -231,7 +231,7 @@ async function showReplayHistory(){
  if(!replayHistoryOpen.value)return
  replayHistoryLoading.value=true;error.value=''
  const source=props.detail?.request?.replay?.sourceTaskId||props.detail?.id
- try{const all=await api('tasks?includeExperiments=true');replayHistory.value=(all.tasks||[]).filter(t=>t.kind==='calibration-replay'&&(t.request?.replay?.sourceTaskId||t.request?.replaySourceTaskId)===source&&!t.trashed)}
+ try{const all=await api('tasks');replayHistory.value=(all.tasks||[]).filter(t=>t.kind==='calibration-replay'&&(t.request?.replay?.sourceTaskId||t.request?.replaySourceTaskId)===source&&!t.trashed)}
  catch(e){error.value=e.message}finally{replayHistoryLoading.value=false}
 }
 async function openReplay(){
@@ -273,7 +273,7 @@ onBeforeUnmount(()=>{disposed=true;clearInterval(timer);progressTicket++;replayT
 <template>
  <section class="panel calibration-workbench" :data-coverage-ready="!!data">
   <div class="calibration-heading">
-   <div class="calibration-heading-main"><div class="calibration-heading-meta"><span>模型方案与率定</span><span class="scheme-status" :class="{adopted:schemeId===boot.currentBusiness?.schemeId}">{{!schemeId?'新方案':schemeId===boot.currentBusiness?.schemeId?'当前采用':'我的方案'}}</span></div><h2>{{draft?.name||currentName}}</h2><p>杜加流量率定 <span>→</span> 流量与湖位联合优选 <span>→</span> 连续模拟</p></div>
+   <div class="calibration-heading-main"><div class="calibration-heading-meta"><span>模型方案与率定</span><span class="scheme-status" :class="{adopted:schemeId===boot.currentBusiness?.schemeId}">{{!schemeId?'新方案':schemeId===boot.currentBusiness?.schemeId?'当前最佳':'我的方案'}}</span></div><h2>{{draft?.name||currentName}}</h2><p>杜加流量率定 <span>→</span> 流量与湖位联合优选 <span>→</span> 连续模拟</p></div>
    <div class="calibration-save"><span :class="{unsaved:dirty}">{{dirty?'有未保存的修改':'设置已保存'}}</span><button class="primary" :disabled="locked||!dirty" @click="saveOnly">保存方案</button></div>
   </div>
   <div class="calibration-toolbar"><div class="scheme-tools"><button :disabled="locked" @click="fresh">＋ 新建方案</button><button :disabled="locked||!draft" @click="duplicate">复制方案</button><button :disabled="locked" @click="managerOpen=true">管理方案</button></div><button class="link" @click="showHistory">{{historyOpen?'收起计算记录':'计算记录'}} <span aria-hidden="true">↗</span></button></div>

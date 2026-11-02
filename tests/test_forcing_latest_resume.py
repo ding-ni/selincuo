@@ -255,7 +255,10 @@ class ForcingCommitTests(TestCase):
         base = {'id': 'base', 'start': '2022-12-01T09:00:00', 'end': '2026-10-21T07:00:00',
                 'spatialVersion': 'source', 'lakePrecipitationCorrection': {'factor': 0.5}}
         merged = {**base, 'id': 'merged'}
-        db = SimpleNamespace(workspace=workspace, items=lambda _: [{'manifest': base}])
+        corrected = {**merged, 'id': 'corrected', 'precipitationCorrectionUpdate': {
+            'method': 'automatic-warm-rain-reestimate-v1'}}
+        db = SimpleNamespace(workspace=workspace, items=lambda _: [{'id': 'base', 'manifest': base},
+            {'id': 'corrected', 'manifest': corrected}])
         meta = {'catalogUpdated': 'new', 'variables': ['2m_temperature', 'total_precipitation',
                 'potential_evaporation'], 'availableStartUTC': '1981-01-01T00:00:00Z',
                 'availableEndUTC': '2026-10-31T23:00:00Z'}
@@ -299,7 +302,10 @@ class ForcingCommitTests(TestCase):
              patch('requests.get', return_value=response), \
              patch('backend.operational_scheme.definition', return_value=definition), \
              patch('backend.forcing.register_era5', return_value={'id': 'fresh'}) as register, \
-             patch('backend.forcing_revisions.merge_products', return_value=merged):
+             patch('backend.forcing_revisions.merge_products', return_value=merged), \
+             patch('backend.precipitation_updates.refresh', return_value={'status':'updated',
+                   'inputId':'corrected','sourceInputId':'merged','updatedFactors':4,
+                   'reusedFactors':0,'message':'updated'}) as correction:
             latest.acquire_latest(db, start_date='2022-12-01', end_date='2022-12-02')
         client.retrieve.assert_called_once()
         files = list(folder.glob('*.nc'))
@@ -307,6 +313,7 @@ class ForcingCommitTests(TestCase):
         catalogs = {read_json(p.with_suffix('.provenance.json'))['catalog']['catalogUpdated']: p for p in files}
         self.assertEqual(set(catalogs), {'old', 'new'})
         self.assertEqual(register.call_args.args[0], [catalogs['new']])
+        correction.assert_called_once_with(db,'merged',activate=False)
 
     def test_stop_before_and_after_commit_have_consistent_results(self):
         from backend.database import Database
@@ -362,12 +369,14 @@ class ForcingCommitTests(TestCase):
                     jobs.close()
 
     @patch.object(latest, '_local_candidate', return_value=((Path('verified-local.nc'), {}), False))
-    def test_acquisition_reuses_source_and_passes_corrected_base_to_merge(self, find_local):
+    def test_acquisition_reuses_source_and_reestimates_correction_after_merge(self, find_local):
         base = {'id': 'base', 'start': '2022-12-01T09:00:00', 'end': '2026-10-21T07:00:00',
                 'spatialVersion': 'source', 'lakePrecipitationCorrection': {'factor': 0.5}}
         merged = {**base, 'id': 'merged'}
+        corrected = {**merged, 'id': 'corrected', 'precipitationCorrectionUpdate': {
+            'method': 'automatic-warm-rain-reestimate-v1'}}
         workspace = Path(tempfile.mkdtemp(prefix='selinco-reuse-check-'))
-        db = SimpleNamespace(workspace=workspace, items=lambda _: [{'manifest': base}])
+        db = SimpleNamespace(workspace=workspace, items=lambda _: [{'id':'corrected','manifest':corrected}])
         source = Path('verified-local.nc')
         client = SimpleNamespace(client=SimpleNamespace(get_jobs=Mock()), retrieve=Mock())
         meta = {'catalogUpdated': 'test', 'variables': ['2m_temperature', 'total_precipitation',
@@ -383,16 +392,22 @@ class ForcingCommitTests(TestCase):
              patch('cdsapi.Client', return_value=client), \
              patch('backend.operational_scheme.definition', return_value=definition), \
              patch('backend.forcing.register_era5', return_value={'id': 'fresh'}) as register, \
-             patch('backend.forcing_revisions.merge_products', return_value=merged) as merge:
+             patch('backend.forcing_revisions.merge_products', return_value=merged) as merge, \
+             patch('backend.precipitation_updates.refresh', return_value={'status':'updated',
+                   'inputId':'corrected','sourceInputId':'merged','updatedFactors':4,
+                   'reusedFactors':0,'message':'updated'}) as correction:
             result = latest.acquire_latest(db, start_date='2022-12-01', end_date='2022-12-02')
         client.retrieve.assert_not_called()
         self.assertEqual(register.call_args.args[0], [source])
         merge.assert_called_once_with(db, 'base', 'fresh')
-        self.assertEqual(result['manifest']['lakePrecipitationCorrection'], base['lakePrecipitationCorrection'])
+        correction.assert_called_once_with(db,'merged',activate=False)
+        self.assertEqual(result['inputId'],'corrected')
+        self.assertEqual(result['manifest']['precipitationCorrectionUpdate']['method'],
+                         'automatic-warm-rain-reestimate-v1')
 
 
 class ContinuousInputMergeTests(TestCase):
-    def test_backfill_keeps_correction_and_parent_unchanged_and_rejects_gap(self):
+    def test_backfill_invalidates_stale_correction_and_keeps_parent_unchanged(self):
         from backend.common import ROOT, canonical, digest, now, read_json, sha_file, write_json
         from backend.database import Database
         from backend.forcing import load_input
@@ -430,8 +445,8 @@ class ContinuousInputMergeTests(TestCase):
         _, arrays = load_input(db, merged['id'])
         self.assertEqual(arrays['precipitation'][:, 0].tolist(), list(range(8)))
         self.assertEqual(merged['revisionSelection']['changedHistoricalHours'], 0)
-        self.assertEqual(merged['lakePrecipitationCorrection'], correction)
-        self.assertEqual(merged['transformationSHA256'], digest(correction))
+        self.assertNotIn('lakePrecipitationCorrection', merged)
+        self.assertNotIn('landPrecipitationCorrection', merged)
         self.assertEqual(sha_file(workspace / 'inputs/products/base/forcing.npz'), original['dataSHA256'])
         self.assertEqual(merge_products(db, 'base', 'early')['id'], merged['id'])
         product('gap', '2022-12-30T00:00:00', [0, 1])

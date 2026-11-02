@@ -1,0 +1,49 @@
+{
+  "version": "0.13.0",
+  "setup": {
+    "path": "F:\\色林错预警预报平台\\releases\\色林错预警预报平台-v0.13.0-Setup.exe",
+    "bytes": 996976681,
+    "sha256": "d534295a58765a6f10f406b92d67bcbc0d75ae8a87f24cb4a232d055ed400d18"
+  },
+  "defaultResultId": "JOB-05c3f62282ce4239aed1",
+  "packageFiles": 9222,
+  "packageBytes": 1638255287,
+  "observations": 59119,
+  "rawExcelSources": 33,
+  "businessSchemes": 1,
+  "portableVerification": {
+    "passed": true,
+    "freshCounts": {
+      "input_products": 2,
+      "observations": 59119,
+      "parameter_versions": 1,
+      "sources": 33,
+      "states": 0,
+      "stations": 8,
+      "tasks": 0
+    },
+    "checks": [
+      "clean-seed",
+      "business-home-and-protected-science-release-separated",
+      "single-business-scheme-and-parameter",
+      "best-result-viewable-with-zarr",
+      "read-only-business-simulation-plan",
+      "business-scheme-short-simulation",
+      "duplicate-request-idempotency",
+      "water-balance",
+      "background-CSV-export-and-artifact-reuse",
+      "saved-state-continuation",
+      "background-backup-artifact-download",
+      "background-independent-directory-restore",
+      "business-adoption-and-protected-release-restored"
+    ],
+    "dailyRows": 3577,
+    "exportRows": 3577,
+    "routingBalanceMaxErrorM3": 7.748603820800781e-07
+  },
+  "runtimeSelfCheck": true,
+  "installed": false,
+  "priorInstallDatabaseUnchanged": true,
+  "installationFailure": "Sandbox denied HKCU uninstall registry key; isolated installer rolled back. Escalation not executed because approval review service returned 503.",
+  "screenshots": "not executed: browser subprocess blocked and approval review unavailable"
+}

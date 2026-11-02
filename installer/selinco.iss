@@ -1,6 +1,6 @@
 #define AppName "色林错预警预报平台"
 #ifndef AppVersion
-  #define AppVersion "0.12.0"
+  #define AppVersion "0.13.2"
 #endif
 #ifndef AppSource
   #define AppSource "..\build\verified-dist\SelincoPlatform"
@@ -31,7 +31,7 @@ UninstallFilesDir={app}\uninstall
 UninstallDisplayIcon={app}\SelincoPlatform.exe
 CloseApplications=yes
 [Files]
-Source: "{#AppSource}\*"; DestDir: "{app}"; Excludes: "\workspace\*,\restored-workspaces\*,\config\active-workspace.json"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#AppSource}\*"; DestDir: "{app}"; Excludes: "\workspace\*,\workspace-business\*,\restored-workspaces\*"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "start_platform.ps1"; DestDir: "{app}\installer"; Flags: ignoreversion
 [Tasks]
 #ifndef VerificationInstall

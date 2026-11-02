@@ -212,4 +212,5 @@ def commit(db, request):
             sources.append(identifier)
         conn.execute('INSERT INTO audit(at,action,payload) VALUES(?,?,?)',
                      (now(), 'observations.native-increment', canonical({'sources': sources, **report['counts']})))
-    return {'status': 'imported' if sources else 'unchanged', 'sources': sources, **report['counts']}
+    return {'status': 'imported' if sources else 'unchanged', 'sources': sources,
+            'variables': sorted({variable for _, _, _, variable, _ in parsed}), **report['counts']}

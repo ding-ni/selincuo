@@ -1,0 +1,33 @@
+{
+  "version": "0.13.4",
+  "installedDirectory": "F:\\色林错预警预报平台\\运行程序",
+  "port": 8882,
+  "activeWorkspace": "F:\\色林错预警预报平台\\运行程序\\workspace-business",
+  "adoptedResultId": "JOB-05c3f62282ce4239aed1",
+  "apiChecks": {
+    "healthVersion": "0.13.4",
+    "bootstrapPublishedResults": 1,
+    "bootstrapSchemes": 1,
+    "normalTasks": 0,
+    "schemeManagementEntries": 1,
+    "schemeName": "色林错连续模拟方案",
+    "flowObservationDays": 440,
+    "lakeObservationDays": 1305,
+    "publishedResultDetail": "succeeded",
+    "businessContext": "current-adopted"
+  },
+  "browserCheck": {
+    "cleanCalibrationPageLoaded": true,
+    "missingRecordMessage": false,
+    "oldTabMayRetainPriorMessage": true
+  },
+  "screenshotComparison": {
+    "userScreenshotLocalTime": "2026-11-02T16:40:00",
+    "installedExecutableLocalLastWrite": "2026-11-03T01:43:26",
+    "screenshotsPrecedeCurrentInstall": true
+  },
+  "historicalWorkspacePreserved": true,
+  "modelRecalculated": false,
+  "observationsReimported": false,
+  "forcingRedownloaded": false
+}

@@ -121,7 +121,9 @@ class TwoStageTests(unittest.TestCase):
             'partitionParameters':{},'parameterTransfer':{'mode':'duja-shared'},
             'search':{'keys':[]},'start':'2020-01-01T00:00:00','end':'2026-01-01T00:00:00',
             'inputId':'forcing','spatialVersion':'spatial','routingMode':'source-separated'}
+        from backend.two_stage_calibration import model_identity
         base={**deepcopy(value),'end':'2026-10-21T00:00:00',
+              'identity':{'modelImplementation':model_identity()},
               'parameterSources':{'hydrology':{'method':'Duja-flow-all-data-refit'}}}
         db=SimpleNamespace(items=lambda _: [{'id':'forcing','manifest':{'end':'2026-10-21T07:00:00'}}],
             setting=lambda *_: {'resultId':'approved'},task=lambda _: {'id':'approved','status':'succeeded','result':base})

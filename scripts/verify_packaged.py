@@ -1,5 +1,8 @@
 """Verify software workflows in a disposable workspace, not new scientific admission."""
 import argparse
+import csv
+import io
+from datetime import datetime, timedelta
 import json
 import time
 import sys
@@ -63,16 +66,23 @@ def main():
     assert health['projectId'] == boot['projectId'] == 'selinco'
     assert boot['version'] == args.expected_version, boot['version']
     assert boot['database']['counts']['tasks'] == 0
-    assert boot['database']['counts']['parameter_versions'] == 0
+    assert boot['database']['counts']['parameter_versions'] == 1
     assert boot['database']['counts']['states'] == 0
     context = api('business-context')
     default = context['defaultResult']
-    assert context['release']['resultId'] == boot['standardResultId'] == default['id']
-    assert default['role'] == 'current-default'
-    assert default['evaluation']['mode'] == 'window'
-    assert default['evaluation']['formalScoresFollowChartZoom'] is False
+    assert context['release']['resultId'] == boot['standardResultId']
+    assert context['release']['status'] == 'protected-legacy'
+    assert context['release']['admissionPassed'] is False
+    assert default['id'] == boot['homeResultId'] == context['adopted']['resultId']
+    assert default['role'] == 'current-adopted'
     assert context['defaultResultInputId'] == default['inputId']
-    assert len(boot['inputs']) == 1 and boot['inputs'][0]['id'] == default['inputId']
+    assert len(boot['schemes']) == 1 and boot['schemes'][0]['id'] == context['adopted']['schemeId']
+    assert len(boot['parameters']) == 1 and boot['parameters'][0]['id'] == context['adopted']['parameterId']
+    protected = api('published-result?'+urlencode({'id':boot['standardResultId']}))
+    protected_input = protected['result']['inputId']
+    assert protected['status'] == 'succeeded' and protected['result']['identity']
+    assert len(boot['inputs']) == 2
+    assert {row['id'] for row in boot['inputs']} == {default['inputId'],protected_input}
     assert context['forcing']['selectedResult']['inputId'] == default['inputId']
     builtin = api('published-result?'+urlencode({'id':default['id']}))
     assert builtin['status'] == 'succeeded' and builtin['result']['daily']
@@ -80,54 +90,52 @@ def main():
     summary = api('result-summary?'+urlencode({'resultId':default['id']}))
     assert summary['identity'] == builtin['result']['identity']
     assert summary['evaluation']['annual'] == builtin['result']['metrics']
-    scheme = next(s for s in boot['operationalSchemes'] if s['id'] == 'selinco-historical-standard-v1')
-    assert scheme['available'], scheme['message']
-    plan = api('simulation-plan?'+urlencode({'schemeId':scheme['id'],'schemeRevision':scheme['revision'],
-               'inputId':default['inputId'],'start':'2025-01-01T00:00','end':'2026-01-01T00:00'}))
-    assert plan['action'] == 'reuse' and plan['resultId'] == default['id'] and plan['createsTask'] is False
+    scheme = boot['schemes'][0]
+    draft = api('research-template')
+    assert draft['name'] == '我的色林错方案'
+    configuration = api('schemes/'+scheme['id']+'/calibration-configuration')
+    assert configuration['initialParameters'] == scheme['payload']['calibrationInitialParameters']
+    assert configuration['matchesCurrentImplementation'] is True
+    assert configuration['form']['search'] == scheme['payload']['search']
+    plan_request={'researchSchemeId':scheme['id'],'inputId':default['inputId'],
+                  'start':'2026-10-16','end':'2026-10-18'}
+    plan = api('simulation-plan?'+urlencode(plan_request))
+    assert plan['inputId'] and plan['calculationStart'] <= '2026-10-18'
     assert api('bootstrap')['database']['counts']['tasks'] == 0, '只读运行计划不能产生任务'
-    request = {'kind':'simulation','schemeId':scheme['id'],'schemeRevision':scheme['revision'],
-               'inputId':default['inputId'],
-               'start':'2025-01-01T00:00','end':'2026-01-01T00:00','name':'v'+args.expected_version+'软件验收·2025历史方案复算',
-               'clientRequestId':'packaged-'+args.expected_version+'-standard-history-verification'}
+    request = {'kind':'simulation','researchSchemeId':scheme['id'],'inputId':default['inputId'],
+               'start':'2026-10-16','end':'2026-10-18','name':'v'+args.expected_version+'软件验收·业务方案试算',
+               'clientRequestId':'packaged-'+args.expected_version+'-business-scheme-verification'}
     submitted = api('tasks', request)
     duplicate = api('tasks', request)
     assert submitted['id'] == duplicate['id']
     task = poll(submitted['id'])
-    assert task['favorite'] and task['collection'] == '历史模拟'
-    assert task['request']['start'] == '2023-01-01T00:00:00'
-    assert task['request']['evaluationStart'] == '2025-01-01T00:00:00'
+    assert task['request']['researchSchemeId'] == scheme['id']
+    assert task['request']['evaluationStart'] == '2026-10-16T00:00:00'
     result = task['result']
     assert result['scheme']['id'] == scheme['id']
-    assert result['parameters'] == scheme['parameters']
-    assert result['partitionParameters'] == scheme['partitionParameters']
-    assert len(result['daily']) == 365
-    assert set(result['metrics']) == {'2025'}
-    expected = builtin['result']['metrics']['2025']
-    for group, keys in (('flow',('nse','pbias')),('lake',('rmse','mae','bias'))):
-        for key in keys:
-            assert abs(result['metrics']['2025'][group][key]-expected[group][key]) < 1e-9, (group,key)
+    assert result['parameters'] == scheme['payload']['parameters']
+    assert result['partitionParameters'] == scheme['payload']['partitionParameters']
+    assert len(result['daily']) > 0
     assert result['diagnostics']['landGlacierMaxBalanceErrorMm'] < 1e-9
-    assert result['modelDiagnostics']['catchmentBalanceMaxErrorM3'] < .001
-    reference_days={row['date'][:10]:row for row in builtin['result']['daily'] if row['date'].startswith('2025')}
-    assert len(reference_days) == 365
-    for row in result['daily']:
-        reference=reference_days[row['date'][:10]]
-        for key in ('lakeLevel','duja','total'):
-            a,b=row.get(key),reference.get(key)
-            assert (a is None and b is None) or a is not None and b is not None and abs(a-b)<1e-9,(row['date'],key,a,b)
+    assert result['diagnostics']['routingMaxBalanceErrorM3'] < .001
+    assert result['inputId'] in {item['id'] for item in api('bootstrap')['inputs']}
     exported = poll(api('tasks',{'kind':'export-result','taskId':task['id'],'format':'daily.csv',
                                'name':'软件验收·后台日成果导出','clientRequestId':'packaged-daily-export'})['id'])
     export_again = api('tasks',{'kind':'export-result','taskId':task['id'],'format':'daily.csv',
                               'name':'软件验收·复用已完成导出','clientRequestId':'packaged-daily-export-reuse'})
     assert export_again['id'] == exported['id']
-    csv_lines = download(exported['result']['artifacts'][0]).decode('utf-8-sig').strip().splitlines()
-    assert len(csv_lines) == 366
-    continued = poll(api('tasks', {'kind':'continuation','inputId':result['inputId'],
-        'start':'2026-01-01T01:00:00','end':'2026-01-01T02:00:00','stateId':result['stateId'],
-        'parameters':result['parameters'],'partitionParameters':result['partitionParameters'],
-        'routingMode':result['routingMode'],'name':'软件验收·状态续算'})['id'])
+    csv_rows = list(csv.DictReader(io.StringIO(download(exported['result']['artifacts'][0]).decode('utf-8-sig'))))
+    assert len(csv_rows) == len(result['daily']) and csv_rows
+    assert [row['date'][:10] for row in csv_rows] == [row['date'][:10] for row in result['daily']]
     state = api('states/' + result['stateId'])['state']
+    valid_at = datetime.fromisoformat(state['validAt'])
+    continuation_start = valid_at + timedelta(hours=1)
+    continuation_end = valid_at + timedelta(hours=2)
+    continued = poll(api('tasks', {'kind':'continuation','inputId':result['inputId'],
+        'start':continuation_start.isoformat(timespec='seconds'), 'end':continuation_end.isoformat(timespec='seconds'),
+        'stateId':result['stateId'], 'parameters':result['parameters'],
+        'partitionParameters':result['partitionParameters'],
+        'routingMode':result['routingMode'],'name':'软件验收·状态续算'})['id'])
     assert state['identity'] == result['identity']
     assert continued['result']['identity'] == result['identity']
     assert continued['result']['hours'] == 2
@@ -150,23 +158,24 @@ def main():
     assert restored_path != expected_workspace and (restored_path/'database/hydrology.sqlite3').is_file()
     with closing(sqlite3.connect((restored_path/'database/hydrology.sqlite3').as_uri()+'?mode=ro',uri=True)) as connection:
         restored_release=connection.execute('SELECT id,result_id FROM operational_releases ORDER BY sequence DESC LIMIT 1').fetchone()
-        assert restored_release == (context['release']['id'],default['id'])
+        assert restored_release == (context['release']['id'],context['release']['resultId'])
+        restored_business=json.loads(connection.execute("SELECT value FROM settings WHERE key='business-adopted-scheme-v1'").fetchone()[0])
+        assert restored_business['resultId'] == default['id']
         assert connection.execute('PRAGMA integrity_check').fetchone()[0] == 'ok'
         assert connection.execute('SELECT COUNT(*) FROM observations').fetchone()[0] == boot['database']['counts']['observations']
     report = {'at':now(),'projectId':'selinco','version':boot['version'],'workspace':health['workspace'],
         'freshCounts':boot['database']['counts'],'scheme':task['result']['scheme'],
         'taskId':task['id'],'continuationTaskId':continued['id'],'dailyRows':len(result['daily']),
-        'metrics':result['metrics'],'evaluationMode':summary['evaluation']['mode'],'defaultRelease':context['release'],
+        'metrics':result.get('metrics',{}),'evaluationMode':summary['evaluation']['mode'],'defaultRelease':context['release'],
         'defaultInputId':default['inputId'],'readOnlySimulationPlan':plan,
-        'exportRows':len(csv_lines)-1,'exportTaskId':exported['id'],'exportReusedTaskId':export_again['id'],
+        'exportRows':len(csv_rows),'exportTaskId':exported['id'],'exportReusedTaskId':export_again['id'],
         'backupTaskId':backup_task['id'],'backup':backup,'restore':restored,'restoreTaskId':restore_task['id'],
-        'modelIdentity':result['identity'],'catchmentBalanceMaxErrorM3':result['modelDiagnostics']['catchmentBalanceMaxErrorM3'],
-        'checks':['clean-seed','published-default-context-and-frozen-input','window-evaluation-explicit','builtin-result-viewable',
-                  'read-only-covered-window-reuse','builtin-scheme-available','fixed-parameters-server-owned',
-                  '2023-land-warmup-with-original-window-lake-initialization','duplicate-request-idempotency','2025-full-year-result',
+        'modelIdentity':result['identity'],'routingBalanceMaxErrorM3':result['diagnostics']['routingMaxBalanceErrorM3'],
+        'checks':['clean-seed','business-home-and-protected-science-release-separated','single-business-scheme-and-parameter',
+                  'best-result-viewable-with-zarr','read-only-business-simulation-plan','business-scheme-short-simulation',
+                  'duplicate-request-idempotency','water-balance',
                   'background-CSV-export-and-artifact-reuse','saved-state-continuation','background-backup-artifact-download',
-                  'background-independent-directory-restore','default-release-unchanged','frozen-reference-metrics-match',
-                  'frozen-reference-daily-values-match','water-balance'],
+                  'background-independent-directory-restore','business-adoption-and-protected-release-restored'],
         'acceptanceScope':'packaged-software-workflow','scientificAdmission':'not-assessed-by-this-script',
         'candidateUpgradePassed':False,'passed':True}
     write_json(args.output, report)

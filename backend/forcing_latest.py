@@ -416,8 +416,7 @@ def acquire_latest(db,progress=None,cancelled=lambda:False,start_date=None,end_d
                 record(stage='verified',message='')
                 break
         check()
-        from .forcing import register_era5,register_lake_correction
-        from .operational_scheme import definition
+        from .forcing import register_era5
         # Include historical raw files for accumulated UTC boundary hours; never synthesize a halo.
         if progress:progress(80,'核验新增时段与官方修订，原输入保持冻结')
         # register_era5 publishes its input after processing and then emits its
@@ -433,13 +432,23 @@ def acquire_latest(db,progress=None,cancelled=lambda:False,start_date=None,end_d
         product=merge_products(db,first['id'],fresh['id'])
         record(stage='merged',inputId=product['id'],verifiedEnd=product['end'])
         check()
-        correction=definition().get('inputRequirement',{}).get('lakePrecipitationCorrection')
-        if correction and not product.get('lakePrecipitationCorrection'):
-            product=register_lake_correction(db,product['id'],correction)
-            record(stage='corrected',inputId=product['id'],verifiedEnd=product['end'])
-            check()
-        result={**status,'status':'succeeded','stage':'registered','inputId':product['id'],
-                'verifiedEnd':product['end'],'manifest':product,'downloadedFiles':[p.name for p in downloaded]}
+        from .precipitation_updates import refresh
+        precipitation=refresh(db,product['id'],activate=False)
+        check()
+        if precipitation['status'] in ('updated','unchanged'):
+            selected=next(x['manifest'] for x in db.items('input_products') if x['id']==precipitation['inputId'])
+            record(stage='precipitation-corrected' if precipitation['status']=='updated' else 'precipitation-unchanged',
+                   inputId=selected['id'],verifiedEnd=selected['end'],message=precipitation.get('message',''))
+        else:
+            from .model_forcing import current_product
+            selected=current_product(db)['manifest']
+            precipitation['pendingInputId']=product['id']
+            precipitation['inputId']=selected['id']
+            record(stage='precipitation-pending',inputId=product['id'],verifiedEnd=product['end'],
+                   message=precipitation['message'])
+        result={**status,'status':'succeeded','stage':'registered','inputId':selected['id'],
+                'sourceInputId':product['id'],'precipitationCorrection':precipitation,
+                'verifiedEnd':product['end'],'manifest':selected,'downloadedFiles':[p.name for p in downloaded]}
         if commit:commit(result)
         else:check();record(**{k:v for k,v in result.items() if k not in ('manifest','downloadedFiles')})
         return result
