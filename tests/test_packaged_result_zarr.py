@@ -12,6 +12,54 @@ from scripts.assemble_release import bundle_business_result
 
 
 class PackagedResultZarrTests(unittest.TestCase):
+    def test_published_zarr_exports_npz_into_export_task(self):
+        import numpy as np
+        from backend.grid_storage import Writer
+        from backend.maintenance import artifact_file, export_result
+        with tempfile.TemporaryDirectory(prefix='published-zarr-export-') as tmp:
+            root=Path(tmp);db=Database(root/'workspace')
+            source=root/'published';source.mkdir()
+            writer=Writer(source,2,1,1)
+            writer.put(0,2,{'time':np.array([1,2]),'flow':np.arange(14,dtype=float).reshape(2,7)})
+            writer.finish()
+            identifier='JOB-published'
+            task={'id':identifier,'status':'succeeded','result':{'storageFormat':'zarr-v2','identity':{'inputId':'INPUT-best'}}}
+            output=db.workspace/'tasks/JOB-export';output.mkdir(parents=True)
+            with patch('backend.business_context.result_task',return_value=task), \
+                 patch('backend.business_context.result_folder',return_value=source), \
+                 patch('backend.published_results.catalog',return_value=[{'id':identifier}]), \
+                 patch('backend.published_results.result_file') as published_file:
+                result=export_result(db,{'taskId':identifier,'format':'hourly.npz'},output)
+            published_file.assert_not_called()
+            self.assertFalse((source/'hourly.npz').exists())
+            self.assertEqual(result['artifacts'][0]['storage'],'task')
+            self.assertEqual(result['artifacts'][0]['ownerTaskId'],'JOB-export')
+            path=artifact_file(db,{'status':'succeeded','result':result},'hourly.npz')
+            self.assertEqual(path,output/'hourly.npz')
+            with np.load(path,allow_pickle=False) as values:
+                np.testing.assert_array_equal(values['time'],[1,2])
+                np.testing.assert_array_equal(values['flow'],np.arange(14,dtype=float).reshape(2,7))
+
+    def test_published_result_queries_skip_archive_wide_chunk_hashing(self):
+        from backend.result_query import _open_source
+        identifier='JOB-read-best'
+        task={'id':identifier,'status':'succeeded','result':{'storageFormat':'zarr-v2'}}
+        item={'id':identifier,'directory':identifier,'files':{'hourly-manifest.json':{}}}
+        with tempfile.TemporaryDirectory(prefix='published-result-read-') as tmp:
+            root=Path(tmp)
+            checkpoint=root/'final-state.json';write_json(checkpoint,{'identity':{'inputId':'INPUT-best'}})
+            zarr=root/identifier/'hourly.zarr'
+            with patch('backend.published_results.catalog',return_value=[item]), \
+                 patch('backend.published_results.detail',return_value=task), \
+                 patch('backend.published_results.result_file',return_value=checkpoint), \
+                 patch('backend.published_results.hourly_zarr',return_value=zarr) as published_zarr, \
+                 patch('backend.grid_storage.open_arrays',return_value={'time':[1,2]}) as open_arrays:
+                loaded_task,arrays,state=_open_source(None,identifier)
+        published_zarr.assert_called_once_with(identifier,verify_files=False)
+        self.assertIs(loaded_task,task)
+        self.assertEqual(arrays['time'],[1,2])
+        self.assertEqual(state,{'identity':{'inputId':'INPUT-best'}})
+
     def test_adopted_task_is_frozen_as_hash_checked_static_zarr_result(self):
         with tempfile.TemporaryDirectory(prefix='packaged-result-zarr-') as tmp:
             root=Path(tmp);workspace=root/'workspace';db=Database(workspace)

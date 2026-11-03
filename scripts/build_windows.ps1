@@ -17,7 +17,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Frontend build failed' }
 Pop-Location
 $buildRun = Get-Date -Format 'yyyyMMdd-HHmmss'
 $distributionRoot = Join-Path $projectRoot "build\release-$buildRun"
-& $Python -m PyInstaller --distpath $distributionRoot --workpath build/pyinstaller installer/selinco.spec
+$workPath = Join-Path $distributionRoot 'pyinstaller-work'
+& $Python -m PyInstaller --distpath $distributionRoot --workpath $workPath installer/selinco.spec
 if ($LASTEXITCODE -ne 0) { throw 'PyInstaller failed' }
 $packageSeed = Join-Path $distributionRoot 'package-seed'
 & $Python scripts/make_seed.py --output $packageSeed --business-scheme-id current
@@ -30,6 +31,8 @@ $releaseExe = Join-Path $releaseSource 'SelincoPlatform.exe'
 if ($LASTEXITCODE -ne 0) { throw 'Packaged runtime self-check failed' }
 & (Join-Path $PSScriptRoot 'verify_delivery.ps1') -Application $releaseExe -VerificationRoot (Join-Path $distributionRoot 'portable-verification') -Python $Python -ExpectedVersion $releaseVersion
 if ($LASTEXITCODE -ne 0) { throw 'Packaged workflow verification failed' }
+& $Python -c "import sys; from pathlib import Path; from backend.common import write_json; write_json(Path(sys.argv[1])/'config/active-workspace.json', {'workspace':'workspace-business','purpose':'business-default','seed':'seed/workspace'})" $releaseSource
+if ($LASTEXITCODE -ne 0) { throw 'Restore packaged business workspace pointer failed' }
 & $Python scripts/compile_installer.py --compiler $ISCC --source $releaseSource --version $releaseVersion --verification
 if ($LASTEXITCODE -ne 0) { throw 'Verification installer build failed' }
 $verificationSetup = Join-Path $projectRoot "releases/色林错预警预报平台-v$releaseVersion-Verification-Setup.exe"

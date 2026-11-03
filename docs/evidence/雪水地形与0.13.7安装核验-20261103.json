@@ -1,0 +1,254 @@
+{
+  "version": "0.13.7",
+  "date": "2026-11-03",
+  "installer": {
+    "path": "releases/色林错预警预报平台-v0.13.7-Setup.exe",
+    "bytes": 994064632,
+    "directory": "F:\\色林错预警预报平台\\运行程序",
+    "installation": "succeeded",
+    "log": "build/release-20261103-map-0137/正式覆盖安装.log",
+    "desktopShortcut": "C:/Users/ading/Desktop/色林错预警预报平台.lnk"
+  },
+  "business": {
+    "resultId": "JOB-05c3f62282ce4239aed1",
+    "schemeId": "SCHEME-2c4816223d4b47cfb3cd",
+    "parameterId": "PARAM-1bccaba37f764ddbb89e",
+    "inputId": "INPUT-67a56a9abcc50dc4a9033ab6",
+    "warmupStart": "2017-01-01",
+    "modelRecalculated": false,
+    "forcingRedownloaded": false,
+    "adoptedResultChanged": false
+  },
+  "fixes": [
+    "当前采用的冻结成果作为一条只读计算记录进入列表和详情，保留原始请求、阶段次数及逐日过程。",
+    "日末雪水当量按发布目录识别JOB成果，直接读取冻结逐时状态。",
+    "逐时状态查询不再重新扫描全部历史分块摘要，发行组装阶段仍核验所有分块。",
+    "发行包携带当前三级地形影像、terrain-current.json和presentation.json。",
+    "前端发行仅携带当前Vite清单引用资源，源码历史构建文件保留。"
+  ],
+  "dem": {
+    "original": "slc_dem/slc_dem",
+    "format": "Arc/Info GRID (AIG)",
+    "crs": "EPSG:4326",
+    "width": 5804,
+    "height": 3932,
+    "pixelDegrees": 0.000833333333,
+    "originalUse": "90米相对地形排水归属复核；现有高程带及部分空间关系仍保留既有1公里来源。",
+    "routing": "分区产流、分源线性水库、河道调蓄和滞时；时间步长1小时。",
+    "terrainDisplaySource": "Copernicus GLO-90（3角秒）",
+    "pixelRouting": false
+  },
+  "installedAPI": {
+    "version": "0.13.7",
+    "applicationRoot": "F:\\色林错预警预报平台\\运行程序",
+    "workspace": "F:\\色林错预警预报平台\\运行程序\\workspace-business",
+    "schemeCount": 1,
+    "publishedResultCount": 1,
+    "calculationRecordCount": 1,
+    "resultId": "JOB-05c3f62282ce4239aed1",
+    "resultIdentity": {
+      "effectiveParameterSHA256": "2efd930ba9b1a058ce066b190fbc758dfd64e516aa00f6c6fb42deea40a73384",
+      "forcingGridSHA256": "e0ea22478c85fc3c8c87fe868c15de68516a220632e6d0b11ac943941f63ca3e",
+      "forcingTransformationSHA256": "bd68020214925a91d24667579ff550c1f09e2f7502bf5bf271f03650c6d43fda",
+      "initialHydrologySHA256": "04efc3591bbe5f7c61645642060c5ebd8603ae257a56a9b4e4626ea1ca434882",
+      "initializationSHA256": "dd95d5971015704a2f95d6c5ab08f6143fede91e226d0ed956b9ff266e90c032",
+      "landForcingTransformationSHA256": "081be24a01852ffb7bc3e7a86b01a0f85c32dd49ff7cb147e19ea13124fe0079",
+      "modelFamily": "grid-continuous-v1",
+      "modelImplementation": "add1e581be4154dc22df6ae1a9f6765e2fff8bffd4f6075dfa61107d3bf8c549",
+      "observationProfile": "time-weighted-level-v2-gap6h-cover18h",
+      "observationSnapshotSHA256": "d5871d988ca451820df0508982ce2646b7cb071f0e32ae678d779effb91f2dd9",
+      "parameterSHA256": "a2d7bd99916894ad1cd72f70bb3616bbe3f927838f394e9df657a921e576bfb7",
+      "parameterTransferSHA256": "eb5ba8d49a3966eed999017023c92795c35b5dd2abb4717cf188db8b3b254dd4",
+      "partitionParameterSHA256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "projectId": "selinco",
+      "routingMode": "source-separated",
+      "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6"
+    },
+    "dailyRows": 3580,
+    "calibrationEvaluations": 72609,
+    "snow": {
+      "complete": true,
+      "validAt": "2026-10-21T00:00:00",
+      "units": 31,
+      "minimumMm": 0.0,
+      "maximumMm": 6021.2812779742035,
+      "meanMm": 3.5122722922599734
+    },
+    "terrain": {
+      "source": "Copernicus GLO-90（3角秒）",
+      "images": [
+        {
+          "path": "/spatial/地形展示-f536452f39682ab7/terrain-1200.png",
+          "dimensions": [
+            1200,
+            850
+          ],
+          "bytes": 1776786
+        },
+        {
+          "path": "/spatial/地形展示-f536452f39682ab7/terrain-2400.png",
+          "dimensions": [
+            2400,
+            1700
+          ],
+          "bytes": 6610215
+        },
+        {
+          "path": "/spatial/地形展示-f536452f39682ab7/terrain-4800.png",
+          "dimensions": [
+            4800,
+            3400
+          ],
+          "bytes": 23616398
+        }
+      ]
+    },
+    "sourceDem": "slc_dem/slc_dem",
+    "seedCounts": {
+      "stations": 8,
+      "sources": 33,
+      "observations": 59119,
+      "input_products": 2,
+      "parameter_versions": 1,
+      "tasks": 0,
+      "states": 0
+    },
+    "seconds": {
+      "health": 0.04610290000000006,
+      "bootstrap": 26.9768845,
+      "records": 0.37744670000000013,
+      "recordDetail": 0.3928508000000015,
+      "resultMetadata": 0.2883780000000016,
+      "snowCold": 0.340325,
+      "snowHot": 0.32783449999999803,
+      "terrainIndex": 0.024644999999999584,
+      "terrainImage0": 0.006344599999998479,
+      "terrainImage1": 0.03122059999999749,
+      "terrainImage2": 0.036415999999999116
+    }
+  },
+  "isolatedAPI": {
+    "version": "0.13.7",
+    "applicationRoot": "F:\\色林错预警预报平台\\build\\release-20261103-map-0137\\SelincoPlatform",
+    "workspace": "F:\\色林错预警预报平台\\build\\release-20261103-map-0137\\map-verification\\workspace",
+    "schemeCount": 1,
+    "publishedResultCount": 1,
+    "calculationRecordCount": 1,
+    "resultId": "JOB-05c3f62282ce4239aed1",
+    "resultIdentity": {
+      "effectiveParameterSHA256": "2efd930ba9b1a058ce066b190fbc758dfd64e516aa00f6c6fb42deea40a73384",
+      "forcingGridSHA256": "e0ea22478c85fc3c8c87fe868c15de68516a220632e6d0b11ac943941f63ca3e",
+      "forcingTransformationSHA256": "bd68020214925a91d24667579ff550c1f09e2f7502bf5bf271f03650c6d43fda",
+      "initialHydrologySHA256": "04efc3591bbe5f7c61645642060c5ebd8603ae257a56a9b4e4626ea1ca434882",
+      "initializationSHA256": "dd95d5971015704a2f95d6c5ab08f6143fede91e226d0ed956b9ff266e90c032",
+      "landForcingTransformationSHA256": "081be24a01852ffb7bc3e7a86b01a0f85c32dd49ff7cb147e19ea13124fe0079",
+      "modelFamily": "grid-continuous-v1",
+      "modelImplementation": "add1e581be4154dc22df6ae1a9f6765e2fff8bffd4f6075dfa61107d3bf8c549",
+      "observationProfile": "time-weighted-level-v2-gap6h-cover18h",
+      "observationSnapshotSHA256": "d5871d988ca451820df0508982ce2646b7cb071f0e32ae678d779effb91f2dd9",
+      "parameterSHA256": "a2d7bd99916894ad1cd72f70bb3616bbe3f927838f394e9df657a921e576bfb7",
+      "parameterTransferSHA256": "eb5ba8d49a3966eed999017023c92795c35b5dd2abb4717cf188db8b3b254dd4",
+      "partitionParameterSHA256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "projectId": "selinco",
+      "routingMode": "source-separated",
+      "spatialVersion": "AGG-SPATIAL-90fbdd73db960fdda4a6"
+    },
+    "dailyRows": 3580,
+    "calibrationEvaluations": 72609,
+    "snow": {
+      "complete": true,
+      "validAt": "2026-10-21T00:00:00",
+      "units": 31,
+      "minimumMm": 0.0,
+      "maximumMm": 6021.2812779742035,
+      "meanMm": 3.5122722922599734
+    },
+    "terrain": {
+      "source": "Copernicus GLO-90（3角秒）",
+      "images": [
+        {
+          "path": "/spatial/地形展示-f536452f39682ab7/terrain-1200.png",
+          "dimensions": [
+            1200,
+            850
+          ],
+          "bytes": 1776786
+        },
+        {
+          "path": "/spatial/地形展示-f536452f39682ab7/terrain-2400.png",
+          "dimensions": [
+            2400,
+            1700
+          ],
+          "bytes": 6610215
+        },
+        {
+          "path": "/spatial/地形展示-f536452f39682ab7/terrain-4800.png",
+          "dimensions": [
+            4800,
+            3400
+          ],
+          "bytes": 23616398
+        }
+      ]
+    },
+    "sourceDem": "slc_dem/slc_dem",
+    "seedCounts": {
+      "stations": 8,
+      "sources": 33,
+      "observations": 59119,
+      "input_products": 2,
+      "parameter_versions": 1,
+      "tasks": 0,
+      "states": 0
+    },
+    "seconds": {
+      "health": 0.01750229999999997,
+      "bootstrap": 6.7054265,
+      "records": 0.04521849999999983,
+      "recordDetail": 0.3578740000000007,
+      "resultMetadata": 5.521212500000001,
+      "snowCold": 0.41948269999999965,
+      "snowHot": 0.38613730000000146,
+      "terrainIndex": 4.8949497,
+      "terrainImage0": 0.00781339999999986,
+      "terrainImage1": 0.01455959999999834,
+      "terrainImage2": 0.07144560000000055
+    }
+  },
+  "verification": {
+    "targetedPythonChecks": 18,
+    "testFiles": {
+      "tests/test_dashboard.py": 5,
+      "tests/test_packaged_result_zarr.py": 2,
+      "tests/test_release.py": 10,
+      "backgroundQueueSingleCheck": 1
+    },
+    "frontendBuild": "passed",
+    "emptyOutDir": false,
+    "exeSelfCheck": "passed",
+    "browser": {
+      "result": "地形高程和日末雪水当量均实际切换成功，无缺失计算记录提示。",
+      "screenshots": [
+        "build/release-20261103-map-0137/地形显示.png",
+        "build/release-20261103-map-0137/日末雪水当量.png"
+      ]
+    },
+    "fullSuiteClaim": false
+  },
+  "knownIssues": [
+    {
+      "issue": "安装工作区首页初始化偏慢，首轮请求超过180秒，后续实测26.9768845秒；独立发行验收6.7054265秒。",
+      "evidence": "bootstrap调用成果available检查，遍历6671份逐时文件；两库主要业务数量一致。抽取80份安装文件路径检查耗时4.09秒。尚未取得运行进程调用栈，不将此推断写成已确认的唯一根因。",
+      "status": "未在本轮修改。"
+    },
+    {
+      "issue": "1194像素宽浏览器中的地形图例刻度有换行。",
+      "status": "已记录，未改动本轮地图布局。"
+    },
+    {
+      "issue": "逐次优化轨迹保留在原工作区，安装包的冻结成果携带原始请求、参数范围、阶段计数和完整日过程。",
+      "status": "同0.13.5交付。"
+    }
+  ]
+}

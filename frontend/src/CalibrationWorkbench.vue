@@ -24,7 +24,12 @@ const dirty=computed(()=>draft.value&&(JSON.stringify(draft.value)!==saved.value
 const locked=computed(()=>props.busy||working.value)
 const selectedScheme=computed(()=>schemes.value.find(s=>s.id===schemeId.value))
 const currentName=computed(()=>props.boot.currentBusiness?.name||schemes.value.find(s=>s.id===props.boot.homeSchemeId)?.name||'色林错模拟方案')
-const records=computed(()=>(allHistory.value||props.tasks||[]).filter(t=>!t.trashed&&['two-stage-calibration','calibration','trial','calibration-replay'].includes(t.kind)))
+const records=computed(()=>{
+ const rows=(allHistory.value||props.tasks||[]).filter(t=>!t.trashed&&['two-stage-calibration','calibration','trial','calibration-replay'].includes(t.kind))
+ const adopted=(props.boot.publishedResults||[]).filter(t=>t.id===props.boot.homeResultId)
+  .map(t=>({...t,kind:'published-result',status:'succeeded',builtin:true,displayName:'当前最佳 · '+(t.displayName||t.name)}))
+ return [...adopted,...rows.filter(row=>!adopted.some(item=>item.id===row.id))]
+})
 const definitions=computed(()=>props.boot.parameterDefinitions||[])
 const flowKeys=computed(()=>props.boot.calibrationConfig?.flowSelectableKeys||[])
 const groups=[{id:'land',name:'陆面产流'},{id:'snow',name:'积雪与冰川'},{id:'routing',name:'汇流'},{id:'lake',name:'湖泊'}]
@@ -242,6 +247,7 @@ async function openReplay(){
 }
 async function loadFrozenRecord(){
  const task=props.detail;if(!['two-stage-calibration','calibration-replay'].includes(task?.kind)||!task.result)return
+ if(task.builtin)return
  if(task.request?.twoStage?.selectionMode==='continuous-dual')return
  const source=task.request?.replay?.sourceTaskId||task.result?.replay?.sourceTaskId||task.id
  const ticket=++recordTicket
@@ -278,7 +284,7 @@ onBeforeUnmount(()=>{disposed=true;clearInterval(timer);progressTicket++;replayT
   </div>
   <div class="calibration-toolbar"><div class="scheme-tools"><button :disabled="locked" @click="fresh">＋ 新建方案</button><button :disabled="locked||!draft" @click="duplicate">复制方案</button><button :disabled="locked" @click="managerOpen=true">管理方案</button></div><button class="link" @click="showHistory">{{historyOpen?'收起计算记录':'计算记录'}} <span aria-hidden="true">↗</span></button></div>
   <SchemeManager v-if="managerOpen" @close="managerOpen=false" @open="openManaged($event)" @copy="openManaged($event,true)" @changed="schemesChanged"/>
-  <div v-if="historyOpen" class="calibration-history"><button v-for="t in records" :key="t.id" :class="{selected:t.id===detail?.id}" @click="openRecord(t.id)"><span>{{t.name}}</span><small>{{status(t)}} · {{(t.created_at||'').slice(0,10)}}</small></button><p v-if="!records.length" class="muted">暂无计算记录。</p></div>
+  <div v-if="historyOpen" class="calibration-history"><button v-for="t in records" :key="t.id" :class="{selected:t.id===detail?.id}" @click="openRecord(t.id)"><span>{{t.displayName||t.name}}</span><small>{{t.builtin?'当前采用 · 正式成果':status(t)+' · '+(t.created_at||'').slice(0,10)}}</small></button><p v-if="!records.length" class="muted">暂无计算记录。</p></div>
   <nav class="calibration-steps" aria-label="率定步骤"><button v-for="(label,i) in steps" :key="i" :class="{active:step===i,passed:step>i}" :aria-current="step===i?'step':undefined" @click="step=i"><span>{{i+1}}</span><b>{{label}}</b></button></nav>
   <p v-if="error" class="message error" role="alert">{{error}}</p><p v-if="message" class="message success" role="status">{{message}}</p>
   <template v-if="draft">

@@ -78,7 +78,7 @@ export function replayResultName(t,homeId,loaded){
  const result=loaded?.id===t.id?loaded.result:null,rows=result?replayRows(result):null
  const start=(rows?.[0]?.date||result?.displayCoverage?.start||t.request?.start||'').slice(0,4)
  const end=(rows?.at(-1)?.date||result?.displayCoverage?.endExclusive||t.request?.end||'').slice(0,4)
- return start&&end?'历史模拟 · '+start+(start===end?'':'—'+end):'历史模拟'
+ return start&&end?'当前最佳 · 连续模拟（'+start+(start===end?'':'—'+end)+'）':'当前最佳 · 连续模拟'
 }
 export function hasDashboardCapabilities(task,metadata,inputs=[]){
  const result=task?.result

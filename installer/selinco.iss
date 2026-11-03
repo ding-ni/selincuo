@@ -1,6 +1,6 @@
 #define AppName "色林错预警预报平台"
 #ifndef AppVersion
-  #define AppVersion "0.13.2"
+  #define AppVersion "0.13.8"
 #endif
 #ifndef AppSource
   #define AppSource "..\build\verified-dist\SelincoPlatform"

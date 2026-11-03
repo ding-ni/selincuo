@@ -163,7 +163,14 @@ def export_result(db, request, folder, progress=None, cancelled=None):
     published=any(r['id']==task['id'] for r in catalog())
     owner=task['id'];storage='published' if published else 'task'
     source_filename='final-state.json' if published and filename=='checkpoint.json' else filename
-    if published:path=result_file(task['id'],source_filename)
+    if published:
+        if filename=='hourly.npz' and task['result'].get('storageFormat')=='zarr-v2':
+            from .business_context import result_folder
+            from .grid_storage import export_npz
+            path=export_npz(result_folder(db,task['id']),folder,progress,cancelled)
+            owner=folder.name
+            storage='task'
+        else:path=result_file(task['id'],source_filename)
     else:
         source=within(db.workspace/'tasks',task['id'])
         path=source/filename

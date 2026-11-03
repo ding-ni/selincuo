@@ -215,7 +215,7 @@ class RegistryTests(unittest.TestCase):
             with self.db.connect() as c:
                 c.execute('INSERT INTO tasks(id,kind,status,created_at,updated_at,request,result) VALUES(?,?,?,?,?,?,?)',
                           ('JOB-export','export-result','succeeded',now(),now(),canonical({'researchSchemeId':'SCHEME-fixture','inputId':'INPUT-fixture'}),canonical(artifact_payload)))
-            with urlopen(url+'/api/model/tasks') as response:
+            with urlopen(url+'/api/model/tasks?includeExperiments=true') as response:
                 rows=json.load(response)['tasks']
             exported=next(row for row in rows if row['id']=='JOB-export')
             self.assertIn('task-artifact',exported['result']['artifacts'][0]['downloadUrl'])

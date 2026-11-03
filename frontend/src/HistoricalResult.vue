@@ -4,7 +4,7 @@ import Chart from './Chart.vue'
 import ShoreComparison from './ShoreComparison.vue'
 import {downloadReport} from './result-report.mjs'
 import {api,number,resultName} from './api.mjs'
-import {displayCoverageDates,displayAnnualMetrics} from './result-catalog.mjs'
+import {displayCoverageDates,displayAnnualMetrics,calculationProcess} from './result-catalog.mjs'
 const props=defineProps({detail:Object,busy:Boolean,viewWindow:Object})
 const emit=defineEmits(['stop','state','retry','results','export'])
 const summary=ref(null),summaryError=ref('');let summaryTicket=0
@@ -16,6 +16,7 @@ const result=computed(()=>props.detail?.result),all=computed(()=>{
  const coverage=result.value?.displayCoverage,start=coverage?.start?.slice(0,10),end=coverage?.endExclusive?.slice(0,10)
  return (result.value?.daily||[]).filter(r=>(!start||r.date.slice(0,10)>=start)&&(!end||r.date.slice(0,10)<end))
 })
+const process=computed(()=>calculationProcess(props.detail))
 const totalLabel=computed(()=>result.value?.inflowComplete===false?'已判定入湖合计':result.value?.modelFamily==='grid-continuous-v1'?'入湖流量':'历史口径入湖合计')
 const fringeLabel=computed(()=>result.value?.modelFamily==='grid-continuous-v1'?'湖周直接来水':'残余集水区（旧版）')
 const years=computed(()=>[...Object.keys(result.value?.periodEvaluation?.periods||{}),...Object.keys(result.value?.metrics||{})]),metric=computed(()=>result.value?.periodEvaluation?.periods?.[year.value]||result.value?.metrics?.[year.value])
@@ -48,6 +49,17 @@ watch(()=>all.value.length,()=>{if(!start.value)whole();if(!year.value)year.valu
   <div class="metric-grid"><div><span>湖位 RMSE</span><b>{{number(metric?.lake?.rmse,3)}} <small>m</small></b></div><div><span>湖位 MAE</span><b>{{number(metric?.lake?.mae,3)}} <small>m</small></b></div><div><span>杜加流量 NSE</span><b>{{number(metric?.flow?.nse,3)}}</b></div><div><span>径流量偏差</span><b>{{number(metric?.flow?.pbias,1)}} <small>%</small></b></div></div>
   <p class="muted">配对日数：湖位 {{metric?.lake?.count||0}} 日，流量 {{metric?.flow?.count||0}} 日。过程日期筛选与本处评价选择独立。</p>
  </template>
- <details class="technical-details"><summary>计算信息与文件</summary><dl><dt>方案</dt><dd>{{result.scheme?.name||'用户计算'}} · {{result.scheme?.revision||'—'}}</dd><dt>输入</dt><dd>{{result.inputId}}</dd><dt>成果编号</dt><dd>{{detail.id}}</dd></dl><div class="actions"><a class="button" :href="href(detail.builtin?'final-state.json':'checkpoint.json')">导出末状态</a><a v-if="detail.builtin" class="button" :href="href('hourly.npz')">下载内置逐时数据</a><button v-else @click="emit('export',detail.id,'hourly.npz')">后台导出逐时数据</button></div></details>
+ <details class="technical-details calculation-process"><summary>计算过程与参数记录</summary>
+  <dl><dt>模型</dt><dd>{{result.modelFamily==='grid-continuous-v1'?'格网连续新安江与分区汇流':result.modelFamily||'模型版本见计算身份'}}</dd>
+   <dt>模拟时段</dt><dd>{{result.start?.slice(0,10)}} — {{result.end?.slice(0,10)}}</dd>
+   <dt>预热起点</dt><dd>{{detail.request?.periods?.warmupStart?.slice(0,10)||detail.request?.start?.slice(0,10)||'记录未单列'}}</dd>
+   <dt>驱动与空间</dt><dd>{{result.inputId}} · {{result.spatialVersion}}</dd>
+   <dt>搜索起点</dt><dd>{{process.seeds.join('、')||'无'}}</dd>
+   <dt>实际评价次数</dt><dd>{{number(process.evaluations,0)}} · {{process.converged?'已收敛':process.stages.some(stage=>stage.termination==='budget-exhausted')?'预算用尽':'未提供收敛记录'}}</dd>
+  </dl>
+  <div v-if="process.stages.length" class="table-wrap"><table><thead><tr><th>阶段</th><th>实际评价</th><th>状态</th></tr></thead><tbody><tr v-for="stage in process.stages" :key="stage.stage"><td>{{stage.stage}}</td><td>{{number(stage.evaluations,0)}}</td><td>{{stage.converged?'已收敛':stage.termination==='budget-exhausted'?'预算用尽':'已完成'}}</td></tr></tbody></table></div>
+  <div v-if="process.parameters.length" class="table-wrap"><table><thead><tr><th>参数</th><th>使用方式</th><th>初值</th><th>搜索范围</th><th>最终值</th></tr></thead><tbody><tr v-for="row in process.parameters" :key="row.key"><td>{{row.key}}</td><td>{{({flow:'水文率定',lake:'湖泊率定',fixed:'固定',unknown:'未记录'})[row.phase]}}</td><td>{{number(row.initial,6)}}</td><td>{{['flow','lake'].includes(row.phase)?number(row.bounds[0],6)+' — '+number(row.bounds[1],6):'—'}}</td><td>{{number(row.value,6)}}</td></tr></tbody></table></div>
+ </details>
+ <details class="technical-details"><summary>成果文件</summary><dl><dt>方案</dt><dd>{{result.scheme?.name||'用户计算'}} · {{result.scheme?.revision||'—'}}</dd><dt>成果编号</dt><dd>{{detail.id}}</dd></dl><div class="actions"><a class="button" :href="href(detail.builtin?'final-state.json':'checkpoint.json')">导出末状态</a><button @click="emit('export',detail.id,'hourly.npz')">后台导出逐时数据</button></div></details>
  </template></section>
 </template>

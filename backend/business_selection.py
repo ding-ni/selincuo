@@ -5,6 +5,8 @@ import math
 from .common import canonical, now
 
 CURRENT_SETTING='business-adopted-scheme-v1'
+RESULT_TASK_KINDS={'simulation','continuation','trial','calibration','calibration-workflow',
+                   'two-stage-calibration','calibration-replay','sensitivity'}
 
 
 def current(db):
@@ -43,7 +45,8 @@ def visible_tasks(db, rows, include_experiments=False):
         return rows
     chosen=current(db).get('resultId')
     active = {'queued', 'running', 'stopping'}
-    return [row for row in rows if row['id'] == chosen or row.get('userSaved') or row.get('user_saved') or
+    return [row for row in rows if row.get('kind') not in RESULT_TASK_KINDS or
+            row['id'] == chosen or row.get('userSaved') or row.get('user_saved') or
             row.get('status') in active]
 
 

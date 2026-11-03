@@ -1,13 +1,13 @@
 <script setup>
 import {ref,computed,watch} from 'vue'
 import {api,number,resultName} from './api.mjs'
-import {isResultRecord,resultDisplayPeriod} from './result-catalog.mjs'
+import {isResultRecord,resultDisplayPeriod,resultTypeName} from './result-catalog.mjs'
 import PermanentDeletion from './PermanentDeletion.vue'
 const props=defineProps({tasks:Array,trashedResults:Array,published:Array,standardId:String,homeId:String,selectedId:String,selectedResult:Object,busy:Boolean})
 const emit=defineEmits(['select','metadata','stop','changed'])
 const tab=ref('current'),search=ref(''),page=ref(1),compareIds=ref([]),comparisons=ref([]),compareError=ref(''),comparing=ref(false),historyTasks=ref([]),historyError=ref(''),historyLoading=ref(false)
 const catalog=computed(()=>{
- const values=[...(props.published||[]).map(t=>({...t,builtin:true,status:'succeeded'})),...(props.tasks||[]),...historyTasks.value,...(props.trashedResults||[])]
+ const values=[...(props.tasks||[]),...historyTasks.value,...(props.trashedResults||[]),...(props.published||[]).map(t=>({...t,builtin:true,status:'succeeded'}))]
  return [...new Map(values.filter(isResultRecord).map(t=>[t.id,t])).values()]
 })
 const protectedResult=t=>t.builtin||t.id===props.homeId||t.id===props.standardId
@@ -41,7 +41,7 @@ watch(()=>[tab.value,props.homeId,props.selectedId],([current,home,selected])=>{
 },{immediate:true})
 const period=t=>resultDisplayPeriod(t,props.selectedResult)
 const schemeName=t=>t.request?.schemeName||t.request?.schemeSnapshot?.name||t.scheme?.name||(t.id===props.homeId?t.displayName||t.name||'当前采用方案':t.builtin?'历史方案':'见成果详情')
-const typeName=t=>({simulation:'历史模拟',continuation:'续算',trial:'试算',calibration:'率定','two-stage-calibration':'两阶段率定','calibration-replay':'率定复现','calibration-workflow':'率定',sensitivity:'敏感性分析'})[t.kind]||'历史模拟'
+const typeName=t=>resultTypeName(t,props.homeId)
 const statusName=t=>({failed:'失败',cancelled:'已停止',interrupted:'已中断'})[t.status]||t.status
 const exportHref=t=>t.builtin?'/api/model/published-result?'+new URLSearchParams({id:t.id,file:'daily.csv'}):'/api/model/export?'+new URLSearchParams({taskId:t.id,format:'daily.csv'})
 function rename(t,save=false){const value=prompt(save?'保存成果名称':'成果名称',t.name||t.displayName||resultName(t));if(value?.trim())emit('metadata',t,{name:value.trim(),...(save?{favorite:true}:{})})}

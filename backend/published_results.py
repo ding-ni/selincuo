@@ -86,3 +86,34 @@ def available(identifier):
 
 def detail(identifier):
     return read_json(result_file(identifier,'result.json'))
+
+
+def calculation_record(identifier):
+    """Return a compact list row for a frozen, adopted calculation."""
+    item = next((row for row in catalog() if row['id'] == identifier), None)
+    if item is None:
+        return None
+    request = item.get('requestSummary') or {}
+    return {
+        'id': identifier,
+        'kind': item.get('kind') or 'simulation',
+        'status': item.get('status') or 'succeeded',
+        'created_at': item.get('created_at') or item.get('publishedAt') or '',
+        'updated_at': item.get('updated_at') or item.get('created_at') or '',
+        'progress': 100,
+        'message': '当前采用的冻结计算成果',
+        'trashed': False,
+        'favorite': True,
+        'userSaved': True,
+        'name': item.get('name') or item.get('displayName') or identifier,
+        'displayName': item.get('displayName') or item.get('name') or identifier,
+        'request': {
+            'schemeName': request.get('schemeName'),
+            'inputId': item.get('inputId') or request.get('inputId'),
+            'start': request.get('start'),
+            'end': request.get('end'),
+            'modelFamily': request.get('modelFamily'),
+        },
+        'result': None,
+        'builtin': True,
+    }

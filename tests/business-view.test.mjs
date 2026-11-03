@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {businessTasks,qualityLabel,stepLabel,variableDefinitions} from '../frontend/src/business-view.mjs'
+import {resultTypeName} from '../frontend/src/result-catalog.mjs'
 
 test('daily result list includes business simulations while research stays in maintenance',()=>{
  const tasks=[{id:'simulation',kind:'simulation'},{id:'continuation',kind:'continuation'},
@@ -14,4 +15,9 @@ test('monitoring copy uses readable status and step labels',()=>{
  assert.equal(qualityLabel('ice_or_stopped'),'停测')
  assert.equal(stepLabel('irregular'),'时段记录')
  assert.ok(variableDefinitions.some(item=>item.id==='snowWaterEquivalent'&&item.unit==='mm'))
+})
+
+test('adopted continuous result is not labeled as a generic historical simulation',()=>{
+ assert.equal(resultTypeName({id:'best',kind:'published-result'},'best'),'当前最佳 · 连续模拟')
+ assert.equal(resultTypeName({id:'past',kind:'simulation'},'best'),'历史模拟')
 })

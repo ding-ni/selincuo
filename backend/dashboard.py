@@ -143,7 +143,8 @@ def map_frame(db, input_id, day, variable='precipitation',spatial_version=None):
 
 def snow_frame(db, task_id, day):
     start=parse_day(day)
-    published=task_id.startswith('BUILTIN-')
+    from .published_results import catalog
+    published=any(row.get('id')==task_id for row in catalog())
     if published:
         from .published_results import detail, result_file
         task=detail(task_id)

@@ -1,0 +1,66 @@
+{
+  "version": "0.13.5",
+  "installer": {
+    "path": "releases/色林错预警预报平台-v0.13.5-Setup.exe",
+    "bytes": 961766621,
+    "sha256": "06682e3958c9fdd7520f72c3caa266ab6bd3f4193847d626ea592da5bc79105f",
+    "installedDirectory": "F:\\色林错预警预报平台\\运行程序",
+    "desktopShortcutWorkingDirectory": "F:\\色林错预警预报平台\\运行程序",
+    "desktopShortcutScript": "F:\\色林错预警预报平台\\运行程序\\installer\\start_platform.ps1"
+  },
+  "workspace": {
+    "active": "workspace-business",
+    "preserved": true,
+    "restoredDirectoriesRemoved": false
+  },
+  "business": {
+    "schemeId": "SCHEME-2c4816223d4b47cfb3cd",
+    "schemeCount": 1,
+    "parameterId": "PARAM-1bccaba37f764ddbb89e",
+    "resultId": "JOB-05c3f62282ce4239aed1",
+    "publishedResultCount": 1,
+    "calculationRecordCount": 1,
+    "taskKind": "two-stage-calibration",
+    "taskStatus": "succeeded",
+    "calculationStart": "2017-01-01T00:00:00",
+    "calculationEndExclusive": "2026-10-21T00:00:00",
+    "displayStart": "2021-04-23T00:00:00",
+    "warmupStart": "2017-01-01T00:00:00",
+    "dailyRows": 3580,
+    "calibrationEvaluations": 72609,
+    "hourlyResultFormat": "zarr-v2"
+  },
+  "seedCounts": {
+    "tasks": 0,
+    "schemes": 1,
+    "parameterVersions": 1,
+    "inputProducts": 2,
+    "observations": 59119,
+    "sourceFiles": 33
+  },
+  "packageIntegrity": {
+    "manifestFiles": 9005,
+    "missingFiles": 0,
+    "shaMismatches": 0,
+    "releaseSourceVerification": "passed"
+  },
+  "acceptance": {
+    "pythonTests": 465,
+    "releaseTestsAfterFinalWorkspaceFix": 10,
+    "frontendResultAndBusinessTests": 7,
+    "packagedWorkflowChecks": 13,
+    "portableVerification": "passed",
+    "isolatedInstallationVerification": "passed",
+    "installedHealthVersion": "0.13.5",
+    "installedWorkspace": "F:\\色林错预警预报平台\\运行程序\\workspace-business",
+    "installedSchemes": 1,
+    "installedPublishedResults": 1,
+    "installedCalculationRecords": 1,
+    "modelRecalculated": false,
+    "forcingRedownloaded": false
+  },
+  "limitations": [
+    "Per-evaluation optimizer trace rows are not in the frozen published result; actual request settings, stage counts and full daily output are present.",
+    "Automated browser screenshot verification was unavailable in this Windows session."
+  ]
+}

@@ -138,13 +138,14 @@ class SchemeManagementTests(unittest.TestCase):
         db = self.db
         db.set_setting(CURRENT_SETTING, {'resultId': 'JOB-current'})
         rows = [
-            {'id': 'JOB-current', 'status': 'succeeded'},
-            {'id': 'JOB-saved', 'status': 'succeeded', 'user_saved': 1},
-            {'id': 'JOB-active', 'status': 'running'},
-            {'id': 'JOB-old-test', 'status': 'succeeded', 'request': {'purpose': 'development'}},
+            {'id': 'JOB-current', 'kind':'simulation', 'status': 'succeeded'},
+            {'id': 'JOB-saved', 'kind':'simulation', 'status': 'succeeded', 'user_saved': 1},
+            {'id': 'JOB-active', 'kind':'simulation', 'status': 'running'},
+            {'id': 'JOB-old-test', 'kind':'simulation', 'status': 'succeeded', 'request': {'purpose': 'development'}},
+            {'id': 'JOB-evaluation', 'kind':'evaluation', 'status': 'succeeded'},
         ]
         self.assertEqual([row['id'] for row in visible_tasks(db, rows)],
-                         ['JOB-current', 'JOB-saved', 'JOB-active'])
+                         ['JOB-current', 'JOB-saved', 'JOB-active', 'JOB-evaluation'])
         self.assertEqual(visible_tasks(db, rows, include_experiments=True), rows)
 
     def test_sql_failure_rolls_back_family_and_all_results(self):

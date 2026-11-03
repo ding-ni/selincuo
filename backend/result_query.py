@@ -97,7 +97,8 @@ def _open_source(db,identifier):
         if 'hourly-manifest.json' in item['files']:
             from .published_results import hourly_zarr
             from .grid_storage import open_arrays
-            folder=hourly_zarr(identifier,verify_files=True).parent
+            # Release assembly verifies every chunk; runtime reads check the index without rescanning the archive.
+            folder=hourly_zarr(identifier,verify_files=False).parent
             return task,open_arrays(folder),checkpoint
         path=result_file(identifier,'hourly.npz')
     else:

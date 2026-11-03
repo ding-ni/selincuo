@@ -361,7 +361,7 @@ class PermanentDeletionTests(unittest.TestCase):
                          ('JOB-list-export', 'export-result', 'succeeded', at, at, '{}', '{}', 1, '导出'))
         try:
             url = f'http://127.0.0.1:{server.server_port}/api/model/'
-            with urllib.request.urlopen(url + 'tasks', timeout=20) as response:
+            with urllib.request.urlopen(url + 'tasks?includeExperiments=true', timeout=20) as response:
                 self.assertEqual(len(json.load(response)['tasks']), 500)
             with urllib.request.urlopen(url + 'trashed-results', timeout=20) as response:
                 rows = json.load(response)['tasks']

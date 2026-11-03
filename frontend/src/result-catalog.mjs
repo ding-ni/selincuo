@@ -8,6 +8,35 @@ export function isResultRecord(task){
  return ['calibration-workflow','sensitivity'].includes(task?.kind)&&task.status!=='succeeded'
 }
 
+export function resultTypeName(task,homeId=''){
+ if(task?.id===homeId)return '当前最佳 · 连续模拟'
+ return ({simulation:'历史模拟',continuation:'续算',trial:'试算',calibration:'率定',
+  'two-stage-calibration':'两阶段率定','calibration-replay':'率定复现','calibration-workflow':'率定',
+  sensitivity:'敏感性分析'})[task?.kind]||'模拟成果'
+}
+
+export function calculationProcess(task){
+ const result=task?.result||{},request=task?.request||{},calibration=result.calibration||{},search=request.search||{}
+ const selected=Array.isArray(search.keys)?new Set(search.keys):null,mode=request.twoStage?.mode
+ const phase=key=>key==='lakeCoefficient'&&(['both','lake'].includes(mode)||selected?.has(key))?'lake':
+  !selected?'unknown':mode!=='lake'&&selected.has(key)?'flow':'fixed'
+ return {
+  modelFamily:result.modelFamily,
+  start:result.start,
+  end:result.end,
+  warmupStart:request.periods?.warmupStart||request.start,
+  inputId:result.inputId||request.inputId,
+  spatialVersion:result.spatialVersion,
+  seeds:request.twoStage?.seeds||search.seeds||[],
+  evaluations:calibration.evaluations,
+  converged:calibration.converged===true,
+  stages:calibration.stages||[],
+  parameters:Object.entries(search.bounds||{}).map(([key,bounds])=>({
+   key,bounds,phase:phase(key),initial:request.parameters?.[key],value:result.parameters?.[key]
+  }))
+ }
+}
+
 export function resultDisplayPeriod(task,selectedResult){
  const coverage=selectedResult?.id===task.id?selectedResult.result?.displayCoverage:null
  const start=coverage?.start||task.request?.displayStart||task.request?.start||task.start

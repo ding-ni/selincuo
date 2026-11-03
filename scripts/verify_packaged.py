@@ -76,6 +76,16 @@ def main():
     assert default['id'] == boot['homeResultId'] == context['adopted']['resultId']
     assert default['role'] == 'current-adopted'
     assert context['defaultResultInputId'] == default['inputId']
+    records=api('tasks')['tasks']
+    assert len(records)==1 and records[0]['id']==default['id']
+    assert records[0]['kind']=='two-stage-calibration' and records[0]['status']=='succeeded'
+    assert records[0]['builtin'] is True and records[0]['request']['inputId']==default['inputId']
+    recorded_task=api('tasks/'+default['id'])
+    assert recorded_task['builtin'] is True and recorded_task['result']['daily']
+    assert recorded_task['result']['calibration']['evaluations']>0
+    snow_frame=api('snow-frame?'+urlencode({'taskId':default['id'],'day':'2026-10-20'}))
+    assert snow_frame['complete'] is True and len(snow_frame['units'])==len(recorded_task['result']['units'])
+    assert snow_frame['validAt']=='2026-10-21T00:00:00'
     assert len(boot['schemes']) == 1 and boot['schemes'][0]['id'] == context['adopted']['schemeId']
     assert len(boot['parameters']) == 1 and boot['parameters'][0]['id'] == context['adopted']['parameterId']
     protected = api('published-result?'+urlencode({'id':boot['standardResultId']}))
@@ -168,11 +178,14 @@ def main():
         'taskId':task['id'],'continuationTaskId':continued['id'],'dailyRows':len(result['daily']),
         'metrics':result.get('metrics',{}),'evaluationMode':summary['evaluation']['mode'],'defaultRelease':context['release'],
         'defaultInputId':default['inputId'],'readOnlySimulationPlan':plan,
+        'snowFrame':{'complete':snow_frame['complete'],'unitCount':len(snow_frame['units']),
+                     'validAt':snow_frame['validAt'],'sweMean':snow_frame['sweMean']},
         'exportRows':len(csv_rows),'exportTaskId':exported['id'],'exportReusedTaskId':export_again['id'],
         'backupTaskId':backup_task['id'],'backup':backup,'restore':restored,'restoreTaskId':restore_task['id'],
         'modelIdentity':result['identity'],'routingBalanceMaxErrorM3':result['diagnostics']['routingMaxBalanceErrorM3'],
         'checks':['clean-seed','business-home-and-protected-science-release-separated','single-business-scheme-and-parameter',
-                  'best-result-viewable-with-zarr','read-only-business-simulation-plan','business-scheme-short-simulation',
+                  'best-result-viewable-with-zarr','published-snow-water-equivalent-frame',
+                  'read-only-business-simulation-plan','business-scheme-short-simulation',
                   'duplicate-request-idempotency','water-balance',
                   'background-CSV-export-and-artifact-reuse','saved-state-continuation','background-backup-artifact-download',
                   'background-independent-directory-restore','business-adoption-and-protected-release-restored'],

@@ -1,6 +1,6 @@
 {
   "name": "selinco-platform",
-  "version": "0.13.4",
+  "version": "0.13.8",
   "private": true,
   "type": "module",
   "scripts": {

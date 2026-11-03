@@ -14,7 +14,7 @@ _active = json.loads(_active_file.read_text(encoding='utf-8-sig')) if _active_fi
 WORKSPACE = Path(os.environ.get('SELINCO_WORKSPACE', ROOT / _active.get('workspace', 'workspace'))).resolve()
 PROJECT_ID = 'selinco'
 CONTEXT_KEY = 'selinco:semidistributed-cold-lake:0p1deg'
-VERSION = '0.13.4'
+VERSION = '0.13.8'
 
 
 def now():

@@ -123,13 +123,28 @@ def business_default(source, scheme_id):
         raise ValueError('指定业务方案不是当前采用方案')
     schemes = [row for row in source.items('schemes') if row['id'] == scheme_id]
     parameters = [row for row in source.items('parameter_versions') if row['id'] == selection.get('parameterId')]
-    tasks = source.rows('SELECT id,status,request,result,trashed FROM tasks WHERE id=?', (selection.get('resultId'),))
-    if len(schemes) != 1 or len(parameters) != 1 or len(tasks) != 1:
+    result_id=selection.get('resultId')
+    tasks = source.rows('SELECT id,status,request,result,trashed FROM tasks WHERE id=?', (result_id,))
+    if len(schemes) != 1 or len(parameters) != 1 or len(tasks) > 1:
         raise ValueError('采用方案、参数或结果记录缺失')
-    scheme, parameter, task = schemes[0], parameters[0], tasks[0]
-    if task['status'] != 'succeeded' or task['trashed']:
+    scheme, parameter = schemes[0], parameters[0]
+    if tasks:
+        task=tasks[0]
+        if task['status'] != 'succeeded' or task['trashed']:
+            raise ValueError('采用结果未成功完成或已回收')
+        result = json.loads(task['result'] or '{}')
+        request=json.loads(task['request'])
+        task={**task,'result':result,'request':request}
+    else:
+        from backend.published_results import catalog,detail
+        if not any(row['id']==result_id for row in catalog()):
+            raise ValueError('采用结果在工作区任务与冻结成果中均不存在')
+        task=detail(result_id)
+        if task.get('status')!='succeeded' or not isinstance(task.get('result'),dict):
+            raise ValueError('冻结采用成果未成功完成或内容无效')
+    if task['status'] != 'succeeded' or task.get('trashed'):
         raise ValueError('采用结果未成功完成或已回收')
-    result = json.loads(task['result'] or '{}')
+    result=task.get('result') or {}
     payload, parameter_payload = scheme['payload'], parameters[0]['payload']
     result_identity = result.get('identity') or {}
     input_id = result.get('inputId') or result_identity.get('inputId')
@@ -148,7 +163,7 @@ def business_default(source, scheme_id):
         raise ValueError('业务方案绑定的气象输入缺失或摘要不符')
     verify_business_forcing_binding(product['manifest'], result['spatialVersion'], result_identity)
     return {'selection': selection, 'scheme': scheme, 'parameter': parameter,
-            'task': {**task, 'result': result, 'request': json.loads(task['request'])},
+            'task': task,
             'product': product, 'resultIdentitySHA256': digest(result_identity),
             'schemePayloadSHA256': digest(payload), 'parameterPayloadSHA256': digest(parameter_payload)}
 

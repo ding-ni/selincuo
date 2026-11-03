@@ -1,12 +1,13 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
 from openpyxl import Workbook
 
-from backend.common import ROOT
+from backend.common import ROOT, write_json
 from backend.database import Database
 from backend.observations import confirm_coverage, import_observations
 from backend.dashboard import aggregate_frame, monitoring, map_frame, parse_day
@@ -86,4 +87,20 @@ class DashboardTests(unittest.TestCase):
         self.assertEqual(len(frame['units']),len(product['result']['units']))
         self.assertGreaterEqual(frame['sweMean'],0)
         self.assertFalse(snow_frame(None,identifier,'2026-02-01')['complete'])
+
+    def test_published_job_id_snow_frame_does_not_require_a_workspace_task(self):
+        from backend.dashboard import snow_frame
+        identifier='JOB-frozen-best'
+        task={'id':identifier,'status':'succeeded','result':{
+            'units':[{'id':'u1','areaKm2':1.0},{'id':'u2','areaKm2':3.0}],
+            'end':'2024-01-02T00:00:00','spatialVersion':'SPATIAL-frozen','storageFormat':'zarr-v2'}}
+        with patch('backend.published_results.catalog',return_value=[{'id':identifier}]), \
+             patch('backend.published_results.detail',return_value=task), \
+             patch('backend.result_query.read',return_value={'values':[{'value':30.},{'value':60.}]}) as read:
+            frame=snow_frame(None,identifier,'2024-01-01')
+        read.assert_called_once_with(None,{'resultId':identifier,'variable':'swe','time':'2024-01-02T00:00:00'},frame=True)
+        self.assertTrue(frame['complete'])
+        self.assertEqual(frame['validAt'],'2024-01-02T00:00:00')
+        self.assertEqual([unit['value'] for unit in frame['units']],[30.,60.])
+        self.assertEqual(frame['sweMean'],52.5)
 

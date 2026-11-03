@@ -27,6 +27,57 @@ class ReadOnlySeed:
     items = Database.items
 
 
+def frontend_bundle_files(source):
+    source = Path(source).resolve()
+    manifest_path = source / '.vite/manifest.json'
+    manifest = read_json(manifest_path, {})
+    if not isinstance(manifest, dict) or not isinstance(manifest.get('index.html'), dict):
+        raise ValueError('前端发行清单缺失，请先构建Vite资源清单')
+    files = {'index.html'}
+    visited = set()
+
+    def include(key):
+        if key in visited:
+            return
+        entry = manifest.get(key)
+        if not isinstance(entry, dict):
+            raise ValueError('前端资源清单引用不存在：' + str(key))
+        visited.add(key)
+        for relative in [entry.get('file'), *(entry.get('css') or []), *(entry.get('assets') or [])]:
+            if not relative:
+                continue
+            path = within(source, relative)
+            if not path.is_file():
+                raise ValueError('前端发行资源缺失：' + str(relative))
+            files.add(Path(relative).as_posix())
+        for imported in [*(entry.get('imports') or []), *(entry.get('dynamicImports') or [])]:
+            include(imported)
+
+    include('index.html')
+    return files
+
+
+def copy_frontend_dist(source, destination):
+    source = Path(source).resolve()
+    destination = Path(destination).resolve()
+    files = frontend_bundle_files(source)
+    destination.mkdir(parents=True, exist_ok=True)
+    for child in source.iterdir():
+        if child.name in ('.vite', 'assets', 'index.html'):
+            continue
+        target = destination / child.name
+        if child.is_dir():
+            shutil.copytree(child, target, dirs_exist_ok=True,
+                            ignore=shutil.ignore_patterns('__pycache__', '*.pyc', '*.nbi', '*.nbc'))
+        elif child.is_file():
+            shutil.copy2(child, target)
+    for relative in sorted(files):
+        origin = within(source, relative)
+        target = within(destination, relative)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(origin, target)
+
+
 def inspect_seed(seed):
     from backend.release_registry import current
     from backend.published_results import catalog, detail
@@ -157,7 +208,21 @@ def selected_resources(scheme, published):
             version=(record.get('result') or record).get('spatialVersion')
         if version:
             versions.add(version)
-    files = [p for p in (spatial/'manifest.json', spatial/'grid-current.json') if p.is_file()]
+    files = [p for p in (spatial/'manifest.json', spatial/'grid-current.json',
+                         spatial/'presentation.json') if p.is_file()]
+    terrain_index = spatial/'terrain-current.json'
+    if terrain_index.is_file():
+        terrain = read_json(terrain_index,{}) or {}
+        images = {terrain.get('image')}
+        images.update(level.get('image') for level in terrain.get('levels',[]) if isinstance(level,dict))
+        for image in images - {None}:
+            if not isinstance(image,str) or not image.startswith('/spatial/'):
+                raise ValueError('地形展示影像路径无效')
+            image_path=within(spatial,image.removeprefix('/spatial/'))
+            if not image_path.is_file():
+                raise ValueError('地形展示影像缺失：'+image)
+            files.append(image_path)
+        files.append(terrain_index)
     pending=list(sorted(versions));seen=set()
     while pending:
         version=pending.pop()
@@ -199,19 +264,37 @@ def bundle_business_result(source_workspace, business, destination):
     source=ReadOnlySeed(source_workspace)
     rows=source.rows('SELECT id,kind,status,created_at,updated_at,name,request,result,trashed FROM tasks WHERE id=?',
                      (business['resultId'],))
-    if len(rows)!=1 or rows[0]['status']!='succeeded' or rows[0]['trashed']:
-        raise ValueError('正式业务结果不存在、未成功或已回收')
-    row=rows[0]
-    result=json.loads(row['result'] or '{}')
-    request=json.loads(row['request'])
+    if len(rows)>1:
+        raise ValueError('正式业务结果记录重复')
+    if rows:
+        row=rows[0]
+        if row['status']!='succeeded' or row['trashed']:
+            raise ValueError('正式业务结果未成功或已回收')
+        result=json.loads(row['result'] or '{}')
+        request=json.loads(row['request'])
+        source_folder=within(source.workspace/'tasks',business['resultId'])
+        checkpoint_name='checkpoint.json'
+    else:
+        from backend.published_results import catalog,detail
+        published=next((item for item in catalog() if item['id']==business['resultId']),None)
+        if not published:
+            raise ValueError('正式业务结果在工作区任务与冻结成果中均不存在')
+        frozen=detail(business['resultId'])
+        row=frozen
+        if frozen.get('status')!='succeeded':
+            raise ValueError('冻结正式业务成果未成功')
+        result=frozen.get('result') or {}
+        request=frozen.get('request') or {}
+        source_folder=within(ROOT/'data/final-results',published['directory'])
+        checkpoint_name='final-state.json'
     if (digest(result.get('identity') or {})!=business['resultIdentitySHA256'] or
             result.get('inputId')!=business['inputId'] or result.get('spatialVersion')!=business['spatialVersion'] or
             result.get('parameters')!=business['parameterPayload'].get('parameters') or
             result.get('partitionParameters',{})!=business['parameterPayload'].get('partitionParameters',{})):
         raise ValueError('正式业务结果与参数/驱动身份不一致')
-    source_folder=within(source.workspace/'tasks',business['resultId'])
     task_file=read_json(source_folder/'result.json')
-    if task_file!=result:
+    recorded_result=task_file.get('result') if checkpoint_name=='final-state.json' else task_file
+    if recorded_result!=result:
         raise ValueError('任务结果JSON与SQLite冻结结果不一致')
     zarr_folder=source_folder/'hourly.zarr'
     hourly_manifest=read_json(source_folder/'hourly-manifest.json')
@@ -229,11 +312,11 @@ def bundle_business_result(source_workspace, business, destination):
         path=within(zarr_folder,name)
         if not path.is_file() or path.is_symlink() or sha_file(path)!=expected:
             raise ValueError('正式业务Zarr分块缺失或摘要不同：'+name)
-    for name in ('daily.csv','checkpoint.json'):
+    for name in ('daily.csv',checkpoint_name):
         path=source_folder/name
         if not path.is_file() or path.is_symlink():
             raise ValueError('正式业务结果缺少工件：'+name)
-    checkpoint=source_folder/'checkpoint.json'
+    checkpoint=source_folder/checkpoint_name
     expected_checkpoint=result.get('checkpointSHA256')
     if expected_checkpoint and digest(read_json(checkpoint))!=expected_checkpoint:
         raise ValueError('正式业务末状态摘要不一致')
@@ -254,9 +337,46 @@ def bundle_business_result(source_workspace, business, destination):
         shutil.copy2(source_file,target_file)
     packaged_files={path.relative_to(target).as_posix():{'sha256':sha_file(path),'bytes':path.stat().st_size}
                     for path in sorted(target.rglob('*')) if path.is_file()}
-    return {'id':business['resultId'],'name':business['name'],'period':(result.get('displayCoverage') or {}).get('start','')[:4]+'—'+(result.get('displayCoverage') or {}).get('endExclusive','')[:4],
+    display_coverage=result.get('displayCoverage') or {}
+    return {'id':business['resultId'],'name':business['name'],'kind':row['kind'],'status':row['status'],
+            'created_at':row['created_at'],'updated_at':row['updated_at'],
+            'requestSummary':{'schemeName':(result.get('scheme') or {}).get('name'),
+                              'inputId':result.get('inputId'),'modelFamily':result.get('modelFamily'),
+                              'start':request.get('start'),'end':request.get('end'),
+                              'displayStart':display_coverage.get('start'),
+                              'displayEndExclusive':display_coverage.get('endExclusive'),
+                              'warmupStart':(request.get('periods') or {}).get('warmupStart')},
+            'period':(display_coverage.get('start',''))[:4]+'—'+(display_coverage.get('endExclusive',''))[:4],
             'directory':directory,'files':packaged_files,'displayName':business['name'],
             'spatialVersion':business['spatialVersion'],'inputId':business['inputId'],'businessDefault':True}
+
+
+def copy_calibration_baseline(identifier, destination):
+    """Copy only the immutable comparison curve referenced by the adopted scheme."""
+    import json
+    for operational in (ROOT/'config/operational', ROOT/'运行程序/config/operational'):
+        index_path=operational/'calibration-baselines.json'
+        index=read_json(index_path,{}) or {}
+        entry=(index.get('results') or {}).get(identifier)
+        if entry is None:
+            continue
+        if index.get('schemaVersion')!=1 or not isinstance(entry,dict):
+            raise ValueError('率定对照基准目录无效：'+identifier)
+        source=within(operational,entry.get('file',''))
+        if not source.is_file() or source.is_symlink() or sha_file(source)!=entry.get('sha256'):
+            raise ValueError('率定对照基准缺失或摘要不符：'+identifier)
+        task=read_json(source,{})
+        if (not isinstance(task,dict) or task.get('id')!=identifier or task.get('status')!='succeeded' or
+                not isinstance(task.get('result'),dict) or not task['result'].get('daily')):
+            raise ValueError('率定对照基准内容无效：'+identifier)
+        relative='calibration-baselines/'+identifier+'.json'
+        target=within(destination/'config/operational',relative)
+        target.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copy2(source,target)
+        write_json(destination/'config/operational/calibration-baselines.json',
+                   {'schemaVersion':1,'results':{identifier:{'file':relative,'sha256':sha_file(target)}}})
+        return True
+    return False
 
 def main():
     import argparse
@@ -276,11 +396,14 @@ def main():
     seed = (args.seed_workspace.resolve() if args.seed_workspace else
             within(ROOT / 'seed', read_json(ROOT / 'seed/current.json', {}).get('directory', 'workspace')))
     counts, scheme = inspect_seed(seed)
-    for name in ['backend', 'frontend/dist']:
+    for name in ('backend',):
         origin = ROOT / name
         if origin.is_dir():
             shutil.copytree(origin, dest / name, dirs_exist_ok=True,
                             ignore=shutil.ignore_patterns('__pycache__', '*.pyc', '*.nbi', '*.nbc', 'active-workspace.json'))
+    frontend_dist = ROOT / 'frontend/dist'
+    if frontend_dist.is_dir():
+        copy_frontend_dist(frontend_dist, dest / 'frontend/dist')
     from backend.published_results import catalog as published_catalog, result_file
     protected_result_id = scheme['release']['resultId']
     published = list(published_catalog())
@@ -349,21 +472,22 @@ def main():
     if business:
         baseline_id=(business['payload'].get('twoStage') or {}).get('baselineTaskId')
         if baseline_id and baseline_id not in {row['id'] for row in published}:
-            import json
-            origin=ReadOnlySeed(WORKSPACE)
-            rows=origin.rows('SELECT id,status,result FROM tasks WHERE id=?',(baseline_id,))
-            if len(rows)!=1 or rows[0]['status']!='succeeded':
-                raise ValueError('正式方案缺少原率定对照基准：'+baseline_id)
-            original=json.loads(rows[0]['result'])
-            if not original.get('daily'):
-                raise ValueError('率定对照基准缺少日过程')
-            baseline={'id':baseline_id,'status':'succeeded','kind':'calibration-comparison',
-                      'result':{'identity':original['identity'],'daily':original['daily']}}
-            relative='calibration-baselines/'+baseline_id+'.json'
-            path=within(dest/'config/operational',relative)
-            write_json(path,baseline)
-            write_json(dest/'config/operational/calibration-baselines.json',
-                       {'schemaVersion':1,'results':{baseline_id:{'file':relative,'sha256':sha_file(path)}}})
+            if not copy_calibration_baseline(baseline_id,dest):
+                import json
+                origin=ReadOnlySeed(WORKSPACE)
+                rows=origin.rows('SELECT id,status,result FROM tasks WHERE id=?',(baseline_id,))
+                if len(rows)!=1 or rows[0]['status']!='succeeded':
+                    raise ValueError('正式方案缺少原率定对照基准：'+baseline_id)
+                original=json.loads(rows[0]['result'])
+                if not original.get('daily'):
+                    raise ValueError('率定对照基准缺少日过程')
+                baseline={'id':baseline_id,'status':'succeeded','kind':'calibration-comparison',
+                          'result':{'identity':original['identity'],'daily':original['daily']}}
+                relative='calibration-baselines/'+baseline_id+'.json'
+                path=within(dest/'config/operational',relative)
+                write_json(path,baseline)
+                write_json(dest/'config/operational/calibration-baselines.json',
+                           {'schemaVersion':1,'results':{baseline_id:{'file':relative,'sha256':sha_file(path)}}})
     observation_index=read_json(ROOT/'config/operational/published-observations.json',{}) or {}
     for snapshot in observation_index.get('snapshots',{}).values():
         relative=snapshot.get('file')

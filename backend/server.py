@@ -492,19 +492,35 @@ class Handler(SimpleHTTPRequestHandler):
                 row['phase']=row['message'].split(' · ')[0]
                 row['termination']=({'cancelled':'user-stopped','interrupted':'service-restarted',
                                      'failed':'failed','succeeded':'completed'}).get(row['status'])
-            from .business_selection import visible_tasks
-            rows=visible_tasks(self.db,rows,query.get('includeExperiments')=='true')
+            if path == 'tasks':
+                from .business_selection import current as current_business
+                from .published_results import calculation_record
+                adopted_id=current_business(self.db).get('resultId')
+                if adopted_id and not any(row['id']==adopted_id for row in rows):
+                    record=calculation_record(adopted_id)
+                    if record:
+                        rows.insert(0,record)
+            if path == 'tasks':
+                from .business_selection import visible_tasks
+                rows=visible_tasks(self.db,rows,query.get('includeExperiments')=='true')
             return self.send_json({'tasks': rows})
         if re.fullmatch(r'tasks/[^/]+/replay-plan', path):
             from .calibration_replay import replay_plan
             return self.send_json(replay_plan(self.db, path.split('/')[1]))
         if path.startswith('tasks/'):
-            return self.send_json(self.server.jobs.public(self.db.task(path.split('/')[1])))
+            identifier=path.split('/')[1]
+            from .business_selection import current as current_business
+            from .published_results import catalog,detail as published_detail
+            if (current_business(self.db).get('resultId')==identifier and
+                    any(row['id']==identifier for row in catalog())):
+                return self.send_json({**published_detail(identifier),'builtin':True})
+            return self.send_json(self.server.jobs.public(self.db.task(identifier)))
         if path == 'states':
             states = self.db.items('states')
             from .business_selection import visible_tasks
-            task_rows=[{'id':r['id'],'request':json.loads(r['request']),'user_saved':r['user_saved']}
-                       for r in self.db.rows('SELECT id,request,user_saved FROM tasks')]
+            task_rows=[{'id':r['id'],'kind':r['kind'],'status':r['status'],
+                        'request':json.loads(r['request']),'user_saved':r['user_saved']}
+                       for r in self.db.rows('SELECT id,kind,status,request,user_saved FROM tasks')]
             visible_ids={r['id'] for r in visible_tasks(self.db,task_rows)}
             states=[r for r in states if r['task_id'] in visible_ids or r.get('favorite') or r.get('name')]
             from .result_query import compatible

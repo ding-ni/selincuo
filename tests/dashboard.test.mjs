@@ -35,7 +35,7 @@ test('dashboard offers only the adopted result',()=>{
   {id:'deleted',kind:'simulation',userSaved:1,status:'succeeded',trashed:1}], 'final')
  assert.deepEqual(rows.map(r=>r.id),['final'])
  assert.equal(rows[0].builtin,true)
- assert.equal(replayResultName(rows[0],'final',{id:'final',result:{daily:[{date:'2021-04-23'},{date:'2026-10-20'}]}}),'历史模拟 · 2021—2026')
+ assert.equal(replayResultName(rows[0],'final',{id:'final',result:{daily:[{date:'2021-04-23'},{date:'2026-10-20'}]}}),'当前最佳 · 连续模拟（2021—2026）')
  const task={status:'succeeded',result:{daily:[{date:'2025-01-01',lakeLevel:4540,total:5}],units:[{id:'unit'}],inputId:'input'}}
  const meta={units:[{id:'unit'}],spatialBase:'/spatial/version/',hours:24}
  assert.equal(hasDashboardCapabilities(task,meta,[{id:'input'}]),true)

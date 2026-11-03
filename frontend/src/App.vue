@@ -76,7 +76,7 @@ async function refresh(){
  if(page.value!=='monitor')await loadContext()
  if(!historyDetail.value&&page.value==='simulation'&&boot.value.homeResultId)await openResult(boot.value.homeResultId,'history')
 }
-async function openResult(id,target='detail'){if(!id)return;const ticket=++resultTickets[target];const value=await api(boot.value.publishedResults.some(r=>r.id===id)?'published-result?id='+id:'tasks/'+id);if(ticket!==resultTickets[target])return;if(target==='calibration')calibrationDetail.value=value;else if(target==='history')historyDetail.value=value;else{detail.value=value;if(value.status==='succeeded')await selectContext(id,undefined,id!==selectedId.value?'push':'replace')}return value}
+async function openResult(id,target='detail'){if(!id)return;const ticket=++resultTickets[target],published=boot.value.publishedResults.some(r=>r.id===id),loaded=await api(published?'published-result?id='+id:'tasks/'+id);if(ticket!==resultTickets[target])return;const value=published?{...loaded,builtin:true,kind:'published-result'}:loaded;if(target==='calibration')calibrationDetail.value=value;else if(target==='history')historyDetail.value=value;else{detail.value=value;if(value.status==='succeeded')await selectContext(id,undefined,id!==selectedId.value?'push':'replace')}return value}
 async function navigate(p,id,viewWindow=null){
  if(p==='results')resultWindow.value=viewWindow?.id===id?viewWindow:null
  error.value='';if(id)await selectContext(id,undefined,'none');page.value=p;if(p!=='monitor'&&!boot.value)await action(refresh);if(p!=='monitor'&&!boot.value){syncUrl();return}if(p!=='monitor'&&!context.value)await loadContext();syncUrl()
