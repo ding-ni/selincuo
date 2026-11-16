@@ -35,19 +35,27 @@ def get(server, path, query):
             raise FileNotFoundError('站点不存在')
         station = stations[0]
         labels = {'precipitation': '降水', 'temperature': '气温', 'level': '水位', 'flow': '流量'}
-        rows = []
-        for variable in db.rows('SELECT DISTINCT variable FROM observations WHERE station_id=?', (station_id,)):
+        units = {'precipitation': 'mm', 'temperature': '℃', 'level': 'm', 'flow': 'm³/s'}
+        groups = []
+        for variable in db.rows('SELECT DISTINCT variable FROM observations WHERE station_id=? ORDER BY variable', (station_id,)):
             key = variable['variable']
             records = db.observations(station_id, key, start=day, end=day, limit=None)
-            record = max(records, key=lambda row: (row['time'], row['step'] == 'daily')) if records else None
-            source = db.rows('SELECT path FROM sources WHERE id=?', (record['source_id'],)) if record else []
-            rows.append({'label': labels.get(key, key),
-                         'value': str(record['value']) + ' ' + record['unit'] if record and record['value'] is not None else '缺测',
-                         'time': record['time'] if record else day,
-                         'source': Path(source[0]['path']).name if source else '',
-                         'quality': record['quality'] if record else 'missing'})
-        return True, {'title': station['name'], 'time': day or '最近记录', 'rows': rows,
-                      'source': '站点观测', 'note': '各要素保留原观测时刻和单位'}
+            # Sort by time ascending; keep the most recent 3 for a small hover timeline.
+            records = sorted(records, key=lambda row: row['time'])[-3:]
+            items = []
+            for record in records:
+                items.append({'value': record['value'],
+                              'unit': record['unit'] or units.get(key, ''),
+                              'time': record['time'],
+                              'quality': record['quality'] or 'missing'})
+            latest = items[-1] if items else None
+            groups.append({'variable': key, 'label': labels.get(key, key),
+                           'unit': units.get(key, ''),
+                           'latest': latest,
+                           'records': items})
+        return True, {'title': station['name'], 'time': day or '最近记录',
+                      'groups': groups, 'dataSource': '站点观测',
+                      'note': '显示该站最近 3 条有效观测'}
     if root == 'lake-curves':
         from . import lake_curves
         return True, next((v for v in lake_curves.catalog(db)['items'] if v['id'] == identifier), None) if identifier else lake_curves.catalog(db)
@@ -84,11 +92,20 @@ def get(server, path, query):
             return True, risk_scenarios.terrain_frame(db, identifier.split('/')[0], int(query.get('index', 0)))
         if root == 'risk-results' and identifier:
             return True, store.get(db, 'risk-results', identifier)
+        if path == 'risk-scenarios/reference-outlets':
+            import glob as _glob
+            outlet_files = sorted(_glob.glob(str(common.ROOT / 'config/operational/漫溢溢口参考-*.json')))
+            outlets = [read_json(Path(f)) for f in outlet_files]
+            return True, {'items': outlets}
         return True, risk_scenarios.detail(db, identifier) if identifier else risk_scenarios.catalog(db)
     if root == 'warnings':
         from . import warnings
         if identifier == 'rules':
-            return True, {'items': store.list_records(db, 'warning-rules')}
+            rules = store.list_records(db, 'warning-rules')
+            # When no rules have been saved yet, return the built-in defaults so
+            # the front-end can pre-fill the form rather than showing a blank table.
+            default = warnings.default_rules() if not rules else None
+            return True, {'items': rules, 'default': default}
         return True, store.get(db, 'warnings', identifier) if identifier else warnings.catalog(db)
     if root == 'reports':
         from . import reports

@@ -12,7 +12,7 @@ const displayFeatures=ref([]),detailedFeatures=ref(null),riverFeatures=ref([]),u
 const hover=ref(null),stationHoverCache=new Map();let hoverTicket=0
 function hoverAt(event,value){if(drag.value)return;const [x,y]=point(event);hover.value={...value,x:Math.max(8,Math.min(x+15,size.value.width-285)),y:Math.max(8,Math.min(y+15,size.value.height-190))}}
 function weatherHover(event,kind,item){hoverAt(event,mapHover(kind,item,{frame:weatherFrame.value,snow:props.snow,spatial:spatial.value}))}
-async function stationHover(event,station){const ticket=++hoverTicket;hoverAt(event,{title:station.name,source:'站点观测',rows:[{label:'位置',value:station.lon.toFixed(4)+'°E '+station.lat.toFixed(4)+'°N'}]});try{let data=stationHoverCache.get(station.id);if(!data){data=await api('station-hover?'+new URLSearchParams({stationId:station.id,...(props.frame?.day||props.snow?.day?{day:props.frame?.day||props.snow?.day}:{})}));stationHoverCache.set(station.id,data)}if(ticket===hoverTicket&&hover.value){hoverAt(event,{...data,title:station.name})}}catch{}}
+async function stationHover(event,station){const ticket=++hoverTicket;hoverAt(event,{title:station.name,dataSource:'站点观测',groups:[],_loading:true});try{let data=stationHoverCache.get(station.id);if(!data){data=await api('station-hover?'+new URLSearchParams({stationId:station.id,...(props.frame?.day||props.snow?.day?{day:props.frame?.day||props.snow?.day}:{})}));stationHoverCache.set(station.id,data)}if(ticket===hoverTicket&&hover.value){hoverAt(event,{...data,title:station.name,_station:station.id})}}catch{}}
 function clearHover(){hoverTicket++;hover.value=null}
 watch(()=>[props.variable,props.frame?.day,props.snow?.day,props.spatialBase],()=>{clearHover();stationHoverCache.clear()})
 const legendKey=ref(),legendGroup=ref(),mapTools=ref(),overlayBoxes=ref([])
@@ -208,7 +208,31 @@ onBeforeUnmount(()=>{observer?.disconnect();overlayObserver?.disconnect();loadTi
  <g v-if="showStations" v-for="s in positioned" :key="s.id" :data-station="s.id" :transform="`translate(${screen([s.lon,s.lat]).join(',')})`" :class="['screen-station',s.kind,{chosen:selected===s.id}]" @pointerenter="stationHover($event,s)" @pointerleave="clearHover" @click.stop="emit('select',s.id)" @keydown.enter="emit('select',s.id)" @keydown.space.prevent="emit('select',s.id)" role="button" tabindex="0" :aria-label="'查看'+s.name"><title>{{s.name}} · {{s.id.startsWith('SLC-')?'用户GCJ-02坐标近似转换至WGS84':'已登记站点位置'}}</title><path v-if="stationLabel(s.id)" :d="`M0 0L${stationLabel(s.id).leaderEnd[0]-stationLabel(s.id).anchor[0]},${stationLabel(s.id).leaderEnd[1]-stationLabel(s.id).anchor[1]}`" class="label-leader"/><circle class="station-halo" :r="selected===s.id?11:8"/><path v-if="s.kind==='rain'" :d="`M0 ${-stationRadius-1}L${stationRadius+1} ${stationRadius}H${-stationRadius-1}Z`"/><rect v-else-if="s.kind==='river'" :x="-stationRadius" :y="-stationRadius" :width="2*stationRadius" :height="2*stationRadius" transform="rotate(45)"/><circle v-else :r="stationRadius"/><text v-if="stationLabel(s.id)" :x="stationLabel(s.id).cx-stationLabel(s.id).anchor[0]" :y="stationLabel(s.id).cy-stationLabel(s.id).anchor[1]+4" text-anchor="middle">{{s.name.replace('色林错','')}}</text></g>
  <g v-if="showNames" class="basin-labels"><g v-for="l in labels" :key="l.id||l.kind" :data-label="l.id||l.kind" :data-anchor="l.anchor.join(',')" :class="['basin-map-label',l.id||l.kind,{focused:focus===l.id}]" role="button" tabindex="0" :aria-label="l.kind==='lake'?'色林错':l.name+'流域'" @click.stop="emit('feature',l)" @keydown.enter="emit('feature',l)"><text :x="l.cx" :y="l.cy+(l.lines.length===1?4:-3)" text-anchor="middle"><tspan v-for="(line,i) in l.lines" :key="i" :x="l.cx" :dy="i?13:0">{{line}}</tspan></text></g></g>
  <text x="18" y="25" class="north-label">↑ N</text><g class="scale-bar" :transform="`translate(18,${size.height-45})`"><path :d="`M0 -5V0H${scaleKm*camera.k}V-5`"/><text x="0" y="15">{{scaleKm}} km</text></g></svg>
- <aside v-if="hover" class="map-hover-card" role="status" :style="{left:hover.x+'px',top:hover.y+'px'}"><strong>{{hover.title}}</strong><time>{{hover.time||'最近有效观测'}}</time><dl><template v-for="(row,i) in hover.rows" :key="i"><dt>{{row.label}}</dt><dd>{{row.value}}<small v-if="row.time">{{row.time.replace('T',' ')}}</small><small v-if="row.source">{{row.source}}</small></dd></template></dl><small>{{hover.source}}</small><small v-if="hover.note">{{hover.note}}</small></aside>
+ <aside v-if="hover" class="map-hover-card" role="status" :style="{left:hover.x+'px',top:hover.y+'px'}" @click="hover._station&&emit('select',hover._station)" :class="{clickable:!!hover._station}">
+  <strong>{{hover.title}}</strong>
+  <time>{{hover.time||'最近有效观测'}}</time>
+  <template v-if="hover.groups&&hover.groups.length">
+   <div v-for="g in hover.groups" :key="g.variable" class="hover-group">
+    <span class="hover-var">{{g.label}}</span>
+    <div class="hover-timeline">
+     <span v-if="hover._loading" class="hover-loading">读取中…</span>
+     <template v-else v-for="(rec,ri) in g.records" :key="ri">
+      <span :class="['hover-rec',{latest:ri===g.records.length-1,missing:rec.value==null}]">
+       <em>{{rec.time?rec.time.replace('T',' ').slice(5,16):'—'}}</em>
+       <b>{{rec.value!=null?(typeof rec.value==='number'?rec.value.toFixed(3):rec.value)+' '+rec.unit:'缺测'}}</b>
+      </span>
+     </template>
+     <span v-if="!hover._loading&&!g.records.length" class="hover-loading">暂无记录</span>
+    </div>
+   </div>
+   <small v-if="hover._station" class="hover-hint">点击查看监测详情</small>
+  </template>
+  <template v-else-if="hover.rows&&hover.rows.length">
+   <dl><template v-for="(row,i) in hover.rows" :key="i"><dt>{{row.label}}</dt><dd>{{row.value}}</dd></template></dl>
+  </template>
+  <small class="hover-src">{{hover.dataSource||hover.source}}</small>
+  <small v-if="hover.note">{{hover.note}}</small>
+ </aside>
  <div ref="mapTools" class="screen-map-tools"><button aria-label="放大地图" @click="focusAt(1.4)">＋</button><button aria-label="缩小地图" @click="focusAt(1/1.4)">−</button><button v-if="selectedObject" :disabled="!selectedFeatures.length" @click="locateSelection">定位到{{selectedObject.scope==='unit'?'单元':'区域'}}</button><button :class="{on:target==='domain'&&zoom===1}" @click="reset()">全流域</button><button v-if="!selectedObject" :class="{on:target==='lake'&&zoom===1}" @click="reset('lake')">湖区</button></div>
  <div v-if="selectedObject" class="selected-object-caption">{{selectedObject.label}}<span v-if="!selectedFeatures.length"> · 该对象没有对应空间几何</span></div>
  <div class="screen-map-source">{{target==='selection'?'所选区域':target==='domain'?'全流域':'湖区'}} · 滚轮缩放 / 拖动平移</div>
@@ -221,5 +245,5 @@ onBeforeUnmount(()=>{observer?.disconnect();overlayObserver?.disconnect();loadTi
  </div></template>
 
 <style scoped>
-.map-hover-card{position:absolute;z-index:30;pointer-events:none;width:270px;padding:13px 15px;border:1px solid var(--line,#adc1c8);border-radius:7px;background:var(--panel,#fff);color:var(--ink,#193b49);box-shadow:0 5px 22px #15334424;font-size:12px}.map-hover-card strong{display:block;overflow-wrap:anywhere}.map-hover-card time,.map-hover-card small{display:block;color:var(--muted,#667f89);margin-top:5px}.map-hover-card dl{display:grid;grid-template-columns:1fr auto;gap:7px;margin:10px 0}.map-hover-card dt{overflow-wrap:anywhere}.map-hover-card dd{margin:0;font-variant-numeric:tabular-nums}
+.map-hover-card{position:absolute;z-index:30;width:285px;padding:13px 15px;border:1px solid var(--line,#adc1c8);border-radius:7px;background:var(--panel,#fff);color:var(--ink,#193b49);box-shadow:0 5px 22px #15334424;font-size:12px;pointer-events:none}.map-hover-card.clickable{pointer-events:auto;cursor:pointer}.map-hover-card.clickable:hover{background:var(--panel-hover,#f4f9fb)}.map-hover-card strong{display:block;overflow-wrap:anywhere;font-size:13px}.map-hover-card time,.map-hover-card small{display:block;color:var(--muted,#667f89);margin-top:5px}.map-hover-card dl{display:grid;grid-template-columns:1fr auto;gap:7px;margin:10px 0}.map-hover-card dt{overflow-wrap:anywhere}.map-hover-card dd{margin:0;font-variant-numeric:tabular-nums}.hover-group{margin:10px 0 4px}.hover-var{font-weight:600;color:var(--ink,#193b49);font-size:11px;text-transform:uppercase;letter-spacing:.04em}.hover-timeline{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}.hover-rec{display:flex;flex-direction:column;gap:2px;min-width:70px;padding:4px 7px;background:var(--surface,#f4f7f8);border-radius:4px;border:1px solid transparent}.hover-rec.latest{background:#e8f4f7;border-color:#aacdd6}.hover-rec.missing{opacity:.55}.hover-rec em{font-style:normal;color:var(--muted,#667f89);font-size:10px;white-space:nowrap}.hover-rec b{font-variant-numeric:tabular-nums;font-size:12px;font-weight:600;white-space:nowrap}.hover-loading{color:var(--muted,#667f89);font-size:11px;padding:4px 0}.hover-hint{color:#2d7fa0;margin-top:6px}.hover-src{margin-top:8px}
 </style>

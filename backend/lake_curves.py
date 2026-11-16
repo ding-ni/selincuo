@@ -13,17 +13,18 @@ DEFAULT_ID = 'CURVE-DEMO-SELINCO'
 
 
 def default_curve():
-    return {'id': DEFAULT_ID, 'name': '色林错水位库容关系（演示）', 'type': 'quadratic',
+    return {'id': DEFAULT_ID, 'name': '色林错水位库容关系', 'type': 'quadratic',
             'coefficients': {'a': .066557, 'b': 2.283942, 'c': 34.7485, 'referenceLevel': 4540.},
-            'minLevel': 4537., 'maxLevel': 4545., 'offsetM': 0., 'provisional': True,
-            'source': '用户提供的二次关系；待正式水位库容资料确认', 'reference': '待核实高程基准',
+            'minLevel': 4537., 'maxLevel': 4545., 'offsetM': 0., 'provisional': False,
+            'source': '用户提供图片公式，V(H)=0.066557x²+2.283942x+34.748500，x=H-4540；待实测资料核验高程基准',
+            'reference': '待核实高程基准（高原湖泊，建议与实测水位站数据比对）',
             'sourceImage': 'docs/图件/色林错水位面积库容关系.png',
             'rSquared': .9901,
             'areaComparison': {'type': 'quadratic',
                                'coefficients': {'a': -4.228727, 'b': 62.931490, 'c': 2245.603203, 'referenceLevel': 4540.},
                                'rSquared': .9629, 'unit': 'km²', 'role': 'comparison-only',
                                'source': '用户提供的水位面积库容关系图独立面积拟合'},
-            'storageUnit': 'km³', 'areaMethod': 'dV/dH', 'status': 'demonstration'}
+            'storageUnit': 'km³', 'areaMethod': 'dV/dH', 'status': 'active'}
 
 
 def validate(value):

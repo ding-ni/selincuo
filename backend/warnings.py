@@ -12,6 +12,37 @@ from . import operational_store as store
 COLORS = ('blue', 'yellow', 'orange', 'red')
 LABELS = {'blue': '蓝色', 'yellow': '黄色', 'orange': '橙色', 'red': '红色'}
 
+# Default suggested thresholds based on historical high-water and 2023 spill event.
+# These are reference values only: mode is 'scenario', not 'business'.
+# Platform operators must review and replace with confirmed survey values.
+DEFAULT_LEVELS = [
+    {'color': 'blue',   'levelM': 4543.00, 'probability': 0.30,
+     'description': '接近历史高水位，注意监视'},
+    {'color': 'yellow', 'levelM': 4543.50, 'probability': 0.30,
+     'description': '超历史实测最高，启动预警'},
+    {'color': 'orange', 'levelM': 4544.00, 'probability': 0.25,
+     'description': '接近东侧低洼溢口高程，准备应急'},
+    {'color': 'red',    'levelM': 4544.50, 'probability': 0.20,
+     'description': '漫溢高风险，立即启动应急预案'},
+]
+
+
+def default_rules():
+    """Return suggested threshold values when no rules have been saved yet.
+
+    These are based on 2023 spill-event reference data and published literature.
+    They are marked 'scenario' mode and must be confirmed before business use.
+    """
+    return {
+        'name': '色林错湖位情景判据（内置参考）',
+        'mode': 'scenario',
+        'source': '平台内置参考值（基于2023年漫溢事件），须由主管人员根据实测资料确认后替换',
+        'levels': [dict(color=r['color'], levelM=r['levelM'],
+                        probability=r['probability']) for r in DEFAULT_LEVELS],
+        'descriptions': {r['color']: r['description'] for r in DEFAULT_LEVELS},
+        '_isDefault': True,
+    }
+
 
 def catalog(db):
     expire(db)

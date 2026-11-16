@@ -67,7 +67,15 @@ class Jobs:
         # Worker threads run code imported by this process. The on-disk sources
         # must still match that startup identity before creating a new result.
         self.backend_source_identity = common.model_identity()
-        self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='selinco-model')
+        # Compute-intensive tasks (forecast, risk simulation, curve comparison)
+        # run serially on one thread. IO-bound tasks (data sync, reports,
+        # ensemble fetch) get their own pool so they are not blocked by a
+        # long-running forecast.
+        self.compute_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='selinco-compute')
+        self.io_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix='selinco-io')
+        # Legacy alias so existing callers that use self.executor still work.
+        self.executor = self.compute_executor
+        self._IO_KINDS = frozenset({'data-sync', 'report', 'forecast-input-ensemble'})
         self.cancelled = set()
         self.lock = threading.RLock()
         self.restore_pending = False
@@ -157,7 +165,8 @@ class Jobs:
                     connection.execute('INSERT INTO settings(key,value) VALUES(?,?)',
                         (submission[0], canonical({'fingerprint': submission[1], 'taskId': identifier})))
             self.db.log('task.submit', {'id': identifier, 'kind': kind})
-            self.executor.submit(self._execute, identifier)
+            pool = self.io_executor if kind in self._IO_KINDS else self.compute_executor
+            pool.submit(self._execute, identifier)
             return self.public(self.db.task(identifier))
         release_bound=kind=='simulation' and bool(payload.get('expectedReleaseId'))
         if release_bound:

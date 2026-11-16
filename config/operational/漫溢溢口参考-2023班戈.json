@@ -1,0 +1,13 @@
+{
+  "id": "BREACH-2023-BANGE",
+  "name": "2023年班戈湖漫溢口（参考）",
+  "lon": 89.370,
+  "lat": 31.772,
+  "crestM": 4544.0,
+  "widthM": 50,
+  "coefficient": 0.385,
+  "releaseCapacityM3s": null,
+  "source": "2023年漫溢事件，坐标基于SLC-E站（89.364°E 31.776°N）东偏南约500m估算，高程参考Copernicus GLO-90，须实地核验后更新",
+  "provisional": true,
+  "createdAt": "2026-11-16"
+}

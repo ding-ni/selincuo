@@ -3,7 +3,7 @@ import {ref,reactive,computed,onMounted,onBeforeUnmount,watch} from 'vue'
 import {api,number} from './api.mjs'
 import Chart from './Chart.vue'
 import TerrainReplay from './TerrainReplay.vue'
-const error=ref(''),notice=ref(''),busy=ref(false),catalog=ref({scenarios:[],results:[],exposures:[]}),forecasts=ref([]),forecastId=ref(''),scenarioId=ref(''),resultId=ref(''),frame=ref(null),index=ref(0),view=ref('map'),playing=ref(false),picking=ref(false),outline=ref(null),reports=ref([]),raster=ref(''),pointer=ref(null),pending=ref(null)
+const error=ref(''),notice=ref(''),busy=ref(false),catalog=ref({scenarios:[],results:[],exposures:[]}),forecasts=ref([]),forecastId=ref(''),scenarioId=ref(''),resultId=ref(''),frame=ref(null),index=ref(0),view=ref('map'),playing=ref(false),picking=ref(false),outline=ref(null),reports=ref([]),raster=ref(''),pointer=ref(null),pending=ref(null),referenceOutlets=ref([])
 const form=reactive({name:'湖周漫溢演示情景',demOffsetM:0,datumSource:'演示情景高程偏移，未经实测核定',marginKm:5,outlet:{lon:null,lat:null,crestM:null,widthM:30,coefficient:.6,releaseCapacityM3s:0},exposureIds:[],alternatives:[]})
 const exposureKind=ref('facility'),exposureName=ref(''),exposureSource=ref('')
 let pollTimer,playTimer,frameTicket=0
@@ -12,13 +12,38 @@ function project(p){const b=bounds.value;return [(p[0]-b[0])/(b[2]-b[0])*1000,(b
 function path(geometry){if(!geometry)return '';const polys=geometry.type==='Polygon'?[geometry.coordinates]:geometry.type==='MultiPolygon'?geometry.coordinates:[];return polys.map(poly=>poly.map(ring=>ring.map((p,i)=>(i?'L':'M')+project(p).join(',')).join(' ')+'Z').join(' ')).join(' ')}
 const lakePath=computed(()=>outline.value?.features.filter(f=>f.properties.kind==='lake').map(f=>path(f.geometry)).join(' ')||'')
 async function action(fn){busy.value=true;error.value='';notice.value='';try{return await fn()}catch(e){error.value=e.message}finally{busy.value=false}}
-async function refresh(){const [r,f,p]=await Promise.all([api('risk-scenarios'),api('forecasts'),api('reports')]);catalog.value=r;forecasts.value=f.forecasts||f.items||f.results||[];reports.value=p.reports||[];if(!forecastId.value&&forecasts.value.length)forecastId.value=forecasts.value[0].id;if(resultId.value&&!r.results.some(x=>x.id===resultId.value)){resultId.value='';frame.value=null}}
+async function refresh(){const [r,f,p]=await Promise.all([api('risk-scenarios'),api('forecasts'),api('reports')]);catalog.value=r;forecasts.value=f.forecasts||f.items||f.results||[];reports.value=p.reports||[];if(!forecastId.value&&forecasts.value.length)forecastId.value=forecasts.value[0].id;if(resultId.value&&!r.results.some(x=>x.id===resultId.value)){resultId.value='';frame.value=null};try{const ref=await api('risk-scenarios/reference-outlets');referenceOutlets.value=ref.items||[]}catch{}}
+function loadReferenceOutlet(outlet){Object.assign(form.outlet,{lon:outlet.lon,lat:outlet.lat,crestM:outlet.crestM,widthM:outlet.widthM,coefficient:outlet.coefficient,releaseCapacityM3s:outlet.releaseCapacityM3s??0});if(outlet.provisional)notice.value='⚠ 已载入参考溢口"'+outlet.name+'"，坐标为估算值，须实地核验后使用'
+else notice.value='已载入溢口参考：'+outlet.name}
 function chooseScenario(){const value=catalog.value.scenarios.find(s=>s.id===scenarioId.value);if(value)Object.assign(form,structuredClone(value));else Object.assign(form,{name:'新的漫溢情景',outlet:{lon:null,lat:null,crestM:null,widthM:30,coefficient:.6,releaseCapacityM3s:0},alternatives:[],exposureIds:[]})}
 async function save(){return action(async()=>{const value=await api('risk-scenarios'+(scenarioId.value?'/'+scenarioId.value:''),form);scenarioId.value=value.id;await refresh();notice.value='情景已保存';return value})}
 async function run(){await action(async()=>{let sid=scenarioId.value;if(!sid){const value=await api('risk-scenarios',form);sid=value.id;scenarioId.value=sid}else await api('risk-scenarios/'+sid,form);const task=await api('risk-scenarios/run',{scenarioId:sid,forecastId:forecastId.value});pending.value=task;notice.value='漫溢情景计算已提交';await refresh()})}
 async function loadFrame(){if(!resultId.value)return;const ticket=++frameTicket;try{const value=await api('risk-results/'+resultId.value+'/frame?index='+index.value);if(ticket===frameTicket)frame.value=value}catch(e){if(ticket===frameTicket)error.value=e.message}}
 watch(resultId,()=>{index.value=0;frame.value=null;loadFrame()});watch(index,loadFrame)
-watch(frame,value=>{if(!value){raster.value='';return}const t=value.terrain,c=document.createElement('canvas');c.width=t.width;c.height=t.height;const ctx=c.getContext('2d'),image=ctx.createImageData(t.width,t.height),heights=t.elevations.flat().filter((_,i)=>t.valid[Math.floor(i/t.width)][i%t.width]),lo=Math.min(...heights),hi=Math.max(...heights);for(let y=0;y<t.height;y++)for(let x=0;x<t.width;x++){const i=(y*t.width+x)*4,z=(t.elevations[y][x]-lo)/Math.max(1,hi-lo),d=value.depths[y][x];let rgb=[115+100*z,137+70*z,111+65*z];if(t.lakeMask[y][x])rgb=[38,109,142];else if(d>0)rgb=[42,170-Math.min(80,d*4),211-Math.min(50,d*2)];image.data.set([...rgb,t.valid[y][x]?255:0],i)}ctx.putImageData(image,0,0);raster.value=c.toDataURL()})
+watch(frame,value=>{
+ if(!value){raster.value='';return}
+ const t=value.terrain,c=document.createElement('canvas')
+ c.width=t.width;c.height=t.height
+ const ctx=c.getContext('2d'),image=ctx.createImageData(t.width,t.height)
+ const heights=t.elevations.flat().filter((_,i)=>t.valid[Math.floor(i/t.width)][i%t.width])
+ const lo=Math.min(...heights),hi=Math.max(...heights)
+ // 4-tier depth classification for inundation risk
+ // 0–0.5m low (yellow), 0.5–1.5m medium (orange-yellow), 1.5–3m high (orange-red), >3m critical (deep red)
+ function depthColor(d){
+  if(d>3)return[178,30,30]      // critical – deep red
+  if(d>1.5)return[210,80,25]    // high – orange-red
+  if(d>0.5)return[220,145,30]   // medium – amber
+  return[230,195,60]            // low – yellow
+ }
+ for(let y=0;y<t.height;y++)for(let x=0;x<t.width;x++){
+  const i=(y*t.width+x)*4,z=(t.elevations[y][x]-lo)/Math.max(1,hi-lo),d=value.depths[y][x]
+  let rgb=[115+100*z,137+70*z,111+65*z]
+  if(t.lakeMask[y][x])rgb=[38,109,142]
+  else if(d>0)rgb=depthColor(d)
+  image.data.set([...rgb,t.valid[y][x]?255:0],i)
+ }
+ ctx.putImageData(image,0,0);raster.value=c.toDataURL()
+})
 function pick(event){const r=event.currentTarget.getBoundingClientRect(),x=(event.clientX-r.left)/r.width,y=(event.clientY-r.top)/r.height,b=bounds.value;if(picking.value){form.outlet.lon=Number((b[0]+x*(b[2]-b[0])).toFixed(6));form.outlet.lat=Number((b[3]-y*(b[3]-b[1])).toFixed(6));picking.value=false;notice.value='已选溢口位置，请填写高程和宽度'}}
 function inspect(event){if(!frame.value)return;const r=event.currentTarget.getBoundingClientRect(),t=frame.value.terrain,x=Math.floor((event.clientX-r.left)/r.width*t.width),y=Math.floor((event.clientY-r.top)/r.height*t.height);if(x>=0&&x<t.width&&y>=0&&y<t.height&&t.valid[y][x])pointer.value={x:event.clientX-r.left,y:event.clientY-r.top,elevation:t.elevations[y][x],depth:frame.value.depths[y][x],lake:t.lakeMask[y][x]};else pointer.value=null}
 function togglePlay(){playing.value=!playing.value;clearInterval(playTimer);if(playing.value)playTimer=setInterval(()=>{if(index.value<totalFrames.value-1)index.value++;else{playing.value=false;clearInterval(playTimer)}},850)}
@@ -31,10 +56,113 @@ async function poll(){if(!pending.value?.id)return;try{const value=await api('ta
 onMounted(async()=>{await action(refresh);try{const response=await fetch('/spatial/map.geojson');if(response.ok)outline.value=await response.json()}catch{}pollTimer=setInterval(poll,2500)})
 onBeforeUnmount(()=>{clearInterval(pollTimer);clearInterval(playTimer);frameTicket++})
 </script>
-<template><section class="risk-workspace"><div class="panel-title"><div><h2>漫溢与应急</h2><p class="muted">湖位情景、潜在淹没与方案对比</p></div><button @click="action(refresh)" :disabled="busy">刷新</button></div><p v-if="error" class="error" role="alert">{{error}}</p><p v-if="notice" class="note" role="status">{{notice}}</p><div v-if="pending" class="task-progress"><strong>{{pending.message||'后台计算中'}}</strong><progress max="100" :value="pending.progress||0"></progress><span>{{number(pending.progress,0)}}%</span></div>
-<div class="risk-columns"><aside class="risk-config"><div class="panel-title"><h3>情景配置</h3><span class="scenario-tag">情景估算</span></div><label>已保存情景<select v-model="scenarioId" @change="chooseScenario"><option value="">新建情景</option><option v-for="s in catalog.scenarios" :key="s.id" :value="s.id">{{s.name}}</option></select></label><label>情景名称<input v-model="form.name"></label><label>来水与气象<select v-model="forecastId"><option value="">请选择已完成预测</option><option v-for="f in forecasts" :key="f.id" :value="f.id">{{f.name}} · {{f.stateTime||f.start||f.createdAt}}</option></select></label><fieldset><legend>溢口</legend><button :class="{primary:picking}" @click="picking=!picking">{{picking?'请在右侧地图点选':'地图选择位置'}}</button><div class="form-pair"><label>经度<input type="number" step=".000001" v-model.number="form.outlet.lon"></label><label>纬度<input type="number" step=".000001" v-model.number="form.outlet.lat"></label><label>高程 m<input type="number" step=".01" v-model.number="form.outlet.crestM"></label><label>宽度 m<input type="number" min=".01" step="1" v-model.number="form.outlet.widthM"></label><label>流量系数<input type="number" min=".01" max="1" step=".01" v-model.number="form.outlet.coefficient"></label><label>人工泄流能力 m³/s<input type="number" min="0" step=".1" v-model.number="form.outlet.releaseCapacityM3s"></label></div><p class="muted">人工泄流按溢口高程以上可释放水量估算，与自然溢流共用库容上限；不代表闸门或实体工程控制。</p></fieldset><details><summary>高程与范围</summary><label>湖位到DEM偏移 m<input type="number" step=".01" v-model.number="form.demOffsetM"></label><label>偏移依据<input v-model="form.datumSource"></label><label>湖周扩展 km<input type="number" min=".2" max="50" v-model.number="form.marginKm"></label></details><details><summary>承灾体与预案</summary><label v-for="e in catalog.exposures" :key="e.id" class="check"><input type="checkbox" v-model="form.exposureIds" :value="e.id">{{e.name}} · {{e.featureCount}}项</label><p v-if="!catalog.exposures.length" class="muted">尚未导入居民点、道路或设施。</p><label class="button file-button" :class="{disabled:!scenarioId}">关联预案附件<input type="file" :disabled="!scenarioId" @change="attachment"></label></details><details><summary>工程情景比选</summary><p class="muted">各调整方案可分别设置人工泄流能力；均按各自溢口高程以上的可释放库容核算。</p><div v-for="(a,i) in form.alternatives" :key="i" class="alternative"><label>名称<input v-model="a.name"></label><div class="form-pair"><label>高程 m<input type="number" step=".01" v-model.number="a.crestM"></label><label>宽度 m<input type="number" v-model.number="a.widthM"></label><label>人工泄流 m³/s<input type="number" min="0" step=".1" v-model.number="a.releaseCapacityM3s"></label></div><button class="link" @click="form.alternatives.splice(i,1)">取消此方案</button></div><button @click="addAlternative">添加调整方案</button></details><div class="actions"><button :disabled="busy" @click="save">保存情景</button><button class="primary" :disabled="busy||!!pending||!forecastId" @click="run">计算并比选</button></div></aside>
-<div class="risk-main"><div class="risk-view-toolbar"><label>已完成结果<select v-model="resultId"><option value="">请选择结果</option><option v-for="r in catalog.results" :key="r.id" :value="r.id">{{r.name}} · {{r.createdAt}}</option></select></label><div class="segmented"><button :class="{active:view==='map'}" @click="view='map'">二维</button><button :class="{active:view==='terrain'}" :disabled="!frame" @click="view='terrain'">三维地形</button></div></div><TerrainReplay v-if="view==='terrain'&&frame" :frame="frame"/><div v-else class="risk-map" :class="{picking}" @pointerleave="pointer=null"><svg viewBox="0 0 1000 680" preserveAspectRatio="none" @click="pick" @pointermove="inspect"><rect width="1000" height="680" fill="#dde9e4"/><image v-if="raster" :href="raster" x="0" y="0" width="1000" height="680" preserveAspectRatio="none"/><path v-else :d="lakePath" fill="#2e7c9f" stroke="#225d78" stroke-width="2"/><g v-if="mapPoint"><circle :cx="mapPoint[0]" :cy="mapPoint[1]" r="9" fill="#c1513e" stroke="white" stroke-width="3"/><text :x="mapPoint[0]+15" :y="mapPoint[1]+4" fill="#6d3029" font-size="17">溢口情景点</text></g></svg><div v-if="pointer" class="map-inspect" :style="{left:Math.min(pointer.x+12,650)+'px',top:Math.max(6,pointer.y-55)+'px'}">高程 {{number(pointer.elevation,1)}} m<br>{{pointer.lake?'原湖区，无湖底水深资料':'新增淹没深 '+number(pointer.depth,2)+' m'}}</div><span class="map-note">{{frame?'Copernicus GLO-90 · 湖周连通淹没情景':'湖泊边界 · 点选溢口并填写情景参数'}}</span></div><div v-if="rows.length" class="risk-timeline"><button @click="togglePlay">{{playing?'暂停':'播放'}}</button><input type="range" min="0" :max="totalFrames-1" v-model.number="index"><span>{{rows[index]?.time.replace('T',' ')}} · {{number(rows[index]?.level,3)}} m</span></div><div v-if="main" class="risk-metrics"><article><small>预计起溢</small><b>{{main.firstSpillTime?.replace('T',' ')||'未达到溢口'}}</b></article><article><small>最大溢流</small><b>{{number(main.peakSpillM3s,2)}} <em>m³/s</em></b></article><article><small>新增潜在淹没</small><b>{{number(main.inundatedAreaKm2,2)}} <em>km²</em></b></article><article><small>受影响对象</small><b>{{main.effects.count}} <em>个</em></b></article></div><Chart v-if="rows.length" :rows="rows.map(r=>({...r,date:r.time}))" :series="[{key:'level',label:'湖位',type:'line'}]" unit="m" :hourly="true" context="risk-level"/><p class="risk-limit">本页为简化溢流及静态地形连通淹没情景；三维视图展示地形与结果，湖内不估算水下深度。</p></div></div>
-<section v-if="result" class="risk-section"><div class="panel-title"><h3>方案比选</h3><button @click="report('comparison')" :disabled="busy||!!pending">导出对比报告</button></div><div class="table-wrap"><table><thead><tr><th>方案</th><th>最高湖位 m</th><th>自然溢流 m³</th><th>人工泄流 m³</th><th>总出流 m³</th><th>新增淹没 km²</th><th>影响对象</th><th>道路 m</th></tr></thead><tbody><tr v-for="r in result.comparisons" :key="r.name"><td>{{r.name}}</td><td>{{number(r.peakLevelM,3)}}</td><td>{{number(r.spillVolumeM3,0)}}</td><td>{{number(r.releaseVolumeM3,0)}}</td><td>{{number(r.totalOutflowM3,0)}}</td><td>{{number(r.inundatedAreaKm2,3)}}</td><td>{{r.effects.count}}</td><td>{{number(r.effects.roadLengthM,0)}}</td></tr></tbody></table></div><details><summary>受影响对象明细</summary><div class="table-wrap"><table><thead><tr><th>名称</th><th>类型</th><th>最大水深 m</th><th>道路受影响 m</th><th>来源</th></tr></thead><tbody><tr v-for="r in main.effects.objects" :key="r.exposureId+':'+r.featureId"><td>{{r.name}}</td><td>{{r.kind}}</td><td>{{number(r.maxDepthM,2)}}</td><td>{{number(r.affectedLengthM,0)}}</td><td>{{r.source}}</td></tr></tbody></table></div></details></section>
-<section class="risk-section"><details><summary>承灾体资料接入</summary><div class="exposure-form"><label>资料名称<input v-model="exposureName"></label><label>对象类别<select v-model="exposureKind"><option value="facility">重点设施</option><option value="settlement">居民点</option><option value="road">道路</option></select></label><label>来源<input v-model="exposureSource"></label><label class="button file-button">导入GeoJSON / Shapefile ZIP<input type="file" accept=".json,.geojson,.zip" @change="importExposure"></label><button :disabled="busy||!!pending" @click="osm">读取湖周公开道路与居民点</button></div><p class="muted">公开地图来源为OpenStreetMap contributors，ODbL。统计范围以实际导入对象为准。</p></details></section><section class="risk-section"><div class="panel-title"><h3>日报与周报</h3><div class="actions"><button :disabled="busy||!!pending" @click="report('monitoring-daily')">生成监测日报</button><button :disabled="busy||!!pending" @click="report('warning-weekly')">生成预警周报</button></div></div><div class="report-list"><article v-for="r in reports" :key="r.id"><span>{{r.name}} · {{r.createdAt}}</span><a v-for="a in r.artifacts" :key="a.name" :href="a.downloadUrl">{{a.name}}</a></article><p v-if="!reports.length" class="empty">暂无已生成报告。</p></div></section></section></template>
-<style scoped>.risk-columns{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;align-items:start}.risk-config{padding:18px;background:var(--panel,#fff);border:1px solid var(--border,#cfdbdd);border-radius:10px}.risk-config label{display:flex;flex-direction:column;gap:5px;margin:10px 0;font-size:13px}.risk-config input,.risk-config select,.risk-view-toolbar select{width:100%;min-width:0}.risk-config fieldset{border:1px solid var(--border,#cfdbdd);border-radius:6px;margin:18px 0;padding:10px}.risk-config legend{font-size:13px;padding:0 5px}.form-pair{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}.risk-config .check{flex-direction:row;align-items:center}.risk-config .check input{width:auto}.risk-config details{padding:12px 0;border-top:1px solid var(--border,#cfdbdd)}.risk-config .actions{margin-top:16px}.risk-main{min-width:0}.risk-view-toolbar{display:flex;gap:16px;justify-content:space-between;align-items:end;margin-bottom:12px}.risk-view-toolbar label{display:flex;flex-direction:column;gap:5px;max-width:75%;min-width:0}.segmented{display:flex;gap:3px}.segmented .active{background:#245e70;color:#fff}.risk-map{position:relative;height:460px;border:1px solid var(--border,#cfdbdd);border-radius:10px;overflow:hidden}.risk-map.picking{cursor:crosshair}.risk-map svg{width:100%;height:100%;display:block}.map-note{position:absolute;bottom:12px;left:12px;background:#fffdf0e8;padding:6px 10px;font-size:12px;color:#305461;border-radius:4px}.map-inspect{position:absolute;pointer-events:none;background:#163844ee;color:#fff;padding:9px 12px;font-size:12px;border-radius:5px;white-space:nowrap}.risk-timeline{display:flex;align-items:center;gap:12px;margin:15px 0;font-size:12px}.risk-timeline input{flex:1;min-width:70px}.risk-timeline span{min-width:220px}.risk-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}.risk-metrics article{padding:13px;background:var(--panel,#fff);border:1px solid var(--border,#d6e0e1);border-radius:8px}.risk-metrics small{display:block;color:var(--muted,#647a80);margin-bottom:9px}.risk-metrics b{font-size:17px;overflow-wrap:anywhere}.risk-metrics em{font-size:12px;font-style:normal;font-weight:400}.risk-limit{font-size:12px;color:var(--muted,#647a80);line-height:1.8}.risk-section{margin-top:22px;padding:18px;background:var(--panel,#fff);border:1px solid var(--border,#d6e0e1);border-radius:10px}.exposure-form{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-top:16px}.exposure-form label{display:flex;flex-direction:column;gap:6px}.file-button{position:relative;overflow:hidden;cursor:pointer}.file-button input{position:absolute;inset:0;opacity:0;cursor:pointer}.alternative{padding:8px 0;border-bottom:1px solid var(--border,#d6e0e1)}.scenario-tag{font-size:11px;color:#936c2b;background:#f4e8cf;padding:4px 7px;border-radius:4px}.report-list article{display:flex;gap:15px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--border,#d6e0e1);font-size:13px}.report-list span{flex:1}.task-progress{display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:15px;background:#e1eee9;border-radius:8px}.task-progress progress{flex:1}@media(max-width:1050px){.risk-columns{grid-template-columns:260px minmax(0,1fr)}.risk-metrics{grid-template-columns:1fr 1fr}.risk-timeline{flex-wrap:wrap}.risk-timeline span{min-width:0}}@media(max-width:760px){.risk-columns{grid-template-columns:1fr}.risk-map{height:350px}.risk-view-toolbar{align-items:stretch}.risk-section .panel-title{flex-wrap:wrap}}
+<template><section class="risk-workspace">
+<div class="panel-title"><div><h2>漫溢与应急</h2><p class="muted">湖位情景、潜在淹没与方案对比</p></div><button @click="action(refresh)" :disabled="busy">刷新</button></div>
+<p v-if="error" class="error" role="alert">{{error}}</p>
+<p v-if="notice" class="note" role="status">{{notice}}</p>
+<div v-if="pending" class="task-progress"><strong>{{pending.message||'后台计算中'}}</strong><progress max="100" :value="pending.progress||0"></progress><span>{{number(pending.progress,0)}}%</span></div>
+<div class="risk-columns">
+<aside class="risk-config">
+  <div class="panel-title"><h3>情景配置</h3><span class="scenario-tag">情景估算</span></div>
+  <label>已保存情景<select v-model="scenarioId" @change="chooseScenario"><option value="">新建情景</option><option v-for="s in catalog.scenarios" :key="s.id" :value="s.id">{{s.name}}</option></select></label>
+  <label>情景名称<input v-model="form.name"></label>
+  <label>来水与气象<select v-model="forecastId"><option value="">请选择已完成预测</option><option v-for="f in forecasts" :key="f.id" :value="f.id">{{f.name}} · {{f.stateTime||f.start||f.createdAt}}</option></select></label>
+  <fieldset>
+    <legend>溢口</legend>
+    <div class="outlet-actions">
+      <button :class="{primary:picking}" @click="picking=!picking">{{picking?'请在右侧地图点选':'地图选择位置'}}</button>
+      <div v-if="referenceOutlets.length" class="ref-outlet-wrap">
+        <select @change="e=>{const o=referenceOutlets.find(x=>x.id===e.target.value);if(o)loadReferenceOutlet(o);e.target.value=''}">
+          <option value="">加载参考溢口…</option>
+          <option v-for="o in referenceOutlets" :key="o.id" :value="o.id">{{o.name}}</option>
+        </select>
+      </div>
+    </div>
+    <div v-if="form.outlet.lon!=null" class="outlet-provisional-hint">
+      ⚠ 坐标为估算值，须实地核验后正式使用
+    </div>
+    <div class="form-pair">
+      <label>经度<input type="number" step=".000001" v-model.number="form.outlet.lon"></label>
+      <label>纬度<input type="number" step=".000001" v-model.number="form.outlet.lat"></label>
+      <label>高程 m<input type="number" step=".01" v-model.number="form.outlet.crestM"></label>
+      <label>宽度 m<input type="number" min=".01" step="1" v-model.number="form.outlet.widthM"></label>
+      <label>流量系数<input type="number" min=".01" max="1" step=".01" v-model.number="form.outlet.coefficient"></label>
+      <label>人工泄流能力 m³/s<input type="number" min="0" step=".1" v-model.number="form.outlet.releaseCapacityM3s"></label>
+    </div>
+    <p class="muted">人工泄流按溢口高程以上可释放水量估算，与自然溢流共用库容上限；不代表闸门或实体工程控制。</p>
+  </fieldset>
+  <details><summary>高程与范围</summary>
+    <label>湖位到DEM偏移 m<input type="number" step=".01" v-model.number="form.demOffsetM"></label>
+    <label>偏移依据<input v-model="form.datumSource"></label>
+    <label>湖周扩展 km<input type="number" min=".2" max="50" v-model.number="form.marginKm"></label>
+  </details>
+  <details><summary>承灾体与预案</summary>
+    <label v-for="e in catalog.exposures" :key="e.id" class="check"><input type="checkbox" v-model="form.exposureIds" :value="e.id">{{e.name}} · {{e.featureCount}}项</label>
+    <p v-if="!catalog.exposures.length" class="muted">尚未导入居民点、道路或设施。</p>
+    <label class="button file-button" :class="{disabled:!scenarioId}">关联预案附件<input type="file" :disabled="!scenarioId" @change="attachment"></label>
+  </details>
+  <details><summary>工程情景比选</summary>
+    <p class="muted">各调整方案可分别设置人工泄流能力；均按各自溢口高程以上的可释放库容核算。</p>
+    <div v-for="(a,i) in form.alternatives" :key="i" class="alternative">
+      <label>名称<input v-model="a.name"></label>
+      <div class="form-pair">
+        <label>高程 m<input type="number" step=".01" v-model.number="a.crestM"></label>
+        <label>宽度 m<input type="number" v-model.number="a.widthM"></label>
+        <label>人工泄流 m³/s<input type="number" min="0" step=".1" v-model.number="a.releaseCapacityM3s"></label>
+      </div>
+      <button class="link" @click="form.alternatives.splice(i,1)">取消此方案</button>
+    </div>
+    <button @click="addAlternative">添加调整方案</button>
+  </details>
+  <div class="actions"><button :disabled="busy" @click="save">保存情景</button><button class="primary" :disabled="busy||!!pending||!forecastId" @click="run">计算并比选</button></div>
+</aside>
+<div class="risk-main">
+  <div class="risk-view-toolbar">
+    <label>已完成结果<select v-model="resultId"><option value="">请选择结果</option><option v-for="r in catalog.results" :key="r.id" :value="r.id">{{r.name}} · {{r.createdAt}}</option></select></label>
+    <div class="segmented"><button :class="{active:view==='map'}" @click="view='map'">二维</button><button :class="{active:view==='terrain'}" :disabled="!frame" @click="view='terrain'">三维地形</button></div>
+  </div>
+  <TerrainReplay v-if="view==='terrain'&&frame" :frame="frame"/>
+  <div v-else-if="view==='terrain'&&!frame" class="terrain-empty">
+    <p>暂无计算结果。请先配置溢口情景并运行计算，完成后可在此查看三维地形回放。</p>
+    <button @click="view='map'">返回二维视图</button>
+  </div>
+  <div v-else class="risk-map" :class="{picking}" @pointerleave="pointer=null">
+    <svg viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet" @click="pick" @pointermove="inspect">
+      <rect width="1000" height="680" fill="#dde9e4"/>
+      <image v-if="raster" :href="raster" x="0" y="0" width="1000" height="680" preserveAspectRatio="xMidYMid meet"/>
+      <path v-else :d="lakePath" fill="#2e7c9f" stroke="#225d78" stroke-width="2"/>
+      <g v-if="mapPoint"><circle :cx="mapPoint[0]" :cy="mapPoint[1]" r="9" fill="#c1513e" stroke="white" stroke-width="3"/><text :x="mapPoint[0]+15" :y="mapPoint[1]+4" fill="#6d3029" font-size="17">溢口</text></g>
+    </svg>
+    <!-- Depth legend -->
+    <div v-if="raster" class="depth-legend">
+      <b>淹没水深</b>
+      <div class="depth-legend-items">
+        <span><i style="background:#e6c33c"></i>0–0.5 m 低风险</span>
+        <span><i style="background:#dc911e"></i>0.5–1.5 m 中风险</span>
+        <span><i style="background:#d25019"></i>1.5–3 m 高风险</span>
+        <span><i style="background:#b21e1e"></i>&gt;3 m 极高风险</span>
+      </div>
+    </div>
+    <div v-if="pointer" class="map-inspect" :style="{left:Math.min(pointer.x+12,650)+'px',top:Math.max(6,pointer.y-55)+'px'}">高程 {{number(pointer.elevation,1)}} m<br>{{pointer.lake?'原湖区，无湖底水深资料':'新增淹没深 '+number(pointer.depth,2)+' m'}}</div>
+    <span class="map-note">{{frame?'Copernicus GLO-90 · 湖周连通淹没情景':'湖泊边界 · 点选溢口并填写情景参数'}}</span>
+  </div>
+  <div v-if="rows.length" class="risk-timeline"><button @click="togglePlay">{{playing?'暂停':'播放'}}</button><input type="range" min="0" :max="totalFrames-1" v-model.number="index"><span>{{rows[index]?.time.replace('T',' ')}} · {{number(rows[index]?.level,3)}} m</span></div>
+  <div v-if="main" class="risk-metrics">
+    <article><small>预计起溢</small><b>{{main.firstSpillTime?.replace('T',' ')||'未达到溢口'}}</b></article>
+    <article><small>最大溢流</small><b>{{number(main.peakSpillM3s,2)}} <em>m³/s</em></b></article>
+    <article><small>新增潜在淹没</small><b>{{number(main.inundatedAreaKm2,2)}} <em>km²</em></b></article>
+    <article><small>受影响对象</small><b>{{main.effects.count}} <em>个</em></b></article>
+  </div>
+  <Chart v-if="rows.length" :rows="rows.map(r=>({...r,date:r.time}))" :series="[{key:'level',label:'湖位',type:'line'}]" unit="m" :hourly="true" context="risk-level"/>
+  <p class="risk-limit">本页为简化溢流及静态地形连通淹没情景；三维视图展示地形与结果，湖内不估算水下深度。</p>
+</div></div>
+<section v-if="result" class="risk-section">
+  <div class="panel-title"><h3>方案比选</h3><button @click="report('comparison')" :disabled="busy||!!pending">导出对比报告</button></div>
+  <div class="table-wrap"><table><thead><tr><th>方案</th><th>最高湖位 m</th><th>自然溢流 m³</th><th>人工泄流 m³</th><th>总出流 m³</th><th>新增淹没 km²</th><th>影响对象</th><th>道路 m</th></tr></thead><tbody><tr v-for="r in result.comparisons" :key="r.name"><td>{{r.name}}</td><td>{{number(r.peakLevelM,3)}}</td><td>{{number(r.spillVolumeM3,0)}}</td><td>{{number(r.releaseVolumeM3,0)}}</td><td>{{number(r.totalOutflowM3,0)}}</td><td>{{number(r.inundatedAreaKm2,3)}}</td><td>{{r.effects.count}}</td><td>{{number(r.effects.roadLengthM,0)}}</td></tr></tbody></table></div>
+  <details><summary>受影响对象明细</summary><div class="table-wrap"><table><thead><tr><th>名称</th><th>类型</th><th>最大水深 m</th><th>道路受影响 m</th></tr></thead><tbody><tr v-for="r in main.effects.objects" :key="r.exposureId+':'+r.featureId"><td>{{r.name}}</td><td>{{r.kind}}</td><td>{{number(r.maxDepthM,2)}}</td><td>{{number(r.affectedLengthM,0)}}</td></tr></tbody></table></div></details>
+</section>
+<section class="risk-section"><details><summary>承灾体资料接入</summary><div class="exposure-form"><label>资料名称<input v-model="exposureName"></label><label>对象类别<select v-model="exposureKind"><option value="facility">重点设施</option><option value="settlement">居民点</option><option value="road">道路</option></select></label><label>来源说明<input v-model="exposureSource" placeholder="数据来源或调查时间"></label><label class="button file-button">导入GeoJSON / Shapefile ZIP<input type="file" accept=".json,.geojson,.zip" @change="importExposure"></label><button :disabled="busy||!!pending" @click="osm">读取湖周公开道路与居民点</button></div><p class="muted">公开地图来源为OpenStreetMap contributors，ODbL。统计范围以实际导入对象为准。</p></details></section>
+<section class="risk-section"><div class="panel-title"><h3>日报与周报</h3><div class="actions"><button :disabled="busy||!!pending" @click="report('monitoring-daily')">生成监测日报</button><button :disabled="busy||!!pending" @click="report('warning-weekly')">生成预警周报</button></div></div><div class="report-list"><article v-for="r in reports" :key="r.id"><span>{{r.name}} · {{r.createdAt}}</span><a v-for="a in r.artifacts" :key="a.name" :href="a.downloadUrl">{{a.name}}</a></article><p v-if="!reports.length" class="empty">暂无已生成报告。</p></div></section>
+</section></template>
+<style scoped>.risk-columns{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;align-items:start}.risk-config{padding:18px;background:var(--panel,#fff);border:1px solid var(--border,#cfdbdd);border-radius:10px}.risk-config label{display:flex;flex-direction:column;gap:5px;margin:10px 0;font-size:13px}.risk-config input,.risk-config select,.risk-view-toolbar select{width:100%;min-width:0}.risk-config fieldset{border:1px solid var(--border,#cfdbdd);border-radius:6px;margin:18px 0;padding:10px}.risk-config legend{font-size:13px;padding:0 5px}.form-pair{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}.risk-config .check{flex-direction:row;align-items:center}.risk-config .check input{width:auto}.risk-config details{padding:12px 0;border-top:1px solid var(--border,#cfdbdd)}.risk-config .actions{margin-top:16px}.risk-main{min-width:0}.risk-view-toolbar{display:flex;gap:16px;justify-content:space-between;align-items:end;margin-bottom:12px}.risk-view-toolbar label{display:flex;flex-direction:column;gap:5px;max-width:75%;min-width:0}.segmented{display:flex;gap:3px}.segmented .active{background:#245e70;color:#fff}.risk-map{position:relative;height:460px;border:1px solid var(--border,#cfdbdd);border-radius:10px;overflow:hidden}.risk-map.picking{cursor:crosshair}.risk-map svg{width:100%;height:100%;display:block}.map-note{position:absolute;bottom:12px;left:12px;background:#fffdf0e8;padding:6px 10px;font-size:12px;color:#305461;border-radius:4px}.map-inspect{position:absolute;pointer-events:none;background:#163844ee;color:#fff;padding:9px 12px;font-size:12px;border-radius:5px;white-space:nowrap}.risk-timeline{display:flex;align-items:center;gap:12px;margin:15px 0;font-size:12px}.risk-timeline input{flex:1;min-width:70px}.risk-timeline span{min-width:220px}.risk-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}.risk-metrics article{padding:13px;background:var(--panel,#fff);border:1px solid var(--border,#d6e0e1);border-radius:8px}.risk-metrics small{display:block;color:var(--muted,#647a80);margin-bottom:9px}.risk-metrics b{font-size:17px;overflow-wrap:anywhere}.risk-metrics em{font-size:12px;font-style:normal;font-weight:400}.risk-limit{font-size:12px;color:var(--muted,#647a80);line-height:1.8}.risk-section{margin-top:22px;padding:18px;background:var(--panel,#fff);border:1px solid var(--border,#d6e0e1);border-radius:10px}.exposure-form{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-top:16px}.exposure-form label{display:flex;flex-direction:column;gap:6px}.file-button{position:relative;overflow:hidden;cursor:pointer}.file-button input{position:absolute;inset:0;opacity:0;cursor:pointer}.alternative{padding:8px 0;border-bottom:1px solid var(--border,#d6e0e1)}.scenario-tag{font-size:11px;color:#936c2b;background:#f4e8cf;padding:4px 7px;border-radius:4px}.report-list article{display:flex;gap:15px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--border,#d6e0e1);font-size:13px}.report-list span{flex:1}.task-progress{display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:15px;background:#e1eee9;border-radius:8px}.task-progress progress{flex:1}.outlet-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.outlet-actions button{flex-shrink:0}.ref-outlet-wrap{flex:1;min-width:140px}.ref-outlet-wrap select{width:100%}.outlet-provisional-hint{background:#fdf5e4;border:1px solid #e8d495;color:#735c18;padding:6px 10px;border-radius:4px;font-size:11px;margin-bottom:8px}.terrain-empty{padding:30px;text-align:center;color:var(--muted,#647a80);border:1px dashed var(--border,#cfdbdd);border-radius:10px;margin-bottom:15px}.terrain-empty p{margin:0 0 14px}.depth-legend{position:absolute;top:12px;right:12px;background:#fffdf0e8;padding:8px 11px;border-radius:5px;font-size:11px;color:#305461;max-width:240px}.depth-legend b{display:block;margin-bottom:5px;font-size:11px}.depth-legend-items{display:flex;flex-direction:column;gap:3px}.depth-legend-items span{display:flex;align-items:center;gap:6px}.depth-legend-items i{display:inline-block;width:11px;height:11px;border-radius:2px;flex-shrink:0}@media(max-width:1050px){.risk-columns{grid-template-columns:260px minmax(0,1fr)}.risk-metrics{grid-template-columns:1fr 1fr}.risk-timeline{flex-wrap:wrap}.risk-timeline span{min-width:0}.depth-legend{position:static;margin:8px 0;max-width:none}}@media(max-width:760px){.risk-columns{grid-template-columns:1fr}.risk-map{height:350px}.risk-view-toolbar{align-items:stretch}.risk-section .panel-title{flex-wrap:wrap}}
 </style>
