@@ -178,7 +178,7 @@ class Handler(SimpleHTTPRequestHandler):
                 return self.send_json({'error': '网页尚未构建，请执行安装平台脚本'}, 503)
             return super().do_GET()
         from .operations_api import get as operational_get
-        handled, result = operational_get(self.server, path, query)
+        handled, result = operational_get(self.server, path, query) if hasattr(self, 'server') else (False, None)
         if handled:
             return self.send_json(result)
         if path == 'business-context':

@@ -108,7 +108,7 @@ def get(server, path, query):
 
 
 def post(server, path, value):
-    db, jobs = server.db, server.jobs
+    db, jobs = getattr(server, 'db', None), getattr(server, 'jobs', None)
     root, _, identifier = path.partition('/')
     if root == 'runtime':
         from .operations_runtime import save_runtime, configure_autostart
@@ -131,6 +131,8 @@ def post(server, path, value):
         from . import forecast_inputs
         if identifier == 'evaporation-preview':
             return True, forecast_inputs.preview_evaporation(db, value)
+        if identifier == 'precipitation-ratios':
+            return True, forecast_inputs.precipitation_ratios(db, value)
         if identifier == 'ensemble':
             return True, jobs.submit('forecast-input-ensemble', value)
         if identifier == 'hourly':

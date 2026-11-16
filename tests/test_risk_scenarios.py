@@ -138,7 +138,7 @@ class RiskTests(unittest.TestCase):
         self.assertTrue((self.db.workspace/record['path']).is_file())
         self.assertEqual(store.get(self.db, 'exposures', record['id'])['source'], '检查资料')
 
-    def test_risk_task_retains_hourly_frames_and_comparison(self):
+    def test_risk_task_keeps_daily_peak_frames_and_comparison(self):
         from rasterio.transform import from_origin
         scenario = risk.save_scenario(self.db, {'name': '隔离演算', 'demOffsetM': 0,
             'outlet': {'lon':89.1,'lat':31.8,'crestM':4543.65,'widthM':30,
@@ -164,10 +164,15 @@ class RiskTests(unittest.TestCase):
         report_lines = ' '.join(report['sections'][0]['lines'])
         self.assertIn('人工泄流体积',report_lines)
         self.assertIn('总出流',report_lines)
-        frame = risk.terrain_frame(self.db,result['id'],1)
-        self.assertEqual(frame['time'],forecast['times'][1])
+        # Archived frames are daily plus the peak hour; flooding is counted against today's shoreline.
+        self.assertEqual(result['frameRows'], [1])
+        frame = risk.terrain_frame(self.db,result['id'],0)
+        self.assertEqual((frame['frames'], frame['time']), (1, forecast['times'][1]))
         self.assertEqual(frame['terrain']['width'],2)
-        self.assertGreater(frame['depths'][1][1],0.)
+        self.assertEqual(frame['depths'][1][1],0.)
+        self.assertEqual(result['comparisons'][0]['inundatedAreaKm2'],0.)
+        with self.assertRaises(ValueError):
+            risk.terrain_frame(self.db,result['id'],1)
 
     def test_complete_shapefile_zip_import(self):
         import geopandas as gpd

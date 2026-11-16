@@ -7,7 +7,7 @@ const emit=defineEmits(['saved','task','navigate','error'])
 const AREAS=[['zajia','扎加藏布'],['zagen','扎根藏布'],['boqu','波曲'],['ali','阿里藏布'],['fringe','湖周直接入湖区'],['lake','湖面']]
 const REGION_CODES={'全流域':'uniform','扎加藏布':'zajia','杜加站以上':'duja','扎根藏布':'zagen','波曲':'boqu','阿里藏布':'ali','湖周直接入湖区':'fringe','湖周':'fringe','湖面':'lake'}
 const method=ref('manual'),days=ref(10),spatial=ref('uniform'),diurnal=ref('uniform'),name=ref('未来10天情景'),rows=ref([]),evap=ref(null),working=ref(false),file=ref(null),fileRows=ref(null)
-const gen=reactive({total:20,pattern:'middle',temp:2,trend:0})
+const gen=reactive({total:20,pattern:'middle',temp:2,trend:0,climatology:true}),ratios=ref(null)
 const weekday=['日','一','二','三','四','五','六']
 const issueDay=computed(()=>props.issue?.issueTime?.slice(0,10))
 const dateAt=i=>{const d=new Date(Date.parse(issueDay.value+'T00:00:00Z')+i*86400000);return {date:d.toISOString().slice(0,10),label:d.toISOString().slice(5,10)+' 周'+weekday[d.getUTCDay()]}}
@@ -15,7 +15,10 @@ function rebuild(){if(!issueDay.value)return;const old=rows.value;rows.value=Arr
 watch([issueDay,days],rebuild,{immediate:true})
 watch([()=>props.sourceId,issueDay,days],async()=>{evap.value=null;if(!props.sourceId||!props.issue?.issueTime)return;try{evap.value=await api('forecast-inputs/evaporation-preview',{sourceResultId:props.sourceId,issueTime:props.issue.issueTime,days:days.value,evaporation:{method:'seasonal-hourly'}})}catch{}},{immediate:true})
 function weights(n,pattern){const w=Array.from({length:n},(_,i)=>pattern==='front'?n-i:pattern==='back'?i+1:pattern==='middle'?n/2+.5-Math.abs(i-(n-1)/2):1);const s=w.reduce((a,b)=>a+b,0);return w.map(v=>v/s)}
-function generate(){const w=weights(rows.value.length,gen.pattern);rows.value.forEach((r,i)=>{const p=Math.round(gen.total*w[i]*10)/10,t=Math.round((gen.temp+gen.trend*i)*10)/10;r.precipitation=p;r.temperature=t;if(spatial.value==='areas')for(const [id] of AREAS)r.areas[id]=p})}
+async function generate(){if(spatial.value==='areas'&&gen.climatology&&!ratios.value){try{ratios.value=await api('forecast-inputs/precipitation-ratios',{sourceResultId:props.sourceId,issueTime:props.issue.issueTime})}catch(e){emit('error',e.message)}}
+ const w=weights(rows.value.length,gen.pattern),k=id=>spatial.value==='areas'&&gen.climatology&&ratios.value?ratios.value.ratios[id]??1:1
+ rows.value.forEach((r,i)=>{const p=gen.total*w[i],t=Math.round((gen.temp+gen.trend*i)*10)/10;r.precipitation=Math.round(p*10)/10;r.temperature=t;if(spatial.value==='areas')for(const [id] of AREAS)r.areas[id]=Math.round(p*k(id)*10)/10})}
+watch([()=>props.sourceId,issueDay],()=>{ratios.value=null})
 function fillArea(id){const v=rows.value[0]?.areas[id];for(const r of rows.value)r.areas[id]=v}
 const blank=v=>v===''||v==null
 const preview=computed(()=>rows.value.map(r=>{let rain=null;if(spatial.value==='areas'){const v=AREAS.filter(([id])=>id!=='lake').map(([id])=>r.areas[id]).filter(x=>!blank(x)).map(Number);rain=v.length?v.reduce((a,b)=>a+b,0)/v.length:null}else rain=blank(r.precipitation)?null:Number(r.precipitation);return {date:r.date,rain,temp:blank(r.temperature)?null:Number(r.temperature)}}))
@@ -71,6 +74,7 @@ async function ensemble(){await action(async()=>{const task=await api('forecast-
    <label>雨型<select v-model="gen.pattern"><option value="uniform">均匀</option><option value="front">前峰</option><option value="middle">中峰</option><option value="back">后峰</option></select></label>
    <label>首日日均温 ℃<input type="number" step="any" v-model.number="gen.temp"></label>
    <label>逐日变化 ℃/天<input type="number" step="any" v-model.number="gen.trend"></label>
+   <label v-if="spatial==='areas'" class="fw-clim"><input type="checkbox" v-model="gen.climatology">按历史同月比例分到各子流域</label>
    <button @click="generate">填入表格</button>
   </div>
   <div class="table-wrap fw-table">
@@ -85,6 +89,7 @@ async function ensemble(){await action(async()=>{const task=await api('forecast-
     </tr></tbody>
    </table>
   </div>
+  <p v-if="ratios&&spatial==='areas'" class="fw-note">同月比例（{{ratios.years}} 年 ERA5-Land）：<template v-for="[id,label] in AREAS" :key="id">{{label}} {{number(ratios.ratios[id],2)}}　</template></p>
   <p class="fw-note">气温为流域平均高程处的日均温，模型按高程递减率分配到各计算单元；蒸发能力留空时采用同季节多年平均逐时过程（灰色为参考值）。</p>
   <div class="fw-preview">
    <div><h4>逐日降水 <small>合计 {{number(totalRain,1)}} mm</small></h4><Chart :rows="preview" :series="[{key:'rain',label:'流域面雨量',type:'bar'}]" unit="mm" zero context="fw-rain"/></div>
@@ -129,6 +134,7 @@ async function ensemble(){await action(async()=>{const task=await api('forecast-
 .fw-generator{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;padding:14px 16px;background:#f4f8f9;border-radius:8px;margin-bottom:16px}
 .fw-generator>b{align-self:center;font-size:14px;color:#2b5f6d;margin-right:4px}
 .fw-generator label{width:150px;font-size:13px}
+.fw-generator .fw-clim{width:auto;display:flex;flex-direction:row;align-items:center;gap:6px;min-height:42px}
 .fw-table{max-height:none}
 .fw-table th{white-space:nowrap}
 .fw-table td{padding:6px 8px}

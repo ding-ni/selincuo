@@ -109,6 +109,31 @@ def preview_evaporation(db, payload):
             'days': days, 'unit': 'mm/day', 'daily': daily, 'basis': basis}
 
 
+def precipitation_ratios(db, payload):
+    """Same-month ERA precipitation of each sub-basin relative to the basin mean, before issue."""
+    from .grid_simulation import prepare
+    issue = hour(payload.get('issueTime'), '起报时刻')
+    context = _context(db, payload)
+    spatial = context['spatial']
+    source = prepare(db, context['state']['inputId'], spatial['version'])
+    times = source['times']
+    month = (times - pd.Timedelta(nanoseconds=1)).month
+    ids = np.flatnonzero((month == issue.month) & (times <= issue))
+    if not len(ids):
+        raise ValueError('历史ERA未覆盖同月降水')
+    totals = source['arrays']['precipitation'][ids].sum(axis=0)
+    unit = totals @ _weights(spatial).T
+    areas = np.array([u['areaKm2'] for u in spatial['units']])
+    mapping = _regions(spatial)
+    basin = float(np.average(unit, weights=areas))
+    if basin <= 0:
+        raise ValueError('历史同月降水为零，不能按比例分配')
+    ratios = {key: float(np.average(unit[idx], weights=areas[idx]) / basin) for key, idx in mapping.items() if key != 'uniform'}
+    ratios['lake'] = float(totals @ np.asarray(spatial['lakeWeights']) / basin)
+    years = len(set((times[ids] - pd.Timedelta(nanoseconds=1)).year))
+    return {'month': int(issue.month), 'years': years, 'basinMonthlyMm': basin / max(1, years), 'ratios': ratios}
+
+
 def _save(db, context, payload, times, arrays, metadata, member_ids=None):
     identifier = 'FWEATHER-' + uuid.uuid4().hex[:20]
     folder = db.workspace / '预报气象' / identifier
