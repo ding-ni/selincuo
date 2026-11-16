@@ -177,6 +177,10 @@ class Handler(SimpleHTTPRequestHandler):
             if not (ROOT / 'frontend/dist/index.html').is_file():
                 return self.send_json({'error': '网页尚未构建，请执行安装平台脚本'}, 503)
             return super().do_GET()
+        from .operations_api import get as operational_get
+        handled, result = operational_get(self.server, path, query)
+        if handled:
+            return self.send_json(result)
         if path == 'business-context':
             from .business_context import business_context
             return self.send_json(business_context(self.db, query.get('resultId')))
@@ -275,7 +279,7 @@ class Handler(SimpleHTTPRequestHandler):
             return self.send_json(monitoring(self.db))
         if path == 'map-frame':
             from .dashboard import map_frame
-            return self.send_json(map_frame(self.db,query['inputId'],query['day'],query.get('variable','precipitation'),query.get('spatialVersion')))
+            return self.send_json(map_frame(self.db,query['inputId'],query['day'],query.get('variable','precipitation'),query.get('spatialVersion'),query.get('resultId')))
         if path == 'map-range':
             from .map_ranges import range_for
             return self.send_json(range_for(self.db,query))
@@ -615,6 +619,10 @@ class Handler(SimpleHTTPRequestHandler):
         path = urlsplit(self.path).path.removeprefix('/api/model/')
         guard_restore_writes(self.server.jobs,path)
         value = self.document()
+        from .operations_api import post as operational_post
+        handled, result = operational_post(self.server, path, value)
+        if handled:
+            return self.send_json(result, 202 if isinstance(result, dict) and result.get('status') == 'queued' else 200)
         if path == 'browser-session':
             lifetime = getattr(self.server, 'browser_lifetime', None)
             if not lifetime or value.get('instanceId') != self.server.instance_id:
@@ -846,9 +854,18 @@ class Handler(SimpleHTTPRequestHandler):
                 return self.send_json(restore_request_preview(self.db,value))
             return self.send_json(self.server.jobs.submit('restore-workspace',value),202)
         if path == 'shutdown':
-            self.server.jobs.close()
+            scheduler = getattr(self.server, 'operations_scheduler', None)
+            if scheduler:
+                scheduler.stop()
+            for task in self.server.jobs.active():
+                self.server.jobs.stop(task['id'])
             self.send_json({'status': 'stopping'})
-            threading.Thread(target=self.server.shutdown, daemon=True).start()
+            def finish_shutdown():
+                while self.server.jobs.active():
+                    threading.Event().wait(.1)
+                self.server.jobs.close()
+                self.server.shutdown()
+            threading.Thread(target=finish_shutdown, daemon=True).start()
             return
         raise FileNotFoundError('接口不存在')
 
@@ -867,7 +884,7 @@ class Handler(SimpleHTTPRequestHandler):
             raise ValueError('文件名不合法')
         extension = Path(name).suffix.lower()
         exchange = query.get('format') == 'exchange'
-        if extension not in ('.xls', '.xlsx', '.csv', '.nc', '.zip') or (extension == '.csv' and not exchange):
+        if extension not in ('.xls', '.xlsx', '.csv', '.nc', '.zip', '.geojson', '.json', '.pdf') or (extension == '.csv' and not exchange):
             raise ValueError('支持Excel、NetCDF和工作区备份ZIP')
         length = int(self.headers.get('Content-Length', 0))
         if not 0 < length <= upload_size_limit(extension):
@@ -886,13 +903,20 @@ class Handler(SimpleHTTPRequestHandler):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--port', type=int, default=8882)
+    parser.add_argument('--port', type=int, default=int(read_json(ROOT / 'config/platform.json', {}).get('port', 8882)))
     parser.add_argument('--workspace', type=Path)
     parser.add_argument('--no-browser', action='store_true')
-    parser.add_argument('--close-with-browser', action='store_true', default=bool(getattr(sys, 'frozen', False)))
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--background', action='store_true')
+    mode.add_argument('--close-with-browser', action='store_true')
     args = parser.parse_args()
     server = Platform(('127.0.0.1', args.port), args.workspace)
-    if args.close_with_browser:
+    from .operations_runtime import OperationalScheduler
+    saved_mode = server.db.setting('operational-runtime', {}).get('mode')
+    server.background_mode = args.background or (not args.close_with_browser and saved_mode == 'background')
+    server.operations_scheduler = OperationalScheduler(server)
+    server.operations_scheduler.start()
+    if not server.background_mode and (args.close_with_browser or saved_mode == 'desktop' or getattr(sys, 'frozen', False)):
         from .browser_lifetime import BrowserLifetime
         server.browser_lifetime = BrowserLifetime(server.jobs, server.shutdown)
         threading.Thread(target=server.browser_lifetime.watch, daemon=True).start()
@@ -904,6 +928,7 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
+        server.operations_scheduler.stop()
         server.server_close()
 
 

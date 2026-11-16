@@ -65,7 +65,10 @@ def main():
     boot = api('bootstrap')
     assert health['projectId'] == boot['projectId'] == 'selinco'
     assert boot['version'] == args.expected_version, boot['version']
-    assert boot['database']['counts']['tasks'] == 0
+    def assert_no_model_tasks():
+        records = api('tasks?includeExperiments=true')['tasks']
+        assert all(row.get('builtin') or row['kind'] == 'report' for row in records), records
+    assert_no_model_tasks()
     assert boot['database']['counts']['parameter_versions'] == 1
     assert boot['database']['counts']['states'] == 0
     context = api('business-context')
@@ -76,7 +79,7 @@ def main():
     assert default['id'] == boot['homeResultId'] == context['adopted']['resultId']
     assert default['role'] == 'current-adopted'
     assert context['defaultResultInputId'] == default['inputId']
-    records=api('tasks')['tasks']
+    records=[row for row in api('tasks')['tasks'] if row['kind'] != 'report']
     assert len(records)==1 and records[0]['id']==default['id']
     assert records[0]['kind']=='two-stage-calibration' and records[0]['status']=='succeeded'
     assert records[0]['builtin'] is True and records[0]['request']['inputId']==default['inputId']
@@ -111,7 +114,7 @@ def main():
                   'start':'2026-10-16','end':'2026-10-18'}
     plan = api('simulation-plan?'+urlencode(plan_request))
     assert plan['inputId'] and plan['calculationStart'] <= '2026-10-18'
-    assert api('bootstrap')['database']['counts']['tasks'] == 0, '只读运行计划不能产生任务'
+    assert_no_model_tasks()
     request = {'kind':'simulation','researchSchemeId':scheme['id'],'inputId':default['inputId'],
                'start':'2026-10-16','end':'2026-10-18','name':'v'+args.expected_version+'软件验收·业务方案试算',
                'clientRequestId':'packaged-'+args.expected_version+'-business-scheme-verification'}

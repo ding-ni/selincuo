@@ -10,9 +10,10 @@ from . import common
 from .common import CONTEXT_KEY, ROOT, canonical, digest, model_identity, now, read_json, write_json
 from .model_core import parameters, normalize_initial_hydrology
 from .simulation import observation_snapshot, run_simulation
+from .operations_api import TASK_HANDLERS
 
 
-CODE_SENSITIVE_TASKS = frozenset((
+CODE_SENSITIVE_TASKS = frozenset(TASK_HANDLERS) | frozenset((
     'simulation', 'trial', 'continuation', 'calibration', 'calibration-workflow',
     'sensitivity', 'evaluation', 'continuous-reference', 'import-observations',
     'build-spatial', 'build-grid-spatial', 'register-inputs', 'download-forcing',
@@ -121,7 +122,7 @@ class Jobs:
     def _submit(self, kind, payload, submission=None):
         if self.restore_pending or self.restart_required:
             raise ValueError('恢复已排队或完成，暂停接收新任务；请等待恢复结束并重启后继续')
-        if kind not in ('simulation', 'trial', 'continuation', 'calibration', 'calibration-workflow', 'two-stage-calibration', 'calibration-replay', 'sensitivity', 'import-observations', 'build-spatial', 'build-grid-spatial', 'register-inputs', 'download-forcing', 'update-forcing', 'export-result', 'backup', 'restore-workspace', 'evaluation', 'continuous-reference'):
+        if kind not in TASK_HANDLERS and kind not in ('simulation', 'trial', 'continuation', 'calibration', 'calibration-workflow', 'two-stage-calibration', 'calibration-replay', 'sensitivity', 'import-observations', 'build-spatial', 'build-grid-spatial', 'register-inputs', 'download-forcing', 'update-forcing', 'export-result', 'backup', 'restore-workspace', 'evaluation', 'continuous-reference'):
             raise ValueError('未知任务类型')
         payload = {k: v for k, v in dict(payload).items() if not k.startswith('_')}
         if payload.get('projectId', 'selinco') != 'selinco' or payload.get('contextKey', CONTEXT_KEY) != CONTEXT_KEY:
@@ -141,6 +142,20 @@ class Jobs:
                 if submission:
                     db.execute('INSERT INTO settings(key,value) VALUES(?,?)',
                                (submission[0], canonical({'fingerprint': submission[1], 'taskId': identifier})))
+            self.db.log('task.submit', {'id': identifier, 'kind': kind})
+            self.executor.submit(self._execute, identifier)
+            return self.public(self.db.task(identifier))
+        if kind in TASK_HANDLERS:
+            identifier = 'JOB-' + uuid.uuid4().hex[:20]
+            folder = self.db.workspace / 'tasks' / identifier
+            folder.mkdir(parents=True, exist_ok=False)
+            write_json(folder / 'request.json', payload)
+            with self.db.connect() as connection:
+                connection.execute('INSERT INTO tasks(id,kind,status,created_at,updated_at,request,name) VALUES(?,?,?,?,?,?,?)',
+                    (identifier, kind, 'queued', now(), now(), canonical(payload), str(payload.get('name', ''))[:120]))
+                if submission:
+                    connection.execute('INSERT INTO settings(key,value) VALUES(?,?)',
+                        (submission[0], canonical({'fingerprint': submission[1], 'taskId': identifier})))
             self.db.log('task.submit', {'id': identifier, 'kind': kind})
             self.executor.submit(self._execute, identifier)
             return self.public(self.db.task(identifier))
@@ -523,6 +538,9 @@ class Jobs:
                 artifact.update(name=artifact['filename'],storage='exports',ownerTaskId=identifier,
                                 downloadUrl='/api/model/task-artifact?'+urlencode({'taskId':identifier,'name':artifact['filename']}))
                 result={'artifacts':[artifact],'termination':'completed','files':artifact['files']}
+            elif kind in TASK_HANDLERS:
+                from .operations_api import execute
+                result = execute(self.db, kind, request, folder, progress, is_cancelled)
             elif kind == 'update-forcing':
                 from .forcing_latest import acquire_latest
                 acquire_latest(self.db, progress, is_cancelled,

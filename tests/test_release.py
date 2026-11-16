@@ -1,5 +1,7 @@
 import json
 import sqlite3
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -210,6 +212,15 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn('scripts/compile_installer.py',build)
         self.assertIn('--verification',build)
         self.assertIn('Restore packaged business workspace pointer failed',build)
+
+    def test_release_assembly_requires_an_explicit_frozen_business_seed(self):
+        completed = subprocess.run(
+            [sys.executable, str(ROOT/'scripts/assemble_release.py'),
+             '--destination', str(ROOT/'build/release-seed-required-test'),
+             '--build-manifest', str(ROOT/'build/release-seed-required-test-manifest.json')],
+            cwd=ROOT, capture_output=True, text=True, timeout=30)
+        self.assertEqual(completed.returncode, 2)
+        self.assertIn('--seed-workspace', completed.stderr)
 
     def test_release_workspace_pointer_is_business_default_after_acceptance(self):
         release=ROOT/'build/release-20261103-033530/SelincoPlatform-final'

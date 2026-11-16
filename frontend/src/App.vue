@@ -9,13 +9,15 @@ import HistoricalResult from './HistoricalResult.vue'
 import ResultWorkspace from './ResultWorkspace.vue'
 import ModelStates from './ModelStates.vue'
 import ModelResources from './ModelResources.vue'
+import ForecastWorkspace from './ForecastWorkspace.vue'
+import RiskWorkspace from './RiskWorkspace.vue'
 import {api,number} from './api.mjs'
 import {connectBrowserSession} from './browser-session.mjs'
 let disconnectBrowserSession=()=>{}
 connectBrowserSession().then(stop=>{disconnectBrowserSession=stop}).catch(()=>{})
 const route=new URLSearchParams(location.search)
 const selectedId=ref(route.get('result')||''),viewDay=ref(route.get('date')||''),context=ref(null),tasksOpen=ref(false)
-const pages=[['overview','⌂','湖情总览'],['monitor','≋','监测资料'],['calibration','⌘','模型方案与率定'],['simulation','▷','历史模拟'],['results','▥','成果中心'],['process','⊞','过程与状态'],['model','◇','资料更新']]
+const pages=[['overview','⌂','湖情总览'],['monitor','≋','监测资料'],['forecast','◷','预测预警'],['risk','⌁','漫溢与应急'],['calibration','⌘','模型方案与率定'],['simulation','▷','历史模拟'],['results','▥','成果中心'],['process','⊞','过程与状态'],['model','◇','资料更新']]
 const page=ref(pages.some(p=>p[0]===route.get('page'))?route.get('page'):'overview'),boot=ref(null),tasks=ref([]),trashedResults=ref([]),states=ref([]),detail=ref(null),historyDetail=ref(null),calibrationDetail=ref(null),error=ref(''),notice=ref(''),busy=ref(false),collapsed=ref(window.innerWidth<1280),monitorInitial=ref(null),stateResultId=ref(''),continuation=ref(null)
 const continuationCoverage=ref(null),simulationSelection=ref(null),resultWindow=ref(null)
 const active=computed(()=>tasks.value.filter(t=>['queued','running','stopping'].includes(t.status))),resultRecords=computed(()=>tasks.value.filter(t=>['simulation','continuation','two-stage-calibration','trial','calibration'].includes(t.kind)||(['calibration-workflow','sensitivity'].includes(t.kind)&&t.status!=='succeeded'))),title=computed(()=>pages.find(p=>p[0]===page.value)?.[2]||'湖情总览')
@@ -121,6 +123,8 @@ onBeforeUnmount(()=>{disconnectBrowserSession();clearInterval(timer);window.remo
  <div v-if="active.length&&page!=='overview'" class="running-strip"><span>{{taskTitle(active[0])}}</span><progress :value="active[0].progress" max="100"></progress><span>{{number(active[0].progress,1)}}%</span><button @click="stop(active[0].id)">停止</button></div>
  <Dashboard v-if="page==='overview'" :boot="boot" :tasks="tasks" :active="active" :selected-id="selectedId" :view-day="viewDay" :summary="context?.selectedResult" @context="selectContext" @navigate="navigate" @result="navigate('results',$event)" @station="dashboardStation"/>
  <MonitoringWorkspace v-if="page==='monitor'" :initial="monitorInitial" @navigate="navigate"/>
+ <ForecastWorkspace v-if="page==='forecast'" :boot="boot" :busy="busy" @refresh="action(refresh)" @navigate="navigate"/>
+ <RiskWorkspace v-if="page==='risk'" :boot="boot" :busy="busy" @refresh="action(refresh)"/>
  <CalibrationWorkspace v-if="page==='calibration'" :boot="boot" :tasks="tasks" :detail="calibrationDetail" :busy="busy" :active="active" @refresh="action(refresh)" @deleted="deletedResults" @submit="submit" @stop="stop" @select="selectCalibration" @simulate="simulateWith" @replay="replayStarted" @state="showState(calibrationDetail)" @export="exportResult"/>
  <HistoricalSimulation v-if="page==='simulation'" :boot="boot" :selection="simulationSelection" :busy="busy" :active="active" @submit="submit" @navigate="navigate"><HistoricalResult :detail="historyDetail" :busy="busy" @stop="stop" @export="exportResult" @state="showState(historyDetail)" @retry="navigate('simulation')"/></HistoricalSimulation>
  <ResultWorkspace v-if="page==='results'" :tasks="resultRecords" :trashed-results="trashedResults" :published="boot.publishedResults.filter(t=>t.id===boot.homeResultId)" :standard-id="boot.homeResultId" :home-id="boot.homeResultId" :selected-id="detail?.id" :selected-result="detail" :busy="busy" @select="resultWindow=null;action(()=>openResult($event))" @metadata="metadata" @changed="deletedResults" @stop="stop"><HistoricalResult :detail="detail" :view-window="resultWindow?.id===detail?.id?resultWindow:null" :busy="busy" @stop="stop" @export="exportResult" @state="showState(detail)" @retry="navigate('simulation')"/></ResultWorkspace>

@@ -72,7 +72,7 @@ def aggregate_frame(times, array, day, operation='sum'):
     return (values.mean(axis=0) if operation=='mean' else values.sum(axis=0)),24
 
 
-def map_frame(db, input_id, day, variable='precipitation',spatial_version=None):
+def map_frame(db, input_id, day, variable='precipitation',spatial_version=None,result_id=None):
     if variable not in ('precipitation','temperature','evaporation'):
         raise ValueError('地图变量须为降水、气温或蒸发能力')
     parse_day(day)
@@ -117,6 +117,20 @@ def map_frame(db, input_id, day, variable='precipitation',spatial_version=None):
         lake_used=float(lake_precipitation_series(manifest,spatial,arrays,times,ids).sum())
     domain_used=float(domain_weights@values)+(lake_used-lake_raw)*spatial['lakeAreaKm2']/(areas.sum()+spatial['lakeAreaKm2'])
     unit_values=weights@values
+    if variable=='temperature' and result_id:
+        from .business_context import result_task
+        from .grid_simulation import parameter_configuration, unit_forcing
+        task=result_task(db,result_id)
+        result=task.get('result') or task
+        if result.get('inputId') != input_id or result.get('spatialVersion') != spatial['version']:
+            raise ValueError('悬停气温的成果、驱动及空间不一致')
+        request={key:result.get(key) for key in ('parameters','partitionParameters','parameterTransfer')}
+        _,_,parameters,regions,_,_=parameter_configuration(spatial,request)
+        times=pd.DatetimeIndex(arrays['time']);start=parse_day(day)
+        ids=times.get_indexer(pd.date_range(start+pd.Timedelta(hours=1),start+pd.Timedelta(days=1),freq='h'))
+        _,temperature,_=unit_forcing(spatial,arrays,ids,parameters,regions)
+        unit_values=temperature.mean(axis=0)
+        base['unitValuesRepresent']='model-elevation-corrected'
     if variable=='precipitation' and manifest.get('landPrecipitationCorrection') is not None:
         # Reuse the actual per-member model transformation while retaining raw
         # source-grid values for the weather map and the lake correction once.

@@ -1,0 +1,435 @@
+"""Lake-connected inundation scenarios, spill estimates and exposure comparison."""
+from copy import deepcopy
+import base64
+import io
+import json
+import math
+from pathlib import Path
+import zipfile
+
+import numpy as np
+import pandas as pd
+
+from .common import ROOT, now, read_json, write_json, within
+from . import operational_store as store
+
+
+COLLECTION = 'risk-scenarios'
+RESULTS = 'risk-results'
+METHOD = 'lake-connected-static-inundation-and-weir-v1'
+
+
+def _number(value, label, lo=None, hi=None):
+    if isinstance(value, bool):
+        raise ValueError(label+'须为有效数值')
+    try:
+        result = float(value)
+    except (TypeError, ValueError):
+        raise ValueError(label+'须为有效数值') from None
+    if not math.isfinite(result) or lo is not None and result < lo or hi is not None and result > hi:
+        raise ValueError(label+'超出有效范围')
+    return result
+
+
+def _dem_paths():
+    packaged = ROOT/'data/derived/spatial/湖周漫溢地形.tif'
+    if packaged.is_file():
+        return [packaged]
+    roots = [ROOT/'data/raw/spatial/公开连续地形-CopernicusGLO90-20261028']
+    return [p for root in roots if root.is_dir() for p in root.glob('*/*_DEM.tif')]
+
+
+def catalog(db):
+    return {'scenarios': store.list_records(db, COLLECTION),
+            'results': store.list_records(db, RESULTS),
+            'exposures': store.list_records(db, 'exposures'),
+            'terrainAvailable': bool(_dem_paths()), 'method': METHOD}
+
+
+def save_scenario(db, payload, identifier=None):
+    old = store.get(db, COLLECTION, identifier) if identifier else {}
+    value = {**old, **deepcopy(payload)}
+    value['name'] = str(value.get('name') or '湖周漫溢情景').strip()
+    value['demOffsetM'] = _number(value.get('demOffsetM', 0), '湖位到DEM的高程偏移', -1000, 1000)
+    value['marginKm'] = _number(value.get('marginKm', 5), '湖周范围', .2, 50)
+    outlet = value.get('outlet') or {}
+    value['outlet'] = {'lon': _number(outlet.get('lon'), '溢口经度', -180, 180),
+        'lat': _number(outlet.get('lat'), '溢口纬度', -90, 90),
+        'crestM': _number(outlet.get('crestM'), '溢口高程', 4000, 6500),
+        'widthM': _number(outlet.get('widthM'), '溢口宽度', .01, 10000),
+        'coefficient': _number(outlet.get('coefficient', .6), '流量系数', .01, 1),
+        'releaseCapacityM3s': _number(outlet.get('releaseCapacityM3s', 0), '人工泄流能力', 0, 1e7)}
+    value['mode'] = 'scenario'
+    value['datumSource'] = str(value.get('datumSource') or '演示情景高程偏移，未经实测核定')
+    value['method'] = METHOD
+    value['exposureIds'] = list(dict.fromkeys(value.get('exposureIds') or []))
+    alternatives = []
+    for item in value.get('alternatives') or []:
+        candidate = {**value['outlet'], **item}
+        alternatives.append({'name': str(item.get('name') or '调整方案'),
+            'crestM': _number(candidate['crestM'], '方案溢口高程', 4000, 6500),
+            'widthM': _number(candidate['widthM'], '方案溢口宽度', .01, 10000),
+            'coefficient': _number(candidate['coefficient'], '方案流量系数', .01, 1),
+            'releaseCapacityM3s': _number(candidate.get('releaseCapacityM3s', 0), '方案人工泄流能力', 0, 1e7)})
+    value['alternatives'] = alternatives
+    return store.save(db, COLLECTION, value, identifier=identifier, prefix='RISK-')
+
+
+def detail(db, identifier):
+    return store.get(db, COLLECTION, identifier)
+
+
+def weir_discharge(level_m, outlet):
+    head = max(0., float(level_m)-float(outlet['crestM']))
+    return (2./3.)*float(outlet['coefficient'])*float(outlet['widthM'])*math.sqrt(2.*9.80665)*head**1.5
+
+
+def simulate_spill(times, inflow, rain, evap, initial_level, curve, outlet, cancelled=None):
+    from .lake_curves import storage, level, area
+    v = storage(initial_level, curve)
+    h = float(initial_level)
+    offset = curve.get('offsetM', 0.)
+    minimum, maximum = curve['minLevel']-offset, curve['maxLevel']-offset
+    crest = float(outlet['crestM'])
+    release_floor = storage(max(crest, minimum), curve) if crest <= maximum else None
+    rows = []
+    for index, time in enumerate(times):
+        if cancelled and cancelled():
+            raise InterruptedError('已停止漫溢情景计算')
+        a = area(h, curve)
+        incoming = float(inflow[index])*3600.
+        precipitation = float(rain[index])/1000.*a
+        evaporation = float(evap[index])/1000.*a
+        before = v
+        available = (max(0., v + incoming + precipitation - evaporation - release_floor)
+                     if release_floor is not None else 0.)
+        spill = min(weir_discharge(h, outlet)*3600., available)
+        released = min(float(outlet.get('releaseCapacityM3s', 0))*3600., available-spill)
+        total_outflow = spill+released
+        v += incoming + precipitation - evaporation - total_outflow
+        h = level(v, curve)
+        rows.append({'time': str(time), 'level': h, 'inflowM3s': float(inflow[index]),
+            'spillM3s': spill/3600., 'spillM3': spill, 'inflowM3': incoming,
+            'releasedM3s': released/3600., 'releasedM3': released,
+            'totalOutflowM3s': total_outflow/3600., 'totalOutflowM3': total_outflow,
+            'precipitationM3': precipitation, 'evaporationM3': evaporation,
+            'storageChangeM3': v-before,
+            'balanceErrorM3': (v-before)-(incoming+precipitation-evaporation-total_outflow)})
+    return rows
+
+
+def connected_depth(elevation, valid, lake_mask, level_m):
+    """Eight-neighbour connectivity; existing lake cells seed the wet domain."""
+    from scipy.ndimage import binary_propagation
+    elevation = np.asarray(elevation, dtype=float)
+    valid = np.asarray(valid, dtype=bool)
+    lake_mask = np.asarray(lake_mask, dtype=bool)
+    wettable = valid & ((elevation <= level_m) | lake_mask)
+    seeds = lake_mask & valid
+    if not seeds.any():
+        raise ValueError('当前地形范围没有有效湖区种子')
+    connected = binary_propagation(seeds, structure=np.ones((3, 3)), mask=wettable)
+    # Satellite DEM over existing water is not lake bathymetry.
+    expansion = connected & ~lake_mask
+    depth = np.where(expansion, np.maximum(0., level_m-elevation), 0.)
+    return depth, connected
+
+
+def _lake_geometry():
+    from shapely.geometry import shape
+    from shapely.ops import unary_union
+    value = read_json(ROOT/'data/derived/spatial/map.geojson')
+    geometries = [shape(f['geometry']) for f in value['features'] if f['properties'].get('kind') == 'lake']
+    if not geometries:
+        raise ValueError('缺少已登记湖泊边界')
+    return unary_union(geometries)
+
+
+def load_terrain(scenario, max_size=180):
+    import rasterio
+    from rasterio.enums import Resampling
+    from rasterio.features import rasterize
+    from rasterio.merge import merge
+    from rasterio.transform import array_bounds
+    from shapely.geometry import box, mapping
+    lake = _lake_geometry()
+    west, south, east, north = lake.bounds
+    margin = scenario['marginKm']/111.195
+    bounds = (west-margin/math.cos(math.radians((south+north)/2)), south-margin,
+              east+margin/math.cos(math.radians((south+north)/2)), north+margin)
+    datasets = []
+    try:
+        for path in _dem_paths():
+            ds = rasterio.open(path)
+            if ds.crs.to_epsg() == 4326 and box(*ds.bounds).intersects(box(*bounds)):
+                datasets.append(ds)
+            else:
+                ds.close()
+        if not datasets:
+            raise ValueError('湖周范围缺少可读取的Copernicus地形，请补充安装资料')
+        if len(datasets) == 1 and datasets[0].name.endswith('湖周漫溢地形.tif'):
+            covered = datasets[0].bounds
+            if bounds[0] < covered.left or bounds[1] < covered.bottom or bounds[2] > covered.right or bounds[3] > covered.top:
+                raise ValueError('所选湖周范围超出安装包地形覆盖，请将扩展距离设为20公里以内或补充地形')
+        dx, dy = (bounds[2]-bounds[0])/max_size, (bounds[3]-bounds[1])/max_size
+        data, transform = merge(datasets, bounds=bounds, res=(dx, dy), nodata=-9999.,
+                                dtype='float32', resampling=Resampling.average)
+        elevation = data[0].astype(float)
+        valid = np.isfinite(elevation) & (elevation != -9999.) & (elevation > 1000)
+        lake_mask = rasterize([(mapping(lake), 1)], out_shape=elevation.shape,
+                              transform=transform, all_touched=True).astype(bool)
+        lake_mask &= valid
+        if not lake_mask.any():
+            raise ValueError('所选地形未覆盖湖泊有效边界')
+        actual_bounds = list(array_bounds(*elevation.shape, transform))
+        latitudes = transform.f+(np.arange(elevation.shape[0])+.5)*transform.e
+        cell_areas = (abs(transform.a)*111195.*np.cos(np.radians(latitudes)) *
+                      abs(transform.e)*111195.)[:, None]*np.ones((1, elevation.shape[1]))
+        return {'elevation': elevation, 'valid': valid, 'lakeMask': lake_mask,
+                'transform': transform, 'bounds': actual_bounds, 'cellAreas': cell_areas,
+                'source': 'Copernicus GLO-90，湖周面积平均展示网格',
+                'verticalReference': 'EGM2008 orthometric metres',
+                'sampling': 'area-average; existing lake depth unavailable'}
+    finally:
+        for ds in datasets:
+            ds.close()
+
+
+def _forecast_source(db, identifier):
+    from .forecasts import detail as forecast_detail
+    value = forecast_detail(db, identifier)
+    result = value.get('result', value)
+    if result.get('status') in ('failed', 'running', 'queued'):
+        raise ValueError('漫溢情景需要已完成的预测结果')
+    return result
+
+
+def _series_source(result):
+    times = result.get('times') or result.get('time')
+    control = result.get('control') or {}
+    if isinstance(control, list):
+        times = [r['time'] for r in control]
+        control = {k: [r.get(k) for r in control] for k in control[0] if k != 'time'}
+    inflow = control.get('inflowM3s') or control.get('inflow') or control.get('total')
+    rain = control.get('lakeRainMm')
+    evap = control.get('lakeEvaporationMm')
+    initial = result.get('initialLakeLevel')
+    curve = result.get('lakeCurve') or result.get('curve')
+    if not times or inflow is None or rain is None or evap is None or initial is None or not curve:
+        raise ValueError('预测缺少逐时来水、湖面降水蒸发、初始湖位或曲线配置')
+    n = len(times)
+    if any(len(v) != n or not np.isfinite(np.asarray(v, dtype=float)).all() for v in (inflow, rain, evap)):
+        raise ValueError('预测逐时水量数据不完整')
+    return times, inflow, rain, evap, float(initial), curve
+
+
+def _flood_geometry(depth, terrain):
+    from rasterio.features import shapes
+    from shapely.geometry import shape
+    from shapely.ops import unary_union
+    mask = np.asarray(depth) > 0
+    geometries = [shape(g) for g, value in shapes(mask.astype('uint8'), mask=mask,
+                    transform=terrain['transform']) if value]
+    return unary_union(geometries)
+
+
+def assess_exposures(db, exposure_ids, depth, terrain):
+    from shapely.geometry import shape
+    from shapely.ops import transform
+    from pyproj import Transformer
+    flood = _flood_geometry(depth, terrain)
+    project = Transformer.from_crs(4326, 6933, always_xy=True).transform
+    rows = []
+    for identifier in exposure_ids:
+        record = store.get(db, 'exposures', identifier)
+        source = read_json(within(db.workspace, record['path']))
+        for index, f in enumerate(source['features']):
+            geometry = shape(f['geometry'])
+            if geometry.is_empty or flood.is_empty or not geometry.intersects(flood):
+                continue
+            intersection = geometry.intersection(flood)
+            values = []
+            for coordinate in ([geometry.coords[0]] if geometry.geom_type == 'Point' else [intersection.representative_point().coords[0]]):
+                col, row = ~terrain['transform'] * coordinate
+                r, c = int(row), int(col)
+                if 0 <= r < depth.shape[0] and 0 <= c < depth.shape[1]:
+                    values.append(float(depth[r, c]))
+            if geometry.geom_type != 'Point':
+                from rasterio.features import rasterize
+                mask = rasterize([(f['geometry'], 1)], out_shape=depth.shape,
+                                 transform=terrain['transform'], all_touched=True).astype(bool)
+                if mask.any():
+                    values.append(float(np.max(depth[mask])))
+            props = f.get('properties') or {}
+            rows.append({'exposureId': identifier, 'featureId': str(f.get('id', index)),
+                'name': str(props.get('name') or props.get('名称') or '未命名对象'),
+                'kind': record.get('kind', 'facility'), 'geometryType': geometry.geom_type,
+                'maxDepthM': max(values, default=0.),
+                'affectedLengthM': float(transform(project, intersection).length)
+                                  if geometry.geom_type in ('LineString', 'MultiLineString') else 0.,
+                'source': record.get('source', record['name'])})
+    return {'objects': rows, 'count': len(rows),
+            'roadLengthM': sum(r['affectedLengthM'] for r in rows),
+            'settlementCount': sum(r['kind'] == 'settlement' for r in rows)}
+
+
+def run(db, request, folder=None, progress=None, cancelled=None):
+    scenario = detail(db, request['scenarioId'])
+    source = _forecast_source(db, request['forecastId'])
+    times, inflow, rain, evap, initial, curve = _series_source(source)
+    terrain = load_terrain(scenario)
+    if progress:
+        progress(15, '已读取湖周地形与预测水量')
+    folder = Path(folder) if folder else db.workspace/'risk-runs'/('情景-'+pd.Timestamp.utcnow().strftime('%Y%m%d%H%M%S%f'))
+    folder.mkdir(parents=True, exist_ok=True)
+    paths, comparisons, primary_rows = [], [], None
+    for k, (name, outlet) in enumerate([(scenario['name'], scenario['outlet'])] +
+                [(a['name'], {**scenario['outlet'], **a}) for a in scenario.get('alternatives', [])]):
+        rows = simulate_spill(times, inflow, rain, evap, initial, curve, outlet, cancelled)
+        peak = max(r['level'] for r in rows)
+        depth, wet = connected_depth(terrain['elevation'], terrain['valid'], terrain['lakeMask'], peak+scenario['demOffsetM'])
+        effects = assess_exposures(db, scenario.get('exposureIds', []), depth, terrain)
+        comparisons.append({'name': name, 'peakLevelM': peak,
+            'firstSpillTime': next((r['time'] for r in rows if r['spillM3'] > 0), None),
+            'spillVolumeM3': sum(r['spillM3'] for r in rows),
+            'peakSpillM3s': max(r['spillM3s'] for r in rows),
+            'releaseVolumeM3': sum(r['releasedM3'] for r in rows),
+            'peakReleaseM3s': max(r['releasedM3s'] for r in rows),
+            'totalOutflowM3': sum(r['totalOutflowM3'] for r in rows),
+            'peakTotalOutflowM3s': max(r['totalOutflowM3s'] for r in rows),
+            'inundatedAreaKm2': float(terrain['cellAreas'][depth > 0].sum()/1e6),
+            'maxDepthM': float(depth.max()), 'effects': effects, 'outlet': outlet,
+            'balanceMaxErrorM3': max(abs(r['balanceErrorM3']) for r in rows)})
+        if k == 0:
+            primary_rows = rows
+            depths = np.stack([connected_depth(terrain['elevation'], terrain['valid'], terrain['lakeMask'],
+                              r['level']+scenario['demOffsetM'])[0].astype('float32') for r in rows])
+            np.savez_compressed(folder/'inundation.npz', elevation=terrain['elevation'].astype('float32'),
+                valid=terrain['valid'], lakeMask=terrain['lakeMask'], depths=depths,
+                bounds=terrain['bounds'], transform=np.array(tuple(terrain['transform'])))
+        if progress:
+            progress(20+65*(k+1)/(1+len(scenario.get('alternatives', []))), '已完成'+name)
+    value = {'name': scenario['name'], 'scenarioId': scenario['id'], 'forecastId': request['forecastId'],
+        'status': 'succeeded', 'mode': 'scenario', 'method': METHOD, 'createdAt': now(),
+        'scenario': scenario, 'lakeCurve': curve, 'rows': primary_rows, 'comparisons': comparisons,
+        'terrain': {'bounds': terrain['bounds'], 'width': terrain['elevation'].shape[1],
+                    'height': terrain['elevation'].shape[0], 'source': terrain['source'],
+                    'verticalReference': terrain['verticalReference'], 'lakeBedDepthAvailable': False},
+        'path': str((folder/'inundation.npz').relative_to(db.workspace)).replace('\\','/'),
+        'limitations': ['静态地形连通淹没情景；未计算下游洪波传播与到达时间',
+                        '已有湖面无水下地形，不输出湖内水深', '溢口和高程偏移采用本次情景配置']}
+    value = store.save(db, RESULTS, value, prefix='RISK-RUN-')
+    pd.DataFrame(primary_rows).to_csv(folder/'risk-hourly.csv', index=False, encoding='utf-8-sig')
+    write_json(folder/'result.json', value)
+    if progress:
+        progress(100, '漫溢情景与方案比选完成')
+    return value
+
+
+def terrain_frame(db, identifier, index=0):
+    value = store.get(db, RESULTS, identifier)
+    index = int(index)
+    if not 0 <= index < len(value['rows']):
+        raise ValueError('回放时刻超出结果范围')
+    with np.load(within(db.workspace, value['path']), allow_pickle=False) as arrays:
+        valid = arrays['valid']
+        elevations = np.where(valid, arrays['elevation'], 0.)
+        terrain = {**value['terrain'], 'elevations': elevations.tolist(), 'valid': valid.tolist(),
+                   'lakeMask': arrays['lakeMask'].tolist()}
+        return {'terrain': terrain, 'depths': arrays['depths'][index].tolist(), 'index': index,
+                'time': value['rows'][index]['time'], 'level': value['rows'][index]['level'],
+                'outlet': value['scenario']['outlet'], 'demOffsetM': value['scenario']['demOffsetM']}
+
+
+def import_exposure(db, payload):
+    from shapely.geometry import shape, mapping
+    value = payload.get('geojson')
+    if value is None:
+        filename = str(payload.get('filename') or '')
+        raw = base64.b64decode(payload.get('dataBase64') or '', validate=True)
+        if filename.lower().endswith(('.json', '.geojson')):
+            value = json.loads(raw.decode('utf-8-sig'))
+        elif filename.lower().endswith('.zip'):
+            import geopandas as gpd
+            if not zipfile.is_zipfile(io.BytesIO(raw)):
+                raise ValueError('Shapefile压缩包无效')
+            frame = gpd.read_file(io.BytesIO(raw))
+            if frame.crs is None:
+                raise ValueError('Shapefile缺少坐标系，请提供完整配套文件')
+            value = json.loads(frame.to_crs(4326).to_json())
+        else:
+            raise ValueError('请提供GeoJSON或包含完整配套文件的Shapefile ZIP')
+    if not isinstance(value, dict) or value.get('type') != 'FeatureCollection' or not value.get('features'):
+        raise ValueError('承灾体资料须为非空GeoJSON要素集')
+    for feature in value['features']:
+        geometry = shape(feature.get('geometry'))
+        if geometry.is_empty or not geometry.is_valid:
+            raise ValueError('承灾体几何为空或无效')
+        if not (-180 <= geometry.bounds[0] <= geometry.bounds[2] <= 180 and -90 <= geometry.bounds[1] <= geometry.bounds[3] <= 90):
+            raise ValueError('GeoJSON须使用WGS84经纬度')
+    record = store.save(db, 'exposures', {'name': str(payload.get('name') or '承灾体资料'),
+        'kind': payload.get('kind', 'facility'), 'source': str(payload.get('source') or payload.get('filename') or '用户导入'),
+        'featureCount': len(value['features']), 'coordinateSystem': 'EPSG:4326'}, prefix='EXPOSURE-')
+    path = db.workspace/'risk-exposures'/(record['id']+'.geojson')
+    write_json(path, value)
+    record['path'] = str(path.relative_to(db.workspace)).replace('\\','/')
+    return store.save(db, 'exposures', record, identifier=record['id'])
+
+
+def fetch_osm(db, request, folder=None, progress=None, cancelled=None):
+    import requests
+    bounds = request.get('bbox') or read_json(ROOT/'data/derived/spatial/presentation.json')['lakeBounds']
+    if len(bounds) != 4:
+        raise ValueError('公开地图查询需要west,south,east,north范围')
+    west, south, east, north = map(float, bounds)
+    bbox = ','.join(map(str, [south, west, north, east]))
+    kinds = request.get('features', ['roads', 'settlements'])
+    clauses = []
+    if 'roads' in kinds:
+        clauses.append('way[highway]('+bbox+');')
+    if 'settlements' in kinds:
+        clauses.append('nwr[place~"city|town|village|hamlet"]('+bbox+');')
+    if not clauses:
+        raise ValueError('请选择道路或居民点')
+    if cancelled and cancelled():
+        raise InterruptedError('已停止公开地图读取')
+    response = requests.post('https://overpass-api.de/api/interpreter',
+        data={'data': '[out:json][timeout:45];('+''.join(clauses)+');out geom center;'}, timeout=(10, 60))
+    response.raise_for_status()
+    features = {'road': [], 'settlement': []}
+    for element in response.json().get('elements', []):
+        tags = element.get('tags') or {}
+        kind = 'road' if tags.get('highway') else 'settlement'
+        if kind == 'road':
+            coordinates = [[p['lon'], p['lat']] for p in element.get('geometry', [])]
+            if len(coordinates) < 2:
+                continue
+            geometry = {'type': 'LineString', 'coordinates': coordinates}
+        else:
+            point = element.get('center', element)
+            if 'lon' not in point:
+                continue
+            geometry = {'type': 'Point', 'coordinates': [point['lon'], point['lat']]}
+        features[kind].append({'type': 'Feature', 'id': str(element['id']), 'geometry': geometry,
+                              'properties': {'name': tags.get('name', ''), **tags}})
+    records = [import_exposure(db, {'name': 'OSM道路' if kind == 'road' else 'OSM居民点', 'kind': kind,
+        'source': 'OpenStreetMap contributors / ODbL / '+now(),
+        'geojson': {'type': 'FeatureCollection', 'features': rows}})
+        for kind, rows in features.items() if rows]
+    return {'exposures': records, 'source': 'OpenStreetMap contributors / ODbL',
+            'featureCount': sum(r['featureCount'] for r in records)}
+
+
+def attachment(db, payload):
+    scenario = detail(db, payload['scenarioId'])
+    name = Path(str(payload.get('filename') or '应急预案.pdf')).name
+    raw = base64.b64decode(payload.get('dataBase64') or '', validate=True)
+    if not raw:
+        raise ValueError('预案附件为空')
+    folder = db.workspace/'risk-plans'/scenario['id']
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder/(pd.Timestamp.utcnow().strftime('%Y%m%d%H%M%S%f')+'-'+name)
+    path.write_bytes(raw)
+    scenario.setdefault('attachments', []).append({'name': name, 'bytes': len(raw),
+        'path': str(path.relative_to(db.workspace)).replace('\\','/'), 'createdAt': now()})
+    return store.save(db, COLLECTION, scenario, identifier=scenario['id'])

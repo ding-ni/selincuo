@@ -16,7 +16,7 @@ const dark=ref(localStorage.getItem('selinco:screen-theme')!=='light'),show=reac
 const viewport=ref({width:1600,height:900})
 const density=computed(()=>viewport.value.height<700?'compact':viewport.value.height<900||viewport.value.width<1400?'tight':'regular')
 const currentId=ref(''),choices=ref([]),candidates=computed(()=>screenResults(props.boot.publishedResults||[],props.tasks||[],props.boot.homeResultId))
-const frames=createFrameCache(),ranges=new Map(),choiceChecks=new Map();let sequence=0,choiceTicket=0,choicesReady=false,timer,sliderTimer,disposed=false,resizeObserver
+const frames=createFrameCache(),ranges=new Map(),choiceChecks=new Map();let sequence=0,choiceTicket=0,choicesReady=false,timer,sliderTimer,monitorTimer,disposed=false,resizeObserver
 async function refreshChoices(){
  const ticket=++choiceTicket,homeId=props.boot.homeResultId,values=candidates.value
  const checks=values.map(async record=>{
@@ -72,7 +72,7 @@ function frameFor(t,m,d,v,prefetch=false){
  const inputId=t.result.inputId,spatialVersion=m.spatialVersion||t.result.spatialVersion,key=[t.id,inputId,spatialVersion,v,d].join('|')
  return frames.get(key,async signal=>{
   const started=performance.now()
-  const params={inputId,day:d,spatialVersion},options={signal}
+  const params={inputId,resultId:t.id,day:d,spatialVersion},options={signal}
   const requests=[api('map-frame?'+new URLSearchParams({...params,variable:'precipitation'}),null,options)]
   if(v==='snow')requests.push(api('snow-frame?'+new URLSearchParams({taskId:t.id,day:d}),null,options))
   else if(!['basin','terrain','precipitation'].includes(v))requests.push(api('map-frame?'+new URLSearchParams({...params,variable:v}),null,options))
@@ -119,8 +119,8 @@ watch(()=>candidates.value.map(t=>[t.id,t.updated_at,t.userSaved,t.trashed].join
 watch(()=>props.selectedId,id=>{if(id&&id!==currentId.value&&mode.value==='model'&&choices.value.some(item=>item.id===id)){currentId.value=id;selectResult()}})
 watch(()=>props.viewDay,value=>{if(value&&value!==day.value&&value!==requestedDay.value&&dates.value.includes(value))requestView(value)})
 watch(dark,v=>localStorage.setItem('selinco:screen-theme',v?'dark':'light'))
-onMounted(async()=>{resizeObserver=new ResizeObserver(([entry])=>{viewport.value={width:entry.contentRect.width,height:entry.contentRect.height}});resizeObserver.observe(host.value);document.addEventListener('fullscreenchange',sync);document.addEventListener('keydown',keys);try{const [,data]=await Promise.all([refreshChoices(),api('dashboard')]);monitor.value=data;choicesReady=true;currentId.value=choices.value.some(item=>item.id===props.selectedId)?props.selectedId:(choices.value.find(item=>item.id===props.boot.homeResultId)?.id||'');if(currentId.value)await selectResult();else{mode.value='observation';await requestView(defaultDay('observation'))}refreshChoices()}catch(e){error.value=e.message}finally{loading.value=false}})
-onBeforeUnmount(()=>{disposed=true;sequence++;choiceTicket++;stop();clearTimeout(sliderTimer);frames.clear();resizeObserver?.disconnect();document.removeEventListener('fullscreenchange',sync);document.removeEventListener('keydown',keys)})
+onMounted(async()=>{monitorTimer=setInterval(async()=>{try{const value=await api('dashboard');if(!disposed)monitor.value=value}catch{}},60000);resizeObserver=new ResizeObserver(([entry])=>{viewport.value={width:entry.contentRect.width,height:entry.contentRect.height}});resizeObserver.observe(host.value);document.addEventListener('fullscreenchange',sync);document.addEventListener('keydown',keys);try{const [,data]=await Promise.all([refreshChoices(),api('dashboard')]);monitor.value=data;choicesReady=true;currentId.value=choices.value.some(item=>item.id===props.selectedId)?props.selectedId:(choices.value.find(item=>item.id===props.boot.homeResultId)?.id||'');if(currentId.value)await selectResult();else{mode.value='observation';await requestView(defaultDay('observation'))}refreshChoices()}catch(e){error.value=e.message}finally{loading.value=false}})
+onBeforeUnmount(()=>{disposed=true;clearInterval(monitorTimer);sequence++;choiceTicket++;stop();clearTimeout(sliderTimer);frames.clear();resizeObserver?.disconnect();document.removeEventListener('fullscreenchange',sync);document.removeEventListener('keydown',keys)})
 </script>
 <template>
 <section ref="host" class="lake-screen" :class="['screen-density-'+density,{'screen-dark':dark,'screen-expanded':expanded}]" :style="{'--screen-height':viewport.height+'px'}" :aria-busy="pending">

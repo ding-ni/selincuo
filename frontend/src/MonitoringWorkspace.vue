@@ -8,7 +8,7 @@ import {qualityLabel,stepLabel,variableDefinitions} from './business-view.mjs'
 import {stationDatum} from './shore-comparison.mjs'
 const props=defineProps({initial:Object});const emit=defineEmits(['navigate'])
 const stations=ref([]),q=reactive({station:props.initial?.station||'SLC',variable:props.initial?.variable||'level',step:'',start:'',end:'',profile:'quality-v2'}),snapshot=ref(null),daily=ref([]),records=ref({rows:[],total:0,page:1,pageSize:50}),tab=ref('process'),comparisonOpened=ref(false),working=ref(true),recordBusy=ref(false),error=ref(''),profileNote=ref(''),recordStep=ref(''),qualityDay=ref('')
-let queryController,recordController,ticket=0,recordTicket=0
+let queryController,recordController,ticket=0,recordTicket=0,monitorTimer
 const selected=computed(()=>stations.value.find(s=>s.id===q.station))
 const available=computed(()=>selected.value?.variables||[])
 const availableSteps=computed(()=>available.value.find(v=>v.id===q.variable)?.steps||[])
@@ -44,8 +44,8 @@ async function loadRecords(page=1){
 }
 watch(tab,t=>{if(t==='records')loadRecords(1);if(t==='comparison')comparisonOpened.value=true})
 function exportDaily(){const csv='\ufeff时间,'+shown.value.label+' ('+shown.value.unit+'),资料视图,质量,覆盖小时,最大间隔小时,来源或缺测原因\r\n'+daily.value.map(r=>[r.time,r.value??'',profileName(snapshot.value.profile),r.quality||'',r.coverageHours??'',r.maximumGapHours??'',r.reason||r.source||''].map(value=>'"'+String(value).replaceAll('"','""')+'"').join(',')).join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));const a=document.createElement('a');a.href=url;a.download=stationName.value+'-'+shown.value.label+'-'+profileName(snapshot.value.profile)+'-'+snapshot.value.start+'至'+snapshot.value.end+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
-onMounted(async()=>{try{stations.value=(await api('observation-catalog')).stations;await Promise.resolve();bounds(true);if(props.initial?.day)q.start=q.end=props.initial.day;await query();if(props.initial?.comparison)tab.value='comparison'}catch(e){error.value=e.message;working.value=false}})
-onBeforeUnmount(()=>{queryController?.abort();recordController?.abort();ticket++;recordTicket++})
+onMounted(async()=>{monitorTimer=setInterval(async()=>{if(working.value||recordBusy.value)return;try{stations.value=(await api('observation-catalog')).stations;if(snapshot.value){const data=await api('observation-series?'+new URLSearchParams(snapshot.value));daily.value=data.rows;if(tab.value==='records')await loadRecords(records.value.page)}}catch(e){error.value=e.message}},60000);try{stations.value=(await api('observation-catalog')).stations;await Promise.resolve();bounds(true);if(props.initial?.day)q.start=q.end=props.initial.day;await query();if(props.initial?.comparison)tab.value='comparison'}catch(e){error.value=e.message;working.value=false}})
+onBeforeUnmount(()=>{clearInterval(monitorTimer);queryController?.abort();recordController?.abort();ticket++;recordTicket++})
 </script>
 <template>
  <section class="panel"><div class="panel-title"><h3>监测资料查询</h3><button class="link" @click="emit('navigate','model')">资料接入 →</button></div>

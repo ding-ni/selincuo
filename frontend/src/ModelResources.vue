@@ -2,6 +2,8 @@
 import {ref,computed,watch,onMounted} from 'vue'
 import DataImport from './DataImport.vue'
 import NativeObservationImport from './NativeObservationImport.vue'
+import DataConnections from './DataConnections.vue'
+import BackgroundSettings from './BackgroundSettings.vue'
 import {api,number} from './api.mjs'
 import {variableDefinitions} from './business-view.mjs'
 const props=defineProps({boot:Object,busy:Boolean,active:Array})
@@ -35,7 +37,9 @@ onMounted(async()=>{
 watch(()=>props.boot,async()=>{try{coverage.value=await api('forcing-coverage')}catch(e){emit('error',e.message)}})
 </script>
 <template>
- <nav class="workspace-tabs"><button v-for="t in [['observations','观测资料'],['forcing','模型气象资料']]" :key="t[0]" :class="{active:tab===t[0]}" @click="tab=t[0]">{{t[1]}}</button></nav>
+ <nav class="workspace-tabs"><button v-for="t in [['observations','观测资料'],['forcing','模型气象资料'],['connections','现场数据接入'],['background','后台运行']]" :key="t[0]" :class="{active:tab===t[0]}" @click="tab=t[0]">{{t[1]}}</button></nav>
+ <DataConnections v-if="tab==='connections'" :stations="boot.stations" @refresh="imported"/>
+ <BackgroundSettings v-if="tab==='background'" :boot="boot"/>
  <template v-if="tab==='forcing'">
   <section class="panel">
    <div class="panel-title"><h3>更新气象资料</h3><span class="badge">ERA5-Land</span><button :disabled="working||busy" @click="checkCoverage">{{working?'检查中…':'检查官方可用范围'}}</button></div>

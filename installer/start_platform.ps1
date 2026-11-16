@@ -23,7 +23,7 @@ try {
         New-Item -ItemType Directory -Path $logFolder -Force | Out-Null
         $stdoutPath = Join-Path $logFolder 'service.stdout.log'
         $stderrPath = Join-Path $logFolder 'service.stderr.log'
-        $process = Start-Process -FilePath (Join-Path $applicationRoot 'SelincoPlatform.exe') -ArgumentList @('--no-browser', '--close-with-browser', '--port', $platformPort) -WorkingDirectory $applicationRoot -WindowStyle Hidden -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath -PassThru
+        $process = Start-Process -FilePath (Join-Path $applicationRoot 'SelincoPlatform.exe') -ArgumentList @('--no-browser', '--port', $platformPort, '--workspace', ('"' + $workspacePath + '"')) -WorkingDirectory $applicationRoot -WindowStyle Hidden -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath -PassThru
         $serviceReady = $false
         for ($attempt = 0; $attempt -lt 100; $attempt++) {
             if (Test-SelincoService) { $serviceReady = $true; break }

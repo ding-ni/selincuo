@@ -168,12 +168,19 @@ def import_records(db, document, archive=None):
         identity = {'schemaVersion': 1, 'sourceKey': logical,
                     'records': sorted([{k:v for k,v in r.items() if k != 'row'} for r in records],
                                       key=lambda r:(r['station'],r['variable'],r['step'],r['time']))}
+        source_metadata = document.get('sourceMetadata')
+        if source_metadata is not None:
+            if not isinstance(source_metadata, dict):
+                raise ValueError('来源说明须为对象')
+            identity['sourceMetadata'] = source_metadata
         checksum = digest(identity)
         identifier = 'SRC-' + checksum[:24]
         metadata = {'adapter': 'observation-exchange-v1', 'timeZone': document.get('timeZone', 'Asia/Shanghai'),
                     'sourceKey': document['sourceKey'].strip(), 'fullSnapshot': True, 'schemaVersion': 1,
                     'importMode': mode, 'baseSourceId': base_id if mode == 'append' else None,
                     'duplicatePolicy': policy if mode == 'append' else None}
+        if source_metadata is not None:
+            metadata['sourceMetadata'] = source_metadata
         groups = defaultdict(list)
         for row in records:
             groups[(row['station'], row['variable'], row['step'])].append(row)

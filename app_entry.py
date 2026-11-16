@@ -46,7 +46,7 @@ def main():
         return
     bootstrap_parser = argparse.ArgumentParser(add_help=False)
     bootstrap_parser.add_argument('--workspace', type=Path)
-    bootstrap_parser.add_argument('--port',type=int,default=8882)
+    bootstrap_parser.add_argument('--port',type=int,default=int(read_json(ROOT / 'config/platform.json', {}).get('port', 8882)))
     bootstrap_args, _ = bootstrap_parser.parse_known_args()
     target_workspace = (bootstrap_args.workspace or WORKSPACE).resolve()
     port=bootstrap_args.port

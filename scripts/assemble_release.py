@@ -208,7 +208,7 @@ def selected_resources(scheme, published):
             version=(record.get('result') or record).get('spatialVersion')
         if version:
             versions.add(version)
-    files = [p for p in (spatial/'manifest.json', spatial/'grid-current.json',
+    files = [p for p in (spatial/'manifest.json', spatial/'grid-current.json', spatial/'map.geojson',
                          spatial/'presentation.json') if p.is_file()]
     terrain_index = spatial/'terrain-current.json'
     if terrain_index.is_file():
@@ -254,6 +254,44 @@ def selected_resources(scheme, published):
             raise ValueError('缺少原始90米DEM的完整ADF文件组')
         files += [p for p in dem.iterdir() if p.is_file()]
     return sorted(set(files))
+
+
+def copy_risk_terrain(destination):
+    """Keep native GLO-90 resolution in a small lake-plus-20-km offline crop."""
+    import math
+    import rasterio
+    from rasterio.merge import merge
+    from shapely.geometry import box
+    from backend.risk_scenarios import _dem_paths, _lake_geometry
+    lake = _lake_geometry()
+    west, south, east, north = lake.bounds
+    margin = 20.05/111.195
+    longitude_margin = margin/math.cos(math.radians((south+north)/2))
+    bounds = (west-longitude_margin, south-margin, east+longitude_margin, north+margin)
+    opened = []
+    try:
+        for path in _dem_paths():
+            dataset = rasterio.open(path)
+            if dataset.crs.to_epsg() == 4326 and box(*dataset.bounds).intersects(box(*bounds)):
+                opened.append(dataset)
+            else:
+                dataset.close()
+        if not opened:
+            raise ValueError('离线漫溢功能缺少湖周Copernicus GLO-90地形')
+        data, transform = merge(opened, bounds=bounds, nodata=-9999., dtype='float32')
+        target = destination/'data/derived/spatial/湖周漫溢地形.tif'
+        if target.exists():
+            raise ValueError('发行地形目标已存在，请使用新发行目录')
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with rasterio.open(target, 'w', driver='GTiff', width=data.shape[2], height=data.shape[1],
+                count=1, dtype='float32', crs='EPSG:4326', transform=transform, nodata=-9999.,
+                tiled=True, compress='deflate') as output:
+            output.write(data)
+            output.update_tags(source='Copernicus GLO-90', verticalReference='EGM2008', marginKm=20)
+        return target
+    finally:
+        for dataset in opened:
+            dataset.close()
 
 
 def bundle_business_result(source_workspace, business, destination):
@@ -382,19 +420,21 @@ def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--destination', type=Path, default=ROOT / 'build/verified-dist/SelincoPlatform')
-    parser.add_argument('--seed-workspace', type=Path,
-                        help='本次独立构建生成的冻结种子；省略时沿用仓库当前种子')
+    parser.add_argument('--seed-workspace', type=Path, required=True,
+                        help='本次独立构建生成的冻结业务种子')
+    parser.add_argument('--build-manifest', type=Path,
+                        help='独立构建清单路径；已有清单不覆盖')
     args = parser.parse_args()
     dest = args.destination.resolve()
-    version_manifest=ROOT/('releases/build-manifest-v'+VERSION+'.json')
+    version_manifest=(args.build_manifest.resolve() if args.build_manifest else
+                      ROOT/('releases/build-manifest-v'+VERSION+'.json'))
     if version_manifest.exists():
         raise ValueError('此发行版本已有构建清单，必须提升版本号或选择独立发布编号')
     if not dest.is_relative_to(ROOT / 'build'):
         raise ValueError('发布组装仅允许本项目build目录')
     if any((dest / name).exists() for name in ('backend','config','docs','scripts','seed','workspace')):
         raise ValueError('目标包含既有平台文件，请选择新构建目录，避免混入旧版内容')
-    seed = (args.seed_workspace.resolve() if args.seed_workspace else
-            within(ROOT / 'seed', read_json(ROOT / 'seed/current.json', {}).get('directory', 'workspace')))
+    seed = args.seed_workspace.resolve()
     counts, scheme = inspect_seed(seed)
     for name in ('backend',):
         origin = ROOT / name
@@ -423,6 +463,7 @@ def main():
         target = dest / source.relative_to(ROOT)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
+    copy_risk_terrain(dest)
     for item in published:
         if item.get('businessDefault'):
             continue
@@ -438,7 +479,13 @@ def main():
             raise ValueError('缺少交付说明：'+name)
         (dest / 'docs').mkdir(parents=True, exist_ok=True)
         shutil.copy2(origin, dest / 'docs' / name)
+    for name in ('算法路线与科学验证.md','系统架构与接口契约.md'):
+        origin = ROOT / '文档' / name
+        if not origin.is_file():
+            raise ValueError('缺少专题说明：'+name)
+        shutil.copy2(origin, dest / 'docs' / name)
     if (ROOT/'docs/images').is_dir():shutil.copytree(ROOT/'docs/images',dest/'docs/images',dirs_exist_ok=True)
+    if (ROOT/'docs/图件').is_dir():shutil.copytree(ROOT/'docs/图件',dest/'docs/图件',dirs_exist_ok=True)
     (dest / 'config').mkdir(parents=True, exist_ok=True)
     shutil.copy2(ROOT / 'config/platform.json', dest / 'config/platform.json')
     # The release has one clean business workspace.  Keep it separate from
