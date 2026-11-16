@@ -1,21 +1,29 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
 import {mapHover} from '../frontend/src/map-hover.mjs'
+import {linePath,barRects,formatValue} from '../frontend/src/sparkline.mjs'
 
-test('raw cell retains zero and separates applied values',()=>{
- const value=mapHover('grid',{id:'g',value:0},{frame:{variable:'precipitation',unit:'mm/d',day:'2026-10-20',unitValues:[{id:'u',value:8}]},spatial:{grids:[{id:'g'}],aggregation:[{unitId:'u',members:[{gridIndex:0}]}]}})
- assert.match(value.source,/格点原值/)
- assert.equal(value.rows[0].value,'0 mm/d')
- assert.match(value.rows[1].label,/降水订正后/)
- assert.equal(value.rows[1].value,'8.000 mm/d')
+test('grid hover shows business value without internal identifiers',()=>{
+ const value=mapHover('grid',{id:'88.5,30.1',lon:88.5,lat:30.1,value:0},{frame:{variable:'precipitation',unit:'mm/d',day:'2026-10-20'}})
+ assert.equal(value.title,'气象格点')
+ assert.equal(value.value,0)
+ assert.equal(value.unit,'mm')
+ assert.match(value.subtitle,/30\.10°N/)
+ assert.doesNotMatch(JSON.stringify(value),/88\.5,30\.1|AGG-|xlsx/)
 })
 
-test('unit temperature uses one corrected model value and missing stays missing',()=>{
- const value=mapHover('grid',{id:'g',value:-8},{frame:{variable:'temperature',unit:'℃',day:'2026-10-20',unitValuesRepresent:'model-elevation-corrected',unitValues:[{id:'u',value:-3}]},spatial:{grids:[{id:'g'}],aggregation:[{unitId:'u',members:[{gridIndex:0}]}]}})
- assert.match(value.note,/未作高程订正/)
- assert.match(value.rows[1].label,/高程订正后/)
- assert.equal(value.rows[1].value,'-3.000 ℃')
- const unit=mapHover('unit',{id:'u'},{frame:{variable:'temperature',unit:'℃',unitValuesRepresent:'model-elevation-corrected',unitValues:[{id:'u',value:-3}]}})
- assert.match(unit.source,/高程订正后/)
- assert.equal(mapHover('snow',{id:'u'},{snow:{day:'2026-10-20',units:[{id:'u',value:null}]}}).rows[0].value,'缺测')
+test('unit and snow hover use partition names and keep missing as null',()=>{
+ const unit=mapHover('unit',{id:'duja-4500-land',partition:'duja',kind:'land',elevationBandMin:4500,elevationBandMax:5000},{frame:{variable:'temperature',unit:'℃',day:'2026-10-20',unitValues:[{id:'duja-4500-land',value:-3}]}})
+ assert.equal(unit.title,'杜加站以上')
+ assert.equal(unit.value,-3)
+ assert.match(unit.subtitle,/4500–5000 m/)
+ const snow=mapHover('snow',{id:'u',partition:'boqu'},{snow:{day:'2026-10-20',units:[{id:'u',value:null}]}})
+ assert.equal(snow.value,null)
+ assert.equal(formatValue('snow',snow.value),'—')
+})
+
+test('sparkline helpers tolerate gaps',()=>{
+ assert.equal(linePath([1,null]),null)
+ const path=linePath([1,2,null,4]);assert.ok(path.line.startsWith('M'))
+ const bars=barRects([0,2,null]);assert.equal(bars.length,3);assert.ok(bars[2].missing);assert.equal(bars[1].y,30-27)
 })

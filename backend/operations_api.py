@@ -28,34 +28,11 @@ def get(server, path, query):
         from .operations_runtime import runtime_status
         return True, runtime_status(server)
     if path == 'station-hover':
-        station_id = query.get('stationId', '')
-        day = query.get('day') or None
-        stations = db.rows('SELECT * FROM stations WHERE id=?', (station_id,))
-        if not stations:
-            raise FileNotFoundError('站点不存在')
-        station = stations[0]
-        labels = {'precipitation': '降水', 'temperature': '气温', 'level': '水位', 'flow': '流量'}
-        units = {'precipitation': 'mm', 'temperature': '℃', 'level': 'm', 'flow': 'm³/s'}
-        groups = []
-        for variable in db.rows('SELECT DISTINCT variable FROM observations WHERE station_id=? ORDER BY variable', (station_id,)):
-            key = variable['variable']
-            records = db.observations(station_id, key, start=day, end=day, limit=None)
-            # Sort by time ascending; keep the most recent 3 for a small hover timeline.
-            records = sorted(records, key=lambda row: row['time'])[-3:]
-            items = []
-            for record in records:
-                items.append({'value': record['value'],
-                              'unit': record['unit'] or units.get(key, ''),
-                              'time': record['time'],
-                              'quality': record['quality'] or 'missing'})
-            latest = items[-1] if items else None
-            groups.append({'variable': key, 'label': labels.get(key, key),
-                           'unit': units.get(key, ''),
-                           'latest': latest,
-                           'records': items})
-        return True, {'title': station['name'], 'time': day or '最近记录',
-                      'groups': groups, 'dataSource': '站点观测',
-                      'note': '显示该站最近 3 条有效观测'}
+        from .station_hover import station_summary
+        return True, station_summary(db, query.get('stationId', ''))
+    if path == 'map-point-series':
+        from .station_hover import map_point_series
+        return True, map_point_series(db, query)
     if root == 'lake-curves':
         from . import lake_curves
         return True, next((v for v in lake_curves.catalog(db)['items'] if v['id'] == identifier), None) if identifier else lake_curves.catalog(db)
