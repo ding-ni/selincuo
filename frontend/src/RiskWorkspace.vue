@@ -1,168 +1,219 @@
 <script setup>
-import {ref,reactive,computed,onMounted,onBeforeUnmount,watch} from 'vue'
-import {api,number} from './api.mjs'
+import {computed,onBeforeUnmount,onMounted,reactive,ref,watch} from 'vue'
 import Chart from './Chart.vue'
-import TerrainReplay from './TerrainReplay.vue'
-const error=ref(''),notice=ref(''),busy=ref(false),catalog=ref({scenarios:[],results:[],exposures:[]}),forecasts=ref([]),forecastId=ref(''),scenarioId=ref(''),resultId=ref(''),frame=ref(null),index=ref(0),view=ref('map'),playing=ref(false),picking=ref(false),outline=ref(null),reports=ref([]),raster=ref(''),pointer=ref(null),pending=ref(null),referenceOutlets=ref([])
-const form=reactive({name:'湖周漫溢演示情景',demOffsetM:0,datumSource:'演示情景高程偏移，未经实测核定',marginKm:5,outlet:{lon:null,lat:null,crestM:null,widthM:30,coefficient:.6,releaseCapacityM3s:0},exposureIds:[],alternatives:[]})
-const exposureKind=ref('facility'),exposureName=ref(''),exposureSource=ref('')
-let pollTimer,playTimer,frameTicket=0
-const result=computed(()=>catalog.value.results.find(r=>r.id===resultId.value)),rows=computed(()=>result.value?.rows||[]),main=computed(()=>result.value?.comparisons?.[0]),bounds=computed(()=>frame.value?.terrain.bounds||[88.45,31.45,89.45,32.2]),totalFrames=computed(()=>rows.value.length),mapPoint=computed(()=>form.outlet.lon!=null&&form.outlet.lat!=null?project([form.outlet.lon,form.outlet.lat]):null)
-function project(p){const b=bounds.value;return [(p[0]-b[0])/(b[2]-b[0])*1000,(b[3]-p[1])/(b[3]-b[1])*680]}
-function path(geometry){if(!geometry)return '';const polys=geometry.type==='Polygon'?[geometry.coordinates]:geometry.type==='MultiPolygon'?geometry.coordinates:[];return polys.map(poly=>poly.map(ring=>ring.map((p,i)=>(i?'L':'M')+project(p).join(',')).join(' ')+'Z').join(' ')).join(' ')}
-const lakePath=computed(()=>outline.value?.features.filter(f=>f.properties.kind==='lake').map(f=>path(f.geometry)).join(' ')||'')
-async function action(fn){busy.value=true;error.value='';notice.value='';try{return await fn()}catch(e){error.value=e.message}finally{busy.value=false}}
-async function refresh(){const [r,f,p]=await Promise.all([api('risk-scenarios'),api('forecasts'),api('reports')]);catalog.value=r;forecasts.value=f.forecasts||f.items||f.results||[];reports.value=p.reports||[];if(!forecastId.value&&forecasts.value.length)forecastId.value=forecasts.value[0].id;if(resultId.value&&!r.results.some(x=>x.id===resultId.value)){resultId.value='';frame.value=null};try{const ref=await api('risk-scenarios/reference-outlets');referenceOutlets.value=ref.items||[]}catch{}}
-function loadReferenceOutlet(outlet){Object.assign(form.outlet,{lon:outlet.lon,lat:outlet.lat,crestM:outlet.crestM,widthM:outlet.widthM,coefficient:outlet.coefficient,releaseCapacityM3s:outlet.releaseCapacityM3s??0});if(outlet.provisional)notice.value='⚠ 已载入参考溢口"'+outlet.name+'"，坐标为估算值，须实地核验后使用'
-else notice.value='已载入溢口参考：'+outlet.name}
-function chooseScenario(){const value=catalog.value.scenarios.find(s=>s.id===scenarioId.value);if(value)Object.assign(form,structuredClone(value));else Object.assign(form,{name:'新的漫溢情景',outlet:{lon:null,lat:null,crestM:null,widthM:30,coefficient:.6,releaseCapacityM3s:0},alternatives:[],exposureIds:[]})}
-async function save(){return action(async()=>{const value=await api('risk-scenarios'+(scenarioId.value?'/'+scenarioId.value:''),form);scenarioId.value=value.id;await refresh();notice.value='情景已保存';return value})}
-async function run(){await action(async()=>{let sid=scenarioId.value;if(!sid){const value=await api('risk-scenarios',form);sid=value.id;scenarioId.value=sid}else await api('risk-scenarios/'+sid,form);const task=await api('risk-scenarios/run',{scenarioId:sid,forecastId:forecastId.value});pending.value=task;notice.value='漫溢情景计算已提交';await refresh()})}
-async function loadFrame(){if(!resultId.value)return;const ticket=++frameTicket;try{const value=await api('risk-results/'+resultId.value+'/frame?index='+index.value);if(ticket===frameTicket)frame.value=value}catch(e){if(ticket===frameTicket)error.value=e.message}}
-watch(resultId,()=>{index.value=0;frame.value=null;loadFrame()});watch(index,loadFrame)
-watch(frame,value=>{
- if(!value){raster.value='';return}
- const t=value.terrain,c=document.createElement('canvas')
- c.width=t.width;c.height=t.height
- const ctx=c.getContext('2d'),image=ctx.createImageData(t.width,t.height)
- const heights=t.elevations.flat().filter((_,i)=>t.valid[Math.floor(i/t.width)][i%t.width])
- const lo=Math.min(...heights),hi=Math.max(...heights)
- // 4-tier depth classification for inundation risk
- // 0–0.5m low (yellow), 0.5–1.5m medium (orange-yellow), 1.5–3m high (orange-red), >3m critical (deep red)
- function depthColor(d){
-  if(d>3)return[178,30,30]      // critical – deep red
-  if(d>1.5)return[210,80,25]    // high – orange-red
-  if(d>0.5)return[220,145,30]   // medium – amber
-  return[230,195,60]            // low – yellow
- }
- for(let y=0;y<t.height;y++)for(let x=0;x<t.width;x++){
-  const i=(y*t.width+x)*4,z=(t.elevations[y][x]-lo)/Math.max(1,hi-lo),d=value.depths[y][x]
-  let rgb=[115+100*z,137+70*z,111+65*z]
-  if(t.lakeMask[y][x])rgb=[38,109,142]
-  else if(d>0)rgb=depthColor(d)
-  image.data.set([...rgb,t.valid[y][x]?255:0],i)
- }
- ctx.putImageData(image,0,0);raster.value=c.toDataURL()
-})
-function pick(event){const r=event.currentTarget.getBoundingClientRect(),x=(event.clientX-r.left)/r.width,y=(event.clientY-r.top)/r.height,b=bounds.value;if(picking.value){form.outlet.lon=Number((b[0]+x*(b[2]-b[0])).toFixed(6));form.outlet.lat=Number((b[3]-y*(b[3]-b[1])).toFixed(6));picking.value=false;notice.value='已选溢口位置，请填写高程和宽度'}}
-function inspect(event){if(!frame.value)return;const r=event.currentTarget.getBoundingClientRect(),t=frame.value.terrain,x=Math.floor((event.clientX-r.left)/r.width*t.width),y=Math.floor((event.clientY-r.top)/r.height*t.height);if(x>=0&&x<t.width&&y>=0&&y<t.height&&t.valid[y][x])pointer.value={x:event.clientX-r.left,y:event.clientY-r.top,elevation:t.elevations[y][x],depth:frame.value.depths[y][x],lake:t.lakeMask[y][x]};else pointer.value=null}
-function togglePlay(){playing.value=!playing.value;clearInterval(playTimer);if(playing.value)playTimer=setInterval(()=>{if(index.value<totalFrames.value-1)index.value++;else{playing.value=false;clearInterval(playTimer)}},850)}
-function addAlternative(){form.alternatives.push({name:'调整方案 '+(form.alternatives.length+1),crestM:form.outlet.crestM,widthM:form.outlet.widthM,coefficient:form.outlet.coefficient,releaseCapacityM3s:form.outlet.releaseCapacityM3s})}
-async function importExposure(event){const file=event.target.files[0];if(!file)return;await action(async()=>{const payload={name:exposureName.value||file.name,kind:exposureKind.value,source:exposureSource.value||file.name,filename:file.name};if(file.name.toLowerCase().endsWith('.zip')){const bytes=new Uint8Array(await file.arrayBuffer());let text='';for(let i=0;i<bytes.length;i+=16384)text+=String.fromCharCode(...bytes.subarray(i,i+16384));payload.dataBase64=btoa(text)}else payload.geojson=JSON.parse(await file.text());await api('exposures/import',payload);await refresh();notice.value='承灾体资料已导入'});event.target.value=''}
-async function osm(){await action(async()=>{pending.value=await api('exposures/osm',{bbox:bounds.value,features:['roads','settlements']});notice.value='公开地图读取任务已提交'})}
-async function attachment(event){const file=event.target.files[0];if(!file||!scenarioId.value)return;await action(async()=>{const bytes=new Uint8Array(await file.arrayBuffer());let text='';for(let i=0;i<bytes.length;i+=16384)text+=String.fromCharCode(...bytes.subarray(i,i+16384));await api('scenario-attachments',{scenarioId:scenarioId.value,filename:file.name,dataBase64:btoa(text)});await refresh();notice.value='预案附件已登记'});event.target.value=''}
-async function report(type){await action(async()=>{pending.value=await api('reports',{reportType:type,riskResultId:resultId.value});notice.value='报告生成任务已提交'})}
-async function poll(){if(!pending.value?.id)return;try{const value=await api('tasks/'+pending.value.id);pending.value=value;if(value.status==='succeeded'){const product=value.result;pending.value=null;await refresh();if(product?.method?.includes('inundation'))resultId.value=product.id;notice.value='后台任务已完成'}else if(['failed','cancelled','interrupted'].includes(value.status)){error.value=value.message;pending.value=null}}catch(e){error.value=e.message}}
-onMounted(async()=>{await action(refresh);try{const response=await fetch('/spatial/map.geojson');if(response.ok)outline.value=await response.json()}catch{}pollTimer=setInterval(poll,2500)})
-onBeforeUnmount(()=>{clearInterval(pollTimer);clearInterval(playTimer);frameTicket++})
+import OverflowScene from './OverflowScene.vue'
+import OverflowMap2D from './OverflowMap2D.vue'
+import {loadOverflow,bangeRise,bangeArea,DEPTH_CLASSES} from './overflow-data.mjs'
+import {api,number,fixed} from './api.mjs'
+defineProps({boot:Object,busy:Boolean})
+const emit=defineEmits(['refresh'])
+const COLORS={blue:'#2d7fc1',yellow:'#c9a21a',orange:'#d9771f',red:'#c0392b'},NAMES={blue:'蓝色',yellow:'黄色',orange:'橙色',red:'红色'}
+const mode=ref('replay'),view=ref('3d'),preset=ref('overview'),risk=ref(true),data=ref(null),error=ref(''),notice=ref(''),index=ref(0),playing=ref(false),speed=ref(10)
+const forecasts=ref([]),rules=ref(null),result=ref(null),pending=ref(null),overlay=ref(null),choice=ref(0),exposures=ref([]),working=ref(false)
+const form=reactive({forecastId:'',initialLevelOffsetM:0,outlet:null,alternatives:[],exposureIds:[],scenarioId:''})
+let timer,poller
+onMounted(async()=>{try{data.value=await loadOverflow();index.value=0}catch(e){error.value=e.message}
+ try{const [f,r,d,c]=await Promise.all([api('forecasts'),api('warnings/rules'),api('risk-scenarios/default'),api('risk-scenarios')]);forecasts.value=(f.items||[]).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));rules.value=r.items?.[0]||r.default;Object.assign(form,{forecastId:forecasts.value[0]?.id||'',outlet:d.outlet,alternatives:d.alternatives,defaults:d});exposures.value=c.exposures||[];const last=(c.results||[]).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)))[0];if(last)await openResult(last)}catch(e){error.value=e.message}
+ poller=setInterval(poll,2000)})
+onBeforeUnmount(()=>{clearInterval(timer);clearInterval(poller)})
+const meta=computed(()=>data.value?.meta)
+const replay=computed(()=>meta.value?.replay)
+// Frames shared by the 3D scene, the plan map and the HUD.
+const replayFrames=computed(()=>(replay.value?.frames||[]).map(f=>({date:f.d,lake:f.H??f.Ho,observed:f.Ho,base:replay.value.frames[0].H,outflow:f.Q,volumeKm3:f.V,bangeRiseM:f.Hb,bangeAreaKm2:f.Ab,width:f.width,crest:f.crest,inflow:f.I})))
+function scenarioFrames(c){if(!c?.series||!meta.value)return [];let v=0;const out=[];c.series.dates.forEach((d,i)=>{v+=(c.series.outflow[i]||0)*86400/1e9;const rise=bangeRise(meta.value,v);out.push({date:d,lake:c.series.level[i],base:result.value?.currentLevelM??c.initialLevelM,outflow:c.series.outflow[i],volumeKm3:v,bangeRiseM:rise,bangeAreaKm2:bangeArea(meta.value,rise),crest:c.outlet?.crestM,width:c.outlet?.widthM})});return out}
+const comparisons=computed(()=>result.value?.comparisons||[])
+const frames=computed(()=>mode.value==='replay'?replayFrames.value:scenarioFrames(comparisons.value[choice.value]))
+const frame=computed(()=>frames.value[Math.min(index.value,frames.value.length-1)]||null)
+watch([mode,choice],()=>{index.value=mode.value==='replay'?0:Math.max(0,frames.value.length-1);playing.value=false})
+watch(playing,on=>{clearInterval(timer);if(on)timer=setInterval(()=>{if(index.value<frames.value.length-1)index.value++;else playing.value=false},1000/speed.value)})
+watch(speed,()=>{if(playing.value){playing.value=false;playing.value=true}})
+function jump(date){const i=frames.value.findIndex(f=>f.date===date);if(i>=0){index.value=i;playing.value=false}}
+function togglePlay(){if(!playing.value&&index.value>=frames.value.length-1)index.value=0;playing.value=!playing.value}
+const chartRows=computed(()=>frames.value.map(f=>({date:f.date,lake:f.lake,observed:f.observed,outflow:f.outflow,width:f.width,bange:f.bangeRiseM,volume:f.volumeKm3})))
+// Comparison charts overlay every scheme on one date axis.
+const compareRows=computed(()=>{const cs=comparisons.value.filter(c=>c.series);if(!cs.length||!meta.value)return [];const vol=cs.map(()=>0)
+ return cs[0].series.dates.map((d,i)=>{const r={date:d};cs.forEach((c,k)=>{vol[k]+=(c.series.outflow[i]||0)*86400/1e9;r['l'+k]=c.series.level[i];r['q'+k]=c.series.outflow[i];r['b'+k]=bangeRise(meta.value,vol[k])});return r})})
+const compareSeries=prefix=>comparisons.value.map((c,k)=>({key:prefix+k,label:c.name.replace(/（.*）/,'')}))
+const events=computed(()=>{const fs=replayFrames.value;if(!fs.length)return [];const c=replay.value.checks,first=v=>fs.find(f=>f.volumeKm3>=v)?.date
+ return [['2023-09-21','色林错起溢','主站湖位 4544.65 m，湖水经东岸低鞍部进入班戈错'],['2023-09-23','溃口初宽约 60 m','此后冲刷扩宽至约 200 m'],[first(.3),'累计外泄 0.3 km³','与文献报道的外溢水量相当'],[c.peakDate,'外泄峰值 '+number(c.peakOutflowM3s,0)+' m³/s','溃口冲刷后槛高降至 '+fixed(replay.value.outlet.currentCrestM,2)+' m'],[fs.at(-1).date,'复现结束','累计外泄 '+number(fs.at(-1).volumeKm3,2)+' km³']].filter(e=>e[0])})
+function grade(levels,flows){const ls=rules.value?.levels||[];let g=null;for(const l of ls){const hit=levels.some(v=>v>=l.levelM)||(l.outflowM3s!=null&&flows.some(v=>v>=l.outflowM3s));if(hit)g=l}return g}
+const scenarioGrade=computed(()=>{const c=comparisons.value[choice.value];return c?grade(c.series.level,c.series.outflow):null})
+async function action(fn){working.value=true;error.value='';notice.value='';try{await fn()}catch(e){error.value=e.message}finally{working.value=false}}
+async function run(){await action(async()=>{const d=form.defaults,payload={...d,name:form.initialLevelOffsetM?`起报湖位抬升 ${form.initialLevelOffsetM} m`:'现状溃口',initialLevelOffsetM:Number(form.initialLevelOffsetM),outlet:{...form.outlet},alternatives:form.alternatives.map(a=>({...a})),exposureIds:form.exposureIds}
+ const scenario=await api('risk-scenarios'+(form.scenarioId?'/'+form.scenarioId:''),payload);form.scenarioId=scenario.id
+ pending.value=await api('risk-scenarios/'+scenario.id+'/run',{forecastId:form.forecastId,clientRequestId:'risk-'+Date.now()});notice.value='正在计算漫溢情景'})}
+async function poll(){if(!pending.value?.id)return;try{const t=await api('tasks/'+pending.value.id);pending.value=t;if(t.status==='succeeded'){pending.value=null;await openResult(t.result);notice.value='计算完成';emit('refresh')}else if(['failed','cancelled','interrupted'].includes(t.status)){pending.value=null;error.value=t.message}}catch(e){error.value=e.message}}
+async function openResult(value){result.value=value;choice.value=0;overlay.value=null
+ const levels=(value.frameRows||[]).map(i=>value.rows[i]?.level??-Infinity);const peak=levels.length?levels.indexOf(Math.max(...levels)):0
+ try{const f=await api('risk-results/'+value.id+'/frame?index='+peak);overlay.value={bounds:f.terrain.bounds,width:f.terrain.width,height:f.terrain.height,depths:f.depths}}catch{}
+ if(mode.value!=='replay')index.value=Math.max(0,frames.value.length-1)}
+function addAlternative(){form.alternatives.push({name:'方案 '+(form.alternatives.length+1),...form.outlet})}
+async function osm(){await action(async()=>{pending.value=await api('exposures/osm',{bbox:[88.45,31.45,89.75,32.2],features:['roads','settlements']});notice.value='正在读取湖周道路和居民点'})}
+async function exportComparison(){await action(async()=>{pending.value=await api('reports',{reportType:'comparison',riskResultId:result.value.id});notice.value='正在生成方案对比报告'})}
+const time=t=>t?String(t).replace('T',' ').slice(0,16):'—'
 </script>
-<template><section class="risk-workspace">
-<div class="panel-title"><div><h2>漫溢与应急</h2><p class="muted">湖位情景、潜在淹没与方案对比</p></div><button @click="action(refresh)" :disabled="busy">刷新</button></div>
-<p v-if="error" class="error" role="alert">{{error}}</p>
-<p v-if="notice" class="note" role="status">{{notice}}</p>
-<div v-if="pending" class="task-progress"><strong>{{pending.message||'后台计算中'}}</strong><progress max="100" :value="pending.progress||0"></progress><span>{{number(pending.progress,0)}}%</span></div>
-<div class="risk-columns">
-<aside class="risk-config">
-  <div class="panel-title"><h3>情景配置</h3><span class="scenario-tag">情景估算</span></div>
-  <label>已保存情景<select v-model="scenarioId" @change="chooseScenario"><option value="">新建情景</option><option v-for="s in catalog.scenarios" :key="s.id" :value="s.id">{{s.name}}</option></select></label>
-  <label>情景名称<input v-model="form.name"></label>
-  <label>来水与气象<select v-model="forecastId"><option value="">请选择已完成预测</option><option v-for="f in forecasts" :key="f.id" :value="f.id">{{f.name}} · {{f.stateTime||f.start||f.createdAt}}</option></select></label>
-  <fieldset>
-    <legend>溢口</legend>
-    <div class="outlet-actions">
-      <button :class="{primary:picking}" @click="picking=!picking">{{picking?'请在右侧地图点选':'地图选择位置'}}</button>
-      <div v-if="referenceOutlets.length" class="ref-outlet-wrap">
-        <select @change="e=>{const o=referenceOutlets.find(x=>x.id===e.target.value);if(o)loadReferenceOutlet(o);e.target.value=''}">
-          <option value="">加载参考溢口…</option>
-          <option v-for="o in referenceOutlets" :key="o.id" :value="o.id">{{o.name}}</option>
-        </select>
-      </div>
-    </div>
-    <div v-if="form.outlet.lon!=null" class="outlet-provisional-hint">
-      ⚠ 坐标为估算值，须实地核验后正式使用
-    </div>
-    <div class="form-pair">
-      <label>经度<input type="number" step=".000001" v-model.number="form.outlet.lon"></label>
-      <label>纬度<input type="number" step=".000001" v-model.number="form.outlet.lat"></label>
-      <label>高程 m<input type="number" step=".01" v-model.number="form.outlet.crestM"></label>
-      <label>宽度 m<input type="number" min=".01" step="1" v-model.number="form.outlet.widthM"></label>
-      <label>流量系数<input type="number" min=".01" max="1" step=".01" v-model.number="form.outlet.coefficient"></label>
-      <label>人工泄流能力 m³/s<input type="number" min="0" step=".1" v-model.number="form.outlet.releaseCapacityM3s"></label>
-    </div>
-    <p class="muted">人工泄流按溢口高程以上可释放水量估算，与自然溢流共用库容上限；不代表闸门或实体工程控制。</p>
-  </fieldset>
-  <details><summary>高程与范围</summary>
-    <label>湖位到DEM偏移 m<input type="number" step=".01" v-model.number="form.demOffsetM"></label>
-    <label>偏移依据<input v-model="form.datumSource"></label>
-    <label>湖周扩展 km<input type="number" min=".2" max="50" v-model.number="form.marginKm"></label>
-  </details>
-  <details><summary>承灾体与预案</summary>
-    <label v-for="e in catalog.exposures" :key="e.id" class="check"><input type="checkbox" v-model="form.exposureIds" :value="e.id">{{e.name}} · {{e.featureCount}}项</label>
-    <p v-if="!catalog.exposures.length" class="muted">尚未导入居民点、道路或设施。</p>
-    <label class="button file-button" :class="{disabled:!scenarioId}">关联预案附件<input type="file" :disabled="!scenarioId" @change="attachment"></label>
-  </details>
-  <details><summary>工程情景比选</summary>
-    <p class="muted">各调整方案可分别设置人工泄流能力；均按各自溢口高程以上的可释放库容核算。</p>
-    <div v-for="(a,i) in form.alternatives" :key="i" class="alternative">
-      <label>名称<input v-model="a.name"></label>
-      <div class="form-pair">
-        <label>高程 m<input type="number" step=".01" v-model.number="a.crestM"></label>
-        <label>宽度 m<input type="number" v-model.number="a.widthM"></label>
-        <label>人工泄流 m³/s<input type="number" min="0" step=".1" v-model.number="a.releaseCapacityM3s"></label>
-      </div>
-      <button class="link" @click="form.alternatives.splice(i,1)">取消此方案</button>
-    </div>
-    <button @click="addAlternative">添加调整方案</button>
-  </details>
-  <div class="actions"><button :disabled="busy" @click="save">保存情景</button><button class="primary" :disabled="busy||!!pending||!forecastId" @click="run">计算并比选</button></div>
-</aside>
-<div class="risk-main">
-  <div class="risk-view-toolbar">
-    <label>已完成结果<select v-model="resultId"><option value="">请选择结果</option><option v-for="r in catalog.results" :key="r.id" :value="r.id">{{r.name}} · {{r.createdAt}}</option></select></label>
-    <div class="segmented"><button :class="{active:view==='map'}" @click="view='map'">二维</button><button :class="{active:view==='terrain'}" :disabled="!frame" @click="view='terrain'">三维地形</button></div>
+<template>
+<section class="ov">
+ <div class="ov-head">
+  <div class="seg ov-modes"><button :class="{on:mode==='replay'}" @click="mode='replay'">2023 漫溢复现</button><button :class="{on:mode==='scenario'}" @click="mode='scenario'">预报情景推演</button><button :class="{on:mode==='compare'}" @click="mode='compare'">应急方案比选</button></div>
+  <p v-if="error" class="message error">{{error}}<button @click="error=''">×</button></p>
+  <p v-else-if="notice" class="message success">{{notice}}<button @click="notice=''">×</button></p>
+ </div>
+ <div v-if="!data&&!error" class="ov-loading">正在载入地形与湖泊资料…</div>
+ <div v-if="data" class="ov-stage">
+  <div class="ov-view">
+   <OverflowScene v-if="view==='3d'" :data="data" :frame="frame" :risk="risk" :preset="preset"/>
+   <OverflowMap2D v-else :data="data" :frame="frame" :risk="risk" :overlay="mode==='replay'?null:overlay"/>
+   <div v-if="frame" class="ov-hud">
+    <b class="ov-date">{{frame.date}}</b>
+    <div><span>色林错湖位</span><strong>{{fixed(frame.lake,2)}}<em>m</em></strong><small v-if="frame.observed!=null">实测 {{fixed(frame.observed,2)}} m</small></div>
+    <div><span>外泄流量</span><strong>{{number(frame.outflow,1)}}<em>m³/s</em></strong><small v-if="frame.width">等效宽 {{number(frame.width,0)}} m · 槛高 {{fixed(frame.crest,2)}} m</small></div>
+    <div><span>累计外泄</span><strong>{{number(frame.volumeKm3,3)}}<em>km³</em></strong></div>
+    <div><span>班戈错涨幅</span><strong>+{{fixed(frame.bangeRiseM,2)}}<em>m</em></strong><small>面积 {{number(frame.bangeAreaKm2,0)}} km²</small></div>
+   </div>
+   <div class="ov-tools">
+    <div class="seg small"><button :class="{on:view==='3d'}" @click="view='3d'">三维</button><button :class="{on:view==='2d'}" @click="view='2d'">平面</button></div>
+    <div v-if="view==='3d'" class="seg small"><button :class="{on:preset==='overview'}" @click="preset='overview'">全景</button><button :class="{on:preset==='outlet'}" @click="preset='outlet'">溃口</button><button :class="{on:preset==='bange'}" @click="preset='bange'">班戈错</button></div>
+   </div>
+   <div class="ov-legend"><b>水域与新增淹没</b><span><i style="background:#1e6896"></i>湖泊水域</span><template v-if="risk"><span v-for="c in DEPTH_CLASSES" :key="c[2]"><i :style="{background:c[1]}"></i>{{c[2]}}</span></template><span><i class="flow"></i>溃口外泄</span><label><input type="checkbox" v-model="risk">按水深分级</label></div>
+   <div v-if="frames.length" class="ov-timeline">
+    <button class="ov-play" @click="togglePlay" :aria-label="playing?'暂停':'播放'">{{playing?'❚❚':'▶'}}</button>
+    <input type="range" min="0" :max="frames.length-1" v-model.number="index" aria-label="时间">
+    <select v-model.number="speed" aria-label="播放速度"><option :value="4">慢</option><option :value="10">中</option><option :value="24">快</option></select>
+   </div>
   </div>
-  <TerrainReplay v-if="view==='terrain'&&frame" :frame="frame"/>
-  <div v-else-if="view==='terrain'&&!frame" class="terrain-empty">
-    <p>暂无计算结果。请先配置溢口情景并运行计算，完成后可在此查看三维地形回放。</p>
-    <button @click="view='map'">返回二维视图</button>
-  </div>
-  <div v-else class="risk-map" :class="{picking}" @pointerleave="pointer=null">
-    <svg viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet" @click="pick" @pointermove="inspect">
-      <rect width="1000" height="680" fill="#dde9e4"/>
-      <image v-if="raster" :href="raster" x="0" y="0" width="1000" height="680" preserveAspectRatio="xMidYMid meet"/>
-      <path v-else :d="lakePath" fill="#2e7c9f" stroke="#225d78" stroke-width="2"/>
-      <g v-if="mapPoint"><circle :cx="mapPoint[0]" :cy="mapPoint[1]" r="9" fill="#c1513e" stroke="white" stroke-width="3"/><text :x="mapPoint[0]+15" :y="mapPoint[1]+4" fill="#6d3029" font-size="17">溢口</text></g>
-    </svg>
-    <!-- Depth legend -->
-    <div v-if="raster" class="depth-legend">
-      <b>淹没水深</b>
-      <div class="depth-legend-items">
-        <span><i style="background:#e6c33c"></i>0–0.5 m 低风险</span>
-        <span><i style="background:#dc911e"></i>0.5–1.5 m 中风险</span>
-        <span><i style="background:#d25019"></i>1.5–3 m 高风险</span>
-        <span><i style="background:#b21e1e"></i>&gt;3 m 极高风险</span>
-      </div>
+
+  <aside class="ov-side">
+   <template v-if="mode==='replay'&&replay">
+    <h3>2023 年色林错漫溢</h3>
+    <p class="ov-lead">2023 年 9 月 21 日，色林错湖水经东岸低鞍部（距东岸站 {{number(meta.outlet.distanceToEastStationKm,1)}} km）进入班戈错，溃口持续冲刷外泄。下图按逐日湖泊水量平衡复现该过程。</p>
+    <ol class="ov-events"><li v-for="e in events" :key="e[0]+e[1]" :class="{on:frame?.date===e[0]}" @click="jump(e[0])"><time>{{e[0]}}</time><b>{{e[1]}}</b><span>{{e[2]}}</span></li></ol>
+    <h4>模拟与报道对照</h4>
+    <table class="ov-check"><thead><tr><th></th><th>模拟</th><th>报道</th></tr></thead><tbody>
+     <tr><td>累计外泄（至 2024-06-30）</td><td>{{number(replay.checks.outflowTo20240630Km3,2)}} km³</td><td>约 0.3 km³</td></tr>
+     <tr><td>班戈错水位上涨</td><td>{{fixed(replay.checks.bangeRiseTo20240630M,2)}} m</td><td>约 2.3 m</td></tr>
+     <tr><td>班戈错面积增加</td><td>{{number(replay.checks.bangeAreaIncreasePercent20240630,0)}}%</td><td>约 18%</td></tr>
+     <tr><td>色林错湖位 RMSE</td><td colspan="2">{{fixed(replay.fit.all.revised.rmseM,3)}} m（{{replay.fit.all.revised.days}} 天主站观测）</td></tr>
+    </tbody></table>
+    <p class="ov-refs">资料：{{replay.literature.map(r=>r.journal+' '+r.year).join('；')}}。溃口位置由 Copernicus GLO-90 最低鞍部确定。</p>
+   </template>
+
+   <template v-if="mode==='scenario'">
+    <h3>预报情景推演</h3>
+    <label>来水与气象<select v-model="form.forecastId"><option value="">请选择预报</option><option v-for="f in forecasts" :key="f.id" :value="f.id">{{f.name}} · {{time(f.issueTime)}}</option></select></label>
+    <label>起报湖位抬升<div class="ov-range"><input type="range" min="0" max="1.5" step=".05" v-model.number="form.initialLevelOffsetM"><b>+{{fixed(form.initialLevelOffsetM,2)}} m</b></div></label>
+    <details v-if="form.outlet"><summary>溃口参数</summary><div class="ov-pair"><label>槛高 m<input type="number" step=".01" v-model.number="form.outlet.crestM"></label><label>等效宽度 m<input type="number" step="1" v-model.number="form.outlet.widthM"></label></div></details>
+    <details><summary>承灾体（{{form.exposureIds.length}}）</summary><label v-for="e in exposures" :key="e.id" class="ov-check-row"><input type="checkbox" :value="e.id" v-model="form.exposureIds">{{e.name}} · {{e.featureCount}} 项</label><p v-if="!exposures.length" class="muted">尚未读取湖周道路与居民点。</p><button :disabled="working||!!pending" @click="osm">读取湖周道路与居民点</button></details>
+    <button class="primary ov-run" :disabled="working||!!pending||!form.forecastId" @click="run">计算漫溢情景</button>
+    <div v-if="pending" class="running-strip">{{pending.message||'计算中'}}<progress :value="pending.progress||0" max="100"/></div>
+    <template v-if="comparisons[0]">
+     <div class="ov-grade" :style="{'--g':scenarioGrade?COLORS[scenarioGrade.color]:'#7d969e'}"><b>{{scenarioGrade?scenarioGrade.grade+' '+NAMES[scenarioGrade.color]:'未达预警'}}</b><span>{{scenarioGrade?.meaning||'湖位与外泄低于蓝色预警标准'}}</span></div>
+     <dl class="ov-kpi">
+      <dt>最高湖位</dt><dd>{{fixed(comparisons[0].peakLevelM,2)}} m · {{time(comparisons[0].peakTime)}}</dd>
+      <dt>最大外泄</dt><dd>{{number(comparisons[0].peakTotalOutflowM3s,1)}} m³/s</dd>
+      <dt>外泄总量</dt><dd>{{number(comparisons[0].totalOutflowM3/1e4,0)}} 万 m³</dd>
+      <dt>班戈错涨幅</dt><dd>+{{fixed(comparisons[0].bangeRiseM,2)}} m</dd>
+      <dt>湖周新增淹没</dt><dd>{{number(comparisons[0].inundatedAreaKm2,2)}} km² · 最深 {{number(comparisons[0].maxDepthM,1)}} m</dd>
+      <dt>受影响对象</dt><dd>{{comparisons[0].effects.count}} 处<template v-if="comparisons[0].effects.roadLengthM"> · 道路 {{number(comparisons[0].effects.roadLengthM/1000,1)}} km</template></dd>
+     </dl>
+    </template>
+   </template>
+
+   <template v-if="mode==='compare'">
+    <h3>应急方案比选</h3>
+    <p class="ov-lead">以同一预报来水分别计算各方案的湖位、外泄与下游班戈错响应。</p>
+    <div v-for="(a,i) in form.alternatives" :key="i" class="ov-alt">
+     <input v-model="a.name" aria-label="方案名称">
+     <div class="ov-pair three"><label>槛高 m<input type="number" step=".01" v-model.number="a.crestM"></label><label>宽度 m<input type="number" step="1" v-model.number="a.widthM"></label><label>人工泄流 m³/s<input type="number" step="1" min="0" v-model.number="a.releaseCapacityM3s"></label></div>
+     <button class="link" @click="form.alternatives.splice(i,1)">移除</button>
     </div>
-    <div v-if="pointer" class="map-inspect" :style="{left:Math.min(pointer.x+12,650)+'px',top:Math.max(6,pointer.y-55)+'px'}">高程 {{number(pointer.elevation,1)}} m<br>{{pointer.lake?'原湖区，无湖底水深资料':'新增淹没深 '+number(pointer.depth,2)+' m'}}</div>
-    <span class="map-note">{{frame?'Copernicus GLO-90 · 湖周连通淹没情景':'湖泊边界 · 点选溢口并填写情景参数'}}</span>
-  </div>
-  <div v-if="rows.length" class="risk-timeline"><button @click="togglePlay">{{playing?'暂停':'播放'}}</button><input type="range" min="0" :max="totalFrames-1" v-model.number="index"><span>{{rows[index]?.time.replace('T',' ')}} · {{number(rows[index]?.level,3)}} m</span></div>
-  <div v-if="main" class="risk-metrics">
-    <article><small>预计起溢</small><b>{{main.firstSpillTime?.replace('T',' ')||'未达到溢口'}}</b></article>
-    <article><small>最大溢流</small><b>{{number(main.peakSpillM3s,2)}} <em>m³/s</em></b></article>
-    <article><small>新增潜在淹没</small><b>{{number(main.inundatedAreaKm2,2)}} <em>km²</em></b></article>
-    <article><small>受影响对象</small><b>{{main.effects.count}} <em>个</em></b></article>
-  </div>
-  <Chart v-if="rows.length" :rows="rows.map(r=>({...r,date:r.time}))" :series="[{key:'level',label:'湖位',type:'line'}]" unit="m" :hourly="true" context="risk-level"/>
-  <p class="risk-limit">本页为简化溢流及静态地形连通淹没情景；三维视图展示地形与结果，湖内不估算水下深度。</p>
-</div></div>
-<section v-if="result" class="risk-section">
-  <div class="panel-title"><h3>方案比选</h3><button @click="report('comparison')" :disabled="busy||!!pending">导出对比报告</button></div>
-  <div class="table-wrap"><table><thead><tr><th>方案</th><th>最高湖位 m</th><th>自然溢流 m³</th><th>人工泄流 m³</th><th>总出流 m³</th><th>新增淹没 km²</th><th>影响对象</th><th>道路 m</th></tr></thead><tbody><tr v-for="r in result.comparisons" :key="r.name"><td>{{r.name}}</td><td>{{number(r.peakLevelM,3)}}</td><td>{{number(r.spillVolumeM3,0)}}</td><td>{{number(r.releaseVolumeM3,0)}}</td><td>{{number(r.totalOutflowM3,0)}}</td><td>{{number(r.inundatedAreaKm2,3)}}</td><td>{{r.effects.count}}</td><td>{{number(r.effects.roadLengthM,0)}}</td></tr></tbody></table></div>
-  <details><summary>受影响对象明细</summary><div class="table-wrap"><table><thead><tr><th>名称</th><th>类型</th><th>最大水深 m</th><th>道路受影响 m</th></tr></thead><tbody><tr v-for="r in main.effects.objects" :key="r.exposureId+':'+r.featureId"><td>{{r.name}}</td><td>{{r.kind}}</td><td>{{number(r.maxDepthM,2)}}</td><td>{{number(r.affectedLengthM,0)}}</td></tr></tbody></table></div></details>
+    <div class="actions"><button @click="addAlternative">添加方案</button><button class="primary" :disabled="working||!!pending||!form.forecastId" @click="run">计算比选</button></div>
+    <div v-if="pending" class="running-strip">{{pending.message||'计算中'}}<progress :value="pending.progress||0" max="100"/></div>
+   </template>
+  </aside>
+ </div>
+
+ <div v-if="data&&frames.length" class="ov-charts">
+  <template v-if="mode==='compare'&&compareRows.length">
+   <div><h4>色林错湖位</h4><Chart :rows="compareRows" :series="compareSeries('l')" unit="m" :day="frame?.date" @day="jump" context="ov-cmp-l"/></div>
+   <div><h4>溃口外泄流量</h4><Chart :rows="compareRows" :series="compareSeries('q')" unit="m³/s" zero :day="frame?.date" @day="jump" context="ov-cmp-q"/></div>
+   <div><h4>班戈错涨幅</h4><Chart :rows="compareRows" :series="compareSeries('b')" unit="m" zero :day="frame?.date" @day="jump" context="ov-cmp-b"/></div>
+  </template>
+  <template v-else>
+  <div><h4>色林错湖位</h4><Chart :rows="chartRows" :series="[{key:'lake',label:'模拟湖位'},...(mode==='replay'?[{key:'observed',label:'主站实测',observed:true}]:[])]" unit="m" :day="frame?.date" @day="jump" :context="'ov-lake-'+mode"/></div>
+  <div><h4>溃口外泄流量</h4><Chart :rows="chartRows" :series="[{key:'outflow',label:'外泄流量',options:{areaStyle:{opacity:.15}}}]" unit="m³/s" zero :day="frame?.date" @day="jump" :context="'ov-q-'+mode"/></div>
+  <div><h4>班戈错涨幅</h4><Chart :rows="chartRows" :series="[{key:'bange',label:'水位上涨'}]" unit="m" zero :day="frame?.date" @day="jump" :context="'ov-b-'+mode"/></div>
+  </template>
+ </div>
+
+ <section v-if="mode==='compare'&&comparisons.length" class="panel ov-table">
+  <div class="panel-title"><h3>方案对比</h3><button :disabled="working||!!pending" @click="exportComparison">导出对比报告</button></div>
+  <div class="table-wrap"><table><thead><tr><th>方案</th><th>最高湖位 m</th><th>期末湖位 m</th><th>最大外泄 m³/s</th><th>外泄总量 万m³</th><th>班戈错涨幅 m</th><th>湖周新增淹没 km²</th><th>受影响对象</th></tr></thead>
+   <tbody><tr v-for="(c,i) in comparisons" :key="c.name" :class="{selected:choice===i}" @click="choice=i"><td>{{c.name}}</td><td>{{fixed(c.peakLevelM,3)}}</td><td>{{fixed(c.finalLevelM,3)}}</td><td>{{number(c.peakTotalOutflowM3s,1)}}</td><td>{{number(c.totalOutflowM3/1e4,0)}}</td><td>{{fixed(c.bangeRiseM,2)}}</td><td>{{number(c.inundatedAreaKm2,2)}}</td><td>{{c.effects.count}}</td></tr></tbody></table></div>
+  <p class="muted">点击某一方案，在上方三维或平面视图中播放该方案过程。</p>
+ </section>
 </section>
-<section class="risk-section"><details><summary>承灾体资料接入</summary><div class="exposure-form"><label>资料名称<input v-model="exposureName"></label><label>对象类别<select v-model="exposureKind"><option value="facility">重点设施</option><option value="settlement">居民点</option><option value="road">道路</option></select></label><label>来源说明<input v-model="exposureSource" placeholder="数据来源或调查时间"></label><label class="button file-button">导入GeoJSON / Shapefile ZIP<input type="file" accept=".json,.geojson,.zip" @change="importExposure"></label><button :disabled="busy||!!pending" @click="osm">读取湖周公开道路与居民点</button></div><p class="muted">公开地图来源为OpenStreetMap contributors，ODbL。统计范围以实际导入对象为准。</p></details></section>
-<section class="risk-section"><div class="panel-title"><h3>日报与周报</h3><div class="actions"><button :disabled="busy||!!pending" @click="report('monitoring-daily')">生成监测日报</button><button :disabled="busy||!!pending" @click="report('warning-weekly')">生成预警周报</button></div></div><div class="report-list"><article v-for="r in reports" :key="r.id"><span>{{r.name}} · {{r.createdAt}}</span><a v-for="a in r.artifacts" :key="a.name" :href="a.downloadUrl">{{a.name}}</a></article><p v-if="!reports.length" class="empty">暂无已生成报告。</p></div></section>
-</section></template>
-<style scoped>.risk-columns{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;align-items:start}.risk-config{padding:18px;background:var(--panel,#fff);border:1px solid var(--border,#cfdbdd);border-radius:10px}.risk-config label{display:flex;flex-direction:column;gap:5px;margin:10px 0;font-size:13px}.risk-config input,.risk-config select,.risk-view-toolbar select{width:100%;min-width:0}.risk-config fieldset{border:1px solid var(--border,#cfdbdd);border-radius:6px;margin:18px 0;padding:10px}.risk-config legend{font-size:13px;padding:0 5px}.form-pair{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}.risk-config .check{flex-direction:row;align-items:center}.risk-config .check input{width:auto}.risk-config details{padding:12px 0;border-top:1px solid var(--border,#cfdbdd)}.risk-config .actions{margin-top:16px}.risk-main{min-width:0}.risk-view-toolbar{display:flex;gap:16px;justify-content:space-between;align-items:end;margin-bottom:12px}.risk-view-toolbar label{display:flex;flex-direction:column;gap:5px;max-width:75%;min-width:0}.segmented{display:flex;gap:3px}.segmented .active{background:#245e70;color:#fff}.risk-map{position:relative;height:460px;border:1px solid var(--border,#cfdbdd);border-radius:10px;overflow:hidden}.risk-map.picking{cursor:crosshair}.risk-map svg{width:100%;height:100%;display:block}.map-note{position:absolute;bottom:12px;left:12px;background:#fffdf0e8;padding:6px 10px;font-size:12px;color:#305461;border-radius:4px}.map-inspect{position:absolute;pointer-events:none;background:#163844ee;color:#fff;padding:9px 12px;font-size:12px;border-radius:5px;white-space:nowrap}.risk-timeline{display:flex;align-items:center;gap:12px;margin:15px 0;font-size:12px}.risk-timeline input{flex:1;min-width:70px}.risk-timeline span{min-width:220px}.risk-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}.risk-metrics article{padding:13px;background:var(--panel,#fff);border:1px solid var(--border,#d6e0e1);border-radius:8px}.risk-metrics small{display:block;color:var(--muted,#647a80);margin-bottom:9px}.risk-metrics b{font-size:17px;overflow-wrap:anywhere}.risk-metrics em{font-size:12px;font-style:normal;font-weight:400}.risk-limit{font-size:12px;color:var(--muted,#647a80);line-height:1.8}.risk-section{margin-top:22px;padding:18px;background:var(--panel,#fff);border:1px solid var(--border,#d6e0e1);border-radius:10px}.exposure-form{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-top:16px}.exposure-form label{display:flex;flex-direction:column;gap:6px}.file-button{position:relative;overflow:hidden;cursor:pointer}.file-button input{position:absolute;inset:0;opacity:0;cursor:pointer}.alternative{padding:8px 0;border-bottom:1px solid var(--border,#d6e0e1)}.scenario-tag{font-size:11px;color:#936c2b;background:#f4e8cf;padding:4px 7px;border-radius:4px}.report-list article{display:flex;gap:15px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--border,#d6e0e1);font-size:13px}.report-list span{flex:1}.task-progress{display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:15px;background:#e1eee9;border-radius:8px}.task-progress progress{flex:1}.outlet-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.outlet-actions button{flex-shrink:0}.ref-outlet-wrap{flex:1;min-width:140px}.ref-outlet-wrap select{width:100%}.outlet-provisional-hint{background:#fdf5e4;border:1px solid #e8d495;color:#735c18;padding:6px 10px;border-radius:4px;font-size:11px;margin-bottom:8px}.terrain-empty{padding:30px;text-align:center;color:var(--muted,#647a80);border:1px dashed var(--border,#cfdbdd);border-radius:10px;margin-bottom:15px}.terrain-empty p{margin:0 0 14px}.depth-legend{position:absolute;top:12px;right:12px;background:#fffdf0e8;padding:8px 11px;border-radius:5px;font-size:11px;color:#305461;max-width:240px}.depth-legend b{display:block;margin-bottom:5px;font-size:11px}.depth-legend-items{display:flex;flex-direction:column;gap:3px}.depth-legend-items span{display:flex;align-items:center;gap:6px}.depth-legend-items i{display:inline-block;width:11px;height:11px;border-radius:2px;flex-shrink:0}@media(max-width:1050px){.risk-columns{grid-template-columns:260px minmax(0,1fr)}.risk-metrics{grid-template-columns:1fr 1fr}.risk-timeline{flex-wrap:wrap}.risk-timeline span{min-width:0}.depth-legend{position:static;margin:8px 0;max-width:none}}@media(max-width:760px){.risk-columns{grid-template-columns:1fr}.risk-map{height:350px}.risk-view-toolbar{align-items:stretch}.risk-section .panel-title{flex-wrap:wrap}}
+</template>
+<style scoped>
+.ov-head{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:14px}
+.ov-head .message{margin:0;flex:1}
+.seg{display:inline-flex;border:1px solid #cddce3;border-radius:7px;overflow:hidden;background:#fff}
+.seg button{border:0;border-radius:0;min-height:40px;padding:6px 18px;background:transparent}
+.seg button+button{border-left:1px solid #cddce3}
+.seg button.on{background:#1c7885;color:#fff}
+.seg.small button{min-height:30px;padding:3px 11px;font-size:12.5px}
+.ov-modes button{font-size:15px}
+.ov-loading{padding:80px;text-align:center;color:var(--muted)}
+.ov-stage{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;margin-bottom:16px}
+.ov-view{position:relative;height:max(470px,62vh);border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#dfe9ec}
+.ov-hud{position:absolute;left:14px;top:14px;display:grid;gap:6px;padding:12px 14px;background:#0f2e3bd9;color:#fff;border-radius:9px;min-width:200px;backdrop-filter:blur(4px);pointer-events:none}
+.ov-date{font-size:19px;font-variant-numeric:tabular-nums;letter-spacing:.02em;margin-bottom:2px}
+.ov-hud div{display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:baseline}
+.ov-hud span{font-size:11.5px;color:#a9c6d0;grid-row:1/3}
+.ov-hud strong{font-size:17px;font-variant-numeric:tabular-nums;text-align:right}
+.ov-hud em{font-style:normal;font-size:11px;color:#a9c6d0;margin-left:3px;font-weight:400}
+.ov-hud small{font-size:11px;color:#9fbdc8;text-align:right;font-variant-numeric:tabular-nums}
+.ov-tools{position:absolute;right:14px;top:14px;display:flex;gap:8px}
+.ov-legend{position:absolute;right:14px;top:60px;display:grid;gap:4px;padding:10px 12px;background:#ffffffe6;border-radius:8px;font-size:12px;color:#355360}
+.ov-legend b{font-size:12px;margin-bottom:2px}
+.ov-legend span{display:flex;align-items:center;gap:7px}
+.ov-legend i{width:14px;height:10px;border-radius:2px;display:inline-block}
+.ov-legend i.flow{height:3px;background:#5cc7ea}
+.ov-legend label{display:flex;flex-direction:row;align-items:center;gap:6px;font-size:12px;margin-top:4px}
+.ov-timeline{position:absolute;left:14px;right:200px;bottom:12px;display:flex;gap:10px;align-items:center;padding:6px 10px;background:#ffffffe6;border-radius:8px}
+.ov-timeline input[type=range]{flex:1;min-height:0;accent-color:#1c7885}
+.ov-timeline select{width:68px;min-height:30px;padding:2px 6px;font-size:12px}
+.ov-play{min-height:30px;width:38px;padding:0;border-radius:50%;background:#1c7885;color:#fff;border:0;font-size:12px}
+.ov-side{border:1px solid var(--line);border-radius:10px;background:#fff;padding:18px;display:grid;gap:12px;align-content:start;overflow:auto;max-height:max(470px,62vh)}
+.ov-side h3{margin:0}.ov-side h4{margin:6px 0 0;font-size:14px}
+.ov-lead{font-size:13px;color:#4c6772;margin:0;line-height:1.7}
+.ov-events{list-style:none;padding:0;margin:0;display:grid;gap:2px;border-left:2px solid #d5e3e7;margin-left:6px}
+.ov-events li{position:relative;padding:7px 0 7px 16px;cursor:pointer;display:grid;gap:1px}
+.ov-events li::before{content:'';position:absolute;left:-6px;top:12px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid #4f9fae}
+.ov-events li.on::before,.ov-events li:hover::before{background:#e0702c;border-color:#e0702c}
+.ov-events time{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ov-events b{font-size:13.5px;color:#1f4652}
+.ov-events span{font-size:12px;color:#5b7680}
+.ov-check{font-size:12.5px}.ov-check th,.ov-check td{padding:6px 8px}
+.ov-refs{font-size:11.5px;color:var(--muted);margin:0}
+.ov-side label{font-size:13px}
+.ov-range{display:flex;align-items:center;gap:10px}.ov-range input{flex:1;min-height:0}.ov-range b{font-variant-numeric:tabular-nums;min-width:62px;text-align:right}
+.ov-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ov-pair.three{grid-template-columns:repeat(3,1fr)}
+.ov-pair input{min-height:34px;padding:4px 8px}
+.ov-side details{margin:0;font-size:13px}
+.ov-check-row{display:flex!important;flex-direction:row;align-items:center;gap:8px}
+.ov-run{width:100%}
+.ov-grade{--g:#7d969e;display:grid;gap:3px;padding:12px 14px;border-radius:8px;border-left:5px solid var(--g);background:color-mix(in srgb,var(--g) 10%,#fff)}
+.ov-grade b{color:var(--g);font-size:17px}.ov-grade span{font-size:12.5px;color:#4c6772}
+.ov-kpi{grid-template-columns:96px 1fr;gap:6px 10px;margin:0;font-size:13px}
+.ov-alt{display:grid;gap:6px;padding:10px;border:1px solid var(--line);border-radius:8px}
+.ov-alt>input{min-height:34px;padding:4px 8px;font-weight:600}
+.ov-alt label{font-size:12px}
+.ov-alt .link{justify-self:end;min-height:22px;font-size:12px}
+.ov-charts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:16px}
+.ov-charts>div{border:1px solid var(--line);border-radius:10px;background:#fff;padding:12px 14px 4px;min-width:0}
+.ov-charts h4{margin:0 0 2px;font-size:14px}
+.ov-charts :deep(.chart){height:230px}
+.ov-table tr{cursor:pointer}
+@media(max-width:1300px){.ov-stage{grid-template-columns:1fr}.ov-side{max-height:none}.ov-charts{grid-template-columns:1fr}}
 </style>

@@ -82,6 +82,8 @@ def get(server, path, query):
             return True, risk_scenarios.terrain_frame(db, identifier.split('/')[0], int(query.get('index', 0)))
         if root == 'risk-results' and identifier:
             return True, store.get(db, 'risk-results', identifier)
+        if path == 'risk-scenarios/default':
+            return True, risk_scenarios.default_scenario(db)
         if path == 'risk-scenarios/reference-outlets':
             import glob as _glob
             outlet_files = sorted(_glob.glob(str(ROOT / 'config/operational/漫溢溢口参考-*.json')))

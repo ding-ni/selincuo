@@ -39,6 +39,44 @@ def _dem_paths():
     return [p for root in roots if root.is_dir() for p in root.glob('*/*_DEM.tif')]
 
 
+DISPLAY = ROOT/'data/derived/spatial/漫溢展示/overflow-display.json'
+
+
+def display():
+    try:
+        return read_json(DISPLAY)
+    except (OSError, ValueError):
+        return None
+
+
+def bange_rise(volume_km3, meta=None):
+    """Rise of Bange Co for a received volume, from the DEM hypsometry (no own inflow or loss)."""
+    meta = meta or display()
+    table = (meta or {}).get('bange', {}).get('hypsometry') or []
+    if not table:
+        return None
+    return float(np.interp(volume_km3, [r['volumeKm3'] for r in table], [r['rise'] for r in table]))
+
+
+def default_scenario(db):
+    """Baseline from the adopted lake model and the DEM saddle of the 2023 breach."""
+    from .lake_revision import active
+    model, meta = active(db), display() or {}
+    outlet = (model or {}).get('outlet') or {}
+    spot = meta.get('outlet') or {}
+    crest = float(outlet.get('currentCrestM', 4543.96)); width = float(outlet.get('currentWidthM', 60.))
+    base = {'crestM': round(crest, 2), 'widthM': round(width, 1), 'coefficient': float(outlet.get('coefficient', .577)), 'releaseCapacityM3s': 0.}
+    return {'name': '现状溃口', 'demOffsetM': round(-float(meta.get('datum', {}).get('lakeMinusDemM', -2.41)), 3),
+            'datumSource': meta.get('datum', {}).get('basis', '2023-09-21 起溢观测湖位减去 GLO-90 鞍部高程'),
+            'marginKm': 5., 'initialLevelOffsetM': 0.,
+            'outlet': {'lon': spot.get('lon', 89.36958), 'lat': spot.get('lat', 31.77958), **base},
+            'alternatives': [
+                {'name': '开挖泄流槽（降槛0.3 m、加宽至120 m）', **base, 'crestM': round(crest - .3, 2), 'widthM': 120.},
+                {'name': '人工泄流 50 m³/s', **base, 'releaseCapacityM3s': 50.},
+                {'name': '封堵抬槛（抬高0.3 m）', **base, 'crestM': round(crest + .3, 2)}],
+            'exposureIds': []}
+
+
 def catalog(db):
     return {'scenarios': store.list_records(db, COLLECTION),
             'results': store.list_records(db, RESULTS),
@@ -52,6 +90,7 @@ def save_scenario(db, payload, identifier=None):
     value['name'] = str(value.get('name') or '湖周漫溢情景').strip()
     value['demOffsetM'] = _number(value.get('demOffsetM', 0), '湖位到DEM的高程偏移', -1000, 1000)
     value['marginKm'] = _number(value.get('marginKm', 5), '湖周范围', .2, 50)
+    value['initialLevelOffsetM'] = _number(value.get('initialLevelOffsetM', 0), '起报湖位抬升', -2, 3)
     outlet = value.get('outlet') or {}
     value['outlet'] = {'lon': _number(outlet.get('lon'), '溢口经度', -180, 180),
         'lat': _number(outlet.get('lat'), '溢口纬度', -90, 90),
@@ -277,17 +316,29 @@ def run(db, request, folder=None, progress=None, cancelled=None):
     scenario = detail(db, request['scenarioId'])
     source = _forecast_source(db, request['forecastId'])
     times, inflow, rain, evap, initial, curve = _series_source(source)
-    terrain = load_terrain(scenario)
+    current = initial
+    initial += float(scenario.get('initialLevelOffsetM', 0.))
+    terrain = load_terrain(scenario, max_size=420)
+    # New inundation is measured against today's shoreline (forecast start level), not the DEM-era lake.
+    _, baseline = connected_depth(terrain['elevation'], terrain['valid'], terrain['lakeMask'], current+scenario['demOffsetM'])
+    meta = display()
+
+    def flooded(level):
+        depth, wet = connected_depth(terrain['elevation'], terrain['valid'], terrain['lakeMask'], level+scenario['demOffsetM'])
+        return np.where(wet & ~baseline, depth, 0.), wet
     if progress:
         progress(15, '已读取湖周地形与预测水量')
     folder = Path(folder) if folder else db.workspace/'risk-runs'/('情景-'+pd.Timestamp.utcnow().strftime('%Y%m%d%H%M%S%f'))
     folder.mkdir(parents=True, exist_ok=True)
-    paths, comparisons, primary_rows = [], [], None
+    paths, comparisons, primary_rows, picks = [], [], None, []
     for k, (name, outlet) in enumerate([(scenario['name'], scenario['outlet'])] +
                 [(a['name'], {**scenario['outlet'], **a}) for a in scenario.get('alternatives', [])]):
         rows = simulate_spill(times, inflow, rain, evap, initial, curve, outlet, cancelled)
         peak = max(r['level'] for r in rows)
-        depth, wet = connected_depth(terrain['elevation'], terrain['valid'], terrain['lakeMask'], peak+scenario['demOffsetM'])
+        depth, wet = flooded(peak)
+        frame = pd.DataFrame(rows); frame.index = pd.to_datetime(frame['time']) - pd.Timedelta(hours=1)
+        daily = frame[['level', 'totalOutflowM3s']].resample('D').mean()
+        volume = float(frame['totalOutflowM3'].sum())
         effects = assess_exposures(db, scenario.get('exposureIds', []), depth, terrain)
         comparisons.append({'name': name, 'peakLevelM': peak,
             'firstSpillTime': next((r['time'] for r in rows if r['spillM3'] > 0), None),
@@ -298,14 +349,20 @@ def run(db, request, folder=None, progress=None, cancelled=None):
             'totalOutflowM3': sum(r['totalOutflowM3'] for r in rows),
             'peakTotalOutflowM3s': max(r['totalOutflowM3s'] for r in rows),
             'inundatedAreaKm2': float(terrain['cellAreas'][depth > 0].sum()/1e6),
+            'initialLevelM': initial, 'finalLevelM': rows[-1]['level'],
+            'peakTime': max(rows, key=lambda r: r['level'])['time'],
+            'bangeRiseM': bange_rise(volume/1e9, meta),
+            'series': {'dates': [d.date().isoformat() for d in daily.index], 'level': daily['level'].round(4).tolist(),
+                       'outflow': daily['totalOutflowM3s'].round(3).tolist()},
             'maxDepthM': float(depth.max()), 'effects': effects, 'outlet': outlet,
             'balanceMaxErrorM3': max(abs(r['balanceErrorM3']) for r in rows)})
         if k == 0:
             primary_rows = rows
-            depths = np.stack([connected_depth(terrain['elevation'], terrain['valid'], terrain['lakeMask'],
-                              r['level']+scenario['demOffsetM'])[0].astype('float32') for r in rows])
+            # Daily frames plus the peak hour keep the archive small at ~200 m resolution.
+            picks = sorted(set(range(23, len(rows), 24)) | {len(rows) - 1, int(np.argmax([r['level'] for r in rows]))})
+            depths = np.stack([flooded(rows[i]['level'])[0].astype('float32') for i in picks])
             np.savez_compressed(folder/'inundation.npz', elevation=terrain['elevation'].astype('float32'),
-                valid=terrain['valid'], lakeMask=terrain['lakeMask'], depths=depths,
+                valid=terrain['valid'], lakeMask=terrain['lakeMask'], depths=depths, frameRows=np.asarray(picks),
                 bounds=terrain['bounds'], transform=np.array(tuple(terrain['transform'])))
         if progress:
             progress(20+65*(k+1)/(1+len(scenario.get('alternatives', []))), '已完成'+name)
@@ -316,6 +373,7 @@ def run(db, request, folder=None, progress=None, cancelled=None):
                     'height': terrain['elevation'].shape[0], 'source': terrain['source'],
                     'verticalReference': terrain['verticalReference'], 'lakeBedDepthAvailable': False},
         'path': str((folder/'inundation.npz').relative_to(db.workspace)).replace('\\','/'),
+        'frameRows': picks, 'initialLevelM': initial, 'currentLevelM': current, 'initialLevelOffsetM': scenario.get('initialLevelOffsetM', 0.),
         'limitations': ['静态地形连通淹没情景；未计算下游洪波传播与到达时间',
                         '已有湖面无水下地形，不输出湖内水深', '溢口和高程偏移采用本次情景配置']}
     value = store.save(db, RESULTS, value, prefix='RISK-RUN-')
@@ -329,15 +387,17 @@ def run(db, request, folder=None, progress=None, cancelled=None):
 def terrain_frame(db, identifier, index=0):
     value = store.get(db, RESULTS, identifier)
     index = int(index)
-    if not 0 <= index < len(value['rows']):
-        raise ValueError('回放时刻超出结果范围')
     with np.load(within(db.workspace, value['path']), allow_pickle=False) as arrays:
+        picks = arrays['frameRows'].tolist() if 'frameRows' in arrays else list(range(len(value['rows'])))
+        if not 0 <= index < len(picks):
+            raise ValueError('回放时刻超出结果范围')
+        row = value['rows'][picks[index]]
         valid = arrays['valid']
         elevations = np.where(valid, arrays['elevation'], 0.)
         terrain = {**value['terrain'], 'elevations': elevations.tolist(), 'valid': valid.tolist(),
                    'lakeMask': arrays['lakeMask'].tolist()}
-        return {'terrain': terrain, 'depths': arrays['depths'][index].tolist(), 'index': index,
-                'time': value['rows'][index]['time'], 'level': value['rows'][index]['level'],
+        return {'terrain': terrain, 'depths': np.round(arrays['depths'][index], 3).tolist(), 'index': index, 'frames': len(picks),
+                'time': row['time'], 'level': row['level'],
                 'outlet': value['scenario']['outlet'], 'demOffsetM': value['scenario']['demOffsetM']}
 
 
