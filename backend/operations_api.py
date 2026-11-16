@@ -1,7 +1,7 @@
 """Business endpoints for continuous acquisition, forecasting and scenarios."""
 from pathlib import Path
 import json
-from .common import read_json
+from .common import read_json, ROOT
 from . import operational_store as store
 
 TASK_HANDLERS = {
@@ -94,7 +94,7 @@ def get(server, path, query):
             return True, store.get(db, 'risk-results', identifier)
         if path == 'risk-scenarios/reference-outlets':
             import glob as _glob
-            outlet_files = sorted(_glob.glob(str(common.ROOT / 'config/operational/漫溢溢口参考-*.json')))
+            outlet_files = sorted(_glob.glob(str(ROOT / 'config/operational/漫溢溢口参考-*.json')))
             outlets = [read_json(Path(f)) for f in outlet_files]
             return True, {'items': outlets}
         return True, risk_scenarios.detail(db, identifier) if identifier else risk_scenarios.catalog(db)
