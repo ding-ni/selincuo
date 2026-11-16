@@ -6,6 +6,7 @@ from . import operational_store as store
 
 TASK_HANDLERS = {
     'lake-curve-comparison': ('lake_curves', 'run_comparison'),
+    'lake-revision': ('lake_revision', 'run'),
     'data-sync': ('data_connections', 'sync'),
     'forecast-input-ensemble': ('forecast_inputs', 'fetch_ensemble'),
     'forecast': ('forecasts', 'run'),
@@ -33,6 +34,14 @@ def get(server, path, query):
     if path == 'map-point-series':
         from .station_hover import map_point_series
         return True, map_point_series(db, query)
+    if root == 'lake-models':
+        from . import lake_revision
+        model = lake_revision.active(db)
+        if identifier == 'active':
+            return True, model
+        brief = lambda r: {k: v for k, v in r.items() if k not in ('daily', 'lakeCurve')}
+        return True, {'active': brief(model) if model else None,
+                      'items': [brief(r) for r in store.list_records(db, lake_revision.COLLECTION)]}
     if root == 'lake-curves':
         from . import lake_curves
         return True, next((v for v in lake_curves.catalog(db)['items'] if v['id'] == identifier), None) if identifier else lake_curves.catalog(db)
@@ -96,6 +105,8 @@ def post(server, path, value):
     if root == 'runtime':
         from .operations_runtime import save_runtime, configure_autostart
         return True, configure_autostart(server, value) if identifier == 'autostart' else save_runtime(server, value)
+    if root == 'lake-models' and identifier == 'revise':
+        return True, jobs.submit('lake-revision', value)
     if root == 'lake-curves':
         from . import lake_curves
         return True, jobs.submit('lake-curve-comparison', value) if identifier == 'compare' else lake_curves.save_curve(db, value)

@@ -32,19 +32,21 @@ class OperationalIntegrationTests(unittest.TestCase):
             self.assertIsNone(connection.execute("SELECT name FROM sqlite_master WHERE name='operational_records'").fetchone())
         self.assertEqual(self.db.setting('existing-business'), {'adopted': 'original'})
 
-    def test_hover_uses_selected_day_and_keeps_zero_and_missing(self):
+    def test_hover_shows_latest_values_keeps_zero_and_hides_file_names(self):
         with self.db.connect() as connection:
             connection.execute('INSERT INTO stations VALUES(?,?,?,?,?,?)', ('TEST', '测试站', 'rain', 89., 32., '{}'))
             connection.execute('INSERT INTO sources VALUES(?,?,?,?,?,?)', ('SRC', '现场.json', 'test', 0, now(), '{}'))
-            for i, (day, value) in enumerate([('2026-11-01', 0.), ('2026-11-02', 2.)]):
+            for i, (day, value) in enumerate([('2026-11-01', 2.), ('2026-11-02', 0.)]):
                 connection.execute('INSERT INTO observations(source_id,station_id,variable,time,step,unit,value,raw_text,quality,sheet,cell) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
-                    ('SRC', 'TEST', 'precipitation', day+'T08:00:00', 'daily', 'mm', value, str(value), 'ok', 'data', str(i)))
+                    ('SRC', 'TEST', 'precipitation', day+'T00:00:00', 'day', 'mm', value, str(value), 'valid', 'data', str(i)))
         server = SimpleNamespace(db=self.db)
-        _, value = operations_api.get(server, 'station-hover', {'stationId': 'TEST', 'day': '2026-11-01'})
-        self.assertEqual(value['rows'][0]['value'], '0.0 mm')
-        self.assertEqual(value['rows'][0]['source'], '现场.json')
-        _, missing = operations_api.get(server, 'station-hover', {'stationId': 'TEST', 'day': '2026-11-03'})
-        self.assertEqual(missing['rows'][0]['value'], '缺测')
+        _, value = operations_api.get(server, 'station-hover', {'stationId': 'TEST', 'day': '2026-10-01'})
+        rain = value['groups'][0]
+        self.assertEqual((value['title'], value['kindLabel'], rain['label']), ('测试站', '雨量站', '降水'))
+        self.assertEqual(rain['latest'], {'value': 0., 'time': '2026-11-02', 'kind': 'daily-total'})
+        self.assertEqual([d['value'] for d in rain['daily'][-2:]], [2., 0.])
+        self.assertEqual(rain['sum7d'], 2.)
+        self.assertNotIn('现场.json', json.dumps(value, ensure_ascii=False))
 
     def test_forecast_sources_include_only_full_states_and_real_state_time(self):
         state = {'schemaVersion': 3, 'validAt': '2026-10-21T00:00:00', 'inputId': 'INPUT', 'identity': {'spatialVersion': 'SPATIAL'}}

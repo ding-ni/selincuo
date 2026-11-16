@@ -61,9 +61,25 @@ def source_context(db, identifier):
         if not np.isfinite(stored).all() or np.any(stored < -1e-8): raise ValueError('初始汇流蓄水无效')
     if result.get('parameters') != state.get('parameters') or result.get('parameterTransfer') != state.get('parameterTransfer'):
         raise ValueError('成果与检查点的参数不一致')
+    from . import lake_revision
+    model = lake_revision.active(db)
+    lake_model = model if model and model.get('sourceResultId') == identifier and model['endState']['time'] == state['validAt'] else None
+    if lake_model:
+        # Lake-only revision: same land/routing state, V(H) lake level and the fitted lake coefficient.
+        params = {**params, 'lakeCoefficient': lake_model['lakeCoefficient']}
+        state = deepcopy(state)
+        state['lake'] = {**(state.get('lake') or {}), 'level': lake_model['endState']['levelM'], 'lakeModelId': lake_model['id']}
     return {'task': task, 'result': result, 'state': state, 'spatial': spatial, 'parameters': params,
             'regions': regions, 'transferAudit': audit, 'sourceResultId': identifier, 'published': bool(published),
-            'stateHandoff': handoff}
+            'stateHandoff': handoff, 'lakeModel': lake_model}
+
+
+def _lake_setup(db, context, curve_id=None):
+    '''Curve and breach outflow used by this forecast's lake balance.'''
+    from . import lake_revision
+    model = context.get('lakeModel')
+    curve = lake_curves.get_curve(db, model['curveId'] if model else curve_id)
+    return curve, (lake_revision.outlet_function(model, curve) if model else None)
 
 
 def catalog(db):
@@ -113,7 +129,7 @@ def preflight(db, payload):
         if weather['sourceResultId'] != payload['sourceResultId'] or weather['spatialVersion'] != context['spatial']['version'] or weather['unitIds'] != context['state']['unitIds']:
             raise ValueError('未来气象与初始成果的空间单元不一致')
         _history(db, context, issue)
-        curve = lake_curves.get_curve(db, payload.get('curveId'))
+        curve, _ = _lake_setup(db, context, payload.get('curveId'))
         initial = payload.get('initialLakeLevel')
         if initial is None: initial = context['state'].get('lake', {}).get('level')
         if initial is None: raise ValueError('初始成果没有湖位，请提供有来源的起报湖位')
@@ -182,7 +198,7 @@ def _hydrology(context, parent, times, rain, temperature, evaporation):
                       'excludedVolumeM3': float(((routed['external'] + routed['unresolved']) * 3600).sum())}
 
 
-def _advance(db, context, issue, curve, progress=None, cancelled=None):
+def _advance(db, context, issue, curve, progress=None, cancelled=None, outlet=None):
     from .grid_simulation import unit_forcing
     from .land_precipitation import validate_manifest
     from .forcing import lake_precipitation_series
@@ -200,7 +216,7 @@ def _advance(db, context, issue, curve, progress=None, cancelled=None):
         lake_evap = source['arrays']['evaporation'][ids] @ np.asarray(spatial['lakeWeights']) * p['lakeCoefficient']
         recent.extend({'time': time.isoformat(), 'inflow': float(flow), 'rainMm': float(r), 'evaporationMm': float(e)}
                       for time, flow, r, e in zip(block_times, q['total'], lake_rain, lake_evap) if time > issue - pd.Timedelta(hours=7))
-        lake = lake_curves.hourly_balance(q['total'], lake_rain, lake_evap, parent['lake']['level'], curve)
+        lake = lake_curves.hourly_balance(q['total'], lake_rain, lake_evap, parent['lake']['level'], curve, outlet)
         final['lake'] = {**parent['lake'], 'level': float(lake['lakeLevel'][-1]), 'validAt': block_times[-1].isoformat()}
         parent = final
         if progress: progress(15 * (start + len(ids)) / len(times), f'实际气象推进至{block_times[-1]}')
@@ -208,7 +224,7 @@ def _advance(db, context, issue, curve, progress=None, cancelled=None):
                     'end': times[-1].isoformat(), 'recentForcing': recent}
 
 
-def _reanchor(db, context, observation, issue, curve, advancement):
+def _reanchor(db, context, observation, issue, curve, advancement, outlet=None):
     """Carry a recent observed lake level to issue time with actual hourly fluxes."""
     observed_at = pd.Timestamp(observation['time'])
     if observed_at == issue: return float(observation['level'])
@@ -237,7 +253,7 @@ def _reanchor(db, context, observation, issue, curve, advancement):
     q = [values[t]['inflow'] * f for t, f in zip(required, fractions)]
     rain = [values[t]['rainMm'] * f for t, f in zip(required, fractions)]
     evap = [values[t]['evaporationMm'] * f for t, f in zip(required, fractions)]
-    return float(lake_curves.hourly_balance(q, rain, evap, observation['level'], curve)['lakeLevel'][-1])
+    return float(lake_curves.hourly_balance(q, rain, evap, observation['level'], curve, outlet)['lakeLevel'][-1])
 
 
 def run(db, request, folder=None, progress=None, cancelled=None):
@@ -246,13 +262,13 @@ def run(db, request, folder=None, progress=None, cancelled=None):
     check = preflight(db, request)
     if not check['ready']: raise ValueError('；'.join(check['deficiencies']))
     context = source_context(db, request['sourceResultId']); weather = _input(db, request['inputId'])
-    issue = hour(check['issueTime']); curve = lake_curves.get_curve(db, request.get('curveId'))
-    parent, advancement = _advance(db, context, issue, curve, progress, cancelled)
+    issue = hour(check['issueTime']); curve, outlet = _lake_setup(db, context, request.get('curveId'))
+    parent, advancement = _advance(db, context, issue, curve, progress, cancelled, outlet)
     initial_level = float(parent.get('lake', {}).get('level'))
     level_source = {'method': 'model-state', 'time': issue.isoformat(), 'level': initial_level}
     if request.get('useLatestMainStation'):
         observed = _latest_main(db, issue)
-        initial_level = _reanchor(db, context, observed, issue, curve, advancement)
+        initial_level = _reanchor(db, context, observed, issue, curve, advancement, outlet)
         level_source = {**observed, 'method': 'main-station-then-actual-flux-to-issue', 'issueLevel': initial_level}
     if request.get('initialLakeLevel') is not None:
         initial_level = float(request['initialLakeLevel']); level_source = {'method': 'user-known-level', 'level': initial_level,
@@ -265,13 +281,14 @@ def run(db, request, folder=None, progress=None, cancelled=None):
         times = pd.DatetimeIndex(archive['time'].astype('datetime64[ns]'))
         expected = pd.date_range(issue + pd.Timedelta(hours=1), periods=weather['hours'], freq='h')
         if not times.equals(expected): raise ValueError('未来气象小时轴与起报时刻不连续')
-        flows = []; levels = []; diagnostics = []; index = []; rain_lake = archive['lakePrecipitation'].copy()
+        flows = []; levels = []; outflows = []; diagnostics = []; index = []; rain_lake = archive['lakePrecipitation'].copy()
         evap_lake = archive['lakeEvaporation'].copy() * context['parameters']['lakeCoefficient']
         for m, member in enumerate(weather['memberIds']):
             if cancelled and cancelled(): raise InterruptedError('已停止水文集合预报')
             q, final, diagnostic = _hydrology(context, parent, times, archive['precipitation'][m], archive['temperature'][m], archive['evaporation'][m])
-            lake = lake_curves.hourly_balance(q['total'], rain_lake[m], evap_lake[m], initial_level, curve)
-            flows.append(np.stack([q[k] for k in RIVERS], axis=1)); levels.append(lake['lakeLevel']); diagnostics.append({'memberId': member, **diagnostic})
+            lake = lake_curves.hourly_balance(q['total'], rain_lake[m], evap_lake[m], initial_level, curve, outlet)
+            flows.append(np.stack([q[k] for k in RIVERS], axis=1)); levels.append(lake['lakeLevel']); outflows.append(lake['outflow'])
+            diagnostics.append({'memberId': member, **diagnostic})
             final['lake'] = {'level': float(lake['lakeLevel'][-1]), 'storageM3': float(lake['storageM3'][-1]),
                              'validAt': times[-1].isoformat(), 'curveId': curve['id']}
             final.update(forecastInputId=weather['id'], memberId=member, initialLakeSource=level_source)
@@ -279,18 +296,22 @@ def run(db, request, folder=None, progress=None, cancelled=None):
             index.append({'memberId': member, 'validAt': times[-1].isoformat(),
                           'path': checkpoint_path.relative_to(db.workspace).as_posix()})
             if progress: progress(15 + 80 * (m + 1) / weather['memberCount'], f'水文预报成员 {m + 1}/{weather["memberCount"]}')
-    flows = np.asarray(flows); levels = np.asarray(levels); inflow = flows[:, :, RIVERS.index('total')]
+    flows = np.asarray(flows); levels = np.asarray(levels); outflows = np.asarray(outflows)
+    inflow = flows[:, :, RIVERS.index('total')]; duja = flows[:, :, RIVERS.index('duja')]
     path = output / '逐时集合预报.npz'
-    np.savez_compressed(path, time=times.asi8, flow=flows, inflow=inflow, lakeLevel=levels,
+    np.savez_compressed(path, time=times.asi8, flow=flows, inflow=inflow, lakeLevel=levels, outflow=outflows,
                         lakeRainMm=rain_lake, lakeEvaporationMm=evap_lake)
     control_index = weather['memberIds'].index('control') if 'control' in weather['memberIds'] else 0
     def member_values(i):
-        return {'inflow': inflow[i].tolist(), 'lakeLevel': levels[i].tolist(),
+        return {'inflow': inflow[i].tolist(), 'lakeLevel': levels[i].tolist(), 'dujaFlow': duja[i].tolist(),
+                'outflow': outflows[i].tolist(),
+                'rivers': {k: flows[i, :, RIVERS.index(k)].tolist() for k in ('zajia', 'zagen', 'boqu', 'ali', 'fringe')},
                 'lakeRainMm': rain_lake[i].tolist(), 'lakeEvaporationMm': evap_lake[i].tolist()}
     quantiles = {}
     for label, percentile in [('p10', 10), ('p50', 50), ('p90', 90)]:
         quantiles[label] = {key: np.percentile(value, percentile, axis=0).tolist() for key, value in
-                           [('inflow', inflow), ('lakeLevel', levels), ('lakeRainMm', rain_lake), ('lakeEvaporationMm', evap_lake)]}
+                           [('inflow', inflow), ('lakeLevel', levels), ('dujaFlow', duja), ('outflow', outflows),
+                            ('lakeRainMm', rain_lake), ('lakeEvaporationMm', evap_lake)]}
     exceedance = []
     for threshold in request.get('thresholds', []):
         value = float(threshold['level'])
@@ -313,8 +334,16 @@ def run(db, request, folder=None, progress=None, cancelled=None):
               'parameters': deepcopy(context['state']['parameters']), 'diagnostics': diagnostics,
               'weatherMetadata': weather['metadata'], 'probabilityMeaning': '未校准的集合成员超限比例',
               'provisional': bool(curve.get('provisional', False)),
+              'lakeModelId': (context.get('lakeModel') or {}).get('id'),
+              'outlet': (context.get('lakeModel') or {}).get('outlet'),
               'summary': {'peakInflowM3s': float(np.max(inflow)), 'maximumMedianLevel': float(np.max(np.median(levels, axis=0))),
-                          'maximumControlLevel': float(np.max(levels[control_index])), 'forecastDays': len(times) / 24}}
+                          'maximumMedianLevelTime': times[int(np.argmax(np.median(levels, axis=0)))].isoformat(),
+                          'maximumControlLevel': float(np.max(levels[control_index])),
+                          'finalMedianLevel': float(np.median(levels[:, -1])),
+                          'peakDujaM3s': float(np.max(np.median(duja, axis=0))),
+                          'peakDujaTime': times[int(np.argmax(np.median(duja, axis=0)))].isoformat(),
+                          'outflowVolumeM3': float(np.median(outflows.sum(axis=1)) * 3600.),
+                          'forecastDays': len(times) / 24}}
     saved = store.save(db, COLLECTION, result, identifier=identifier)
     write_json(output / '预报结果.json', saved)
     if progress: progress(100, '水文预报已保存，原始成果与状态保留')
