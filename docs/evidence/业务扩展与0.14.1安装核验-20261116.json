@@ -1,0 +1,734 @@
+{
+  "projectId": "selinco",
+  "version": "0.14.1",
+  "implementationCommit": "3e0e6a58cfadd988bf5df897c37a2180b9fb3112",
+  "reviewBranch": "codex/round3-parameter-audit-20261028",
+  "mainUnchanged": "8bcd0ec252c01706297a5890c7eee39cdd001a02",
+  "tests": {
+    "riskTerrain": 1,
+    "frontend": 12,
+    "risk": 13,
+    "forecast": 16,
+    "warningReports": 7,
+    "connections": 10,
+    "curves": 5,
+    "operationsApi": 5,
+    "release": 11,
+    "startup": 9,
+    "observationExchange": 8
+  },
+  "testCount": 97,
+  "browserSizes": [
+    {
+      "width": 1366,
+      "height": 768
+    },
+    {
+      "width": 1920,
+      "height": 1080
+    }
+  ],
+  "browser": {
+    "checks": [
+      {
+        "width": 1366,
+        "height": 768,
+        "scenarioId": "RISK-943570cb75d0450bb4d5",
+        "riskResultId": "RISK-RUN-1f6f82a3cf7b4bb0bbc6",
+        "exposurePoint": [
+          88.77403477626292,
+          31.822188826394957
+        ],
+        "mapHover": true,
+        "playback": true,
+        "threeD": true,
+        "comparisonPdf": "应急方案对比报告-1366.pdf",
+        "warningDraftPublishWithdraw": true,
+        "pageErrors": []
+      },
+      {
+        "width": 1920,
+        "height": 1080,
+        "scenarioId": "RISK-117be5beedf344c78e32",
+        "riskResultId": "RISK-RUN-de3cf41ec826401c865b",
+        "exposurePoint": [
+          88.77403477626292,
+          31.822188826394957
+        ],
+        "mapHover": true,
+        "playback": true,
+        "threeD": true,
+        "comparisonPdf": "应急方案对比报告-1920.pdf",
+        "warningDraftPublishWithdraw": true,
+        "pageErrors": []
+      }
+    ]
+  },
+  "connectionBrowser": {
+    "passed": true,
+    "checks": [
+      {
+        "width": 1366,
+        "height": 768,
+        "connectionId": "CONN-fa42db3ff0da44b1a10b",
+        "savedDatum": {
+          "basis": "本地构造HTTP测试；仅在隔离工作区验收",
+          "name": "界面验收模拟高程基准",
+          "status": "verified"
+        },
+        "submittedPeriod": {
+          "start": "2026-11-15T00:00",
+          "end": "2026-11-15T02:00"
+        },
+        "taskId": "JOB-b271e7df0305476cbe0d",
+        "taskStatus": "succeeded",
+        "records": 1,
+        "sourceRangeReceived": {
+          "start": [
+            "2026-11-15T00:00:00"
+          ],
+          "end": [
+            "2026-11-15T02:00:00"
+          ]
+        },
+        "pageErrors": []
+      },
+      {
+        "width": 1920,
+        "height": 1080,
+        "connectionId": "CONN-449dcf8e301a45f9aa38",
+        "savedDatum": {
+          "basis": "本地构造HTTP测试；仅在隔离工作区验收",
+          "name": "界面验收模拟高程基准",
+          "status": "verified"
+        },
+        "submittedPeriod": {
+          "start": "2026-11-15T00:00",
+          "end": "2026-11-15T02:00"
+        },
+        "taskId": "JOB-fbe54730702644349a1c",
+        "taskStatus": "succeeded",
+        "records": 1,
+        "sourceRangeReceived": {
+          "start": [
+            "2026-11-15T00:00:00"
+          ],
+          "end": [
+            "2026-11-15T02:00:00"
+          ]
+        },
+        "pageErrors": []
+      }
+    ],
+    "backendExitCode": 0,
+    "sourceRequests": [
+      {},
+      {},
+      {
+        "start": [
+          "2026-11-15T00:00:00"
+        ],
+        "end": [
+          "2026-11-15T02:00:00"
+        ]
+      },
+      {},
+      {},
+      {
+        "start": [
+          "2026-11-15T00:00:00"
+        ],
+        "end": [
+          "2026-11-15T02:00:00"
+        ]
+      }
+    ]
+  },
+  "background": {
+    "test": "source-backend-background-lifecycle",
+    "startedAt": "2026-11-16T11:46:06.435031+08:00",
+    "sourceType": "synthetic localhost HTTP JSON station; no real monitoring source",
+    "intervalMinutes": 1,
+    "platformPort": 8896,
+    "workspace": "F:\\色林错预警预报平台\\build\\离线发行0.14.1-20261116\\后台常驻验收\\workspace",
+    "windowsAutostartChanged": false,
+    "sourcePort": 54875,
+    "firstHealth": {
+      "backendSourceSHA256": "c9f380a2b328dcc88fc53f07b35be84e7814c0e3796148988dc8e22c3852f0fe",
+      "instanceId": "e56ad9c4aa67407ea86d04a82017fb43",
+      "projectId": "selinco",
+      "version": "0.14.1",
+      "workspace": "F:\\色林错预警预报平台\\build\\离线发行0.14.1-20261116\\后台常驻验收\\workspace"
+    },
+    "runtimeSaved": {
+      "forecastSchedule": {},
+      "lastSchedule": {},
+      "mode": "background",
+      "port": 8896,
+      "restartRequired": false,
+      "settings": {
+        "autostart": false,
+        "forecast": {},
+        "mode": "background",
+        "monitorRefreshSeconds": 60
+      },
+      "workspace": "F:\\色林错预警预报平台\\build\\离线发行0.14.1-20261116\\后台常驻验收\\workspace"
+    },
+    "connectionId": "CONN-e2bceb41b46d4bf1b206",
+    "initialSyncTask": "JOB-35c8728d9dd34084887a",
+    "initialSync": {
+      "config": {
+        "recordsPath": "data.rows",
+        "sinceParameter": "since",
+        "url": "http://127.0.0.1:54875/data"
+      },
+      "createdAt": "2026-11-16T11:46:17+08:00",
+      "credentialConfigured": false,
+      "cursor": {
+        "time": "2026-11-16T09:00:00",
+        "updatedAt": "2026-11-16T11:46:19+08:00"
+      },
+      "enabled": false,
+      "id": "CONN-e2bceb41b46d4bf1b206",
+      "intervalMinutes": 1,
+      "kind": "http",
+      "lastAttemptAt": "2026-11-16T11:46:18+08:00",
+      "lastSuccessAt": "2026-11-16T11:46:19+08:00",
+      "lastSync": {
+        "at": "2026-11-16T11:46:18+08:00",
+        "changed": 1,
+        "completedAt": "2026-11-16T11:46:19+08:00",
+        "connectionId": "CONN-e2bceb41b46d4bf1b206",
+        "cursor": {
+          "time": "2026-11-16T09:00:00",
+          "updatedAt": "2026-11-16T11:46:19+08:00"
+        },
+        "newStations": [],
+        "records": 1,
+        "skipped": 0,
+        "sourceRecords": 1,
+        "sources": [
+          "SRC-214335c3bcb3f200bc37851a"
+        ],
+        "status": "succeeded",
+        "variables": [
+          "level"
+        ]
+      },
+      "lookbackHours": 48.0,
+      "mapping": {
+        "columns": [
+          {
+            "field": "H",
+            "step": "irregular",
+            "unit": "m",
+            "variable": "level"
+          }
+        ],
+        "format": "wide",
+        "station": "Code",
+        "stationMap": {
+          "TEST01": "TEST-SLC-BACKGROUND"
+        },
+        "time": "Time",
+        "timeZone": "UTC"
+      },
+      "name": "后台验收模拟湖位接口",
+      "updatedAt": "2026-11-16T11:46:19+08:00"
+    },
+    "enabled": true,
+    "page": {
+      "title": "色林错预警预报平台",
+      "bodyLength": 267,
+      "browserSession": {
+        "enabled": false,
+        "instanceId": "e56ad9c4aa67407ea86d04a82017fb43"
+      }
+    },
+    "pageClosedAt": "2026-11-16T11:46:29.436476+08:00",
+    "observationsAtPageClose": 1,
+    "postCloseSourceAddedAt": "2026-11-16T11:46:29.445637+08:00",
+    "afterPageCloseSync": {
+      "config": {
+        "recordsPath": "data.rows",
+        "sinceParameter": "since",
+        "url": "http://127.0.0.1:54875/data"
+      },
+      "createdAt": "2026-11-16T11:46:17+08:00",
+      "credentialConfigured": false,
+      "cursor": {
+        "time": "2026-11-16T10:00:00",
+        "updatedAt": "2026-11-16T11:47:21+08:00"
+      },
+      "enabled": true,
+      "id": "CONN-e2bceb41b46d4bf1b206",
+      "intervalMinutes": 1,
+      "kind": "http",
+      "lastAttemptAt": "2026-11-16T11:47:21+08:00",
+      "lastSuccessAt": "2026-11-16T11:47:21+08:00",
+      "lastSync": {
+        "at": "2026-11-16T11:47:21+08:00",
+        "changed": 1,
+        "completedAt": "2026-11-16T11:47:21+08:00",
+        "connectionId": "CONN-e2bceb41b46d4bf1b206",
+        "cursor": {
+          "time": "2026-11-16T10:00:00",
+          "updatedAt": "2026-11-16T11:47:21+08:00"
+        },
+        "newStations": [],
+        "records": 2,
+        "skipped": 1,
+        "sourceRecords": 2,
+        "sources": [
+          "SRC-76ccc671753217ddc08c2f20"
+        ],
+        "status": "succeeded",
+        "variables": [
+          "level"
+        ]
+      },
+      "lookbackHours": 48.0,
+      "mapping": {
+        "columns": [
+          {
+            "field": "H",
+            "step": "irregular",
+            "unit": "m",
+            "variable": "level"
+          }
+        ],
+        "format": "wide",
+        "station": "Code",
+        "stationMap": {
+          "TEST01": "TEST-SLC-BACKGROUND"
+        },
+        "time": "Time",
+        "timeZone": "UTC"
+      },
+      "name": "后台验收模拟湖位接口",
+      "updatedAt": "2026-11-16T11:47:21+08:00"
+    },
+    "afterPageCloseObservations": [
+      {
+        "id": 2,
+        "source_id": "SRC-76ccc671753217ddc08c2f20",
+        "station_id": "TEST-SLC-BACKGROUND",
+        "variable": "level",
+        "time": "2026-11-16T09:00:00",
+        "period_start": null,
+        "period_end": null,
+        "step": "irregular",
+        "unit": "m",
+        "value": 4543.1,
+        "raw_text": "4543.1",
+        "quality": "valid",
+        "sheet": "data",
+        "cell": "1",
+        "rn": 1
+      },
+      {
+        "id": 3,
+        "source_id": "SRC-76ccc671753217ddc08c2f20",
+        "station_id": "TEST-SLC-BACKGROUND",
+        "variable": "level",
+        "time": "2026-11-16T10:00:00",
+        "period_start": null,
+        "period_end": null,
+        "step": "irregular",
+        "unit": "m",
+        "value": 4543.2,
+        "raw_text": "4543.2",
+        "quality": "valid",
+        "sheet": "data",
+        "cell": "2",
+        "rn": 1
+      }
+    ],
+    "firstShutdown": {
+      "response": {
+        "status": "stopping"
+      },
+      "exitCode": 0,
+      "at": "2026-11-16T11:47:22.636433+08:00"
+    },
+    "restartHealth": {
+      "backendSourceSHA256": "c9f380a2b328dcc88fc53f07b35be84e7814c0e3796148988dc8e22c3852f0fe",
+      "instanceId": "e2754966681d41b6adaf0faf37654070",
+      "projectId": "selinco",
+      "version": "0.14.1",
+      "workspace": "F:\\色林错预警预报平台\\build\\离线发行0.14.1-20261116\\后台常驻验收\\workspace"
+    },
+    "restartRuntime": {
+      "forecastSchedule": {},
+      "lastSchedule": {},
+      "mode": "background",
+      "port": 8896,
+      "settings": {
+        "autostart": false,
+        "forecast": {},
+        "mode": "background",
+        "monitorRefreshSeconds": 60
+      },
+      "workspace": "F:\\色林错预警预报平台\\build\\离线发行0.14.1-20261116\\后台常驻验收\\workspace"
+    },
+    "restoredConnection": {
+      "config": {
+        "recordsPath": "data.rows",
+        "sinceParameter": "since",
+        "url": "http://127.0.0.1:54875/data"
+      },
+      "createdAt": "2026-11-16T11:46:17+08:00",
+      "credentialConfigured": false,
+      "cursor": {
+        "time": "2026-11-16T10:00:00",
+        "updatedAt": "2026-11-16T11:47:21+08:00"
+      },
+      "enabled": true,
+      "id": "CONN-e2bceb41b46d4bf1b206",
+      "intervalMinutes": 1,
+      "kind": "http",
+      "lastAttemptAt": "2026-11-16T11:47:21+08:00",
+      "lastSuccessAt": "2026-11-16T11:47:21+08:00",
+      "lastSync": {
+        "at": "2026-11-16T11:47:21+08:00",
+        "changed": 1,
+        "completedAt": "2026-11-16T11:47:21+08:00",
+        "connectionId": "CONN-e2bceb41b46d4bf1b206",
+        "cursor": {
+          "time": "2026-11-16T10:00:00",
+          "updatedAt": "2026-11-16T11:47:21+08:00"
+        },
+        "newStations": [],
+        "records": 2,
+        "skipped": 1,
+        "sourceRecords": 2,
+        "sources": [
+          "SRC-76ccc671753217ddc08c2f20"
+        ],
+        "status": "succeeded",
+        "variables": [
+          "level"
+        ]
+      },
+      "lookbackHours": 48.0,
+      "mapping": {
+        "columns": [
+          {
+            "field": "H",
+            "step": "irregular",
+            "unit": "m",
+            "variable": "level"
+          }
+        ],
+        "format": "wide",
+        "station": "Code",
+        "stationMap": {
+          "TEST01": "TEST-SLC-BACKGROUND"
+        },
+        "time": "Time",
+        "timeZone": "UTC"
+      },
+      "name": "后台验收模拟湖位接口",
+      "updatedAt": "2026-11-16T11:47:21+08:00"
+    },
+    "postRestartSourceAddedAt": "2026-11-16T11:47:27.864697+08:00",
+    "afterRestartSync": {
+      "config": {
+        "recordsPath": "data.rows",
+        "sinceParameter": "since",
+        "url": "http://127.0.0.1:54875/data"
+      },
+      "createdAt": "2026-11-16T11:46:17+08:00",
+      "credentialConfigured": false,
+      "cursor": {
+        "time": "2026-11-16T11:00:00",
+        "updatedAt": "2026-11-16T11:48:27+08:00"
+      },
+      "enabled": true,
+      "id": "CONN-e2bceb41b46d4bf1b206",
+      "intervalMinutes": 1,
+      "kind": "http",
+      "lastAttemptAt": "2026-11-16T11:48:26+08:00",
+      "lastSuccessAt": "2026-11-16T11:48:27+08:00",
+      "lastSync": {
+        "at": "2026-11-16T11:48:26+08:00",
+        "changed": 1,
+        "completedAt": "2026-11-16T11:48:27+08:00",
+        "connectionId": "CONN-e2bceb41b46d4bf1b206",
+        "cursor": {
+          "time": "2026-11-16T11:00:00",
+          "updatedAt": "2026-11-16T11:48:27+08:00"
+        },
+        "newStations": [],
+        "records": 3,
+        "skipped": 2,
+        "sourceRecords": 3,
+        "sources": [
+          "SRC-4a06fe1c087c2795b3334f77"
+        ],
+        "status": "succeeded",
+        "variables": [
+          "level"
+        ]
+      },
+      "lookbackHours": 48.0,
+      "mapping": {
+        "columns": [
+          {
+            "field": "H",
+            "step": "irregular",
+            "unit": "m",
+            "variable": "level"
+          }
+        ],
+        "format": "wide",
+        "station": "Code",
+        "stationMap": {
+          "TEST01": "TEST-SLC-BACKGROUND"
+        },
+        "time": "Time",
+        "timeZone": "UTC"
+      },
+      "name": "后台验收模拟湖位接口",
+      "updatedAt": "2026-11-16T11:48:27+08:00"
+    },
+    "finalObservations": [
+      {
+        "id": 4,
+        "source_id": "SRC-4a06fe1c087c2795b3334f77",
+        "station_id": "TEST-SLC-BACKGROUND",
+        "variable": "level",
+        "time": "2026-11-16T09:00:00",
+        "period_start": null,
+        "period_end": null,
+        "step": "irregular",
+        "unit": "m",
+        "value": 4543.1,
+        "raw_text": "4543.1",
+        "quality": "valid",
+        "sheet": "data",
+        "cell": "1",
+        "rn": 1
+      },
+      {
+        "id": 5,
+        "source_id": "SRC-4a06fe1c087c2795b3334f77",
+        "station_id": "TEST-SLC-BACKGROUND",
+        "variable": "level",
+        "time": "2026-11-16T10:00:00",
+        "period_start": null,
+        "period_end": null,
+        "step": "irregular",
+        "unit": "m",
+        "value": 4543.2,
+        "raw_text": "4543.2",
+        "quality": "valid",
+        "sheet": "data",
+        "cell": "2",
+        "rn": 1
+      },
+      {
+        "id": 6,
+        "source_id": "SRC-4a06fe1c087c2795b3334f77",
+        "station_id": "TEST-SLC-BACKGROUND",
+        "variable": "level",
+        "time": "2026-11-16T11:00:00",
+        "period_start": null,
+        "period_end": null,
+        "step": "irregular",
+        "unit": "m",
+        "value": 4543.3,
+        "raw_text": "4543.3",
+        "quality": "valid",
+        "sheet": "data",
+        "cell": "3",
+        "rn": 1
+      }
+    ],
+    "finalShutdown": {
+      "response": {
+        "status": "stopping"
+      },
+      "exitCode": 0,
+      "at": "2026-11-16T11:48:29.60085+08:00"
+    },
+    "tasks": [
+      {
+        "id": "JOB-35c8728d9dd34084887a",
+        "kind": "data-sync",
+        "status": "succeeded",
+        "message": "完成",
+        "created_at": "2026-11-16T11:46:18+08:00",
+        "updated_at": "2026-11-16T11:46:20+08:00"
+      },
+      {
+        "id": "JOB-5aaa0b6aa3bf496a8aed",
+        "kind": "report",
+        "status": "succeeded",
+        "message": "完成",
+        "created_at": "2026-11-16T11:46:31+08:00",
+        "updated_at": "2026-11-16T11:46:31+08:00"
+      },
+      {
+        "id": "JOB-13a3ff6cee004419a75a",
+        "kind": "report",
+        "status": "succeeded",
+        "message": "完成",
+        "created_at": "2026-11-16T11:46:48+08:00",
+        "updated_at": "2026-11-16T11:46:52+08:00"
+      },
+      {
+        "id": "JOB-d7f19ae41b624c129401",
+        "kind": "data-sync",
+        "status": "succeeded",
+        "message": "完成",
+        "created_at": "2026-11-16T11:47:20+08:00",
+        "updated_at": "2026-11-16T11:47:21+08:00"
+      },
+      {
+        "id": "JOB-0578460740ae48459b57",
+        "kind": "data-sync",
+        "status": "succeeded",
+        "message": "完成",
+        "created_at": "2026-11-16T11:48:26+08:00",
+        "updated_at": "2026-11-16T11:48:27+08:00"
+      }
+    ],
+    "checks": {
+      "pageClosedBeforeScheduledIngestion": true,
+      "backgroundSurvivedPageClose": true,
+      "threeDistinctObservedTimes": true,
+      "savedBackgroundModeUsedWithoutArgument": true,
+      "connectionAndMappingRetained": true,
+      "incrementalCursorRetainedAndAdvanced": true,
+      "ownedServersStoppedGracefully": true
+    },
+    "status": "passed",
+    "sourceCalls": [
+      {
+        "at": "2026-11-16T11:46:18.904577+08:00",
+        "path": "/data",
+        "records": 1
+      },
+      {
+        "at": "2026-11-16T11:47:21.214129+08:00",
+        "path": "/data?since=2026-11-14T01%3A00%3A00",
+        "records": 2
+      },
+      {
+        "at": "2026-11-16T11:48:27.238868+08:00",
+        "path": "/data?since=2026-11-14T02%3A00%3A00",
+        "records": 3
+      }
+    ],
+    "finishedAt": "2026-11-16T11:48:29.790718+08:00"
+  },
+  "portableChecks": [
+    "clean-seed",
+    "business-home-and-protected-science-release-separated",
+    "single-business-scheme-and-parameter",
+    "best-result-viewable-with-zarr",
+    "published-snow-water-equivalent-frame",
+    "read-only-business-simulation-plan",
+    "business-scheme-short-simulation",
+    "duplicate-request-idempotency",
+    "water-balance",
+    "background-CSV-export-and-artifact-reuse",
+    "saved-state-continuation",
+    "background-backup-artifact-download",
+    "background-independent-directory-restore",
+    "business-adoption-and-protected-release-restored"
+  ],
+  "finalFrozenForecast": {
+    "taskId": "JOB-c875177004e34e7ea9dc",
+    "sourceResultId": "JOB-05c3f62282ce4239aed1",
+    "issueTime": "2026-10-21T00:00:00",
+    "hours": 168,
+    "end": "2026-10-28T00:00:00",
+    "summary": {
+      "forecastDays": 7.0,
+      "maximumControlLevel": 4544.0664125629,
+      "maximumMedianLevel": 4544.0664125629,
+      "peakInflowM3s": 26.56657048501677
+    },
+    "diagnostics": [
+      {
+        "excludedVolumeM3": 0.0,
+        "landBalanceMaximumMm": 6.41368902432049e-13,
+        "memberId": "control",
+        "routingBalanceMaximumM3": 1.4901161193847656e-08
+      }
+    ]
+  },
+  "package": {
+    "directory": "build/最终交付0.14.1-20261116/SelincoPlatform",
+    "files": 9083,
+    "bytes": 1581283599,
+    "installer": "releases/v0.14.1-20261116-final/色林错预警预报平台-v0.14.1-Setup.exe",
+    "installerBytes": 1003455033,
+    "frontend": {
+      "javascript": "index-DRvWhKbX.js",
+      "stylesheet": "index-D88bIITw.css",
+      "emptyOutDir": false
+    }
+  },
+  "constraints": [
+    "现场SQL Server与MySQL/MariaDB真实连接待供数方地址、只读权限和样例",
+    "11月16日全域集合采集第二批响应截断，未形成完整全域输入",
+    "图片库容关系与高程基准、有效范围待核实",
+    "简化堰流和地形连通淹没；三维为结果回放，不含下游洪波求解"
+  ],
+  "installation": {
+    "status": "passed",
+    "at": "2026-11-16T12:53:29+08:00",
+    "directory": "运行程序",
+    "port": 8882,
+    "health": {
+      "backendSourceSHA256": "7160a5122a7edd54669c5333a4042ad111d0bcf59874ebda770d7c01a26dad29",
+      "instanceId": "90777de670904bc2add13c4b7aac8e00",
+      "projectId": "selinco",
+      "version": "0.14.1",
+      "workspace": "F:\\色林错预警预报平台\\运行程序\\workspace-business"
+    },
+    "originalObservationsCompared": 59119,
+    "counts": {
+      "observations": 59119,
+      "sources": 33,
+      "stations": 8,
+      "schemes": 1,
+      "parameter_versions": 1,
+      "input_products": 2,
+      "tasks": 0,
+      "states": 0
+    },
+    "originalTablesUnchanged": true,
+    "adoptionUnchanged": true,
+    "backup": "F:\\色林错预警预报平台\\build\\离线发行0.14.1-20261116\\覆盖安装前在线备份.sqlite3",
+    "installLog": "build/最终交付0.14.1-20261116/正式覆盖安装.log",
+    "browser": {
+      "passed": true,
+      "checks": [
+        {
+          "width": 1366,
+          "height": 768,
+          "pageErrors": []
+        },
+        {
+          "width": 1920,
+          "height": 1080,
+          "pageErrors": []
+        }
+      ]
+    },
+    "windowsRestartRequired": false
+  },
+  "portableAcceptance": "build/离线发行0.14.1-20261116/便携业务验收/verification.json",
+  "installedApiAcceptance": "build/离线发行0.14.1-20261116/安装版接口验收.json",
+  "fullDomainEnsembleAcceptance": "build/集合接口最终验收-20261116-2806bc3333/全域集合采集验收.json",
+  "git": {
+    "implementationCommit": "3e0e6a58cfadd988bf5df897c37a2180b9fb3112",
+    "remoteVerified": true,
+    "branch": "codex/round3-parameter-audit-20261028",
+    "main": "8bcd0ec252c01706297a5890c7eee39cdd001a02"
+  }
+}
