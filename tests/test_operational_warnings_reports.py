@@ -58,7 +58,7 @@ class WarningReportTests(unittest.TestCase):
         with patch('backend.forecasts.detail', return_value=forecast):
             value = warnings.draft(self.db, {'forecastId':forecast['id'],'ruleSetId':rules['id']})
         self.assertEqual(value['mode'], 'business')
-        self.assertEqual(value['name'], '湖位预警 · 蓝色')
+        self.assertEqual(value['name'], '色林错漫溢风险IV级蓝色预警')
         self.assertEqual(value['status'], 'draft')
         published = warnings.publish(self.db, value['id'], {'operator':'业务确认人'})
         payload = reports._data(self.db, {'reportType':'warning','warningId':value['id']})
@@ -79,7 +79,21 @@ class WarningReportTests(unittest.TestCase):
             with self.subTest(metadata=metadata), patch('backend.forecasts.detail', return_value={**base, **metadata}):
                 value = warnings.draft(self.db, {'forecastId':base['id'],'ruleSetId':rules['id']})
             self.assertEqual(value['mode'], 'scenario')
-            self.assertEqual(value['name'], '情景风险提示 · 蓝色')
+            self.assertEqual(value['name'], '色林错漫溢风险IV级蓝色预警')
+
+    def test_default_grades_combine_lake_level_and_breach_outflow(self):
+        rules = warnings.default_rules()
+        self.assertEqual([r['levelM'] for r in rules['levels']], [4544.3, 4544.45, 4544.55, 4544.65])
+        self.assertEqual([r['outflowM3s'] for r in rules['levels']], [20., 40., 60., 80.])
+        times = ['2026-11-15T01:00:00', '2026-11-15T02:00:00']
+        cases = [([4544.10, 4544.12], [5, 6], None), ([4544.31, 4544.32], [5, 6], 'blue'),
+                 ([4544.10, 4544.12], [30, 65], 'orange'), ([4544.50, 4544.66], [10, 12], 'red')]
+        for levels, flows, expected in cases:
+            with self.subTest(levels=levels, flows=flows):
+                selected = warnings.evaluate_rules(times, [levels], rules, [flows])['selected']
+                self.assertEqual(selected and selected['color'], expected)
+        flow_only = warnings.evaluate_rules(times, [[4544.1, 4544.1]], rules, [[30, 65]])['selected']
+        self.assertEqual((flow_only['basis'], flow_only['firstTime']), ('outflow', times[1]))
 
     def test_expiry_and_scheduled_reports(self):
         expired = store.save(self.db, 'warnings', {'status':'published','validUntil':'2020-01-01T00:00:00+08:00','history':[]}, prefix='WARNING-')

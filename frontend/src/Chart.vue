@@ -6,7 +6,7 @@ import {GridComponent,TooltipComponent,LegendComponent,DataZoomComponent,MarkLin
 import {CanvasRenderer} from 'echarts/renderers'
 import {chartState,saveChartState,rowKey,dateIndex,rangeContains,centeredZoom,isolatedObservation} from './chart-state.mjs'
 echarts.use([LineChart,BarChart,GridComponent,TooltipComponent,LegendComponent,DataZoomComponent,MarkLineComponent,CanvasRenderer])
-const props=defineProps({rows:{default:()=>[]},series:{default:()=>[]},unit:{default:''},context:{default:''},compact:Boolean,dark:Boolean,day:String,zero:Boolean,hourly:Boolean,expanded:Boolean,axisLabel:{default:'日期'}})
+const props=defineProps({rows:{default:()=>[]},series:{default:()=>[]},unit:{default:''},context:{default:''},compact:Boolean,dark:Boolean,day:String,zero:Boolean,hourly:Boolean,expanded:Boolean,axisLabel:{default:'日期'},include:{type:Array,default:()=>[]}})
 const emit=defineEmits(['day'])
 const root=ref(),plot=ref(),dialog=ref(),isExpanded=ref(false),revision=ref(0),selecting=ref(false),selectionBox=ref(null)
 const fallbackKey='chart-instance:'+getCurrentInstance().uid
@@ -36,7 +36,7 @@ function render(){
  legend:{data:props.series.map(s=>s.label),type:'scroll',top:2,left:'auto',right:8,itemWidth:16,itemHeight:8,textStyle:{color:ink,fontSize:tickFont},selected},
  grid:{left:12,right:30,top:short?24:props.compact?34:55,bottom:short?6:props.compact?12:50,containLabel:true},
  xAxis:{type:'category',boundaryGap:props.series.some(s=>s.type==='bar'),data:axes,axisLabel:{color:ink,fontSize:tickFont,hideOverlap:true,showMinLabel:true,showMaxLabel:true,alignMinLabel:'left',alignMaxLabel:'right',formatter:value=>props.compact&&/^\d{4}-\d{2}/.test(value)?value.slice(0,7):value},axisLine:{lineStyle:{color:grid}},axisTick:{show:false}},
- yAxis:{type:'value',min:memory.yRange?.[0]??null,max:memory.yRange?.[1]??null,name:props.unit,nameLocation:'end',nameGap:short?7:12,nameTextStyle:{color:ink,fontSize:tickFont,align:'left'},scale:!props.zero,axisLabel:{color:ink,fontSize:tickFont,hideOverlap:true,formatter:v=>Math.abs(v)>=1e8?(v/1e8)+'亿':Math.abs(v)>=1e4?(v/1e4)+'万':String(v)},splitNumber:short?2:props.compact?3:5,splitLine:{lineStyle:{color:grid,type:'dashed'}}},
+ yAxis:{type:'value',min:memory.yRange?.[0]??(props.include.length?v=>{const lo=Math.min(v.min,...props.include),span=Math.max(v.max,...props.include)-lo||1,step=10**Math.floor(Math.log10(span/5));return Number((Math.floor((lo-span*.04)/step)*step).toFixed(6))}:null),max:memory.yRange?.[1]??(props.include.length?v=>{const hi=Math.max(v.max,...props.include),span=hi-Math.min(v.min,...props.include)||1,step=10**Math.floor(Math.log10(span/5));return Number((Math.ceil((hi+span*.04)/step)*step).toFixed(6))}:null),name:props.unit,nameLocation:'end',nameGap:short?7:12,nameTextStyle:{color:ink,fontSize:tickFont,align:'left'},scale:!props.zero,axisLabel:{color:ink,fontSize:tickFont,hideOverlap:true,formatter:v=>Math.abs(v)>=1e8?(v/1e8)+'亿':Math.abs(v)>=1e4?(v/1e4)+'万':String(v)},splitNumber:short?2:props.compact?3:5,splitLine:{lineStyle:{color:grid,type:'dashed'}}},
  dataZoom:[{id:'x-inside',type:'inside',xAxisIndex:0,start:memory.zoom[0],end:memory.zoom[1],zoomOnMouseWheel:true,moveOnMouseMove:true},...(!props.compact?[{id:'x-slider',type:'slider',xAxisIndex:0,height:16,bottom:2,start:memory.zoom[0],end:memory.zoom[1],borderColor:grid}]:[])],series
  },{replaceMerge:['series','dataZoom','legend']})
 }

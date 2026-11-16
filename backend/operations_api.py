@@ -51,6 +51,10 @@ def get(server, path, query):
     if root in ('forecast-inputs', 'forecasts'):
         from . import forecast_inputs, forecasts
         module = forecast_inputs if root == 'forecast-inputs' else forecasts
+        if path == 'forecasts/issue':
+            return True, forecasts.issue_info(db, query['sourceResultId'])
+        if root == 'forecasts' and identifier.endswith('/history'):
+            return True, forecasts.history(db, identifier.split('/')[0])
         if path == 'forecasts/sources':
             from .published_results import catalog, result_file
             items = []
@@ -86,11 +90,13 @@ def get(server, path, query):
         return True, risk_scenarios.detail(db, identifier) if identifier else risk_scenarios.catalog(db)
     if root == 'warnings':
         from . import warnings
+        if identifier == 'assess':
+            return True, warnings.assess(db, query['forecastId'], query.get('ruleSetId'))
         if identifier == 'rules':
             rules = store.list_records(db, 'warning-rules')
             # When no rules have been saved yet, return the built-in defaults so
             # the front-end can pre-fill the form rather than showing a blank table.
-            default = warnings.default_rules() if not rules else None
+            default = warnings.default_rules(db)
             return True, {'items': rules, 'default': default}
         return True, store.get(db, 'warnings', identifier) if identifier else warnings.catalog(db)
     if root == 'reports':

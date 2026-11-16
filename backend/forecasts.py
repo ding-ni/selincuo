@@ -352,3 +352,59 @@ def run(db, request, folder=None, progress=None, cancelled=None):
 
 def detail(db, identifier):
     return store.get(db, COLLECTION, identifier)
+
+
+def issue_info(db, source_id):
+    """Issue time follows the continuous state; it moves forward only when real forcing covers the gap."""
+    from .model_forcing import current_product
+    from .station_hover import station_summary
+    context = source_context(db, source_id)
+    state_time = pd.Timestamp(context['state']['validAt'])
+    issue, forcing_end = state_time, None
+    try:
+        manifest = read_json(db.workspace / 'inputs/products' / current_product(db)['id'] / 'manifest.json')
+        forcing_end = pd.Timestamp(manifest['end'])
+        candidate = forcing_end.floor('D')
+        if candidate > state_time:
+            _history(db, context, candidate)
+            issue = candidate
+    except (OSError, ValueError, KeyError, TypeError):
+        pass
+    latest = {}
+    for station, variable in (('SLC', 'level'), ('DUJA', 'flow')):
+        try:
+            group = next(g for g in station_summary(db, station)['groups'] if g['variable'] == variable)
+            latest[station] = group['latest']
+        except (StopIteration, FileNotFoundError, ValueError):
+            latest[station] = None
+    model = context.get('lakeModel')
+    return {'sourceResultId': source_id, 'stateTime': state_time.isoformat(), 'issueTime': issue.isoformat(),
+            'forcingEnd': forcing_end.isoformat() if forcing_end is not None else None,
+            'advanceHours': int((issue - state_time) / pd.Timedelta(hours=1)),
+            'stateLakeLevelM': context['state'].get('lake', {}).get('level'),
+            'lakeModel': None if not model else {'id': model['id'], 'lakeCoefficient': model['lakeCoefficient'],
+                                                  'outlet': model['outlet'], 'onsetLevelM': model['onsetLevelM']},
+            'latest': latest}
+
+
+def history(db, identifier, days=60):
+    """Simulated and observed lake level and Duja flow before the issue time."""
+    from .published_results import result_file
+    from . import lake_revision
+    forecast = detail(db, identifier)
+    issue = pd.Timestamp(forecast['issueTime'])
+    try:
+        daily = pd.read_csv(result_file(forecast['sourceResultId'], 'daily.csv'), encoding='utf-8-sig').set_index('date')
+    except (FileNotFoundError, OSError, ValueError):
+        return {'rows': []}
+    start = (issue - pd.Timedelta(days=days)).date().isoformat()
+    daily = daily[(daily.index >= start) & (daily.index < issue.date().isoformat())]
+    model = lake_revision.active(db)
+    revised = {}
+    if model and model.get('sourceResultId') == forecast['sourceResultId']:
+        revised = {r['date']: r['level'] for r in model['daily'] if r['date'] >= start}
+    def value(v):
+        return None if pd.isna(v) else float(v)
+    return {'rows': [{'date': d, 'level': revised.get(d, value(r.get('lakeLevel'))), 'observedLevel': value(r.get('observedLevel')),
+                      'duja': value(r.get('duja')), 'observedFlow': value(r.get('observedFlow')), 'inflow': value(r.get('total'))}
+                     for d, r in daily.iterrows()]}

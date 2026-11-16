@@ -1,40 +1,63 @@
 <script setup>
-import {computed,onMounted,onBeforeUnmount,reactive,ref} from 'vue'
+import {computed,onMounted,ref} from 'vue'
 import Chart from './Chart.vue'
-import {api,number} from './api.mjs'
-const props=defineProps({boot:Object,sources:{type:Array,default:()=>[]},disabled:Boolean})
-const emit=defineEmits(['saved','select','refresh'])
-const items=ref([]),selected=ref(''),editing=ref(false),working=ref(false),error=ref(''),message=ref(''),source=ref(''),start=ref(''),end=ref(''),comparison=ref(null),pending=ref(null)
-const form=reactive({name:'',type:'quadratic',coefficients:{a:.066557,b:2.283942,c:34.7485,referenceLevel:4540},minLevel:4537,maxLevel:4545,offsetM:0,source:'',reference:'',provisional:true,points:[]})
-const areaEnabled=ref(false)
-let timer,disposed=false
-const current=computed(()=>items.value.find(v=>v.id===selected.value))
-const sourceOptions=computed(()=>props.sources.length?props.sources:props.boot?.publishedResults||[])
-function edit(value=current.value){if(!value)return;Object.assign(form,JSON.parse(JSON.stringify(value)));form.coefficients={a:.066557,b:2.283942,c:34.7485,referenceLevel:4540,...value.coefficients};form.points=(value.points||[{level:4537,storageKm3:28},{level:4545,storageKm3:48}]).map(v=>({...v}));areaEnabled.value=!!value.areaComparison;form.areaComparison=JSON.parse(JSON.stringify(value.areaComparison||{coefficients:{a:0,b:0,c:0,referenceLevel:form.coefficients.referenceLevel},rSquared:null,source:''}));editing.value=true;message.value='';error.value=''}
-function choose(){editing.value=false;emit('select',selected.value)}
-async function load(){const data=await api('lake-curves');items.value=data.items||[];if(!items.value.some(v=>v.id===selected.value))selected.value=data.defaultCurveId||items.value[0]?.id||'';if(!source.value)source.value=sourceOptions.value[0]?.id||props.boot?.homeResultId||''}
-async function run(fn){working.value=true;error.value='';message.value='';try{return await fn()}catch(e){error.value=e.message}finally{working.value=false}}
-async function save(){await run(async()=>{const value=JSON.parse(JSON.stringify(form));delete value.id;value.areaComparison=areaEnabled.value?value.areaComparison:null;if(value.areaComparison?.rSquared==='')value.areaComparison.rSquared=null;const saved=await api('lake-curves',value);await load();selected.value=saved.id;editing.value=false;message.value='已保存独立曲线版本。';emit('saved',saved);emit('select',saved.id);emit('refresh')})}
-async function compare(){await run(async()=>{const task=await api('lake-curves/compare',{sourceResultId:source.value,curveId:selected.value,...(start.value?{start:start.value}:{}),...(end.value?{end:end.value}:{})});pending.value=task.task||task;comparison.value=null;message.value='已提交固定来水对照。'})}
-async function poll(){if(!pending.value||disposed)return;try{const task=await api('tasks/'+encodeURIComponent(pending.value.id));if(disposed)return;pending.value=task;if(task.status==='succeeded'){comparison.value=task.result;pending.value=null;message.value='湖位库容对照已完成。';emit('refresh')}else if(['failed','cancelled','interrupted'].includes(task.status)){error.value=task.message||'对照未完成';pending.value=null}}catch(e){if(!disposed)error.value=e.message}}
-const chartCurve=computed(()=>editing.value?{...form,areaComparison:areaEnabled.value?form.areaComparison:null}:current.value)
-const curveRows=computed(()=>{const c=chartCurve.value;if(!c||!(Number(c.maxLevel)>Number(c.minLevel)))return [];const rows=[];for(let i=0;i<=40;i++){const z=Number(c.minLevel)+(Number(c.maxLevel)-Number(c.minLevel))*i/40;let volume,area;if(c.type==='quadratic'){const p=c.coefficients||{},x=z-Number(p.referenceLevel);volume=Number(p.a)*x*x+Number(p.b)*x+Number(p.c);area=(2*Number(p.a)*x+Number(p.b))*1000}else{const points=[...(c.points||[])].sort((a,b)=>a.level-b.level);const hi=points.findIndex(v=>Number(v.level)>=z);const a=points[Math.max(0,(hi<0?points.length-1:hi)-1)],b=points[Math.max(1,hi<0?points.length-1:hi)];if(!a||!b)continue;const slope=(Number(b.storageKm3)-Number(a.storageKm3))/(Number(b.level)-Number(a.level));volume=Number(a.storageKm3)+(z-Number(a.level))*slope;area=slope*1000}if(Number.isFinite(volume)&&Number.isFinite(area))rows.push({time:(z-Number(c.offsetM||0)).toFixed(2),curveLevel:z,volume,area})}return rows})
-const compareRows=computed(()=>(comparison.value?.times||[]).map((time,i)=>({time,fixed:comparison.value.fixedAreaLevel[i],curve:comparison.value.curveLevel[i]})))
-const areaRows=computed(()=>curveRows.value.map(row=>{const p=chartCurve.value?.areaComparison?.coefficients;if(!p)return row;const x=row.curveLevel-Number(p.referenceLevel),value=Number(p.a)*x*x+Number(p.b)*x+Number(p.c);return {...row,comparisonArea:Number.isFinite(value)?value:null}}))
-const areaSeries=computed(()=>[{key:'area',label:'库容导数面积（计算采用）'},...(chartCurve.value?.areaComparison?[{key:'comparisonArea',label:'独立面积拟合（比较）',options:{lineStyle:{type:'dashed',width:2}}}]:[])])
-onMounted(()=>{load().catch(e=>error.value=e.message);timer=setInterval(poll,2500)})
-onBeforeUnmount(()=>{disposed=true;clearInterval(timer)})
+import {api,number,fixed} from './api.mjs'
+const props=defineProps({level:Number})
+const curve=ref(null),model=ref(null),probe=ref(4544),error=ref('')
+const p=computed(()=>curve.value?.coefficients||{a:.066557,b:2.283942,c:34.7485,referenceLevel:4540})
+const V=h=>{const x=h-p.value.referenceLevel;return p.value.a*x*x+p.value.b*x+p.value.c}
+const A=h=>(2*p.value.a*(h-p.value.referenceLevel)+p.value.b)*1000
+const lo=computed(()=>curve.value?.minLevel??4537),hi=computed(()=>curve.value?.maxLevel??4545)
+const rows=computed(()=>{const out=[];for(let h=lo.value;h<=hi.value+1e-9;h+=.1)out.push({time:h.toFixed(2),volume:V(h),area:A(h)});return out})
+const table=computed(()=>{const out=[];for(let h=lo.value;h<=hi.value+1e-9;h+=.5)out.push({h,v:V(h),a:A(h)});return out})
+const marker=computed(()=>props.level==null?null:(Math.round(props.level*10)/10).toFixed(2))
+const nearest=computed(()=>props.level==null?null:table.value.reduce((b,r)=>Math.abs(r.h-props.level)<Math.abs(b.h-props.level)?r:b,table.value[0]).h)
+const metrics=computed(()=>model.value?.metrics?.all)
+onMounted(async()=>{try{const [c,m]=await Promise.all([api('lake-curves'),api('lake-models')]);curve.value=(c.items||[]).find(i=>i.id===(m.active?.curveId||c.defaultCurveId))||c.items?.[0];model.value=m.active;if(props.level!=null)probe.value=Number(props.level.toFixed(2))}catch(e){error.value=e.message}})
 </script>
 <template>
- <section class="panel curve-panel"><div class="panel-title"><h3>湖泊水位—库容关系</h3><button :disabled="working" @click="run(load)">刷新</button></div>
-  <div class="curve-grid"><label>已登记曲线<select v-model="selected" @change="choose"><option v-for="item in items" :key="item.id" :value="item.id">{{item.name}}{{item.provisional?' · 演示':''}}</option></select></label><div class="curve-buttons"><button :disabled="!current||disabled||working" @click="edit()">复制并编辑</button></div></div>
-  <template v-if="current&&!editing"><p v-if="current.provisional" class="note warning">演示曲线 · {{current.source}}</p><p class="muted">适用高程 {{number(current.minLevel,2)}}—{{number(current.maxLevel,2)}} m · 基准偏移 {{number(current.offsetM,3)}} m · {{current.reference}}</p><p v-if="current.type==='quadratic'" class="curve-equation">V = {{current.coefficients.a}} × (H − {{current.coefficients.referenceLevel}})² + {{current.coefficients.b}} × (H − {{current.coefficients.referenceLevel}}) + {{current.coefficients.c}}　km³<span v-if="current.rSquared!=null"> · R² = {{current.rSquared}}</span></p><p v-if="current.areaComparison" class="curve-equation">独立面积拟合：A = {{current.areaComparison.coefficients.a}} × (H − {{current.areaComparison.coefficients.referenceLevel}})² + {{current.areaComparison.coefficients.b}} × (H − {{current.areaComparison.coefficients.referenceLevel}}) + {{current.areaComparison.coefficients.c}}　km²<span v-if="current.areaComparison.rSquared!=null"> · R² = {{current.areaComparison.rSquared}}</span></p><p v-if="current.areaComparison?.source" class="muted">面积资料：{{current.areaComparison.source}}</p></template>
-  <fieldset v-if="editing" :disabled="disabled||working"><div class="panel-title"><h4>保存独立曲线版本</h4><button @click="editing=false">取消编辑</button></div><div class="curve-grid"><label>曲线名称<input v-model="form.name"></label><label>关系形式<select v-model="form.type"><option value="quadratic">二次关系</option><option value="table">水位—库容表</option></select></label></div><div v-if="form.type==='quadratic'" class="curve-coefficients"><label>a<input v-model.number="form.coefficients.a" type="number" step="any"></label><label>b<input v-model.number="form.coefficients.b" type="number" step="any"></label><label>c / km³<input v-model.number="form.coefficients.c" type="number" step="any"></label><label>参考高程 / m<input v-model.number="form.coefficients.referenceLevel" type="number" step="any"></label></div><template v-else><div v-for="(point,index) in form.points" :key="index" class="curve-point"><label>高程 / m<input v-model.number="point.level" type="number" step="any"></label><label>库容 / km³<input v-model.number="point.storageKm3" type="number" step="any"></label><button @click="form.points.splice(index,1)">移除</button></div><button @click="form.points.push({level:'',storageKm3:''})">增加数据点</button></template><label class="curve-checkbox"><input v-model="areaEnabled" type="checkbox">登记独立面积拟合</label><template v-if="areaEnabled"><div class="curve-coefficients"><label>面积 a<input v-model.number="form.areaComparison.coefficients.a" type="number" step="any"></label><label>面积 b<input v-model.number="form.areaComparison.coefficients.b" type="number" step="any"></label><label>面积 c / km²<input v-model.number="form.areaComparison.coefficients.c" type="number" step="any"></label><label>面积参考高程 / m<input v-model.number="form.areaComparison.coefficients.referenceLevel" type="number" step="any"></label></div><div class="curve-grid"><label>面积拟合 R²（可选）<input v-model.number="form.areaComparison.rSquared" type="number" min="0" max="1" step="any"></label><label>面积资料来源<input v-model="form.areaComparison.source"></label></div></template><div class="curve-grid"><label>最低适用高程 / m<input v-model.number="form.minLevel" type="number" step="any"></label><label>最高适用高程 / m<input v-model.number="form.maxLevel" type="number" step="any"></label><label>模型湖位到曲线基准偏移 / m<input v-model.number="form.offsetM" type="number" step="any"></label><label>高程基准<input v-model="form.reference" placeholder="填写测绘基准或待核实说明"></label><label class="curve-wide">资料来源<input v-model="form.source" placeholder="资料名称、测绘单位或文件依据"></label><label class="curve-checkbox"><input v-model="form.provisional" type="checkbox">作为演示或待核实曲线</label></div><p class="muted">曲线高程 = 模型湖位 + 基准偏移；保存时检查适用范围内库容递增与面积为正。</p><button class="primary" @click="save">保存新曲线</button></fieldset>
-  <div v-if="curveRows.length" class="curve-charts"><div><h4>水位—库容</h4><Chart :rows="curveRows" :series="[{key:'volume',label:'库容'}]" unit="km³" axis-label="模型湖位 / m" hourly :context="'curve-volume:'+(editing?'edit':selected)"/></div><div><h4>水位—面积</h4><Chart :rows="areaRows" :series="areaSeries" unit="km²" axis-label="模型湖位 / m" hourly :context="'curve-area:'+(editing?'edit':selected)"/></div></div>
-  <p v-if="chartCurve?.areaComparison" class="note">湖泊水量计算采用库容曲线的导数面积 dV/dH；独立面积拟合用于比较展示。</p><details class="curve-compare"><summary>用既有来水对照湖位过程</summary><p class="muted">沿用原成果的来水和湖面气象，按选定库容关系计算湖位过程。</p><div class="curve-grid"><label>来水成果<select v-model="source"><option value="">请选择连续成果</option><option v-for="item in sourceOptions" :key="item.id" :value="item.id">{{item.name||item.id}}</option></select></label><label>开始时间（可选）<input v-model="start" type="datetime-local"></label><label>结束时间（可选）<input v-model="end" type="datetime-local"></label></div><button class="primary" :disabled="!source||!selected||working||disabled||!!pending" @click="compare">开始固定来水对照</button><p v-if="pending" class="note" role="status">{{pending.message||'正在计算湖位对照'}} · {{number(pending.progress,1)}}%</p><template v-if="comparison"><p>对照 {{comparison.summary?.hours}} 小时 · 最大湖位差 {{number(comparison.maximumLevelDifferenceM,4)}} m</p><Chart :rows="compareRows" :series="[{key:'fixed',label:'原成果湖位'},{key:'curve',label:'库容关系湖位'}]" unit="m" hourly :context="'lake-comparison:'+comparison.id"/></template></details>
-  <p v-if="working" class="note" role="status">正在处理…</p><p v-if="message" class="note" role="status">{{message}}</p><p v-if="error" class="message error" role="alert">{{error}}</p>
- </section>
+<section class="panel lc">
+ <p v-if="error" class="message error">{{error}}</p>
+ <div class="lc-top">
+  <div class="lc-formula">
+   <h3>色林错水位—库容关系</h3>
+   <p class="eq">V(H) = {{p.a}} x² + {{p.b}} x + {{p.c}}</p>
+   <p class="eq sub">A(H) = dV/dH = {{fixed(2*p.a*1000,3)}} x + {{fixed(p.b*1000,3)}}</p>
+   <p class="lc-legend">x = H − {{p.referenceLevel}}，H 为湖位（m），V 为库容（km³），A 为湖面面积（km²）。湖面降水、蒸发按 A(H) 计算，入湖水量计入库容后由 V(H) 反算湖位。适用 {{lo}}—{{hi}} m。</p>
+  </div>
+  <div class="lc-calc">
+   <label>湖位 H（m）<input type="number" step=".01" :min="lo" :max="hi" v-model.number="probe"></label>
+   <div><span>库容</span><b>{{number(V(probe),3)}}<em>km³</em></b></div>
+   <div><span>湖面面积</span><b>{{fixed(A(probe),1)}}<em>km²</em></b></div>
+   <div v-if="level!=null"><span>相对当前湖位</span><b>{{(V(probe)-V(level))>=0?'+':''}}{{number((V(probe)-V(level))*1000,0)}}<em>百万m³</em></b></div>
+  </div>
+  <div v-if="model" class="lc-model">
+   <h4>湖泊方案</h4>
+   <dl><dt>湖面系数</dt><dd>{{number(model.lakeCoefficient,3)}}</dd><dt>溃口槛高</dt><dd>{{fixed(model.outlet.currentCrestM,2)}} m（2023 年起溢时 {{fixed(model.onsetLevelM,2)}} m）</dd><dt>等效过流宽度</dt><dd>{{number(model.outlet.currentWidthM,0)}} m</dd><dt>湖位误差</dt><dd>RMSE {{number(metrics?.revised?.rmseM,3)}} m（{{metrics?.revised?.days}} 天）</dd></dl>
+  </div>
+ </div>
+ <div class="lc-charts">
+  <div><h4>水位—库容</h4><Chart :rows="rows" :series="[{key:'volume',label:'库容 V'}]" unit="km³" axis-label="湖位 m" :day="marker" :context="'lc-v'"/></div>
+  <div><h4>水位—面积</h4><Chart :rows="rows" :series="[{key:'area',label:'面积 A = dV/dH'}]" unit="km²" axis-label="湖位 m" :day="marker" :context="'lc-a'"/></div>
+ </div>
+ <div class="table-wrap lc-table"><table><thead><tr><th>湖位 m</th><th v-for="r in table" :key="r.h" :class="{now:r.h===nearest}">{{r.h.toFixed(1)}}</th></tr></thead><tbody><tr><th>库容 km³</th><td v-for="r in table" :key="r.h" :class="{now:r.h===nearest}">{{number(r.v,2)}}</td></tr><tr><th>面积 km²</th><td v-for="r in table" :key="r.h" :class="{now:r.h===nearest}">{{fixed(r.a,0)}}</td></tr></tbody></table></div>
+</section>
 </template>
 <style scoped>
-.curve-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:18px 0}.curve-grid label,.curve-coefficients label,.curve-point label{display:grid;gap:7px;color:var(--muted);font-size:13px}.curve-grid input,.curve-grid select,.curve-coefficients input,.curve-point input{width:100%;min-width:0}.curve-buttons{align-self:end}.curve-equation{font-variant-numeric:tabular-nums;overflow-wrap:anywhere;padding:14px;background:var(--surface-alt,#f4f8f9);border-radius:6px}.curve-panel fieldset{border:1px solid var(--line);padding:18px;margin:20px 0;border-radius:6px}.curve-coefficients{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}.curve-wide{grid-column:1/-1}.curve-checkbox{display:flex!important;align-items:center;gap:8px}.curve-checkbox input{width:auto}.curve-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:26px 0}.curve-point{display:grid;grid-template-columns:1fr 1fr auto;align-items:end;gap:12px;margin:12px 0}.curve-compare{margin-top:25px;border-top:1px solid var(--line);padding-top:20px}.curve-compare summary{cursor:pointer;color:var(--muted)}h4{margin:0 0 12px;font-size:14px}@media(max-width:800px){.curve-grid,.curve-charts{grid-template-columns:1fr}.curve-coefficients{grid-template-columns:repeat(2,minmax(0,1fr))}.curve-wide{grid-column:auto}.curve-point{grid-template-columns:1fr 1fr}.curve-point button{justify-self:start}}
+.lc-top{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(220px,.8fr) minmax(240px,.9fr);gap:22px;margin-bottom:22px}
+.lc-formula h3{margin:0 0 12px}
+.eq{font-family:"Cambria Math","Times New Roman",serif;font-size:21px;margin:0 0 6px;color:#1f4e5c;font-variant-numeric:tabular-nums}
+.eq.sub{font-size:17px;color:#46707d}
+.lc-legend{font-size:13px;color:var(--muted);margin:12px 0 0;line-height:1.75}
+.lc-calc,.lc-model{border:1px solid var(--line);border-radius:8px;padding:14px 16px;background:#fbfdfd;display:grid;gap:10px;align-content:start}
+.lc-calc span{font-size:12px;color:var(--muted);display:block}
+.lc-calc b{font-size:20px;color:#245e6f;font-variant-numeric:tabular-nums}
+.lc-calc em{font-style:normal;font-size:12px;color:var(--muted);margin-left:4px;font-weight:400}
+.lc-model h4{margin:0}
+.lc-model dl{grid-template-columns:90px 1fr;gap:6px 10px;margin:0;font-size:13px}
+.lc-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-bottom:18px}
+.lc-charts h4{margin:0 0 4px}
+.lc-table th,.lc-table td{text-align:center;padding:8px 10px;font-variant-numeric:tabular-nums}
+.lc-table .now{background:#fff4dc;font-weight:600}
+@media(max-width:1200px){.lc-top{grid-template-columns:1fr 1fr}.lc-formula{grid-column:1/-1}.lc-charts{grid-template-columns:1fr}}
 </style>
