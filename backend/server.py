@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import threading
+import time
 import sys
 import uuid
 import webbrowser
@@ -87,12 +88,24 @@ class Platform(ThreadingHTTPServer):
         migrate(self.db)
         from .continuous_reference import migrate as migrate_references
         migrate_references(self.db)
+        # Every request opens and closes its own SQLite connection. In WAL mode the
+        # last connection to close runs a full checkpoint and deletes the -wal/-shm
+        # files, which costs about a second per close on Windows. One idle connection
+        # held for the server's lifetime keeps those files and makes closes cheap.
+        import sqlite3
+        self.db_keeper = sqlite3.connect(str(self.db.path), check_same_thread=False)
+        # Reading a table attaches the WAL index; 'SELECT 1' would not touch the file.
+        self.db_keeper.execute('SELECT COUNT(*) FROM sqlite_master').fetchone()
         self.jobs = Jobs(self.db)
         self.instance_id = uuid.uuid4().hex
         super().__init__(address, Handler)
 
     def server_close(self):
         super().server_close()
+        keeper = getattr(self, 'db_keeper', None)
+        if keeper is not None:
+            keeper.close()
+            self.db_keeper = None
         self.lock_stream.close()
 
 
@@ -901,6 +914,29 @@ class Handler(SimpleHTTPRequestHandler):
         return self.send_json({'filename': destination.name, 'bytes': length})
 
 
+def warm_up(db):
+    """Read the database once and prepare monitoring caches after start-up.
+
+    Workspaces may live on slow (e.g. USB) disks where the first random SQLite
+    read is very slow; a sequential pass loads the file into the OS cache.
+    """
+    started = time.time()
+    try:
+        with open(db.path, 'rb') as stream:
+            while stream.read(4 * 1024 * 1024):
+                pass
+        from .observation_query import catalog, series
+        for station in catalog(db)['stations']:
+            for variable in station.get('variables', []):
+                try:
+                    series(db, station['id'], variable['id'])
+                except (ValueError, KeyError):
+                    continue
+        print(f'监测资料缓存已就绪（{time.time() - started:.1f} 秒）', flush=True)
+    except Exception as exc:  # warm-up must never stop the service
+        print('监测资料预热未完成：' + str(exc), flush=True)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=int(read_json(ROOT / 'config/platform.json', {}).get('port', 8882)))
@@ -916,6 +952,7 @@ def main():
     server.background_mode = args.background or (not args.close_with_browser and saved_mode == 'background')
     server.operations_scheduler = OperationalScheduler(server)
     server.operations_scheduler.start()
+    threading.Thread(target=warm_up, args=(server.db,), name='selinco-warm-up', daemon=True).start()
     if not server.background_mode and (args.close_with_browser or saved_mode == 'desktop' or getattr(sys, 'frozen', False)):
         from .browser_lifetime import BrowserLifetime
         server.browser_lifetime = BrowserLifetime(server.jobs, server.shutdown)
