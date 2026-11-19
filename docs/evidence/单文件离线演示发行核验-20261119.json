@@ -1,6 +1,6 @@
 {
   "version": "0.14.3",
-  "verifiedAt": "2026-11-19T15:28:51.1476798+08:00",
+  "verifiedAt": "2026-11-19T15:40:29.324406+08:00",
   "branch": "codex/round3-parameter-audit-20261028",
   "installer": {
     "path": "releases/v0.14.3-20261119/色林错预警预报平台-v0.14.3-Setup.exe",
@@ -8,7 +8,10 @@
     "windows": "x64",
     "deliveryFiles": 1,
     "compile": "passed",
-    "installedVerification": "not-run"
+    "installedVerification": "passed",
+    "deliveryCopyVerified": true,
+    "setupLog": "E:\\色林错离线交付\\0.14.3-20261119\\build\\验收\\单机安装验收.log",
+    "restartRequired": false
   },
   "frozenRelease": {
     "manifestEntries": 9142,
@@ -42,8 +45,8 @@
   },
   "offlineBrowser": {
     "version": "0.14.3",
-    "workspace": "E:\\色林错离线交付\\0.14.3-20261119\\build\\发行\\SelincoPlatform\\workspace-business",
-    "port": 8898,
+    "workspace": "E:\\色林错离线交付\\0.14.3-20261119\\build\\验收\\单机安装验收\\workspace-business",
+    "port": 8899,
     "network": "浏览器只放行该隔离安装的本机服务",
     "viewports": [
       {
@@ -125,5 +128,6 @@
     ],
     "businessRecordsUnchanged": true
   },
-  "captureDirectory": "E:\\色林错离线交付\\0.14.3-20261119\\build\\验收\\离线浏览器验收-20261119-152735"
+  "captureDirectory": "E:\\色林错离线交付\\0.14.3-20261119\\build\\验收\\离线浏览器验收-20261119-153840",
+  "implementationCommit": "a9edb2cf6285c93b010f461d1fb7afb9f0a6b0f8"
 }
