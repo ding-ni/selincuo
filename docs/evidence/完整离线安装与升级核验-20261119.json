@@ -1,0 +1,186 @@
+{
+  "version": "0.14.2",
+  "verifiedAt": "2026-11-19T05:16:42+00:00",
+  "implementationCommit": "4394d72ef02a12d93d207cbed0c3f3b41205dc97",
+  "branch": "codex/round3-parameter-audit-20261028",
+  "installer": {
+    "path": "releases/v0.14.2-20261119/色林错预警预报平台-v0.14.2-Setup.exe",
+    "bytes": 1003992099,
+    "sha256": "8b2b7bb6de18cab3058ecea7fa30aff15c2d25a1a86039e8d37a31a868c0fd30"
+  },
+  "migrationArchive": {
+    "path": "releases/v0.14.2-20261119/本机业务迁移备份-20261119.zip",
+    "bytes": 981298893,
+    "workspaceFiles": 170,
+    "databaseIntegrity": "ok",
+    "counts": {
+      "stations": 8,
+      "sources": 33,
+      "observations": 59119,
+      "input_products": 2
+    },
+    "businessRecords": {
+      "reports": 5,
+      "lake-models": 1,
+      "forecast-inputs": 2,
+      "forecasts": 2,
+      "risk-scenarios": 3,
+      "risk-results": 3,
+      "exposures": 2
+    },
+    "checkedForecastFiles": 4,
+    "checkedRiskRasters": 3,
+    "checkedReportFiles": 10,
+    "sha256": "70ca8bf2a5ea3350e9209a93c403343df8b8da94005d53f4ada070f48e43ae31"
+  },
+  "bundled": {
+    "releaseManifestFiles": 9130,
+    "releaseManifestBytes": 1582457529,
+    "stationCount": 8,
+    "originalExcelFiles": 33,
+    "observations": 59119,
+    "meteorologicalInputs": 2,
+    "schemes": 1,
+    "parameterSets": 1,
+    "cleanSeedTasks": 0,
+    "originalDemFiles": 8,
+    "sourceBoundaryShapefiles": 6,
+    "hourlyZarrFiles": 6671,
+    "overflowDisplayFiles": 6,
+    "exposures": {
+      "road": 215,
+      "settlement": 63
+    },
+    "riskTerrainIncluded": true,
+    "formalResultId": "JOB-05c3f62282ce4239aed1",
+    "parameterId": "PARAM-1bccaba37f764ddbb89e",
+    "schemeId": "SCHEME-2c4816223d4b47cfb3cd",
+    "waterModelId": "LAKE-1eca494c917349eab34d",
+    "lakeCurveId": "CURVE-DEMO-SELINCO",
+    "frontEndEntries": [
+      "frontend/dist/assets/index-DaE9ktic.js",
+      "frontend/dist/assets/ModelResources-BvKqrnbA.js"
+    ],
+    "protectedHistoricalResult": "BUILTIN-historical-rev2-39192cc713c5"
+  },
+  "installationAndUpgrade": {
+    "isolatedInstall": true,
+    "port": 8898,
+    "launchMethod": "正式安装器与随包 Windows 启动脚本",
+    "workspaceBefore": "workspace-business",
+    "initialInstance": "240f3f988c9a48c393b2602891a60136",
+    "instanceAfterUpgrade": "38115d838def425b960f8e17b9a5edd8",
+    "restoredRelativePath": "restored-workspaces/restored-e361dbac3447",
+    "backupFiles": 64,
+    "confirmedForecasts": [
+      "FORECAST-f16c981744b14ca79a78"
+    ],
+    "confirmedReports": [
+      "REPORT-32b2e7fc1a7f4d1abfdc",
+      "REPORT-ccce61dfe8bc4629b857"
+    ],
+    "oldWorkspaceRetained": true,
+    "restoredDatabaseIntegrity": "ok",
+    "retainedCounts": {
+      "stations": 8,
+      "sources": 33,
+      "observations": 59119,
+      "input_products": 2
+    },
+    "sameInstallerUpgradePassed": true,
+    "restoredArtifacts": {
+      "forecastHoursAndLakeEndpoints": {
+        "FORECAST-f16c981744b14ca79a78": [
+          168,
+          4544.138092360535,
+          4544.144747792769
+        ]
+      },
+      "reportPdfBytes": {
+        "REPORT-ccce61dfe8bc4629b857": 31932,
+        "REPORT-32b2e7fc1a7f4d1abfdc": 36314
+      }
+    }
+  },
+  "modelVerification": {
+    "hours": 168,
+    "stateTime": "2026-10-21T00:00:00",
+    "sourceResultId": "JOB-05c3f62282ce4239aed1",
+    "lakeModelId": "LAKE-1eca494c917349eab34d",
+    "curveId": "CURVE-DEMO-SELINCO",
+    "lakeEvaporationCoefficient": 1.1444760660068105,
+    "forecastId": "FORECAST-f16c981744b14ca79a78",
+    "forecastTaskId": "JOB-1dba25d2c8644a05b430",
+    "referenceForecastId": "FORECAST-5720534cb34c444fa242",
+    "maximumDifferencesAgainstSource": {
+      "lakeLevel": 0.0,
+      "dujaFlow": 0.0,
+      "inflow": 0.0,
+      "outflow": 0.0,
+      "lakeRainMm": 0.0,
+      "lakeEvaporationMm": 0.0
+    },
+    "waterBalance": {
+      "landMaximumMm": 6.41368902432049e-13,
+      "routingMaximumM3": 1.4901161193847656e-08,
+      "lakeMaximumHourlyM3": 0.0023631072544958442,
+      "lakeTotalM3": 0.0005858093500137329
+    },
+    "reportTaskId": "JOB-0385d3a6b77f4ea5b1b2",
+    "pdfBytes": 36314
+  },
+  "offlineBrowser": {
+    "network": "浏览器仅放行本机验收服务",
+    "viewports": [
+      {
+        "window": [
+          1366,
+          768
+        ],
+        "overview": "4,544.061m",
+        "roadDay": "2023-10-06",
+        "impact": "道路沿线受淹\n532 m\n预计断行 0 m",
+        "forecastDays": 10,
+        "backupUi": true,
+        "externalRequests": [],
+        "pageErrors": [],
+        "httpErrors": []
+      },
+      {
+        "window": [
+          1920,
+          1080
+        ],
+        "overview": "4,544.061m",
+        "roadDay": "2023-10-06",
+        "impact": "道路沿线受淹\n532 m\n预计断行 0 m",
+        "forecastDays": 10,
+        "backupUi": true,
+        "migrationZipPreviewFiles": 170,
+        "migrationArchiveBytes": 981298893,
+        "externalRequests": [],
+        "pageErrors": [],
+        "httpErrors": []
+      }
+    ],
+    "migrationZipPreviewFiles": 170
+  },
+  "regression": {
+    "frontendPassed": 70,
+    "backendFullRun": {
+      "passed": 549,
+      "total": 557
+    },
+    "backendEightTargetedRetests": {
+      "mapRainfall": 4,
+      "backgroundTasks": 3,
+      "releaseContract": 1,
+      "passed": 8
+    },
+    "stateAndConcurrentClimateCache": {
+      "passed": 7
+    },
+    "frozenModelSelfCheck": 0.0
+  },
+  "scope": "同一台 Windows 电脑的独立安装目录，实际运行安装器、关闭浏览器外网访问；未在第二台物理电脑或供数方的现场数据库复验。"
+}
