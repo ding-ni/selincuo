@@ -147,6 +147,13 @@ def detail(db, identifier):
     return store.get(db, COLLECTION, identifier)
 
 
+def result_detail(db, identifier):
+    if identifier.startswith('DEMO-RISK-RUN-'):
+        from . import demo_examples
+        return demo_examples.risk_result(identifier)
+    return store.get(db, RESULTS, identifier)
+
+
 def weir_discharge(level_m, outlet):
     head = max(0., float(level_m)-float(outlet['crestM']))
     return (2./3.)*float(outlet['coefficient'])*float(outlet['widthM'])*math.sqrt(2.*9.80665)*head**1.5
@@ -436,7 +443,15 @@ def run(db, request, folder=None, progress=None, cancelled=None):
 
 def result_exposures(db, identifier):
     """Return the road and point data selected for this saved run."""
-    result = store.get(db, RESULTS, identifier)
+    result = result_detail(db, identifier)
+    if identifier.startswith('DEMO-RISK-RUN-'):
+        from . import demo_examples
+        selected = set(result['scenario']['exposureIds'])
+        return {'items': [
+            {'id': record['id'], 'source': record['source'],
+             'features': read_json(within(EXPOSURE_BUNDLE, record['bundleFile']))['features']}
+            for record in demo_examples.index()['exposures'] if record['id'] in selected
+        ]}
     items = []
     for exposure_id in result['scenario'].get('exposureIds', []):
         record = store.get(db, 'exposures', exposure_id)
@@ -446,9 +461,14 @@ def result_exposures(db, identifier):
 
 
 def terrain_frame(db, identifier, index=0, depth_only=False):
-    value = store.get(db, RESULTS, identifier)
+    value = result_detail(db, identifier)
+    if identifier.startswith('DEMO-RISK-RUN-'):
+        from .demo_examples import DEMO_ROOT
+        directory = DEMO_ROOT
+    else:
+        directory = db.workspace
     index = int(index)
-    with np.load(within(db.workspace, value['path']), allow_pickle=False) as arrays:
+    with np.load(within(directory, value['path']), allow_pickle=False) as arrays:
         picks = arrays['frameRows'].tolist() if 'frameRows' in arrays else list(range(len(value['rows'])))
         if not 0 <= index < len(picks):
             raise ValueError('回放时刻超出结果范围')

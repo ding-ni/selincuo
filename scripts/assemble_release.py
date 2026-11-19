@@ -221,6 +221,38 @@ def overflow_resources(spatial):
     return files
 
 
+def copy_demo_resources(source, destination):
+    """Include complete, independently readable demonstration results."""
+    from backend.demo_examples import DIRECTORY
+    index = read_json(source / 'demo.json') if source.is_dir() else None
+    if not index:
+        raise ValueError('缺少离线演示资料，请先运行构建离线演示资料.py')
+    forecast = index['forecast']
+    scenarios = index['scenarios']
+    if (forecast['hours'] != 240 or len(forecast['times']) != 240 or
+            not index['history']['rows'] or {row['initialLevelOffsetM'] for row in scenarios} != {0, .6} or
+            len(scenarios) != 2):
+        raise ValueError('离线演示需要完整十日预报和两种漫溢情景')
+    files = ['demo.json', 'weather/气象输入说明.json', index['weather']['dataPath'],
+             forecast['memberArtifact']['path'], *(item['path'] for item in forecast['memberCheckpointIndex'])]
+    for scenario in scenarios:
+        folder = 'results/' + scenario['resultId']
+        relative = folder + '/结果.json'
+        result = read_json(within(source, relative))
+        if (not result or result['id'] != scenario['resultId'] or
+                result['forecastId'] != forecast['id'] or len(result['rows']) != forecast['hours'] or
+                scenario['exposureIds'] != index['exposureIds'] or len(result['comparisons']) < 2):
+            raise ValueError('缺少完整离线漫溢与比选结果：' + scenario['name'])
+        files.extend((relative, result['path'], folder + '/risk-hourly.csv'))
+    for relative in files:
+        original = within(source, relative)
+        if not original.is_file():
+            raise ValueError('离线演示工件缺失：' + relative)
+        target = within(destination / DIRECTORY, relative)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(original, target)
+
+
 def selected_resources(scheme, published):
     """Bundle the adopted spatial lineage, source boundaries and model DEM."""
     spatial = ROOT / 'data/derived/spatial'
@@ -285,11 +317,20 @@ def selected_resources(scheme, published):
 
 def copy_risk_terrain(destination):
     """Keep native GLO-90 resolution in a small lake-plus-20-km offline crop."""
+    from backend.risk_scenarios import _dem_paths, _lake_geometry
+    relative = 'data/derived/spatial/湖周漫溢地形.tif'
+    target = destination / relative
+    if target.exists():
+        raise ValueError('发行地形目标已存在，请使用新发行目录')
+    paths = _dem_paths()
+    if paths == [ROOT / relative]:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(paths[0], target)
+        return target
     import math
     import rasterio
     from rasterio.merge import merge
     from shapely.geometry import box
-    from backend.risk_scenarios import _dem_paths, _lake_geometry
     lake = _lake_geometry()
     west, south, east, north = lake.bounds
     margin = 20.05/111.195
@@ -297,7 +338,7 @@ def copy_risk_terrain(destination):
     bounds = (west-longitude_margin, south-margin, east+longitude_margin, north+margin)
     opened = []
     try:
-        for path in _dem_paths():
+        for path in paths:
             dataset = rasterio.open(path)
             if dataset.crs.to_epsg() == 4326 and box(*dataset.bounds).intersects(box(*bounds)):
                 opened.append(dataset)
@@ -306,9 +347,6 @@ def copy_risk_terrain(destination):
         if not opened:
             raise ValueError('离线漫溢功能缺少湖周Copernicus GLO-90地形')
         data, transform = merge(opened, bounds=bounds, nodata=-9999., dtype='float32')
-        target = destination/'data/derived/spatial/湖周漫溢地形.tif'
-        if target.exists():
-            raise ValueError('发行地形目标已存在，请使用新发行目录')
         target.parent.mkdir(parents=True, exist_ok=True)
         with rasterio.open(target, 'w', driver='GTiff', width=data.shape[2], height=data.shape[1],
                 count=1, dtype='float32', crs='EPSG:4326', transform=transform, nodata=-9999.,
@@ -451,6 +489,8 @@ def main():
                         help='本次独立构建生成的冻结业务种子')
     parser.add_argument('--build-manifest', type=Path,
                         help='独立构建清单路径；已有清单不覆盖')
+    parser.add_argument('--demo-data', type=Path, default=ROOT/'data/derived/spatial/离线演示',
+                        help='已生成的离线演示资料目录')
     args = parser.parse_args()
     dest = args.destination.resolve()
     version_manifest=(args.build_manifest.resolve() if args.build_manifest else
@@ -492,6 +532,7 @@ def main():
         target = dest / source.relative_to(ROOT)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
+    copy_demo_resources(args.demo_data.resolve(), dest)
     copy_risk_terrain(dest)
     for item in published:
         if item.get('businessDefault'):

@@ -1,0 +1,129 @@
+{
+  "version": "0.14.3",
+  "verifiedAt": "2026-11-19T15:28:51.1476798+08:00",
+  "branch": "codex/round3-parameter-audit-20261028",
+  "installer": {
+    "path": "releases/v0.14.3-20261119/色林错预警预报平台-v0.14.3-Setup.exe",
+    "bytes": 1004905158,
+    "windows": "x64",
+    "deliveryFiles": 1,
+    "compile": "passed",
+    "installedVerification": "not-run"
+  },
+  "frozenRelease": {
+    "manifestEntries": 9142,
+    "selfCheck": "passed",
+    "modelCheck": 0.0,
+    "startup": "fresh-seed",
+    "defaultResultId": "JOB-05c3f62282ce4239aed1",
+    "schemeId": "SCHEME-2c4816223d4b47cfb3cd",
+    "lakeModelId": "LAKE-1eca494c917349eab34d",
+    "seedCounts": {
+      "tasks": 0,
+      "states": 0,
+      "parameter_versions": 1,
+      "schemes": 1,
+      "input_products": 2,
+      "observations": 59119
+    }
+  },
+  "demo": {
+    "readOnly": true,
+    "forecastId": "FORECAST-ff4668df1d644fb49e0b",
+    "issueTime": "2026-10-21T00:00:00",
+    "forecastHours": 240,
+    "historyDays": 60,
+    "resultIds": [
+      "DEMO-RISK-RUN-CURRENT",
+      "DEMO-RISK-RUN-HIGH-WATER"
+    ],
+    "roadFeatures": 215,
+    "settlementFeatures": 63
+  },
+  "offlineBrowser": {
+    "version": "0.14.3",
+    "workspace": "E:\\色林错离线交付\\0.14.3-20261119\\build\\发行\\SelincoPlatform\\workspace-business",
+    "port": 8898,
+    "network": "浏览器只放行该隔离安装的本机服务",
+    "viewports": [
+      {
+        "window": [
+          1366,
+          768
+        ],
+        "externalRequests": [],
+        "pageErrors": [],
+        "httpErrors": [],
+        "businessWrites": [],
+        "scenarios": [
+          {
+            "name": "现状溃口",
+            "peakAreaKm2": 0.08,
+            "archiveFrame": "2026-10-30 11:00",
+            "floodedCells": 2,
+            "impact": "道路与居民点 · 2026-10-30\n\n该时刻未识别到受淹道路或居民点。\n\nOpenStreetMap contributors / ODbL 1.0 / 下载 20261117T1231Z · OpenStreetMap contributors / ODbL 1.0 / 下载 20261117T1229Z",
+            "comparisonRows": 4
+          },
+          {
+            "name": "起报湖位抬升 0.6 m",
+            "peakAreaKm2": 6.25,
+            "archiveFrame": "2026-10-21 01:00",
+            "floodedCells": 153,
+            "impact": "道路与居民点 · 2026-10-21\n\n该时刻未识别到受淹道路或居民点。\n\nOpenStreetMap contributors / ODbL 1.0 / 下载 20261117T1231Z · OpenStreetMap contributors / ODbL 1.0 / 下载 20261117T1229Z",
+            "comparisonRows": 4
+          }
+        ],
+        "forecast": {
+          "hours": 240,
+          "days": 10,
+          "firstDay": "2026-10-21",
+          "lastDay": "2026-10-30"
+        },
+        "historicalRoad": {
+          "date": "2023-10-06",
+          "impact": "道路沿线受淹\n532 m\n预计断行 0 m"
+        }
+      },
+      {
+        "window": [
+          1920,
+          1080
+        ],
+        "externalRequests": [],
+        "pageErrors": [],
+        "httpErrors": [],
+        "businessWrites": [],
+        "scenarios": [
+          {
+            "name": "现状溃口",
+            "peakAreaKm2": 0.08,
+            "archiveFrame": "2026-10-30 11:00",
+            "floodedCells": 2,
+            "impact": "道路与居民点 · 2026-10-30\n\n该时刻未识别到受淹道路或居民点。\n\nOpenStreetMap contributors / ODbL 1.0 / 下载 20261117T1231Z · OpenStreetMap contributors / ODbL 1.0 / 下载 20261117T1229Z",
+            "comparisonRows": 4
+          },
+          {
+            "name": "起报湖位抬升 0.6 m",
+            "peakAreaKm2": 6.25,
+            "archiveFrame": "2026-10-21 01:00",
+            "floodedCells": 153,
+            "impact": "道路与居民点 · 2026-10-21\n\n该时刻未识别到受淹道路或居民点。\n\nOpenStreetMap contributors / ODbL 1.0 / 下载 20261117T1231Z · OpenStreetMap contributors / ODbL 1.0 / 下载 20261117T1229Z",
+            "comparisonRows": 4
+          }
+        ],
+        "forecast": {
+          "hours": 240,
+          "days": 10,
+          "firstDay": "2026-10-21",
+          "lastDay": "2026-10-30"
+        },
+        "historicalRoad": {
+          "date": "2023-10-06",
+          "impact": "道路沿线受淹\n532 m\n预计断行 0 m"
+        }
+      }
+    ],
+    "businessRecordsUnchanged": true
+  },
+  "captureDirectory": "E:\\色林错离线交付\\0.14.3-20261119\\build\\验收\\离线浏览器验收-20261119-152735"
+}

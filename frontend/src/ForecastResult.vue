@@ -2,15 +2,16 @@
 import {computed,ref,watch} from 'vue'
 import Chart from './Chart.vue'
 import {api,number,fixed} from './api.mjs'
-const props=defineProps({forecasts:{type:Array,default:()=>[]},selected:String})
+const props=defineProps({forecasts:{type:Array,default:()=>[]},selected:String,demo:Boolean})
 const emit=defineEmits(['update:selected','warning','risk'])
 const COLORS={blue:'#1677ff',yellow:'#f5c400',orange:'#ff7d00',red:'#f5222d'}
 const detail=ref(null),history=ref([]),assessment=ref(null),error=ref(''),loading=ref(false)
 const chosen=computed({get:()=>props.selected,set:v=>emit('update:selected',v)})
 watch(()=>props.selected,load,{immediate:true})
 async function load(){const id=props.selected;detail.value=null;history.value=[];assessment.value=null;error.value='';if(!id)return;loading.value=true
- try{const [d,h,a]=await Promise.allSettled([api('forecasts/'+encodeURIComponent(id)),api('forecasts/'+encodeURIComponent(id)+'/history'),api('warnings/assess?'+new URLSearchParams({forecastId:id}))])
-  if(props.selected!==id)return;if(d.status==='rejected')throw d.reason;detail.value=d.value.result||d.value;history.value=h.status==='fulfilled'?h.value.rows:[];assessment.value=a.status==='fulfilled'?a.value:null}catch(e){error.value=e.message}finally{loading.value=false}}
+ const path=(props.demo?'demo/forecasts/':'forecasts/')+encodeURIComponent(id)
+ try{const [d,h,a]=await Promise.allSettled([api(path),api(path+'/history'),...(props.demo?[]:[api('warnings/assess?'+new URLSearchParams({forecastId:id}))])])
+  if(props.selected!==id)return;if(d.status==='rejected')throw d.reason;detail.value=d.value.result||d.value;history.value=h.status==='fulfilled'?h.value.rows:[];assessment.value=a?.status==='fulfilled'?a.value:null}catch(e){error.value=e.message}finally{loading.value=false}}
 const ensemble=computed(()=>Number(detail.value?.memberCount)>1)
 const series=key=>ensemble.value?detail.value.quantiles.p50[key]:detail.value.control[key]
 const dayOf=t=>new Date(Date.parse(t+'Z')-3600000).toISOString().slice(0,10)
@@ -42,8 +43,9 @@ const issueDay=computed(()=>detail.value?.issueTime?.slice(0,10))
 <template>
 <section class="panel fr">
  <div class="fr-head">
-  <label>预报成果<select v-model="chosen"><option value="">请选择</option><option v-for="f in forecasts" :key="f.id" :value="f.id">{{f.name}} · 起报 {{String(f.issueTime||'').replace('T',' ').slice(0,16)}}</option></select></label>
-  <button v-if="detail" class="primary fr-risk" @click="emit('risk',detail.id)">推演漫溢情景 →</button>
+  <div v-if="demo" class="fr-demo-title"><h3>{{forecasts[0]?.name}}</h3><small>离线演示 · 预先计算的气象情景</small></div>
+  <label v-else>预报成果<select v-model="chosen"><option value="">请选择</option><option v-for="f in forecasts" :key="f.id" :value="f.id">{{f.name}} · 起报 {{String(f.issueTime||'').replace('T',' ').slice(0,16)}}</option></select></label>
+  <button v-if="detail" class="primary fr-risk" @click="emit('risk',detail.id)">{{demo?'查看离线漫溢情景':'推演漫溢情景'}} →</button>
   <span v-if="detail" class="fr-meta">{{ensemble?detail.memberCount+' 个成员':'单情景'}} · {{number(detail.hours/24,0)}} 天 · {{String(detail.issueTime).replace('T',' ').slice(0,16)}} 起报</span>
  </div>
  <p v-if="error" class="message error">{{error}}</p>
@@ -56,7 +58,8 @@ const issueDay=computed(()=>detail.value?.issueTime?.slice(0,10))
    <div><span>期末湖位</span><b>{{fixed(s.finalMedianLevel,2)}}<em>m</em></b><small :class="change>0?'up':'down'">{{change==null?'':(change>=0?'+':'')+number(change*100,1)+' cm'}}</small></div>
    <div><span>杜加最大流量</span><b>{{number(s.peakDujaM3s,1)}}<em>m³/s</em></b><small>{{time(s.peakDujaTime)}}</small></div>
    <div><span>溃口出流总量</span><b>{{number((s.outflowVolumeM3||0)/1e4,0)}}<em>万m³</em></b><small>预见期累计</small></div>
-   <button class="fr-grade" :style="grade?{'--g':COLORS[grade.color]}:{}" :class="{none:!grade}" @click="emit('warning')"><span>预警等级</span><b>{{grade?grade.grade+' '+({blue:'蓝色',yellow:'黄色',orange:'橙色',red:'红色'})[grade.color]:'未达预警'}}</b><small>{{grade?(grade.basis==='outflow'?'溃口出流':'湖位')+'首达 '+time(grade.firstTime):'查看等级标准 →'}}</small></button>
+   <div v-if="demo"><span>成果用途</span><b>现场演示</b><small>{{detail.hours}} 个逐小时结果</small></div>
+   <button v-else class="fr-grade" :style="grade?{'--g':COLORS[grade.color]}:{}" :class="{none:!grade}" @click="emit('warning')"><span>预警等级</span><b>{{grade?grade.grade+' '+({blue:'蓝色',yellow:'黄色',orange:'橙色',red:'红色'})[grade.color]:'未达预警'}}</b><small>{{grade?(grade.basis==='outflow'?'溃口出流':'湖位')+'首达 '+time(grade.firstTime):'查看等级标准 →'}}</small></button>
   </div>
   <div class="fr-charts">
    <div class="fr-card"><h4>色林错湖位 <small>近60天实况 + 预报（日均）</small></h4><Chart :rows="levelRows" :series="levelSeries" unit="m" :day="issueDay" :include="levelExtent" :context="'fr-level:'+detail.id"/></div>
@@ -74,6 +77,7 @@ const issueDay=computed(()=>detail.value?.issueTime?.slice(0,10))
 <style scoped>
 .fr-head{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}
 .fr-head label{flex:0 1 520px}
+.fr-demo-title h3{margin:0 0 4px}.fr-demo-title small{color:var(--muted)}
 .fr-meta{font-size:13px;color:var(--muted);padding-bottom:10px}
 .fr-risk{order:3;margin-left:auto}
 .fr-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:20px}
