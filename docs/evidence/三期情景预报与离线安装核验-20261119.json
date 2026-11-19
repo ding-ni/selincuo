@@ -1,0 +1,327 @@
+{
+  "version": "0.14.4",
+  "verifiedAt": "2026-11-19T18:18:08.4198824+08:00",
+  "branch": "codex/round3-parameter-audit-20261028",
+  "installer": {
+    "path": "releases/v0.14.4-20261119/色林错预警预报平台-v0.14.4-Setup.exe",
+    "bytes": 1014613635,
+    "windows": "x64",
+    "deliveryFiles": 1,
+    "compile": "passed",
+    "installedVerification": "passed",
+    "installationSeconds": 114.2031381,
+    "firstStartupSeconds": 7.7102202,
+    "restartRequired": false,
+    "deliveryCopyVerified": true
+  },
+  "frozenRelease": {
+    "manifestEntries": 9144,
+    "selfCheck": "passed",
+    "modelCheck": 0.0,
+    "defaultResultId": "JOB-05c3f62282ce4239aed1",
+    "schemeId": "SCHEME-2c4816223d4b47cfb3cd",
+    "lakeModelId": "LAKE-1eca494c917349eab34d",
+    "seedCounts": {
+      "stations": 8,
+      "sources": 33,
+      "observations": 59119,
+      "input_products": 2,
+      "parameter_versions": 1,
+      "tasks": 0,
+      "states": 0
+    },
+    "rawObservationFiles": 33,
+    "originalDemResolutionM": 90,
+    "overflowReplayYears": [
+      2023,
+      2024
+    ]
+  },
+  "forecast": {
+    "issueTime": "2026-10-21T00:00:00",
+    "timeZone": "Asia/Shanghai",
+    "initialLakeLevelM": 4544.138051462141,
+    "forcing": "前10天为手工雨温情景，后5天参考2017—2025年ERA5-Land同期",
+    "referenceInputId": "INPUT-67a56a9abcc50dc4a9033ab6",
+    "overlapHourlyForcingLakeAndFlowIdentical": true,
+    "manualDailyInputs": [
+      {
+        "date": "2026-10-21",
+        "precipitationMm": 1.2,
+        "temperatureC": 3
+      },
+      {
+        "date": "2026-10-22",
+        "precipitationMm": 2.3,
+        "temperatureC": 3.3
+      },
+      {
+        "date": "2026-10-23",
+        "precipitationMm": 3.5,
+        "temperatureC": 3.6
+      },
+      {
+        "date": "2026-10-24",
+        "precipitationMm": 4.7,
+        "temperatureC": 3.9
+      },
+      {
+        "date": "2026-10-25",
+        "precipitationMm": 5.8,
+        "temperatureC": 4.2
+      },
+      {
+        "date": "2026-10-26",
+        "precipitationMm": 5.8,
+        "temperatureC": 4.5
+      },
+      {
+        "date": "2026-10-27",
+        "precipitationMm": 4.7,
+        "temperatureC": 4.8
+      },
+      {
+        "date": "2026-10-28",
+        "precipitationMm": 3.5,
+        "temperatureC": 5.1
+      },
+      {
+        "date": "2026-10-29",
+        "precipitationMm": 2.3,
+        "temperatureC": 5.4
+      },
+      {
+        "date": "2026-10-30",
+        "precipitationMm": 1.2,
+        "temperatureC": 5.7
+      }
+    ],
+    "results": [
+      {
+        "id": "FORECAST-d9b9102bb6414e5ebb33",
+        "inputId": "FWEATHER-f5b1b0b9dcd64f61912e",
+        "name": "10月21日起报 · 7天情景预报",
+        "hours": 168,
+        "start": "2026-10-21T01:00:00",
+        "end": "2026-10-28T00:00:00",
+        "summary": {
+          "peakInflowM3s": 96.86546777273773,
+          "maximumMedianLevel": 4544.145318087011,
+          "maximumMedianLevelTime": "2026-10-28T00:00:00",
+          "maximumControlLevel": 4544.145318087011,
+          "finalMedianLevel": 4544.145318087011,
+          "peakDujaM3s": 46.80710443592423,
+          "peakDujaTime": "2026-10-28T00:00:00",
+          "outflowVolumeM3": 4691593.234910884,
+          "forecastDays": 7.0
+        },
+        "diagnostics": [
+          {
+            "memberId": "control",
+            "landBalanceMaximumMm": 8.705675069720087E-13,
+            "routingBalanceMaximumM3": 2.980232238769531E-08,
+            "excludedVolumeM3": 0.0
+          }
+        ]
+      },
+      {
+        "id": "FORECAST-f6a07c18727445588f88",
+        "inputId": "FWEATHER-22225330e6fd4202a652",
+        "name": "10月21日起报 · 10天情景预报",
+        "hours": 240,
+        "start": "2026-10-21T01:00:00",
+        "end": "2026-10-31T00:00:00",
+        "summary": {
+          "peakInflowM3s": 114.5022216107172,
+          "maximumMedianLevel": 4544.149630299667,
+          "maximumMedianLevelTime": "2026-10-30T11:00:00",
+          "maximumControlLevel": 4544.149630299667,
+          "finalMedianLevel": 4544.149148325606,
+          "peakDujaM3s": 53.49322649947885,
+          "peakDujaTime": "2026-10-29T19:00:00",
+          "outflowVolumeM3": 6879983.822248823,
+          "forecastDays": 10.0
+        },
+        "diagnostics": [
+          {
+            "memberId": "control",
+            "landBalanceMaximumMm": 8.705675069720087E-13,
+            "routingBalanceMaximumM3": 3.725290298461914E-08,
+            "excludedVolumeM3": 0.0
+          }
+        ]
+      },
+      {
+        "id": "FORECAST-473c94d4dbfc433eb983",
+        "inputId": "FWEATHER-923188afa81d4e2c8351",
+        "name": "10月21日起报 · 15天情景预报",
+        "hours": 360,
+        "start": "2026-10-21T01:00:00",
+        "end": "2026-11-05T00:00:00",
+        "summary": {
+          "peakInflowM3s": 114.5022216107172,
+          "maximumMedianLevel": 4544.149675790208,
+          "maximumMedianLevelTime": "2026-10-31T11:00:00",
+          "maximumControlLevel": 4544.149675790208,
+          "finalMedianLevel": 4544.1466732096005,
+          "peakDujaM3s": 53.49322649947885,
+          "peakDujaTime": "2026-10-29T19:00:00",
+          "outflowVolumeM3": 10540962.827600215,
+          "forecastDays": 15.0
+        },
+        "diagnostics": [
+          {
+            "memberId": "control",
+            "landBalanceMaximumMm": 8.705675069720087E-13,
+            "routingBalanceMaximumM3": 5.960464477539063E-08,
+            "excludedVolumeM3": 0.0
+          }
+        ]
+      }
+    ]
+  },
+  "browser": {
+    "network": "local-only",
+    "port": 8899,
+    "viewports": [
+      {
+        "window": [
+          1366,
+          768
+        ],
+        "forecasts": [
+          {
+            "id": "FORECAST-d9b9102bb6414e5ebb33",
+            "hours": 168,
+            "days": 7,
+            "firstDay": "2026-10-21",
+            "lastDay": "2026-10-27",
+            "end": "2026-10-28T00:00:00",
+            "weatherSource": "手工雨温情景"
+          },
+          {
+            "id": "FORECAST-f6a07c18727445588f88",
+            "hours": 240,
+            "days": 10,
+            "firstDay": "2026-10-21",
+            "lastDay": "2026-10-30",
+            "end": "2026-10-31T00:00:00",
+            "weatherSource": "手工雨温情景"
+          },
+          {
+            "id": "FORECAST-473c94d4dbfc433eb983",
+            "hours": 360,
+            "days": 15,
+            "firstDay": "2026-10-21",
+            "lastDay": "2026-11-04",
+            "end": "2026-11-05T00:00:00",
+            "weatherSource": "前10天为手工雨温情景，后5天参考2017—2025年ERA5-Land同期"
+          }
+        ],
+        "externalRequests": [],
+        "pageErrors": [],
+        "httpErrors": [],
+        "businessWrites": [],
+        "riskForecastIds": [
+          "FORECAST-d9b9102bb6414e5ebb33",
+          "FORECAST-f6a07c18727445588f88",
+          "FORECAST-473c94d4dbfc433eb983"
+        ],
+        "exposures": [
+          "OSM道路 · 215 项",
+          "OSM居民点 · 63 项"
+        ],
+        "historicalRoad": {
+          "date": "2023-10-06",
+          "impact": "道路沿线受淹\n532 m\n预计断行 0 m"
+        }
+      },
+      {
+        "window": [
+          1920,
+          1080
+        ],
+        "forecasts": [
+          {
+            "id": "FORECAST-d9b9102bb6414e5ebb33",
+            "hours": 168,
+            "days": 7,
+            "firstDay": "2026-10-21",
+            "lastDay": "2026-10-27",
+            "end": "2026-10-28T00:00:00",
+            "weatherSource": "手工雨温情景"
+          },
+          {
+            "id": "FORECAST-f6a07c18727445588f88",
+            "hours": 240,
+            "days": 10,
+            "firstDay": "2026-10-21",
+            "lastDay": "2026-10-30",
+            "end": "2026-10-31T00:00:00",
+            "weatherSource": "手工雨温情景"
+          },
+          {
+            "id": "FORECAST-473c94d4dbfc433eb983",
+            "hours": 360,
+            "days": 15,
+            "firstDay": "2026-10-21",
+            "lastDay": "2026-11-04",
+            "end": "2026-11-05T00:00:00",
+            "weatherSource": "前10天为手工雨温情景，后5天参考2017—2025年ERA5-Land同期"
+          }
+        ],
+        "externalRequests": [],
+        "pageErrors": [],
+        "httpErrors": [],
+        "businessWrites": [],
+        "riskForecastIds": [
+          "FORECAST-d9b9102bb6414e5ebb33",
+          "FORECAST-f6a07c18727445588f88",
+          "FORECAST-473c94d4dbfc433eb983"
+        ],
+        "exposures": [
+          "OSM道路 · 215 项",
+          "OSM居民点 · 63 项"
+        ],
+        "historicalRoad": {
+          "date": "2023-10-06",
+          "impact": "道路沿线受淹\n532 m\n预计断行 0 m"
+        }
+      }
+    ],
+    "registeredExposures": [
+      [
+        "road",
+        215
+      ],
+      [
+        "settlement",
+        63
+      ]
+    ],
+    "businessRecordsUnchanged": true,
+    "legacyDemoNavigationPresent": false
+  },
+  "retainedWorkspaceTest": {
+    "sourceVersion": "0.14.3",
+    "mode": "isolated-workspace-copy",
+    "result": {
+      "status": "supplemented",
+      "observations": 59119,
+      "adoptionPreserved": true,
+      "recycledPreserved": true,
+      "forecastHours": [
+        168,
+        240,
+        360
+      ],
+      "secondStart": "already-present"
+    }
+  },
+  "regression": {
+    "backendTargetedPassed": 79,
+    "frontendPassed": 70,
+    "frontendBuild": "passed",
+    "emptyOutDir": false
+  }
+}

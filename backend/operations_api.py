@@ -54,14 +54,6 @@ def get(server, path, query):
         if identifier == 'plan':
             return True, state_update.plan(db, {'end': query.get('end'), 'mode': query.get('mode')})
         return True, {'items': state_update.state_chain(db), 'today': state_update._today().isoformat()}
-    if path == 'risk-scenarios/demo':
-        from . import demo_examples
-        return True, demo_examples.catalog()
-    if path.startswith('demo/forecasts/'):
-        from . import demo_examples
-        forecast_id = path.removeprefix('demo/forecasts/')
-        history = forecast_id.endswith('/history')
-        return True, demo_examples.forecast(forecast_id.removesuffix('/history'), history=history)
     if root in ('forecast-inputs', 'forecasts'):
         from . import forecast_inputs, forecasts
         module = forecast_inputs if root == 'forecast-inputs' else forecasts
@@ -84,7 +76,7 @@ def get(server, path, query):
         if root == 'risk-results' and identifier.endswith('/exposures'):
             return True, risk_scenarios.result_exposures(db, identifier.split('/')[0])
         if root == 'risk-results' and identifier:
-            return True, risk_scenarios.result_detail(db, identifier)
+            return True, store.get(db, 'risk-results', identifier)
         if path == 'risk-scenarios/default':
             return True, risk_scenarios.default_scenario(db)
         if path == 'risk-scenarios/reference-outlets':

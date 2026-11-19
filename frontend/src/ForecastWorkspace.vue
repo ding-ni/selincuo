@@ -6,11 +6,10 @@ import WarningPanel from './WarningPanel.vue'
 import LakeCurvePanel from './LakeCurvePanel.vue'
 import StateUpdatePanel from './StateUpdatePanel.vue'
 import {api,number,fixed} from './api.mjs'
-const props=defineProps({boot:Object,busy:Boolean,initialDemo:Boolean})
+const props=defineProps({boot:Object,busy:Boolean})
 const emit=defineEmits(['refresh','navigate','forecast'])
 const tabs=[['state','实况更新'],['weather','未来气象'],['run','预报计算'],['results','预报成果'],['warning','预警发布'],['curve','水位库容']]
-const tab=ref(props.initialDemo?'demo':'state'),sources=ref([]),sourceId=ref(''),issue=ref(null),inputs=ref([]),forecasts=ref([]),inputId=ref(''),startLevel=ref('model'),selected=ref(''),error=ref(''),message=ref(''),pending=ref([]),working=ref(false)
-const demoForecast=ref(null),demoLoading=ref(true),demoError=ref('')
+const tab=ref('state'),sources=ref([]),sourceId=ref(''),issue=ref(null),inputs=ref([]),forecasts=ref([]),inputId=ref(''),startLevel=ref('model'),selected=ref(''),error=ref(''),message=ref(''),pending=ref([]),working=ref(false)
 let timer,disposed=false
 const source=computed(()=>sources.value.find(s=>s.id===sourceId.value))
 const weatherOpened=ref(false)
@@ -44,17 +43,12 @@ async function predict(){await run(async()=>{const check=await api('forecasts/pr
 async function poll(){if(!pending.value.length||disposed)return;for(const old of [...pending.value]){try{const task=await api('tasks/'+encodeURIComponent(old.id));const i=pending.value.findIndex(v=>v.id===old.id);if(i<0)continue
  if(task.status==='succeeded'){pending.value.splice(i,1);await loadLists();if(old.purpose==='forecast'){selected.value=task.result?.id||selected.value;tab.value='results';message.value='预报完成'}else{inputId.value=task.result?.id||inputId.value;message.value='集合预报已获取'}emit('refresh')}
  else if(['failed','cancelled','interrupted'].includes(task.status)){pending.value.splice(i,1);error.value=task.message||'任务未完成'}else pending.value[i]={...task,purpose:old.purpose}}catch(e){error.value=e.message}}}
-onMounted(()=>{run(load);loadDemo();timer=setInterval(poll,2500)})
-async function loadDemo(){
- try{const demo=await api('risk-scenarios/demo');if(!disposed)demoForecast.value=demo?.forecast||null}
- catch(e){if(!disposed)demoError.value=e.message}
- finally{if(!disposed)demoLoading.value=false}
-}
+onMounted(()=>{run(load);timer=setInterval(poll,2500)})
 onBeforeUnmount(()=>{disposed=true;clearInterval(timer)})
 </script>
 <template>
 <div class="fc">
- <section v-if="tab!=='demo'" class="fc-status" aria-label="起报状态">
+ <section class="fc-status" aria-label="起报状态">
   <div class="fc-cell wide" :class="{lag:issue?.lagDays>0}"><span>模型状态</span>
    <b>{{time(issue?.stateTime)}}</b>
    <small>{{stateAge}}<template v-if="issue?.stateForcing"> · {{issue.stateForcing}}</template></small></div>
@@ -64,13 +58,11 @@ onBeforeUnmount(()=>{disposed=true;clearInterval(timer)})
   <div class="fc-cell"><span>杜加实测流量</span><b>{{number(issue?.latest?.DUJA?.value,1)}}<em>m³/s</em></b><small>{{shortDate(issue?.latest?.DUJA?.time)}}</small></div>
   <div class="fc-cell"><span>溃口出流</span><b>{{number(outflowNow,1)}}<em>m³/s</em></b><small>堰顶 {{fixed(outlet?.currentCrestM,2)}} m · 水头 {{headNow==null?'—':fixed(headNow,2)+' m'}}</small></div>
  </section>
- <div v-if="issue?.lagDays>0&&tab!=='state'&&tab!=='demo'" class="fc-gap-badge">模型状态滞后今日 {{issue.lagDays}} 天，预报将从 {{time(issue?.stateTime)}} 起报。<button class="link" @click="tab='state'">先做实况更新 →</button></div>
- <nav class="workspace-tabs"><button v-for="[id,label] in tabs" :key="id" :class="{active:tab===id}" @click="tab=id">{{label}}</button><button v-if="demoForecast||tab==='demo'" :class="{active:tab==='demo'}" @click="tab='demo'">离线演示</button></nav>
- <template v-if="tab!=='demo'">
-  <p v-if="error" class="message error" role="alert">{{error}}<button @click="error=''">×</button></p>
-  <p v-if="message" class="message success" role="status">{{message}}<button @click="message=''">×</button></p>
-  <div v-for="task in pending" :key="task.id" class="running-strip"><b>{{task.purpose==='weather'?'获取集合预报':'预报计算'}}</b><span>{{task.message||'排队中'}}</span><progress :value="task.progress||0" max="100"/></div>
- </template>
+ <div v-if="issue?.lagDays>0&&tab!=='state'" class="fc-gap-badge">模型状态滞后今日 {{issue.lagDays}} 天，预报将从 {{time(issue?.stateTime)}} 起报。<button class="link" @click="tab='state'">先做实况更新 →</button></div>
+ <nav class="workspace-tabs"><button v-for="[id,label] in tabs" :key="id" :class="{active:tab===id}" @click="tab=id">{{label}}</button></nav>
+ <p v-if="error" class="message error" role="alert">{{error}}<button @click="error=''">×</button></p>
+ <p v-if="message" class="message success" role="status">{{message}}<button @click="message=''">×</button></p>
+ <div v-for="task in pending" :key="task.id" class="running-strip"><b>{{task.purpose==='weather'?'获取集合预报':'预报计算'}}</b><span>{{task.message||'排队中'}}</span><progress :value="task.progress||0" max="100"/></div>
 
  <StateUpdatePanel v-if="tab==='state'&&issue" @updated="stateUpdated" @error="error=$event" @navigate="v=>emit('navigate',v.split(':')[0])"/>
  <ForecastWeather v-if="weatherOpened" v-show="tab==='weather'" :issue="issue" :source-id="sourceId" :busy="working||busy" @saved="weatherSaved" @task="weatherTask" @navigate="emit('navigate',$event)" @error="error=$event"/>
@@ -105,10 +97,6 @@ onBeforeUnmount(()=>{disposed=true;clearInterval(timer)})
  </section>
 
  <ForecastResult v-if="tab==='results'" :forecasts="forecasts" v-model:selected="selected" @warning="tab='warning'" @risk="emit('navigate','risk',$event)"/>
- <template v-if="tab==='demo'">
-  <ForecastResult v-if="demoForecast" :forecasts="[demoForecast]" :selected="demoForecast.id" demo @risk="emit('navigate','risk','demo')"/>
-  <p v-else class="panel empty">{{demoLoading?'正在读取离线演示…':demoError||'暂无离线演示预报。'}}</p>
- </template>
  <WarningPanel v-if="tab==='warning'" :forecasts="forecasts" v-model:selected="selected"/>
  <LakeCurvePanel v-if="tab==='curve'" :level="issue?.stateLakeLevelM"/>
 </div>

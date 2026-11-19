@@ -1,4 +1,4 @@
-"""Non-destructive launcher-only installation of a missing frozen seed input."""
+"""Initialize a packaged workspace and supplement missing release records."""
 from contextlib import contextmanager
 import json
 from pathlib import Path
@@ -56,6 +56,54 @@ def _missing_lake_rows(connection, rows, current_result_id):
         if found:
             return rows[1:] if json.loads(found[0]) == json.loads(curve[5]) else ()
     return rows
+
+
+def bundled_forecast_rows(connection, items):
+    """Load the forecast, weather and required files listed in the release seed."""
+    rows = {}
+    for item in items:
+        hours = item['days'] * 24
+        for collection, identifier, directory, manifest in (
+                ('forecast-inputs', item['inputId'], '预报气象', '气象输入说明.json'),
+                ('forecasts', item['id'], '水文预报', '预报结果.json')):
+            record = connection.execute('SELECT * FROM operational_records WHERE collection=? AND id=?',
+                                        (collection, identifier)).fetchone()
+            if record is None:
+                raise ValueError('发行种子缺少预报记录：'+identifier)
+            row = tuple(record)
+            payload = json.loads(row[-1])
+            if payload.get('hours') != hours or payload.get('trashed'):
+                raise ValueError('发行种子的预报记录与清单不一致：'+identifier)
+            if collection == 'forecasts':
+                if payload.get('inputId') != item['inputId']:
+                    raise ValueError('发行种子的预报与气象编号不一致：'+identifier)
+                paths = [payload['memberArtifact']['path'],
+                         *(member['path'] for member in payload['memberCheckpointIndex'])]
+            else:
+                paths = [payload['dataPath']]
+            folder = Path(directory)/identifier
+            paths = tuple(Path(path) for path in paths)
+            if any(path.parent != folder for path in paths):
+                raise ValueError('发行预报文件与记录目录不一致：'+identifier)
+            rows[(collection, identifier)] = (row, (*paths, folder/manifest))
+    return tuple(rows.values())
+
+
+def _copy_forecast_artifacts(seed, workspace, paths):
+    folder = paths[0].parent
+    source = within(seed, folder)
+    destination = within(workspace, folder)
+    if destination.exists():
+        if all((destination/path.name).is_file() and
+               (destination/path.name).read_bytes() == (source/path.name).read_bytes() for path in paths):
+            return
+        raise ValueError('既有预报文件与发行资料冲突，未覆盖：'+folder.as_posix())
+    stage = workspace/'upgrade-staging'/uuid.uuid4().hex
+    stage.mkdir(parents=True)
+    for path in paths:
+        shutil.copy2(source/path.name, stage/path.name)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    stage.rename(destination)
 
 
 @contextmanager
@@ -176,7 +224,7 @@ def _copy_input(seed, workspace, identifier, manifest):
 
 
 def supplement_business_default(workspace, seed, app_root):
-    """Add one packaged business scheme without replacing any existing adoption."""
+    """Add packaged business records without replacing existing records or adoption."""
     workspace=Path(workspace).resolve();app_root=Path(app_root).resolve()
     packaged=_package_business(seed)
     if not packaged:return {'status':'no-business-default','changed':False}
@@ -190,6 +238,8 @@ def supplement_business_default(workspace, seed, app_root):
         selected=origin.execute('SELECT value FROM settings WHERE key=?',('business-adopted-scheme-v1',)).fetchone()
         product_row=origin.execute('SELECT id,name,created_at,manifest FROM input_products WHERE id=?',(business['inputId'],)).fetchone()
         lake_rows=active_lake_seed_rows(origin) if business.get('lakeModelId') else ()
+        forecast_items=report.get('bundledForecasts', ())
+        seed_forecasts=bundled_forecast_rows(origin,forecast_items)
         if not all((scheme_row,parameter_row,selected,product_row)):
             raise ValueError('发行种子缺少业务方案、参数、输入或采用关系')
         scheme={key:scheme_row[key] for key in scheme_row.keys()}
@@ -256,6 +306,16 @@ def supplement_business_default(workspace, seed, app_root):
             if not current:changed=True
         lake_to_add=_missing_lake_rows(connection,lake_rows,(current_selection or selection).get('resultId'))
         if lake_to_add:changed=True
+        forecast_to_add=seed_forecasts
+        if seed_forecasts and operational_table_exists(connection):
+            forecast_to_add=tuple((row,paths) for row,paths in seed_forecasts if not connection.execute(
+                'SELECT 1 FROM operational_records WHERE collection=? AND id=?',row[:2]).fetchone())
+        if forecast_to_add:
+            for _,paths in forecast_to_add:
+                for path in paths:
+                    if not within(seed,path).is_file():
+                        raise ValueError('发行种子缺少预报文件：'+path.as_posix())
+            changed=True
         current_forcing=connection.execute('SELECT value FROM settings WHERE key=?',('current-model-forcing',)).fetchone()
         preserve_forcing=False
         if current_forcing:
@@ -281,6 +341,8 @@ def supplement_business_default(workspace, seed, app_root):
         with sqlite3.connect(backup) as target:connection.backup(target)
         if not destination.exists():
             _,added_input=_copy_input(seed,workspace,business['inputId'],manifest)
+        for _,paths in forecast_to_add:
+            _copy_forecast_artifacts(seed,workspace,paths)
         with connection:
             connection.execute('BEGIN IMMEDIATE')
             connection.execute('INSERT OR IGNORE INTO schemes VALUES(?,?,?,?)',
@@ -298,9 +360,10 @@ def supplement_business_default(workspace, seed, app_root):
                                     'source':'packaged-business-default'})))
             connection.execute('INSERT OR IGNORE INTO settings VALUES(?,?)',
                                ('scheme-purpose:'+selection['familyId'],canonical('business')))
-            if lake_to_add:
+            if lake_to_add or forecast_to_add:
                 create_schema(connection)
-                connection.executemany('INSERT INTO operational_records VALUES(?,?,?,?,?,?)',lake_to_add)
+                connection.executemany('INSERT INTO operational_records VALUES(?,?,?,?,?,?)',
+                                       (*lake_to_add,*(row for row,_ in forecast_to_add)))
             connection.execute('INSERT INTO audit(at,action,payload) VALUES(?,?,?)',
                                (now(),'workspace.business-default-supplement',canonical({
                                    'schemeId':business['schemeId'],'parameterId':business['parameterId'],
@@ -308,6 +371,7 @@ def supplement_business_default(workspace, seed, app_root):
                                    'adoptionSet':not current,'previousAdoptionPreserved':bool(current_selection),
                                    'forcingSet':set_forcing,'previousForcingPreserved':preserve_forcing,
                                    'addedLakeModelId':lake_to_add[-1][1] if lake_to_add else None,
+                                   'addedForecastIds':[row[1] for row,_ in forecast_to_add if row[0]=='forecasts'],
                                    'backup':str(backup)})))
     return {'status':'supplemented','schemeId':business['schemeId'],'inputId':business['inputId'],
             'adoptionPreserved':bool(current_selection),'currentForcingPreserved':preserve_forcing,

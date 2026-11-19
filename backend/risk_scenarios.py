@@ -5,6 +5,7 @@ import io
 import json
 import math
 from pathlib import Path
+from threading import Lock
 import zipfile
 
 import numpy as np
@@ -78,38 +79,61 @@ def default_scenario(db):
 
 
 EXPOSURE_BUNDLE = ROOT / 'data/derived/spatial/承灾体'
+_EXPOSURE_REGISTRATION = Lock()
+_OSM_SOURCE = 'OpenStreetMap contributors / ODbL'
 
 
 def ensure_bundled_exposures(db):
     """Register the OSM roads and settlements shipped with the installation, once per workspace."""
-    index = read_json(EXPOSURE_BUNDLE / '承灾体资料.json') if (EXPOSURE_BUNDLE / '承灾体资料.json').is_file() else None
-    if not index:
+    with _EXPOSURE_REGISTRATION:
+        index = read_json(EXPOSURE_BUNDLE / '承灾体资料.json')
+        if not index:
+            return []
+        have = {r.get('bundleFile') for r in store.list_records(db, 'exposures')}
+        added = []
+        for item in index.get('adopted', []):
+            if item['file'] in have:
+                continue
+            value = read_json(EXPOSURE_BUNDLE / item['file'])
+            if not value or not value.get('features'):
+                continue
+            added.append(import_exposure(db, {'name': item['name'], 'kind': item['kind'], 'geojson': value,
+                'source': f"{index['source']} / {index['license']} / 下载 {item['downloadedAtUTC']}"}, bundle_file=item['file']))
+            have.add(item['file'])
+        return added
+
+
+def _exposure_choices(db):
+    """One choice per shipped source file; older IDs still identify the saved records."""
+    choices, bundled, aliases = [], {}, {}
+    for record in store.list_records(db, 'exposures'):
+        source = record.get('bundleFile') if record.get('builtin') else None
+        if source and source in bundled:
+            aliases[record['id']] = bundled[source]
+            continue
+        if source:
+            bundled[source] = record['id']
+        choices.append(record)
+    return choices, aliases
+
+
+def _unique_exposure_ids(db, identifiers):
+    if not identifiers:
         return []
-    existing = store.list_records(db, 'exposures')
-    have = {r.get('bundleFile') for r in existing}
-    added = []
-    for item in index.get('adopted', []):
-        if item['file'] in have:
-            continue
-        value = read_json(EXPOSURE_BUNDLE / item['file'])
-        if not value or not value.get('features'):
-            continue
-        record = import_exposure(db, {'name': item['name'], 'kind': item['kind'], 'geojson': value,
-                                      'source': f"{index['source']} / {index['license']} / 下载 {item['downloadedAtUTC']}"})
-        added.append(store.save(db, 'exposures', {**record, 'bundleFile': item['file'], 'builtin': True}, identifier=record['id']))
-    return added
+    _, aliases = _exposure_choices(db)
+    return list(dict.fromkeys(aliases.get(identifier, identifier) for identifier in identifiers))
 
 
 def exposure_ids(db):
     ensure_bundled_exposures(db)
-    return [r['id'] for r in store.list_records(db, 'exposures')]
+    return [r['id'] for r in _exposure_choices(db)[0]]
 
 
 def catalog(db):
     ensure_bundled_exposures(db)
     return {'scenarios': store.list_records(db, COLLECTION),
             'results': store.list_records(db, RESULTS),
-            'exposures': store.list_records(db, 'exposures'),
+            'exposures': _exposure_choices(db)[0],
             'terrainAvailable': bool(_dem_paths()), 'method': METHOD}
 
 
@@ -130,7 +154,7 @@ def save_scenario(db, payload, identifier=None):
     value['mode'] = 'scenario'
     value['datumSource'] = str(value.get('datumSource') or '演示情景高程偏移，未经实测核定')
     value['method'] = METHOD
-    value['exposureIds'] = list(dict.fromkeys(value.get('exposureIds') or []))
+    value['exposureIds'] = _unique_exposure_ids(db, value.get('exposureIds'))
     alternatives = []
     for item in value.get('alternatives') or []:
         candidate = {**value['outlet'], **item}
@@ -145,13 +169,6 @@ def save_scenario(db, payload, identifier=None):
 
 def detail(db, identifier):
     return store.get(db, COLLECTION, identifier)
-
-
-def result_detail(db, identifier):
-    if identifier.startswith('DEMO-RISK-RUN-'):
-        from . import demo_examples
-        return demo_examples.risk_result(identifier)
-    return store.get(db, RESULTS, identifier)
 
 
 def weir_discharge(level_m, outlet):
@@ -371,6 +388,7 @@ def assess_exposures(db, exposure_ids, depth, terrain):
 
 def run(db, request, folder=None, progress=None, cancelled=None):
     scenario = detail(db, request['scenarioId'])
+    scenario['exposureIds'] = _unique_exposure_ids(db, scenario.get('exposureIds'))
     source = _forecast_source(db, request['forecastId'])
     times, inflow, rain, evap, initial, curve = _series_source(source)
     current = initial
@@ -443,15 +461,7 @@ def run(db, request, folder=None, progress=None, cancelled=None):
 
 def result_exposures(db, identifier):
     """Return the road and point data selected for this saved run."""
-    result = result_detail(db, identifier)
-    if identifier.startswith('DEMO-RISK-RUN-'):
-        from . import demo_examples
-        selected = set(result['scenario']['exposureIds'])
-        return {'items': [
-            {'id': record['id'], 'source': record['source'],
-             'features': read_json(within(EXPOSURE_BUNDLE, record['bundleFile']))['features']}
-            for record in demo_examples.index()['exposures'] if record['id'] in selected
-        ]}
+    result = store.get(db, RESULTS, identifier)
     items = []
     for exposure_id in result['scenario'].get('exposureIds', []):
         record = store.get(db, 'exposures', exposure_id)
@@ -461,14 +471,9 @@ def result_exposures(db, identifier):
 
 
 def terrain_frame(db, identifier, index=0, depth_only=False):
-    value = result_detail(db, identifier)
-    if identifier.startswith('DEMO-RISK-RUN-'):
-        from .demo_examples import DEMO_ROOT
-        directory = DEMO_ROOT
-    else:
-        directory = db.workspace
+    value = store.get(db, RESULTS, identifier)
     index = int(index)
-    with np.load(within(directory, value['path']), allow_pickle=False) as arrays:
+    with np.load(within(db.workspace, value['path']), allow_pickle=False) as arrays:
         picks = arrays['frameRows'].tolist() if 'frameRows' in arrays else list(range(len(value['rows'])))
         if not 0 <= index < len(picks):
             raise ValueError('回放时刻超出结果范围')
@@ -489,8 +494,8 @@ def terrain_frame(db, identifier, index=0, depth_only=False):
                 'outlet': value['scenario']['outlet'], 'demOffsetM': value['scenario']['demOffsetM']}
 
 
-def import_exposure(db, payload):
-    from shapely.geometry import shape, mapping
+def import_exposure(db, payload, *, bundle_file=None):
+    from shapely.geometry import shape
     value = payload.get('geojson')
     if value is None:
         filename = str(payload.get('filename') or '')
@@ -515,13 +520,16 @@ def import_exposure(db, payload):
             raise ValueError('承灾体几何为空或无效')
         if not (-180 <= geometry.bounds[0] <= geometry.bounds[2] <= 180 and -90 <= geometry.bounds[1] <= geometry.bounds[3] <= 90):
             raise ValueError('GeoJSON须使用WGS84经纬度')
-    record = store.save(db, 'exposures', {'name': str(payload.get('name') or '承灾体资料'),
+    from uuid import uuid4
+    identifier = 'EXPOSURE-' + uuid4().hex[:20]
+    path = 'risk-exposures/' + identifier + '.geojson'
+    record = {'name': str(payload.get('name') or '承灾体资料'),
         'kind': payload.get('kind', 'facility'), 'source': str(payload.get('source') or payload.get('filename') or '用户导入'),
-        'featureCount': len(value['features']), 'coordinateSystem': 'EPSG:4326'}, prefix='EXPOSURE-')
-    path = db.workspace/'risk-exposures'/(record['id']+'.geojson')
-    write_json(path, value)
-    record['path'] = str(path.relative_to(db.workspace)).replace('\\','/')
-    return store.save(db, 'exposures', record, identifier=record['id'])
+        'featureCount': len(value['features']), 'coordinateSystem': 'EPSG:4326', 'path': path}
+    if bundle_file:
+        record.update(bundleFile=bundle_file, builtin=True)
+    write_json(db.workspace / path, value)
+    return store.save(db, 'exposures', record, identifier=identifier)
 
 
 def fetch_osm(db, request, folder=None, progress=None, cancelled=None):
@@ -564,11 +572,19 @@ def fetch_osm(db, request, folder=None, progress=None, cancelled=None):
             geometry = {'type': 'Point', 'coordinates': [point['lon'], point['lat']]}
         features[kind].append({'type': 'Feature', 'id': str(element['id']), 'geometry': geometry,
                               'properties': {'name': tags.get('name', ''), **tags}})
-    records = [import_exposure(db, {'name': 'OSM道路' if kind == 'road' else 'OSM居民点', 'kind': kind,
-        'source': 'OpenStreetMap contributors / ODbL / '+now(),
-        'geojson': {'type': 'FeatureCollection', 'features': rows}})
-        for kind, rows in features.items() if rows]
-    return {'exposures': records, 'source': 'OpenStreetMap contributors / ODbL',
+    records = []
+    with _EXPOSURE_REGISTRATION:
+        existing = _exposure_choices(db)[0]
+        for kind, rows in features.items():
+            if not rows:
+                continue
+            value = {'type': 'FeatureCollection', 'features': rows}
+            match = next((r for r in existing if r['kind'] == kind and r['featureCount'] == len(rows)
+                          and r['source'].startswith(_OSM_SOURCE)
+                          and read_json(within(db.workspace, r['path'])) == value), None)
+            records.append(match or import_exposure(db, {'name': 'OSM道路' if kind == 'road' else 'OSM居民点',
+                'kind': kind, 'source': _OSM_SOURCE+' / '+now(), 'geojson': value}))
+    return {'exposures': records, 'source': _OSM_SOURCE,
             'featureCount': sum(r['featureCount'] for r in records)}
 
 

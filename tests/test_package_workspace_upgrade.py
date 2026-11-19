@@ -4,11 +4,11 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from backend.common import canonical, digest, sha_file, write_json
+from backend.common import canonical, digest, read_json, sha_file, write_json
 from backend.database import Database
 from backend.lake_curves import default_curve
 from backend.lake_revision import active
-from backend.operational_store import save
+from backend.operational_store import get, list_records, save, set_trashed
 from backend.workspace_upgrade import prepare_package_workspace
 from scripts.make_seed import ReadOnlySource, selected_lake_model
 
@@ -73,6 +73,30 @@ class PackageWorkspaceUpgradeTests(unittest.TestCase):
         self.business.update(lakeModelId=model['id'],lakeCurveId=model['curveId'],lakeModelStateTime=model['endState']['time'])
         write_json(self.seed/'seed-report.json',{'schemaVersion':2,'projectId':'selinco','businessDefault':self.business})
         return model
+
+    def add_forecasts_to_seed(self):
+        db=Database(self.seed)
+        report=read_json(self.seed/'seed-report.json')
+        items=[]
+        for days in (7,10,15):
+            forecast_id=f'FORECAST-package-{days}'
+            input_id=f'FWEATHER-package-{days}'
+            weather_folder=f'预报气象/{input_id}'
+            forecast_folder=f'水文预报/{forecast_id}'
+            weather=save(db,'forecast-inputs',{'name':f'{days}天气象','hours':days*24,
+                         'dataPath':weather_folder+'/逐时气象.npz'},identifier=input_id)
+            forecast=save(db,'forecasts',{'name':f'{days}天情景预报','hours':days*24,'inputId':input_id,
+                           'memberArtifact':{'path':forecast_folder+'/逐时集合预报.npz'},
+                           'memberCheckpointIndex':[{'path':forecast_folder+'/成员末状态-control.json'}]},
+                          identifier=forecast_id)
+            write_json(self.seed/weather_folder/'气象输入说明.json',weather)
+            write_json(self.seed/forecast_folder/'预报结果.json',forecast)
+            write_json(self.seed/forecast_folder/'成员末状态-control.json',{'forecastInputId':input_id})
+            (self.seed/weather['dataPath']).write_bytes(f'weather-{days}'.encode())
+            (self.seed/forecast['memberArtifact']['path']).write_bytes(f'forecast-{days}'.encode())
+            items.append({'id':forecast_id,'inputId':input_id,'days':days})
+        write_json(self.seed/'seed-report.json',{**report,'bundledForecasts':items})
+        return items
 
     def test_fresh_install_copies_complete_frozen_seed(self):
         workspace=self.root/'fresh/workspace'
@@ -188,6 +212,44 @@ class PackageWorkspaceUpgradeTests(unittest.TestCase):
         prepare_package_workspace(workspace,self.seed,self.app)
         self.assertFalse(db.rows("SELECT name FROM sqlite_master WHERE name='operational_records'"))
         self.assertEqual(db.setting('business-adopted-scheme-v1')['resultId'],'JOB-different')
+
+    def test_upgrade_appends_packaged_forecasts_preserving_user_and_recycled_records(self):
+        workspace=self.root/'existing/workspace'
+        prepare_package_workspace(workspace,self.seed,self.app)
+        db=Database(workspace)
+        items=self.add_forecasts_to_seed()
+        user=save(db,'forecasts',{'name':'本机预报'},identifier='FORECAST-local')
+        recycled_id=items[-1]['id']
+        save(db,'forecasts',{'name':'本机已回收成果'},identifier=recycled_id)
+        recycled=set_trashed(db,'forecasts',recycled_id,True)
+        adoption=db.setting('business-adopted-scheme-v1')
+        result=prepare_package_workspace(workspace,self.seed,self.app)
+        self.assertEqual(result['status'],'supplemented')
+        self.assertEqual(adoption,db.setting('business-adopted-scheme-v1'))
+        self.assertEqual(get(db,'forecasts',user['id']),user)
+        self.assertEqual(list_records(db,'forecasts',trashed=True),[recycled])
+        self.assertFalse((workspace/'水文预报'/recycled_id).exists())
+        for item in items[:2]:
+            saved=get(db,'forecasts',item['id'])
+            weather=get(db,'forecast-inputs',item['inputId'])
+            self.assertEqual(saved['hours'],item['days']*24)
+            for path in (weather['dataPath'],saved['memberArtifact']['path'],
+                         saved['memberCheckpointIndex'][0]['path']):
+                self.assertEqual((workspace/path).read_bytes(),(self.seed/path).read_bytes())
+        self.assertEqual(prepare_package_workspace(workspace,self.seed,self.app)['status'],'already-present')
+
+    def test_upgrade_rejects_missing_forecast_checkpoint_before_registering_records(self):
+        workspace=self.root/'existing/workspace'
+        prepare_package_workspace(workspace,self.seed,self.app)
+        items=self.add_forecasts_to_seed()
+        db=Database(self.seed)
+        record=get(db,'forecasts',items[-1]['id'])
+        record['memberCheckpointIndex'][0]['path']=f"水文预报/{record['id']}/缺失的成员末状态.json"
+        save(db,'forecasts',record)
+        with self.assertRaisesRegex(ValueError,'缺少预报文件'):
+            prepare_package_workspace(workspace,self.seed,self.app)
+        self.assertFalse((workspace/'水文预报').exists())
+        self.assertFalse(Database(workspace).rows("SELECT 1 FROM sqlite_master WHERE name='operational_records'"))
 
 if __name__=='__main__':
     unittest.main()

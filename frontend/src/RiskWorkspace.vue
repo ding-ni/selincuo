@@ -5,21 +5,17 @@ import OverflowScene from './OverflowScene.vue'
 import OverflowMap2D from './OverflowMap2D.vue'
 import {loadOverflow,bangeRise,bangeArea,DEPTH_CLASSES,waterState,loadExposures,scenarioExposures,dailyFrameIndex,paintArchivedDepth,toLake,exposureImpact,peakRoadInundation,inEast,ROAD_RULE,ROAD_STATES} from './overflow-data.mjs'
 import {api,number,fixed} from './api.mjs'
-const props=defineProps({boot:Object,busy:Boolean,forecastId:String,initialDemo:Boolean})
+const props=defineProps({boot:Object,busy:Boolean,forecastId:String})
 const emit=defineEmits(['refresh','navigate'])
 const COLORS={blue:'#1677ff',yellow:'#f5c400',orange:'#ff7d00',red:'#f5222d'},NAMES={blue:'蓝色',yellow:'黄色',orange:'橙色',red:'红色'}
 const time=t=>t?String(t).replace('T',' ').slice(0,16):'—'
-const mode=ref(props.initialDemo?'demo':'replay'),view=ref('3d'),preset=ref('overview'),risk=ref(true),data=shallowRef(null),error=ref(''),notice=ref(''),index=ref(0),playing=ref(false),speed=ref(10)
-const forecasts=ref([]),rules=ref(null),liveResult=shallowRef(null),pending=ref(null),savedFrame=shallowRef(null),choice=ref(0),exposures=ref([]),working=ref(false),planMap=ref()
-const demoCases=shallowRef([]),demoResult=shallowRef(null),demoSelected=ref(''),demoLoading=ref(false),demoError=ref('')
-const result=computed(()=>mode.value==='demo'?demoResult.value:liveResult.value)
-const activeChoice=computed(()=>mode.value==='demo'?0:choice.value)
+const mode=ref('replay'),view=ref('3d'),preset=ref('overview'),risk=ref(true),data=shallowRef(null),error=ref(''),notice=ref(''),index=ref(0),playing=ref(false),speed=ref(10)
+const forecasts=ref([]),rules=ref(null),result=shallowRef(null),pending=ref(null),savedFrame=shallowRef(null),choice=ref(0),exposures=ref([]),working=ref(false),planMap=ref()
 const form=reactive({forecastId:'',initialLevelOffsetM:0,outlet:null,alternatives:[],exposureIds:[],scenarioId:''})
 let timer,poller,disposed=false
 const shipped=shallowRef(null),scenarioRoads=shallowRef(null),exposureError=ref(''),frameError=ref(''),frameRequests=new Map()
 onMounted(async()=>{
  const terrain=loadOverflow().then(value=>{if(disposed)return;data.value=value;return loadExposures(value.meta).then(v=>{if(!disposed)shipped.value=v})}).catch(e=>{if(!disposed)error.value=e.message})
- loadDemo()
  try{const [f,r,d,c]=await Promise.all([api('forecasts'),api('warnings/rules'),api('risk-scenarios/default'),api('risk-scenarios')]);if(disposed)return;forecasts.value=(f.items||[]).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));rules.value=r.items?.[0]||r.default;Object.assign(form,{forecastId:forecasts.value[0]?.id||'',outlet:d.outlet,alternatives:d.alternatives,exposureIds:[...(d.exposureIds||[])],defaults:d});exposures.value=c.exposures||[];const live=new Set(forecasts.value.map(f=>f.id)),sorted=(c.results||[]).filter(r=>live.has(r.forecastId)).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)))
   if(props.forecastId){
    // Arriving from a forecast: open its scenario, computing it once if needed.
@@ -36,16 +32,9 @@ const replay=computed(()=>meta.value?.replay)
 const replayFrames=computed(()=>(replay.value?.frames||[]).map(f=>({date:f.d,lake:f.H??f.Ho,observed:f.Ho,base:replay.value.frames[0].H,outflow:f.Q,volumeKm3:f.V,bangeRiseM:f.Hb,bangeAreaKm2:f.Ab,width:f.width,crest:f.crest,inflow:f.I})))
 function scenarioFrames(c){if(!c?.series||!meta.value)return [];let v=0;const out=[];c.series.dates.forEach((d,i)=>{v+=(c.series.outflow[i]||0)*86400/1e9;const rise=bangeRise(meta.value,v);out.push({date:d,lake:c.series.level[i],base:result.value?.currentLevelM??c.initialLevelM,outflow:c.series.outflow[i],volumeKm3:v,bangeRiseM:rise,bangeAreaKm2:bangeArea(meta.value,rise),crest:c.outlet?.crestM,width:c.outlet?.widthM})});return out}
 const comparisons=computed(()=>result.value?.comparisons||[])
-const frames=computed(()=>mode.value==='replay'?replayFrames.value:scenarioFrames(comparisons.value[activeChoice.value]))
+const frames=computed(()=>mode.value==='replay'?replayFrames.value:scenarioFrames(comparisons.value[choice.value]))
 const frame=computed(()=>frames.value[Math.min(index.value,frames.value.length-1)]||null)
-const demoPeakIndex=computed(()=>mode.value==='demo'?demoResult.value?.peakFrame:null)
-const demoPeakRow=computed(()=>demoPeakIndex.value!=null?demoResult.value?.rows[demoResult.value.frameRows[demoPeakIndex.value]]:null)
-const demoPeakTime=computed(()=>demoPeakRow.value?.time)
-const demoPeakDay=computed(()=>demoPeakTime.value?new Date(Date.parse(demoPeakTime.value.replace(' ','T').slice(0,19)+'Z')-3600000).toISOString().slice(0,10):'')
-watch([mode,activeChoice,demoPeakDay,meta],()=>{
- const peak=mode.value==='demo'?frames.value.findIndex(f=>f.date===demoPeakDay.value):-1
- index.value=mode.value==='replay'?0:peak>=0?peak:Math.max(0,frames.value.length-1);playing.value=false
-})
+watch([mode,choice],()=>{index.value=mode.value==='replay'?0:Math.max(0,frames.value.length-1);playing.value=false})
 watch(playing,on=>{clearInterval(timer);if(on)timer=setInterval(()=>{if(index.value<frames.value.length-1)index.value++;else playing.value=false},1000/speed.value)})
 watch(speed,()=>{if(playing.value){playing.value=false;playing.value=true}})
 function jump(date){const i=frames.value.findIndex(f=>f.date===date);if(i>=0){index.value=i;playing.value=false}}
@@ -75,8 +64,8 @@ watch(scenarioId,async id=>{
 })
 const mapExposures=computed(()=>mode.value==='replay'?shipped.value:scenarioId.value&&scenarioRoads.value?.id===scenarioId.value?scenarioRoads.value.exposures:null)
 const frameKey=computed(()=>{
- if(!result.value||!frame.value||mode.value==='replay'||activeChoice.value!==0)return ''
- const k=mode.value==='demo'&&demoPeakIndex.value!=null&&frame.value.date===demoPeakDay.value?demoPeakIndex.value:dailyFrameIndex(result.value,frame.value.date)
+ if(!result.value||!frame.value||mode.value==='replay'||choice.value!==0)return ''
+ const k=dailyFrameIndex(result.value,frame.value.date)
  return k>=0?result.value.id+'/frame?index='+k:''
 })
 async function loadSavedFrame(key){
@@ -94,14 +83,6 @@ async function loadSavedFrame(key){
 }
 watch(frameKey,loadSavedFrame)
 const overlay=computed(()=>savedFrame.value?.key===frameKey.value?savedFrame.value:null)
-const showingDemoPeak=computed(()=>!!demoPeakTime.value&&overlay.value?.time===demoPeakTime.value)
-const hudFrame=computed(()=>{
- if(!showingDemoPeak.value)return frame.value
- const rows=demoResult.value.rows.slice(0,demoResult.value.frameRows[demoPeakIndex.value]+1)
- const volumeKm3=rows.reduce((sum,row)=>sum+row.totalOutflowM3,0)/1e9
- const bangeRiseM=bangeRise(meta.value,volumeKm3)
- return {...frame.value,lake:demoPeakRow.value.level,outflow:demoPeakRow.value.totalOutflowM3s,volumeKm3,bangeRiseM,bangeAreaKm2:bangeArea(meta.value,bangeRiseM)}
-})
 const sceneWater=computed(()=>{
  const w=water.value,o=overlay.value
  return view.value==='3d'&&w&&o?paintArchivedDepth({...w,state:w.state.slice(),depth:w.depth.slice()},meta.value.east,o):w
@@ -109,7 +90,7 @@ const sceneWater=computed(()=>{
 const sceneFrame=computed(()=>{
  if(!frame.value||mode.value==='replay')return frame.value
  const o=overlay.value
- return {...hudFrame.value,lake:o?toLake(meta.value,o.level+o.demOffsetM):frame.value.base}
+ return {...frame.value,lake:o?toLake(meta.value,o.level+o.demOffsetM):frame.value.base}
 })
 const roadStatus=computed(()=>{
  if(!scenarioId.value||!frame.value)return ''
@@ -138,37 +119,21 @@ async function showReplayRoad(){
  index.value=replayRoad.value;playing.value=false
  await nextTick();locateRoad()
 }
-const scenarioGrade=computed(()=>{const c=comparisons.value[activeChoice.value];return c?grade(c.series.level,c.series.outflow):null})
+const scenarioGrade=computed(()=>{const c=comparisons.value[choice.value];return c?grade(c.series.level,c.series.outflow):null})
 async function action(fn){working.value=true;error.value='';notice.value='';try{await fn()}catch(e){error.value=e.message}finally{working.value=false}}
 async function run(){await action(async()=>{const d=form.defaults,payload={...d,name:form.initialLevelOffsetM?`起报湖位抬升 ${form.initialLevelOffsetM} m`:'现状溃口',initialLevelOffsetM:Number(form.initialLevelOffsetM),outlet:{...form.outlet},alternatives:form.alternatives.map(a=>({...a})),exposureIds:form.exposureIds}
  const scenario=await api('risk-scenarios'+(form.scenarioId?'/'+form.scenarioId:''),payload);form.scenarioId=scenario.id
  pending.value=await api('risk-scenarios/'+scenario.id+'/run',{forecastId:form.forecastId,clientRequestId:'risk-'+Date.now()});notice.value='正在计算漫溢情景'})}
 async function poll(){if(!pending.value?.id)return;try{const t=await api('tasks/'+pending.value.id);pending.value=t;if(t.status==='succeeded'){pending.value=null;if(t.result?.exposures){const c=await api('risk-scenarios');exposures.value=c.exposures||[];form.exposureIds=[...new Set([...form.exposureIds,...t.result.exposures.map(e=>e.id)])];notice.value='承灾体已更新';return}await openResult(t.result);notice.value='计算完成';emit('refresh')}else if(['failed','cancelled','interrupted'].includes(t.status)){pending.value=null;error.value=t.message}}catch(e){error.value=e.message}}
-function openResult(value){if(mode.value!=='demo')frameRequests.clear();liveResult.value=value;choice.value=0
- if(mode.value==='scenario'||mode.value==='compare')index.value=Math.max(0,frames.value.length-1)}
-async function loadDemo(){
- try{
-  const demo=await api('risk-scenarios/demo');if(disposed)return
-  demoCases.value=demo?.scenarios||[]
-  if(mode.value==='demo'){if(demoCases.value[0])showDemo(demoCases.value[0]);else demoError.value='暂无离线漫溢情景。'}
- }catch(e){if(!disposed)demoError.value=e.message}
-}
-function openDemo(){mode.value='demo';if(!demoResult.value&&demoCases.value[0])showDemo(demoCases.value[0])}
-async function showDemo(scenario){
- if(demoSelected.value===scenario.id&&(demoLoading.value||demoResult.value))return
- frameRequests.clear()
- demoSelected.value=scenario.id;demoLoading.value=true;demoError.value='';demoResult.value=null;playing.value=false
- try{const value=await api('risk-results/'+encodeURIComponent(scenario.resultId));if(!disposed&&demoSelected.value===scenario.id)demoResult.value=value}
- catch(e){if(!disposed&&demoSelected.value===scenario.id)demoError.value=e.message}
- finally{if(!disposed&&demoSelected.value===scenario.id)demoLoading.value=false}
-}
+function openResult(value){frameRequests.clear();result.value=value;choice.value=0
+ if(mode.value!=='replay')index.value=Math.max(0,frames.value.length-1)}
 function addAlternative(){form.alternatives.push({name:'方案 '+(form.alternatives.length+1),...form.outlet})}
 async function osm(){await action(async()=>{pending.value=await api('exposures/osm',{bbox:[88.45,31.45,89.75,32.2],features:['roads','settlements']});notice.value='正在读取湖周道路和居民点'})}
 async function exportComparison(){await action(async()=>{pending.value=await api('reports',{reportType:'comparison',riskResultId:result.value.id});notice.value='正在生成方案对比报告'})}
 const GRADE_HUD={'blue':'#1a3a5cd9','yellow':'#4a3800d9','orange':'#4a1e00d9','red':'#4a0000d9'}
 const GRADE_BORDER=COLORS
 function frameGrade(f){if(!f||!rules.value)return null;return grade([f.lake??-Infinity],[f.outflow??0])}
-const currentFrameGrade=computed(()=>frameGrade(hudFrame.value))
+const currentFrameGrade=computed(()=>frameGrade(frame.value))
 const hudStyle=computed(()=>({background:currentFrameGrade.value?GRADE_HUD[currentFrameGrade.value.color]:'#0f2e3bd9'}))
 const replayGrades=computed(()=>mode.value==='replay'?replayFrames.value.map(f=>frameGrade(f)):[])
 const replayPeakGrade=computed(()=>{const gs=replayGrades.value.filter(Boolean);if(!gs.length)return null;const order=['blue','yellow','orange','red'];return gs.reduce((best,g)=>order.indexOf(g.color)>order.indexOf(best.color)?g:best)})
@@ -178,9 +143,9 @@ const timelineGradient=computed(()=>{const gs=replayGrades.value;if(!gs.length)r
 <template>
 <section class="ov">
  <div class="ov-head">
-  <div class="seg ov-modes"><button :class="{on:mode==='replay'}" @click="mode='replay'">2023 漫溢复现</button><button :class="{on:mode==='scenario'}" @click="mode='scenario'">预报情景推演</button><button :class="{on:mode==='compare'}" @click="mode='compare'">应急方案比选</button><button v-if="demoCases.length||mode==='demo'" :class="{on:mode==='demo'}" @click="openDemo">离线演示</button></div>
-  <p v-if="error&&(mode!=='demo'||!data)" class="message error">{{error}}<button @click="error=''">×</button></p>
-  <p v-else-if="notice&&mode!=='demo'" class="message success">{{notice}}<button @click="notice=''">×</button></p>
+  <div class="seg ov-modes"><button :class="{on:mode==='replay'}" @click="mode='replay'">2023 漫溢复现</button><button :class="{on:mode==='scenario'}" @click="mode='scenario'">预报情景推演</button><button :class="{on:mode==='compare'}" @click="mode='compare'">应急方案比选</button></div>
+  <p v-if="error" class="message error">{{error}}<button @click="error=''">×</button></p>
+  <p v-else-if="notice" class="message success">{{notice}}<button @click="notice=''">×</button></p>
  </div>
  <div v-if="!data&&!error" class="ov-loading">正在载入地形与湖泊资料…</div>
  <div v-if="data" class="ov-stage">
@@ -188,16 +153,16 @@ const timelineGradient=computed(()=>{const gs=replayGrades.value;if(!gs.length)r
    <OverflowScene v-if="view==='3d'" :data="data" :frame="sceneFrame" :water="sceneWater" :risk="risk" :preset="preset" :exposures="mapExposures" :impact="impact" :archived-surface="overlay?overlay.level+overlay.demOffsetM:undefined"/>
    <OverflowMap2D v-else ref="planMap" :data="data" :frame="frame" :water="water" :risk="risk" :overlay="overlay" :exposures="mapExposures" :impact="impact"/>
    <div v-if="frame" class="ov-hud">
-    <div class="ov-tile ov-tile-date" :class="currentFrameGrade?'g-'+currentFrameGrade.color:''"><b>{{frame.date}}</b><small>{{showingDemoPeak?'湖位峰值 · '+time(demoPeakTime).slice(11):stage}}</small></div>
-    <div class="ov-tile"><span>色林错湖位</span><b>{{fixed(hudFrame.lake,2)}}<i>m</i></b><small v-if="frame.observed!=null">实测 {{fixed(frame.observed,2)}}</small></div>
-    <div class="ov-tile"><span>溃口出流</span><b>{{number(hudFrame.outflow,1)}}<i>m³/s</i></b><small v-if="frame.width">宽 {{number(frame.width,0)}} m · 堰顶 {{fixed(frame.crest,2)}}</small></div>
-    <div class="ov-tile"><span>累计出流量</span><b>{{number(hudFrame.volumeKm3,3)}}<i>km³</i></b></div>
-    <div class="ov-tile"><span>班戈错涨幅</span><b>+{{fixed(hudFrame.bangeRiseM,2)}}<i>m</i></b><small>水面 {{number(hudFrame.bangeAreaKm2,0)}} km²</small></div>
+    <div class="ov-tile ov-tile-date" :class="currentFrameGrade?'g-'+currentFrameGrade.color:''"><b>{{frame.date}}</b><small>{{stage}}</small></div>
+    <div class="ov-tile"><span>色林错湖位</span><b>{{fixed(frame.lake,2)}}<i>m</i></b><small v-if="frame.observed!=null">实测 {{fixed(frame.observed,2)}}</small></div>
+    <div class="ov-tile"><span>溃口出流</span><b>{{number(frame.outflow,1)}}<i>m³/s</i></b><small v-if="frame.width">宽 {{number(frame.width,0)}} m · 堰顶 {{fixed(frame.crest,2)}}</small></div>
+    <div class="ov-tile"><span>累计出流量</span><b>{{number(frame.volumeKm3,3)}}<i>km³</i></b></div>
+    <div class="ov-tile"><span>班戈错涨幅</span><b>+{{fixed(frame.bangeRiseM,2)}}<i>m</i></b><small>水面 {{number(frame.bangeAreaKm2,0)}} km²</small></div>
     <div v-if="mode==='replay'" class="ov-tile"><span>新增淹没</span><b>{{number((water?.newAreaKm2||0)+(water?.bangeNewAreaKm2||0),1)}}<i>km²</i></b><small>班戈错 {{number(water?.bangeNewAreaKm2||0,1)}}</small></div>
     <div v-else-if="overlay" class="ov-tile"><span>色林错新增淹没</span><b>{{number(overlay.areaKm2,1)}}<i>km²</i></b><small>{{time(overlay.time)}} · 存档帧</small></div>
     <div v-if="impact" class="ov-tile" :class="{alert:impact.settlements.length||roadLength}"><span>道路沿线受淹</span><b>{{lengthLabel(roadLength)}}</b><small>预计断行 {{lengthLabel(impact.roadKm)}}</small></div>
    </div>
-   <div v-if="currentFrameGrade" class="ov-alarm" :class="'g-'+currentFrameGrade.color"><b>{{currentFrameGrade.grade}} {{NAMES[currentFrameGrade.color]}}{{mode==='demo'?'情景提示':'预警'}}</b><span>{{hudFrame.outflow>=(currentFrameGrade.outflowM3s??Infinity)&&hudFrame.lake<currentFrameGrade.levelM?'溃口出流 '+number(hudFrame.outflow,1)+' m³/s ≥ '+number(currentFrameGrade.outflowM3s,0):'湖位 '+fixed(hudFrame.lake,2)+' m ≥ '+fixed(currentFrameGrade.levelM,2)}}</span></div>
+   <div v-if="currentFrameGrade" class="ov-alarm" :class="'g-'+currentFrameGrade.color"><b>{{currentFrameGrade.grade}} {{NAMES[currentFrameGrade.color]}}预警</b><span>{{frame.outflow>=(currentFrameGrade.outflowM3s??Infinity)&&frame.lake<currentFrameGrade.levelM?'溃口出流 '+number(frame.outflow,1)+' m³/s ≥ '+number(currentFrameGrade.outflowM3s,0):'湖位 '+fixed(frame.lake,2)+' m ≥ '+fixed(currentFrameGrade.levelM,2)}}</span></div>
    <div class="ov-tools">
     <div class="seg small"><button :class="{on:view==='3d'}" @click="view='3d'">三维</button><button :class="{on:view==='2d'}" @click="view='2d'">平面</button></div>
     <div v-if="view==='3d'" class="seg small"><button :class="{on:preset==='overview'}" @click="preset='overview'">全景</button><button :class="{on:preset==='outlet'}" @click="preset='outlet'">溃口</button><button :class="{on:preset==='bange'}" @click="preset='bange'">班戈错</button></div>
@@ -242,17 +207,8 @@ const timelineGradient=computed(()=>{const gs=replayGrades.value;if(!gs.length)r
     <details><summary>承灾体（{{form.exposureIds.length}}）</summary><p class="muted" style="font-size:12px;margin:4px 0 8px">读取湖周道路与居民点，可加入情景计算受影响对象估算。</p><label v-for="e in exposures" :key="e.id" class="ov-check-row"><input type="checkbox" :value="e.id" v-model="form.exposureIds">{{e.name}} · {{e.featureCount}} 项</label><p v-if="!exposures.length" class="muted">尚未读取承灾体数据。</p><button class="primary" :disabled="working||!!pending" @click="osm" style="margin-top:8px">读取湖周道路与居民点</button></details>
     <button class="primary ov-run" :disabled="working||!!pending||!form.forecastId" @click="run">计算漫溢情景</button>
     <div v-if="pending" class="running-strip">{{pending.message||'计算中'}}<progress :value="pending.progress||0" max="100"/></div>
-   </template>
-   <template v-if="mode==='demo'">
-    <h3>离线演示 · 漫溢情景</h3>
-    <p class="ov-lead">两种情景使用同一套 10 天预报来水，比较起报湖位变化对溃口出流、淹没范围和承灾体的影响。</p>
-    <div class="ov-demo-cases"><button v-for="s in demoCases" :key="s.id" :class="{primary:demoSelected===s.id}" :aria-pressed="demoSelected===s.id" @click="showDemo(s)">{{s.name}}</button></div>
-    <button v-if="demoCases.length" class="link" @click="emit('navigate','forecast','demo')">查看离线预报 →</button>
-    <p v-if="demoError" class="message error" role="alert">{{demoError}}</p>
-    <p v-else-if="demoLoading||!demoCases.length" class="muted">正在读取离线漫溢情景…</p>
-   </template>
-    <template v-if="(mode==='scenario'||mode==='demo')&&comparisons[0]">
-     <div class="ov-grade" :style="{'--g':scenarioGrade?COLORS[scenarioGrade.color]:'#7d969e'}"><b>{{scenarioGrade?scenarioGrade.grade+' '+NAMES[scenarioGrade.color]+(mode==='demo'?'情景提示':''):mode==='demo'?'未达蓝色情景阈值':'未达预警'}}</b><span>{{scenarioGrade?.meaning||'湖位与溃口出流均低于蓝色分级标准'}}</span></div>
+    <template v-if="comparisons[0]">
+     <div class="ov-grade" :style="{'--g':scenarioGrade?COLORS[scenarioGrade.color]:'#7d969e'}"><b>{{scenarioGrade?scenarioGrade.grade+' '+NAMES[scenarioGrade.color]:'未达预警'}}</b><span>{{scenarioGrade?.meaning||'湖位与溃口出流均低于蓝色预警标准'}}</span></div>
      <dl class="ov-kpi">
       <dt>最高湖位</dt><dd>{{fixed(comparisons[0].peakLevelM,2)}} m · {{time(comparisons[0].peakTime)}}</dd>
       <dt>最大出流</dt><dd>{{number(comparisons[0].peakTotalOutflowM3s,1)}} m³/s</dd>
@@ -262,6 +218,7 @@ const timelineGradient=computed(()=>{const gs=replayGrades.value;if(!gs.length)r
       <dt>受影响对象</dt><dd>{{comparisons[0].effects.count}} 处<template v-if="comparisons[0].effects.roadLengthM"> · 道路 {{number(comparisons[0].effects.roadLengthM/1000,1)}} km</template></dd>
      </dl>
     </template>
+   </template>
 
    <template v-if="mode==='compare'">
     <h3>应急方案比选</h3>
@@ -293,7 +250,7 @@ const timelineGradient=computed(()=>{const gs=replayGrades.value;if(!gs.length)r
  </div>
 
  <div v-if="data&&frames.length" class="ov-charts">
-  <template v-if="(mode==='compare'||mode==='demo')&&compareRows.length">
+  <template v-if="mode==='compare'&&compareRows.length">
    <div><h4>色林错湖位</h4><Chart :rows="compareRows" :series="compareSeries('l')" unit="m" :day="frame?.date" @day="jump" context="ov-cmp-l"/></div>
    <div><h4>溃口出流过程</h4><Chart :rows="compareRows" :series="compareSeries('q')" unit="m³/s" zero :day="frame?.date" @day="jump" context="ov-cmp-q"/></div>
    <div><h4>班戈错涨幅</h4><Chart :rows="compareRows" :series="compareSeries('b')" unit="m" zero :day="frame?.date" @day="jump" context="ov-cmp-b"/></div>
@@ -305,11 +262,11 @@ const timelineGradient=computed(()=>{const gs=replayGrades.value;if(!gs.length)r
   </template>
  </div>
 
- <section v-if="(mode==='compare'||mode==='demo')&&comparisons.length" class="panel ov-table">
-  <div class="panel-title"><h3>{{mode==='demo'?'离线演示 · 方案对比':'方案对比'}}</h3><button v-if="mode==='compare'" :disabled="working||!!pending" @click="exportComparison">导出对比报告</button></div>
+ <section v-if="mode==='compare'&&comparisons.length" class="panel ov-table">
+  <div class="panel-title"><h3>方案对比</h3><button :disabled="working||!!pending" @click="exportComparison">导出对比报告</button></div>
   <div class="table-wrap"><table><thead><tr><th>方案</th><th>最高湖位 m</th><th>期末湖位 m</th><th>最大出流 m³/s</th><th>出流总量 万m³</th><th>班戈错涨幅 m</th><th>湖周新增淹没 km²</th><th>受影响对象</th></tr></thead>
-   <tbody><tr v-for="(c,i) in comparisons" :key="c.name" :class="{selected:activeChoice===i}" @click="mode==='compare'&&(choice=i)"><td>{{c.name}}</td><td>{{fixed(c.peakLevelM,3)}}</td><td>{{fixed(c.finalLevelM,3)}}</td><td>{{number(c.peakTotalOutflowM3s,1)}}</td><td>{{number(c.totalOutflowM3/1e4,0)}}</td><td>{{fixed(c.bangeRiseM,2)}}</td><td>{{number(c.inundatedAreaKm2,2)}}</td><td>{{c.effects.count}}</td></tr></tbody></table></div>
-  <p v-if="mode==='compare'" class="muted">点击某一方案，在上方三维或平面视图中播放该方案过程。</p>
+   <tbody><tr v-for="(c,i) in comparisons" :key="c.name" :class="{selected:choice===i}" @click="choice=i"><td>{{c.name}}</td><td>{{fixed(c.peakLevelM,3)}}</td><td>{{fixed(c.finalLevelM,3)}}</td><td>{{number(c.peakTotalOutflowM3s,1)}}</td><td>{{number(c.totalOutflowM3/1e4,0)}}</td><td>{{fixed(c.bangeRiseM,2)}}</td><td>{{number(c.inundatedAreaKm2,2)}}</td><td>{{c.effects.count}}</td></tr></tbody></table></div>
+  <p class="muted">点击某一方案，在上方三维或平面视图中播放该方案过程。</p>
  </section>
 </section>
 </template>
@@ -341,7 +298,6 @@ const timelineGradient=computed(()=>{const gs=replayGrades.value;if(!gs.length)r
 @keyframes ov-beat{0%,100%{box-shadow:0 4px 14px #0004,0 0 0 0 currentColor}50%{box-shadow:0 4px 14px #0004,0 0 0 8px #ffffff33}}
 @media(prefers-reduced-motion:reduce){.ov-alarm{animation:none!important}}
 .ov-emptycase{display:grid;gap:8px;padding:14px;border:1px dashed #c9d9de;border-radius:8px;background:#f8fbfc}.ov-emptycase span{font-size:12.5px;color:#4c6772;line-height:1.7}.ov-emptycase button{justify-self:start}
-.ov-demo-cases{display:grid;gap:6px}.ov-demo-cases button{text-align:left}
 .ov-more summary{cursor:pointer;font-size:13.5px;font-weight:600;color:#1f4652;margin:4px 0}
 .ov-tile.alert{background:#6e1d14d9}
 .ov-impact{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:grid;gap:6px}

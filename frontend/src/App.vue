@@ -75,10 +75,8 @@ async function refresh(){
  if(!historyDetail.value&&page.value==='simulation'&&boot.value.homeResultId)await openResult(boot.value.homeResultId,'history')
 }
 async function openResult(id,target='detail'){if(!id)return;const ticket=++resultTickets[target],published=boot.value.publishedResults.some(r=>r.id===id),loaded=await api(published?'published-result?id='+id:'tasks/'+id);if(ticket!==resultTickets[target])return;const value=published?{...loaded,builtin:true,kind:'published-result'}:loaded;if(target==='calibration')calibrationDetail.value=value;else if(target==='history')historyDetail.value=value;else{detail.value=value;if(page.value==='results'&&value.status==='succeeded')selectContext(id,undefined,id!==selectedId.value?'push':'replace')}return value}
-const riskForecastId=ref(''),demoEntry=ref(false)
+const riskForecastId=ref('')
 async function navigate(p,id,viewWindow=null){
- demoEntry.value=(p==='forecast'||p==='risk')&&id==='demo'
- if(demoEntry.value)id=undefined
  if(p==='risk'){riskForecastId.value=typeof id==='string'&&id.startsWith('FORECAST-')?id:'';if(riskForecastId.value)id=undefined}
  if(p==='results')resultWindow.value=viewWindow?.id===id?viewWindow:null
  error.value='';if(id)selectContext(id,undefined,'none');page.value=p;syncUrl()
@@ -126,8 +124,8 @@ onBeforeUnmount(()=>{disconnectBrowserSession();clearInterval(timer);window.remo
  <div v-if="active.length&&page!=='overview'" class="running-strip"><span>{{taskTitle(active[0])}}</span><progress :value="active[0].progress" max="100"></progress><span>{{number(active[0].progress,1)}}%</span><button @click="stop(active[0].id)">停止</button></div>
  <Dashboard v-if="page==='overview'" :boot="boot" :tasks="tasks" :selected-id="selectedId" :view-day="viewDay" @context="selectContext" @navigate="navigate" @result="navigate('results',$event)" @station="dashboardStation"/>
  <MonitoringWorkspace v-if="page==='monitor'" :initial="monitorInitial" @navigate="navigate"/>
- <ForecastWorkspace v-if="page==='forecast'" :boot="boot" :busy="busy" :initial-demo="demoEntry" @refresh="action(refresh)" @navigate="navigate"/>
- <RiskWorkspace v-if="page==='risk'" :boot="boot" :busy="busy" :forecast-id="riskForecastId" :initial-demo="demoEntry" @refresh="action(refresh)" @navigate="navigate"/>
+ <ForecastWorkspace v-if="page==='forecast'" :boot="boot" :busy="busy" @refresh="action(refresh)" @navigate="navigate"/>
+ <RiskWorkspace v-if="page==='risk'" :boot="boot" :busy="busy" :forecast-id="riskForecastId" @refresh="action(refresh)" @navigate="navigate"/>
  <CalibrationWorkspace v-if="page==='calibration'" :boot="boot" :tasks="tasks" :detail="calibrationDetail" :busy="busy" :active="active" @refresh="action(refresh)" @deleted="deletedResults" @submit="submit" @stop="stop" @select="selectCalibration" @simulate="simulateWith" @replay="replayStarted" @state="showState(calibrationDetail)" @export="exportResult"/>
  <HistoricalSimulation v-if="page==='simulation'" :boot="boot" :selection="simulationSelection" :busy="busy" :active="active" @submit="submit" @navigate="navigate"><HistoricalResult :detail="historyDetail" :busy="busy" @stop="stop" @export="exportResult" @state="showState(historyDetail)" @retry="navigate('simulation')"/></HistoricalSimulation>
  <ResultWorkspace v-if="page==='results'" :tasks="resultRecords" :trashed-results="trashedResults" :published="boot.publishedResults.filter(t=>t.id===boot.homeResultId)" :standard-id="boot.homeResultId" :home-id="boot.homeResultId" :selected-id="detail?.id" :selected-result="detail" :busy="busy" @select="resultWindow=null;action(()=>openResult($event))" @metadata="metadata" @changed="deletedResults" @stop="stop"><HistoricalResult :detail="detail" :view-window="resultWindow?.id===detail?.id?resultWindow:null" :busy="busy" @stop="stop" @export="exportResult" @state="showState(detail)" @retry="navigate('simulation')"/></ResultWorkspace>

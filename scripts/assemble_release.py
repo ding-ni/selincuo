@@ -78,6 +78,33 @@ def copy_frontend_dist(source, destination):
         shutil.copy2(origin, target)
 
 
+def inspect_bundled_forecasts(db, report):
+    import json
+    from backend.workspace_upgrade import bundled_forecast_rows, operational_table_exists
+    selected = report.get('bundledForecasts') or []
+    with db.connect() as connection:
+        recorded = {tuple(row) for row in connection.execute("SELECT collection,id FROM operational_records "
+                    "WHERE collection IN ('forecasts','forecast-inputs','risk-scenarios','risk-results')")} if operational_table_exists(connection) else set()
+        bundled = bundled_forecast_rows(connection, selected)
+    by_key = {row[:2]: json.loads(row[-1]) for row, _ in bundled}
+    if set(by_key) != recorded:
+        raise ValueError('发行预报清单与种子业务记录不一致')
+    for _, paths in bundled:
+        for path in paths:
+            if not within(db.workspace, path).is_file():
+                raise ValueError('发行预报缺少运行资料：' + path.as_posix())
+    business = report.get('businessDefault') or {}
+    for row in selected:
+        forecast = by_key['forecasts', row['id']]
+        weather = by_key['forecast-inputs', row['inputId']]
+        if (forecast['sourceResultId'] != business.get('resultId') or
+                forecast['lakeModelId'] != business.get('lakeModelId') or
+                forecast['issueTime'] != business.get('lakeModelStateTime') or
+                forecast['issueTime'] != weather['issueTime'] or forecast['end'] != weather['end'] or
+                len(forecast['times']) != forecast['hours'] or not forecast.get('memberCheckpointIndex')):
+            raise ValueError('发行预报与气象输入或正式起报状态不一致：' + row['id'])
+
+
 def inspect_seed(seed):
     from backend.release_registry import current
     from backend.published_results import catalog, detail
@@ -191,6 +218,10 @@ def inspect_seed(seed):
             raise ValueError('种子观测来源文件缺失或摘要不同')
     if any((db.workspace/name).exists() for name in ('tasks','states','downloads','incoming')):
         raise ValueError('发行种子目录含研究任务、下载或临时文件')
+    wal = db.path.with_name(db.path.name + '-wal')
+    if wal.is_file() and wal.stat().st_size:
+        raise ValueError('发行种子仍有日志未合并，请先保存完整的SQLite种子')
+    inspect_bundled_forecasts(db, report)
     return counts, scheme
 
 
@@ -219,38 +250,6 @@ def overflow_resources(spatial):
         if not path.is_file():
             raise ValueError('离线展示资料缺失：'+str(path))
     return files
-
-
-def copy_demo_resources(source, destination):
-    """Include complete, independently readable demonstration results."""
-    from backend.demo_examples import DIRECTORY
-    index = read_json(source / 'demo.json') if source.is_dir() else None
-    if not index:
-        raise ValueError('缺少离线演示资料，请先运行构建离线演示资料.py')
-    forecast = index['forecast']
-    scenarios = index['scenarios']
-    if (forecast['hours'] != 240 or len(forecast['times']) != 240 or
-            not index['history']['rows'] or {row['initialLevelOffsetM'] for row in scenarios} != {0, .6} or
-            len(scenarios) != 2):
-        raise ValueError('离线演示需要完整十日预报和两种漫溢情景')
-    files = ['demo.json', 'weather/气象输入说明.json', index['weather']['dataPath'],
-             forecast['memberArtifact']['path'], *(item['path'] for item in forecast['memberCheckpointIndex'])]
-    for scenario in scenarios:
-        folder = 'results/' + scenario['resultId']
-        relative = folder + '/结果.json'
-        result = read_json(within(source, relative))
-        if (not result or result['id'] != scenario['resultId'] or
-                result['forecastId'] != forecast['id'] or len(result['rows']) != forecast['hours'] or
-                scenario['exposureIds'] != index['exposureIds'] or len(result['comparisons']) < 2):
-            raise ValueError('缺少完整离线漫溢与比选结果：' + scenario['name'])
-        files.extend((relative, result['path'], folder + '/risk-hourly.csv'))
-    for relative in files:
-        original = within(source, relative)
-        if not original.is_file():
-            raise ValueError('离线演示工件缺失：' + relative)
-        target = within(destination / DIRECTORY, relative)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(original, target)
 
 
 def selected_resources(scheme, published):
@@ -489,8 +488,6 @@ def main():
                         help='本次独立构建生成的冻结业务种子')
     parser.add_argument('--build-manifest', type=Path,
                         help='独立构建清单路径；已有清单不覆盖')
-    parser.add_argument('--demo-data', type=Path, default=ROOT/'data/derived/spatial/离线演示',
-                        help='已生成的离线演示资料目录')
     args = parser.parse_args()
     dest = args.destination.resolve()
     version_manifest=(args.build_manifest.resolve() if args.build_manifest else
@@ -532,7 +529,6 @@ def main():
         target = dest / source.relative_to(ROOT)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
-    copy_demo_resources(args.demo_data.resolve(), dest)
     copy_risk_terrain(dest)
     for item in published:
         if item.get('businessDefault'):
@@ -618,7 +614,8 @@ def main():
     source_manifest = ROOT / 'docs/source-manifest.json'
     if source_manifest.is_file():
         shutil.copy2(source_manifest, dest / 'data/source-manifest.json')
-    shutil.copytree(seed, dest / 'seed/workspace', dirs_exist_ok=True)
+    shutil.copytree(seed, dest / 'seed/workspace', dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns('hydrology.sqlite3-shm', 'hydrology.sqlite3-wal'))
     seed_report = read_json(seed / 'seed-report.json', {})
     shutil.copy2(ROOT / 'README.md', dest / 'README.md')
     write_json(dest / 'release-info.json', {'projectId':'selinco','version':VERSION,

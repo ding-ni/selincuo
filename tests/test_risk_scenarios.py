@@ -1,6 +1,7 @@
 """Spill-volume conservation, connected wetting and retained scenario results."""
 from pathlib import Path
 import base64
+from concurrent.futures import ThreadPoolExecutor
 import io
 import unittest
 import uuid
@@ -10,6 +11,7 @@ from unittest.mock import patch
 import numpy as np
 
 from backend.database import Database
+from backend.common import write_json
 from backend.lake_curves import default_curve, storage
 from backend import operational_store as store
 from backend import risk_scenarios as risk
@@ -19,6 +21,58 @@ class RiskTests(unittest.TestCase):
     def setUp(self):
         self.root = Path(__file__).resolve().parents[1]/'build'/('漫溢定向检查-'+uuid.uuid4().hex[:10])
         self.db = Database(self.root)
+
+    def test_default_and_catalog_register_each_bundled_dataset_once(self):
+        bundle = self.root / '随包承灾体'
+        adopted = [{'file': f'{kind}.geojson', 'kind': kind, 'name': name, 'downloadedAtUTC': '20261117T1229Z'}
+                   for kind, name in [('road', 'OSM道路'), ('settlement', 'OSM居民点')]]
+        write_json(bundle / '承灾体资料.json', {'source': 'OpenStreetMap contributors', 'license': 'ODbL 1.0', 'adopted': adopted})
+        for item, geometry in zip(adopted, [{'type': 'LineString', 'coordinates': [[89, 31], [89.01, 31]]},
+                                            {'type': 'Point', 'coordinates': [89, 31]}]):
+            write_json(bundle / item['file'], {'type': 'FeatureCollection', 'features': [
+                {'type': 'Feature', 'geometry': geometry, 'properties': {}}]})
+        with patch.object(risk, 'EXPOSURE_BUNDLE', bundle), ThreadPoolExecutor(max_workers=2) as pool:
+            default = pool.submit(risk.default_scenario, self.db)
+            catalog = pool.submit(risk.catalog, self.db)
+            choices = catalog.result()['exposures']
+            self.assertEqual({row['id'] for row in choices}, set(default.result()['exposureIds']))
+            self.assertEqual(len(choices), 2)
+            self.assertEqual(len(store.list_records(self.db, 'exposures')), 2)
+
+    def test_existing_bundle_alias_is_hidden_but_historical_result_still_resolves(self):
+        data = {'type': 'FeatureCollection', 'features': [{'type': 'Feature',
+                'geometry': {'type': 'Point', 'coordinates': [89, 31]}, 'properties': {}}]}
+        payload = {'name': 'OSM居民点', 'kind': 'settlement', 'geojson': data}
+        duplicates = [risk.import_exposure(self.db, payload, bundle_file='settlements.geojson') for _ in range(2)]
+        custom = risk.import_exposure(self.db, {**payload, 'geojson': {'type': 'FeatureCollection', 'features': [
+            {'type': 'Feature', 'geometry': {'type': 'Point', 'coordinates': [89.5, 31]}, 'properties': {}}]}})
+        with patch.object(risk, 'EXPOSURE_BUNDLE', self.root / '无随包资料'):
+            choices = {row['id'] for row in risk.catalog(self.db)['exposures']}
+            self.assertIn(custom['id'], choices)
+            shown, = choices - {custom['id']}
+            hidden, = {row['id'] for row in duplicates} - {shown}
+            outlet = {'lon': 89, 'lat': 31, 'crestM': 4544, 'widthM': 60}
+            scenario = risk.save_scenario(self.db, {'outlet': outlet, 'exposureIds': [hidden, shown, custom['id']]})
+            self.assertEqual(scenario['exposureIds'], [shown, custom['id']])
+            existing = store.save(self.db, risk.RESULTS, {'scenario': {'exposureIds': [hidden]}})
+            self.assertEqual(risk.result_exposures(self.db, existing['id'])['items'][0]['id'], hidden)
+            self.assertEqual(len(store.list_records(self.db, 'exposures')), 3)
+
+    def test_osm_reread_reuses_same_data_but_preserves_a_changed_snapshot(self):
+        request = {'bbox': [88, 30, 90, 32], 'features': ['settlements']}
+        with patch('requests.post') as post:
+            def mock_osm(lon):
+                post.return_value.json.return_value = {'elements': [
+                    {'id': 1, 'lon': lon, 'lat': 31, 'tags': {'place': 'village'}}]}
+
+            mock_osm(89)
+            first, = risk.fetch_osm(self.db, request)['exposures']
+            again, = risk.fetch_osm(self.db, request)['exposures']
+            mock_osm(89.1)
+            changed, = risk.fetch_osm(self.db, request)['exposures']
+        self.assertEqual(first['id'], again['id'])
+        self.assertNotEqual(first['id'], changed['id'])
+        self.assertEqual(len(store.list_records(self.db, 'exposures')), 2)
 
     def test_weir_is_dry_below_crest_and_increases_with_head(self):
         outlet = {'crestM': 4543.6, 'widthM': 30., 'coefficient': .6}
