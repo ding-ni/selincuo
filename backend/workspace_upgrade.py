@@ -6,6 +6,56 @@ import shutil
 import sqlite3
 import uuid
 from .common import ROOT, canonical, digest, now, read_json, sha_file, within
+from .operational_store import create_schema
+
+
+def operational_table_exists(connection):
+    return connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='operational_records'").fetchone() is not None
+
+
+def active_lake_seed_rows(connection):
+    """Read the adopted model and its optional registered curve without migrating a source database."""
+    if not operational_table_exists(connection):
+        return ()
+    model = connection.execute('''SELECT * FROM operational_records
+        WHERE collection='lake-models' AND json_extract(payload,'$.status')='active'
+        AND COALESCE(json_extract(payload,'$.trashed'),0)=0 ORDER BY created_at DESC,id LIMIT 1''').fetchone()
+    if model is None:
+        return ()
+    model = tuple(model)
+    payload = json.loads(model[5])
+    curve_id = payload['curveId']
+    if curve_id == 'CURVE-DEMO-SELINCO':
+        from .lake_curves import default_curve
+        curve = default_curve()
+        rows = (model,)
+    else:
+        curve_row = connection.execute("SELECT * FROM operational_records WHERE collection='lake-curves' AND id=?",(curve_id,)).fetchone()
+        if curve_row is None:
+            raise ValueError('当前采用湖泊模型缺少原库容曲线：'+curve_id)
+        curve_row = tuple(curve_row)
+        curve = json.loads(curve_row[5])
+        rows = (curve_row,model)
+    if curve != payload.get('lakeCurve'):
+        raise ValueError('当前采用湖泊模型与库容曲线快照不一致：'+curve_id)
+    return rows
+
+
+def _missing_lake_rows(connection, rows, current_result_id):
+    if not rows or json.loads(rows[-1][5])['sourceResultId'] != current_result_id:
+        return ()
+    if not operational_table_exists(connection):
+        return rows
+    if connection.execute('''SELECT 1 FROM operational_records WHERE collection='lake-models'
+        AND (id=? OR (json_extract(payload,'$.status')='active'
+        AND COALESCE(json_extract(payload,'$.trashed'),0)=0))''',(rows[-1][1],)).fetchone():
+        return ()
+    if len(rows)==2:
+        curve = rows[0]
+        found = connection.execute('SELECT payload FROM operational_records WHERE collection=? AND id=?',curve[:2]).fetchone()
+        if found:
+            return rows[1:] if json.loads(found[0]) == json.loads(curve[5]) else ()
+    return rows
 
 
 @contextmanager
@@ -48,9 +98,6 @@ def supplement_default_input(workspace, seed, app_root):
     current=read_json(app_root/'data/derived/spatial/manifest.json')
     if not any(s and s.get('version')==spatial for s in (archived,current)):
         raise ValueError('发行默认输入的空间版本未安装')
-    data=within(source,manifest['data'])
-    if data.is_symlink() or not data.is_file() or sha_file(data)!=manifest.get('dataSHA256'):
-        raise ValueError('发行输入数据摘要校验失败')
     destination=within(workspace/'inputs/products',identifier)
     with sqlite3.connect(database) as connection:
         rows=connection.execute('SELECT manifest FROM input_products WHERE id=?',(identifier,)).fetchall()
@@ -62,6 +109,9 @@ def supplement_default_input(workspace, seed, app_root):
                 raise ValueError('既有同ID输入文件缺失或冲突，未覆盖；请先独立核查恢复')
             return {'status':'already-present','inputId':identifier,'changed':False}
         if destination.exists():raise ValueError('默认输入目标目录已存在但未登记，禁止覆盖；请独立核查')
+        data=within(source,manifest['data'])
+        if data.is_symlink() or not data.is_file() or sha_file(data)!=manifest.get('dataSHA256'):
+            raise ValueError('发行输入数据摘要校验失败')
         # The caller holds Platform's instance lock. Old running/queued rows may
         # be crash leftovers; preserve them for Jobs' normal interrupted-task
         # recovery rather than preventing the upgraded service from starting.
@@ -139,6 +189,7 @@ def supplement_business_default(workspace, seed, app_root):
         parameter_row=origin.execute('SELECT id,name,created_at,payload FROM parameter_versions WHERE id=?',(business['parameterId'],)).fetchone()
         selected=origin.execute('SELECT value FROM settings WHERE key=?',('business-adopted-scheme-v1',)).fetchone()
         product_row=origin.execute('SELECT id,name,created_at,manifest FROM input_products WHERE id=?',(business['inputId'],)).fetchone()
+        lake_rows=active_lake_seed_rows(origin) if business.get('lakeModelId') else ()
         if not all((scheme_row,parameter_row,selected,product_row)):
             raise ValueError('发行种子缺少业务方案、参数、输入或采用关系')
         scheme={key:scheme_row[key] for key in scheme_row.keys()}
@@ -146,6 +197,12 @@ def supplement_business_default(workspace, seed, app_root):
         selection=json.loads(selected['value'])
         manifest=json.loads(product_row['manifest'])
         product={key:product_row[key] for key in product_row.keys()}
+    if business.get('lakeModelId'):
+        lake_model=json.loads(lake_rows[-1][5]) if lake_rows else {}
+        if (lake_model.get('id') != business['lakeModelId'] or lake_model.get('sourceResultId') != business['resultId'] or
+                lake_model.get('curveId') != business.get('lakeCurveId') or
+                (lake_model.get('endState') or {}).get('time') != business.get('lakeModelStateTime')):
+            raise ValueError('发行种子的采用湖泊模型、曲线或期末状态与清单不一致')
     scheme_payload=json.loads(scheme['payload']);parameter_payload=json.loads(parameter['payload'])
     if (digest(scheme_payload)!=business.get('schemePayloadSHA256') or
             digest(parameter_payload)!=business.get('parameterPayloadSHA256') or
@@ -197,6 +254,8 @@ def supplement_business_default(workspace, seed, app_root):
         else:
             current_selection=None
             if not current:changed=True
+        lake_to_add=_missing_lake_rows(connection,lake_rows,(current_selection or selection).get('resultId'))
+        if lake_to_add:changed=True
         current_forcing=connection.execute('SELECT value FROM settings WHERE key=?',('current-model-forcing',)).fetchone()
         preserve_forcing=False
         if current_forcing:
@@ -208,8 +267,9 @@ def supplement_business_default(workspace, seed, app_root):
                     current_product_row=connection.execute('SELECT manifest FROM input_products WHERE id=?',
                                                            (current_input_id,)).fetchone()
                     current_manifest=json.loads(current_product_row[0]) if current_product_row else {}
-                    update=current_manifest.get('precipitationCorrectionUpdate') or {}
-                    preserve_forcing=update.get('method')=='automatic-warm-rain-reestimate-v1'
+                    if current_manifest.get('data'):
+                        current_data=within(workspace/'inputs/products',current_input_id)
+                        preserve_forcing=within(current_data,current_manifest['data']).is_file()
             except (TypeError,ValueError,AttributeError):
                 preserve_forcing=False
         set_forcing=not preserve_forcing
@@ -219,7 +279,8 @@ def supplement_business_default(workspace, seed, app_root):
                     'adoptionPreserved':bool(current_selection),'changed':False}
         backup=workspace/'database'/('pre-business-default-upgrade-'+uuid.uuid4().hex[:12]+'.sqlite3')
         with sqlite3.connect(backup) as target:connection.backup(target)
-        _,added_input=_copy_input(seed,workspace,business['inputId'],manifest)
+        if not destination.exists():
+            _,added_input=_copy_input(seed,workspace,business['inputId'],manifest)
         with connection:
             connection.execute('BEGIN IMMEDIATE')
             connection.execute('INSERT OR IGNORE INTO schemes VALUES(?,?,?,?)',
@@ -237,12 +298,16 @@ def supplement_business_default(workspace, seed, app_root):
                                     'source':'packaged-business-default'})))
             connection.execute('INSERT OR IGNORE INTO settings VALUES(?,?)',
                                ('scheme-purpose:'+selection['familyId'],canonical('business')))
+            if lake_to_add:
+                create_schema(connection)
+                connection.executemany('INSERT INTO operational_records VALUES(?,?,?,?,?,?)',lake_to_add)
             connection.execute('INSERT INTO audit(at,action,payload) VALUES(?,?,?)',
                                (now(),'workspace.business-default-supplement',canonical({
                                    'schemeId':business['schemeId'],'parameterId':business['parameterId'],
                                    'resultId':business['resultId'],'inputId':business['inputId'],
                                    'adoptionSet':not current,'previousAdoptionPreserved':bool(current_selection),
                                    'forcingSet':set_forcing,'previousForcingPreserved':preserve_forcing,
+                                   'addedLakeModelId':lake_to_add[-1][1] if lake_to_add else None,
                                    'backup':str(backup)})))
     return {'status':'supplemented','schemeId':business['schemeId'],'inputId':business['inputId'],
             'adoptionPreserved':bool(current_selection),'currentForcingPreserved':preserve_forcing,

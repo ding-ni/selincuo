@@ -1,14 +1,16 @@
-﻿param([switch]$NoBrowser)
+﻿param([switch]$NoBrowser, [int]$Port)
 $ErrorActionPreference = 'Stop'
 $applicationRoot = Split-Path -Parent $PSScriptRoot
 $workspacePath = Join-Path $applicationRoot 'workspace'
 $activeConfiguration = Join-Path $applicationRoot 'config\active-workspace.json'
 if (Test-Path -LiteralPath $activeConfiguration) {
     $activeWorkspace = (Get-Content -LiteralPath $activeConfiguration -Raw -Encoding UTF8 | ConvertFrom-Json).workspace
-    if ($activeWorkspace) { $workspacePath = [IO.Path]::GetFullPath((Join-Path $applicationRoot $activeWorkspace)) }
+    if ($activeWorkspace) {
+        $workspacePath = if ([IO.Path]::IsPathRooted($activeWorkspace)) { [IO.Path]::GetFullPath($activeWorkspace) } else { [IO.Path]::GetFullPath((Join-Path $applicationRoot $activeWorkspace)) }
+    }
 }
 $platformConfiguration = Get-Content -LiteralPath (Join-Path $applicationRoot 'config/platform.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-$platformPort = if ($platformConfiguration.port) { [int]$platformConfiguration.port } else { 8882 }
+$platformPort = if ($PSBoundParameters.ContainsKey('Port')) { $Port } elseif ($platformConfiguration.port) { [int]$platformConfiguration.port } else { 8882 }
 $platformUrl = 'http://127.0.0.1:' + $platformPort
 $expectedVersion = $platformConfiguration.version
 function Test-SelincoService {
@@ -34,6 +36,7 @@ try {
     }
     if (-not $NoBrowser) { Start-Process $platformUrl }
 } catch {
+    if ($NoBrowser) { throw }
     Add-Type -AssemblyName System.Windows.Forms
     [System.Windows.Forms.MessageBox]::Show($_.Exception.Message, '色林错平台启动失败') | Out-Null
     exit 1

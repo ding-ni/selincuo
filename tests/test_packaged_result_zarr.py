@@ -102,6 +102,10 @@ class PackagedResultZarrTests(unittest.TestCase):
                 chunk.write_bytes(b'changed')
                 with self.assertRaisesRegex(ValueError,'摘要校验失败'):
                     hourly_zarr(identifier,verify_files=True)
+                chunk.rename(chunk.with_name('missing-chunk-fixture'))
+                self.assertFalse(available(identifier))
+                with self.assertRaisesRegex(FileNotFoundError, '分块缺失：time/0'):
+                    hourly_zarr(identifier)
 
 
 if __name__=='__main__':unittest.main()

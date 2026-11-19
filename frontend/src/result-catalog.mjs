@@ -9,7 +9,7 @@ export function isResultRecord(task){
 }
 
 export function resultTypeName(task,homeId=''){
- if(task?.id===homeId)return '当前最佳 · 连续模拟'
+ if(task?.id===homeId)return '业务方案 · 历史过程'
  return ({simulation:'历史模拟',continuation:'续算',trial:'试算',calibration:'率定',
   'two-stage-calibration':'两阶段率定','calibration-replay':'率定复现','calibration-workflow':'率定',
   sensitivity:'敏感性分析'})[task?.kind]||'模拟成果'

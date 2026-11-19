@@ -13,8 +13,8 @@ COLORS = ('blue', 'yellow', 'orange', 'red')
 LABELS = {'blue': '蓝色', 'yellow': '黄色', 'orange': '橙色', 'red': '红色'}
 
 GRADES = {'blue': 'IV级', 'yellow': 'III级', 'orange': 'II级', 'red': 'I级'}
-MEANINGS = {'blue': '湖位接近2023年溃决水位，加密监测', 'yellow': '湖位或外泄明显上升，做好应急准备',
-            'orange': '接近溃决水位或外泄接近2024年峰值，启动应急响应', 'red': '达到或超过2023年溃决水位，或外泄超过历史峰值'}
+MEANINGS = {'blue': '湖位接近2023年起溢水位，加密水位观测与溃口巡查', 'yellow': '湖位或溃口出流明显上涨，做好应急准备',
+            'orange': '湖位接近起溢水位或出流接近2024年洪峰，启动应急响应', 'red': '湖位达到或超过2023年起溢水位，或出流超过历史洪峰'}
 # Grades are anchored on the 2023 event: the observed level at the 2023-09-21 overflow onset
 # and the 2024 peak breach outflow (about 61 m³/s, lake-model reconstruction).
 LEVEL_OFFSETS = {'blue': -.35, 'yellow': -.20, 'orange': -.10, 'red': 0.}
@@ -31,7 +31,7 @@ def default_rules(db=None):
         if model:
             reference = float(model['onsetLevelM'])
     return {'name': '色林错漫溢风险分级', 'mode': 'scenario', 'referenceLevelM': reference,
-            'source': '以2023年9月21日起溢水位和2024年溃口外泄峰值为基准',
+            'source': '以2023年9月21日起溢水位和2024年溃口出流洪峰为基准',
             'levels': [{'color': c, 'levelM': round(reference + LEVEL_OFFSETS[c], 2), 'outflowM3s': OUTFLOW_LIMITS[c],
                         'probability': EXCEEDANCE, 'grade': GRADES[c], 'meaning': MEANINGS[c]} for c in COLORS],
             '_isDefault': True}
@@ -62,7 +62,7 @@ def save_rules(db, payload, identifier=None):
         q = item.get('outflowM3s')
         q = None if q in (None, '') else float(q)
         if not math.isfinite(h) or not 4000 <= h <= 6500 or not math.isfinite(p) or not 0 <= p <= 1 or (q is not None and (not math.isfinite(q) or q < 0)):
-            raise ValueError('预警水位、外泄流量或超限成员比例无效')
+            raise ValueError('预警水位、溃口出流或超限成员比例无效')
         rows.append({'color': color, 'levelM': h, 'outflowM3s': q, 'probability': p,
                      'grade': GRADES[color], 'meaning': str(item.get('meaning') or MEANINGS[color])})
         seen.add(color)
@@ -121,6 +121,14 @@ def evaluate_rules(times, member_levels, rules, member_outflows=None):
     return result
 
 
+def _issuance_mode(forecast, rules):
+    from .lake_curves import DEFAULT_ID
+    curve = forecast.get('lakeCurve') or {}
+    verified = (curve.get('id') and curve['id'] != DEFAULT_ID and
+                curve.get('provisional') is False and not forecast.get('provisional', False))
+    return 'business' if rules['mode'] == 'business' and verified else 'scenario'
+
+
 def assess(db, forecast_id, rule_id=None):
     from .forecasts import detail
     forecast = detail(db, forecast_id)
@@ -128,7 +136,7 @@ def assess(db, forecast_id, rule_id=None):
     rules = active_rules(db, rule_id)
     value = evaluate_rules(forecast['times'], _member_levels(db, forecast), rules, _member_outflows(db, forecast))
     return {**value, 'forecastId': forecast['id'], 'rules': rules, 'issueTime': forecast.get('issueTime'),
-            'end': forecast.get('end')}
+            'end': forecast.get('end'), 'mode': _issuance_mode(forecast, rules)}
 
 
 def _member_outflows(db, forecast):
@@ -172,13 +180,12 @@ def draft(db, payload):
     assessed = evaluate_rules(forecast['times'], _member_levels(db, forecast), rules, _member_outflows(db, forecast))
     if assessed['selected'] is None:
         raise ValueError('本次预报未达到任何预警等级')
-    curve = forecast.get('lakeCurve') or {}
-    provisional = bool(forecast.get('provisional', curve.get('provisional', True)) or curve.get('provisional', False))
-    mode = 'business' if rules['mode'] == 'business' and not provisional else 'scenario'
+    mode = _issuance_mode(forecast, rules)
     default_end = datetime.now(timezone.utc)+timedelta(days=1)
     valid_until = payload.get('validUntil') or default_end.isoformat(timespec='seconds')
     _instant(valid_until)
-    value = {'name': '色林错漫溢风险'+GRADES[assessed['selected']['color']]+LABELS[assessed['selected']['color']]+'预警',
+    suffix = '预警' if mode == 'business' else '情景风险提示'
+    value = {'name': '色林错漫溢风险'+GRADES[assessed['selected']['color']]+LABELS[assessed['selected']['color']]+suffix,
         'forecastId': forecast['id'], 'scenarioId': payload.get('scenarioId'),
         'ruleSetId': rules.get('id', 'DEFAULT'), 'ruleSnapshot': deepcopy(rules), 'assessment': assessed,
         'color': assessed['selected']['color'], 'mode': mode, 'status': 'draft',

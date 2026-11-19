@@ -1,6 +1,7 @@
 """Revision-aware monitoring reads sharing the numerical aggregation rules."""
 from collections import OrderedDict
 from datetime import date,timedelta
+import json
 from threading import RLock
 import numpy as np
 import pandas as pd
@@ -38,7 +39,7 @@ def cached(db,name,make):
         finally:
             with _lock:_flights.pop(key,None)
 
-def selected_sql(station=None,variable=None,step=None,start=None,end=None,lean=False):
+def selected_sql(station=None,variable=None,step=None,start=None,end=None,lean=False,include_source=False):
     clauses=['s.rowid IN (SELECT MAX(rowid) FROM sources GROUP BY path)'];args=[]
     # A date-only end includes the entire business day, including fractional
     # seconds. Explicit timestamps keep their existing inclusive semantics.
@@ -47,6 +48,7 @@ def selected_sql(station=None,variable=None,step=None,start=None,end=None,lean=F
     for field,op,value in [('station_id','=',station),('variable','=',variable),('step','=',step),('time','>=',start),('time','<' if end_is_day else '<=',day_after if end_is_day else end)]:
         if value:clauses.append('o.'+field+op+'?');args.append(value)
     fields="o.id,o.station_id,o.variable,o.time,o.step,o.quality,o.value" if lean else "o.*"
+    if include_source:fields+=",s.path source_path,s.metadata source_metadata"
     return "WITH ranked AS (SELECT "+fields+",ROW_NUMBER() OVER(PARTITION BY station_id,variable,step,time ORDER BY s.imported_at DESC,o.id DESC) rn FROM observations o JOIN sources s ON s.id=o.source_id WHERE "+' AND '.join(clauses)+') SELECT * FROM ranked WHERE rn=1',args
 
 def catalog(db):
@@ -72,9 +74,25 @@ def page(db,q):
 
 class SeriesView:
     def __init__(self,db):self.rows=db.rows
-    def observations(self,station,variable,step=None,start=None,end=None,limit=None):
-        sql,args=selected_sql(station,variable,step,start,end,lean=True)
+    def observations(self,station,variable,step=None,start=None,end=None,limit=None,include_source=False):
+        sql,args=selected_sql(station,variable,step,start,end,lean=True,include_source=include_source)
         return self.rows(sql+' ORDER BY time,id',args)
+
+
+def main_level_datum_ok(db):
+    rows = db.rows("SELECT metadata FROM stations WHERE id='SLC'")
+    metadata = json.loads(rows[0]['metadata']) if rows and rows[0]['metadata'] else {}
+    datum = metadata.get('verticalDatum') or {}
+    return bool(metadata.get('datumVerified') or datum.get('role') == 'working-reference')
+
+
+def level_source_datum_ok(row):
+    """Check the datum frozen with a connected observation, not today's connection settings."""
+    if not row['source_path'].startswith('exchange/connection/'):
+        return True
+    source = (json.loads(row['source_metadata'] or '{}').get('sourceMetadata') or {})
+    datum = source.get('levelDatum') or {}
+    return datum.get('status') == 'verified' and bool(datum.get('name') and datum.get('basis'))
 
 def series(db,station,variable,start=None,end=None):
     full=cached(db,('daily',station,variable),lambda:daily_series(SeriesView(db),station,variable))

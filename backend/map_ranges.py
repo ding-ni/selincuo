@@ -3,7 +3,7 @@ from collections import OrderedDict
 import json
 import numpy as np
 import pandas as pd
-from .dashboard import aggregate_frame
+from .dashboard import aggregate_frame, map_input, map_times, map_values
 from .common import digest, read_json
 _cache=OrderedDict()
 
@@ -54,11 +54,11 @@ def range_for(db,q):
             collect(a)
     else:
         if variable not in ('precipitation','temperature','evaporation'):raise ValueError('不支持的地图变量')
-        from .grid_simulation import prepare
-        manifest=read_json(db.workspace/'inputs/products'/q['inputId']/'manifest.json')
-        source=prepare(db,q['inputId'],q.get('spatialVersion') or manifest['spatialVersion']);times=source['times']
+        _,spatial,_,source=map_input(db,q['inputId'],q.get('spatialVersion'))
+        times=map_times(db,source)
+        values=map_values(db,source,(variable,),(len(times),len(spatial['grids'])))[variable]
         for day in pd.date_range(pd.Timestamp(q.get('start') or times[0]).normalize(),pd.Timestamp(q.get('end') or times[-1]).normalize(),freq='D'):
-            a,hours=aggregate_frame(times,source['arrays'][variable],day.strftime('%Y-%m-%d'),'mean' if variable=='temperature' else 'sum')
+            a,_=aggregate_frame(times,values,day.strftime('%Y-%m-%d'),'mean' if variable=='temperature' else 'sum')
             if a is not None:collect(a)
     positive=np.asarray([v for v in samples if v>0])
     result={'variable':variable,'minimum':lo if count else None,'maximum':hi if count else None,'count':int(count),'scope':'replay-period',

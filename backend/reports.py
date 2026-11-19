@@ -92,6 +92,7 @@ def _data(db, request):
             for r in rows] or ['近七天无预警或情景提示记录。']})
     elif kind == 'warning':
         warning = store.get(db, 'warnings', request['warningId'])
+        data['title'] = '业务预警单' if warning.get('mode') == 'business' else '情景风险提示'
         data['warning'] = warning
         match = warning['assessment']['selected']
         data['sections'].append({'title': warning['name'], 'lines': [

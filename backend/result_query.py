@@ -164,6 +164,18 @@ def frozen_spatial_version(result, state=None):
     if len(versions)>1:raise ValueError('成果、方案与检查点的冻结空间身份互相冲突')
     return next(iter(versions),None)
 
+def result_spatial(result, state=None):
+    version=frozen_spatial_version(result,state)
+    if not version:
+        legacy=read_json(ROOT/'data/derived/spatial/manifest.json') or {}
+        if (legacy.get('schemaVersion',1)!=1 or not result.get('units') or
+                legacy.get('units')!=result['units']):
+            raise FileNotFoundError('成果缺少冻结空间版本，且无法证明与当前旧版计算单元一致')
+        version=legacy.get('version')
+        if not version:raise FileNotFoundError('旧版空间资料缺少版本身份')
+    return version,spatial_base(version)
+
+
 def metadata(db,identifier):
     entry=_entry(db,identifier);task,data,state,times=(entry[k] for k in ('task','data','state','times'))
     with _lock:
@@ -176,17 +188,9 @@ def metadata(db,identifier):
                 initialization_days=sorted(set(times[starts].strftime('%Y-%m-%d')))
             entry['initializationDays']=initialization_days;entry['initializationDaysBuilt']=True
         initialization_days=deepcopy(entry['initializationDays'])
-    result=task['result'];version=frozen_spatial_version(result,state)
-    if not version:
-        legacy=read_json(ROOT/'data/derived/spatial/manifest.json') or {}
-        if (legacy.get('schemaVersion',1)!=1 or not result.get('units') or
-                legacy.get('units')!=result['units']):
-            raise FileNotFoundError('成果缺少冻结空间版本，且无法证明与当前旧版计算单元一致')
-        version=legacy.get('version')
-        if not version:raise FileNotFoundError('旧版空间资料缺少版本身份')
+    result=task['result'];version,spatial_path=result_spatial(result,state)
     from .grid_spatial import load
     spatial=load(version) if version else {}
-    spatial_path=spatial_base(version)
     return {'id':identifier,'start':times[0].isoformat(),'end':times[-1].isoformat(),'hours':len(times),'units':result['units'],'variables':variables(),'rivers':result.get('rivers',RIVERS),'partitions':result.get('partitions',PARTITIONS),'canContinue':not task.get('builtin',False) and compatible(state),'warmupEnd':task.get('request',{}).get('periods',{}).get('trainingStart','2024-01-01T00:00:00'),'lakeInitializationDays':initialization_days,
             'spatialVersion':version,'spatialBase':spatial_path,'initialization':result.get('initialization'),'storageFormat':result.get('storageFormat','npz'),'inflowComplete':result.get('inflowComplete',True),'drainage':result.get('drainage'),'modelFamily':result.get('modelFamily','legacy-v0.8')}
 

@@ -5,6 +5,7 @@ import gzip
 from http.client import IncompleteRead
 import json
 from pathlib import Path
+from threading import Lock
 import time
 import uuid
 import zlib
@@ -21,6 +22,7 @@ from . import operational_store as store
 COLLECTION = 'forecast-inputs'
 ENSEMBLE_MODEL = 'ecmwf_ifs025_ensemble'
 ENSEMBLE_URL = 'https://ensemble-api.open-meteo.com/v1/ensemble'
+CLIMATOLOGY_CACHE_LOCK = Lock()
 
 
 def hour(value, label='时刻'):
@@ -60,10 +62,75 @@ def _weights(spatial):
     return matrix
 
 
+def release_forcing_cache():
+    """Drop the in-memory full reanalysis arrays (about 1 GB) once summaries are built."""
+    from . import grid_simulation
+    grid_simulation._cache.clear()
+
+
+def era_summary(db, input_id, spatial_version):
+    """Month/hour mean E0 and monthly precipitation sums over the whole input, cached as a small file.
+
+    Identical to computing from the full arrays when every input hour precedes the issue time,
+    which is always the case for operational forecasts after the reanalysis end.
+    """
+    from .common import read_json
+    manifest = read_json(db.workspace / 'inputs/products' / input_id / 'manifest.json') if db is not None else None
+    if not manifest:
+        return None
+    folder = db.workspace / 'inputs' / 'climatology'
+    path = folder / f'{input_id}-month-summary.npz'
+    if not path.is_file():
+        with CLIMATOLOGY_CACHE_LOCK:
+            if not path.is_file():
+                _build_era_summary(db, input_id, spatial_version, path)
+    with np.load(path, allow_pickle=False) as archive:
+        return {'evaporation': archive['evaporation'], 'counts': archive['counts'],
+                'precipitation': archive['precipitation'], 'years': archive['years'],
+                'end': pd.Timestamp(int(archive['end'][0])), 'inputId': input_id}
+
+
+def _build_era_summary(db, input_id, spatial_version, path):
+    from .grid_simulation import prepare
+    source = prepare(db, input_id, spatial_version)
+    times = source['times']; shifted = times - pd.Timedelta(nanoseconds=1)
+    month, hour_of_day, year = shifted.month.to_numpy(), times.hour.to_numpy(), shifted.year.to_numpy()
+    n = source['arrays']['evaporation'].shape[1]
+    evap = np.zeros((12, 24, n)); counts = np.zeros((12, 24), dtype=int)
+    rain = np.zeros((12, n)); years = np.zeros(12, dtype=int)
+    for m in range(1, 13):
+        selected = month == m
+        rain[m - 1] = source['arrays']['precipitation'][selected].sum(axis=0)
+        years[m - 1] = len(set(year[selected]))
+        for h in range(24):
+            ids = np.flatnonzero(selected & (hour_of_day == h))
+            counts[m - 1, h] = len(ids)
+            if len(ids): evap[m - 1, h] = np.mean(source['arrays']['evaporation'][ids], axis=0)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    partial = path.with_name(path.name + '.partial.npz')
+    np.savez_compressed(partial, evaporation=evap, counts=counts, precipitation=rain, years=years,
+                        end=np.array([times[-1].value]))
+    partial.replace(path)
+    release_forcing_cache()
+
+
 def seasonal_evaporation(db, context, times, reference_input_id=None):
     """Month/hour E0 from actual source ERA values, restricted to pre-issue data."""
     from .grid_simulation import prepare
     source_id = reference_input_id or context['state']['inputId']
+    summary = era_summary(db, source_id, context['spatial']['version'])
+    if summary is not None and summary['end'] <= times[0] - pd.Timedelta(hours=1):
+        spatial = context['spatial']; weights = _weights(spatial); lake_weights = np.asarray(spatial['lakeWeights'])
+        unit = np.empty((len(times), len(spatial['units']))); lake = np.empty(len(times)); used = {}
+        for i, time in enumerate(times):
+            m, h = (time - pd.Timedelta(nanoseconds=1)).month, time.hour
+            if not summary['counts'][m - 1, h]: raise ValueError(f'历史ERA未覆盖{m}月{h}时的蒸发参考')
+            values = summary['evaporation'][m - 1, h]
+            unit[i] = values @ weights.T; lake[i] = float(values @ lake_weights); used[(m, h)] = int(summary['counts'][m - 1, h])
+        return unit, lake, {'method': 'seasonal-hourly-original-era', 'referenceInputId': source_id,
+                            'referenceEnd': summary['end'].isoformat(),
+                            'samples': [{'month': m, 'hour': h, 'count': c} for (m, h), c in sorted(used.items())],
+                            'unit': 'mm/h potential open-water evaporation'}
     source = prepare(db, source_id, context['spatial']['version'])
     prior = source['times'] <= times[0] - pd.Timedelta(hours=1)
     if not prior.any(): raise ValueError('没有起报前的ERA蒸发能力资料')
@@ -90,8 +157,8 @@ def seasonal_evaporation(db, context, times, reference_input_id=None):
 def preview_evaporation(db, payload):
     issue = hour(payload.get('issueTime'), '起报时刻')
     days = int(payload.get('days', 10))
-    if not 7 <= days <= 10 or issue.hour:
-        raise ValueError('逐日蒸发参考须从北京时间00时起报，支持7—10天')
+    if not 7 <= days <= 15 or issue.hour:
+        raise ValueError('逐日蒸发参考须从北京时间00时起报，支持7—15天')
     context = _context(db, payload)
     times = pd.date_range(issue + pd.Timedelta(hours=1), periods=days * 24, freq='h')
     unit, lake, basis = seasonal_evaporation(db, context, times, (payload.get('evaporation') or {}).get('referenceInputId'))
@@ -115,6 +182,16 @@ def precipitation_ratios(db, payload):
     issue = hour(payload.get('issueTime'), '起报时刻')
     context = _context(db, payload)
     spatial = context['spatial']
+    summary = era_summary(db, context['state']['inputId'], spatial['version'])
+    if summary is not None and summary['end'] <= issue:
+        totals = summary['precipitation'][issue.month - 1]; years = int(summary['years'][issue.month - 1])
+        unit = totals @ _weights(spatial).T
+        areas = np.array([u['areaKm2'] for u in spatial['units']])
+        basin = float(np.average(unit, weights=areas))
+        if basin <= 0: raise ValueError('历史同月降水为零，不能按比例分配')
+        ratios = {key: float(np.average(unit[idx], weights=areas[idx]) / basin) for key, idx in _regions(spatial).items() if key != 'uniform'}
+        ratios['lake'] = float(totals @ np.asarray(spatial['lakeWeights']) / basin)
+        return {'month': int(issue.month), 'years': years, 'basinMonthlyMm': basin / max(1, years), 'ratios': ratios}
     source = prepare(db, context['state']['inputId'], spatial['version'])
     times = source['times']
     month = (times - pd.Timedelta(nanoseconds=1)).month
@@ -168,7 +245,7 @@ def _save(db, context, payload, times, arrays, metadata, member_ids=None):
 
 def catalog(db):
     return {'items': store.list_records(db, COLLECTION), 'defaultDays': 10,
-            'minimumDays': 7, 'maximumDays': 10, 'ensembleDefaultDays': 15, 'ensembleMaximumDays': 15,
+            'minimumDays': 7, 'maximumDays': 15, 'dayOptions': [7, 10, 15], 'ensembleDefaultDays': 15, 'ensembleMaximumDays': 15,
             'ensembleModel': ENSEMBLE_MODEL, 'ensembleMembers': 51}
 
 
@@ -222,10 +299,10 @@ def create_manual(db, payload):
     context = _context(db, payload); spatial = context['spatial']; regions = {**context['regions'], '_base': context['parameters']}
     issue = hour(payload.get('issueTime'), '起报时刻')
     days = int(payload.get('days', 10))
-    if not 7 <= days <= 10: raise ValueError('手动情景支持7—10天')
+    if not 7 <= days <= 15: raise ValueError('手动情景支持7—15天')
     daily = payload.get('daily', [])
     if len(daily) != days or issue.hour:
-        raise ValueError('逐日情景须从北京时间00时起报，并逐日填齐7—10天')
+        raise ValueError('逐日情景须从北京时间00时起报，并逐日填齐7—15天')
     times = pd.date_range(issue + pd.Timedelta(hours=1), periods=days * 24, freq='h')
     count = len(spatial['units']); p = np.empty((len(times), count)); t = np.empty_like(p)
     explicit_evap = np.full_like(p, np.nan); explicit_lake_evap = np.full(len(times), np.nan)
@@ -270,6 +347,95 @@ def create_manual(db, payload):
                   'precipitation': 'user scenario, no historical station multiplier', 'source': payload.get('source', '用户手动天气情景')})
 
 
+def station_forecast_stations(db, payload):
+    """Rain gauges usable for a station forecast, with their same-period mean daily rain."""
+    from .state_update import _Climate, _rain_stations
+    context = _context(db, payload)
+    issue = hour(payload.get('issueTime'), '起报时刻')
+    climate = _Climate(db, context)
+    days = int(payload.get('days', 10))
+    stations = _rain_stations(db, context['spatial'])
+    rows = []
+    for s in stations:
+        clim = [float(climate.daily_precipitation(issue.normalize() + pd.Timedelta(days=d))[s['gridIndex']]) for d in range(days)]
+        rows.append({'id': s['id'], 'name': s['name'], 'nearestKm': float(s['distanceKm'].min()),
+                     'climatologyMm': clim})
+    basin = [climate.basin_mean(climate.daily_precipitation(issue.normalize() + pd.Timedelta(days=d))) for d in range(days)]
+    return {'stations': rows, 'basinClimatologyMm': basin}
+
+
+def create_station_forecast(db, payload):
+    """Future weather from forecast daily rain at gauges, or from the multi-year same period.
+
+    Gauge values are spread to the forcing grid by the same IDW station-ratio method as the
+    observed state update; days without any gauge value use the same-period mean. Temperature
+    and evaporation capacity follow the same-period hourly means unless a basin daily mean
+    temperature is given.
+    """
+    from .state_update import _Climate, _rain_stations, _grid_precipitation, _day_forcing
+    context = _context(db, payload); spatial = context['spatial']; regions = {**context['regions'], '_base': context['parameters']}
+    issue = hour(payload.get('issueTime'), '起报时刻')
+    days = int(payload.get('days', 10))
+    if not 7 <= days <= 15: raise ValueError('预见期支持7—15天')
+    if issue.hour: raise ValueError('逐日情景须从北京时间00时起报')
+    method = payload.get('method', 'station')
+    if method not in ('station', 'climatology'): raise ValueError('未来气象须为站点预报或历史同期估算')
+    daily = payload.get('daily') or [{} for _ in range(days)]
+    if len(daily) != days: raise ValueError('须逐日给出全部预见期')
+    climate = _Climate(db, context)
+    stations = _rain_stations(db, spatial)
+    known = {s['id'] for s in stations}
+    shape = (payload.get('rainStartHour', 0), payload.get('rainEndHour', 24), payload.get('rainShape', 'uniform'))
+    weights = _rain(1., *shape)
+    times = pd.date_range(issue + pd.Timedelta(hours=1), periods=days * 24, freq='h')
+    count = len(spatial['units'])
+    p = np.empty((len(times), count)); t = np.empty_like(p); e = np.empty_like(p)
+    lake_p = np.empty(len(times)); lake_e = np.empty(len(times)); lake_t = np.empty(len(times))
+    lake_w = np.asarray(spatial['lakeWeights'], dtype=float)
+    used, summary = {'station': 0, 'climatology': 0}, []
+    for d in range(days):
+        date = issue.normalize() + pd.Timedelta(days=d)
+        row = daily[d] or {}
+        if row.get('date') and pd.Timestamp(row['date']).normalize() != date:
+            raise ValueError('逐日情景日期须连续且不重复')
+        observed = {}
+        if method == 'station':
+            for sid, value in (row.get('stations') or {}).items():
+                if value is None or value == '': continue
+                if sid not in known: raise ValueError('未知雨量站：' + str(sid))
+                value = float(value)
+                if not np.isfinite(value) or not 0 <= value <= 300: raise ValueError(f'{date.date()} 站点日雨量须为0—300 mm')
+                observed[sid] = value
+        grid, day_method = _grid_precipitation(climate, stations, date, observed, None)
+        used[day_method] += 1
+        hours = pd.date_range(date + pd.Timedelta(hours=1), periods=24, freq='h')
+        rain, temp, evap, lake_rain, lake_evap = _day_forcing(context, climate, {'grid': grid, 'method': day_method}, hours)
+        block = slice(d * 24, (d + 1) * 24)
+        p[block] = weights[:, None] * np.asarray(rain).sum(axis=0)[None, :]
+        lake_p[block] = weights * float(np.sum(lake_rain))
+        e[block] = evap; lake_e[block] = lake_evap
+        clim_t = np.stack([climate.hourly('temperature', h) for h in hours])
+        if row.get('temperatureC') not in (None, ''):
+            value = float(row['temperatureC'])
+            if not np.isfinite(value) or not -40 <= value <= 30: raise ValueError(f'{date.date()} 日均气温超出合理范围')
+            t[block] = _temperature(spatial, regions, list(range(count)), value)[None, :]
+            lake_t[block] = value
+        else:
+            t[block] = temp; lake_t[block] = clim_t @ lake_w
+        summary.append({'date': date.date().isoformat(), 'method': day_method, 'stations': observed,
+                        'basinPrecipitationMm': climate.basin_mean(grid),
+                        'temperatureC': None if row.get('temperatureC') in (None, '') else float(row['temperatureC'])})
+    record_payload = {**payload, 'days': days, 'daily': summary}
+    return _save(db, context, record_payload, times,
+                 {'precipitation': p[None], 'temperature': t[None], 'evaporation': e[None],
+                  'lakePrecipitation': lake_p[None], 'lakeEvaporation': lake_e[None], 'lakeTemperature': lake_t[None]},
+                 {'kind': 'station-forecast' if method == 'station' else 'climatology',
+                  'precipitation': 'IDW station ratio on multi-year same-period pattern; days without gauge values use the same-period mean',
+                  'temperature': 'basin daily mean with lapse rate where given, otherwise same-period hourly mean',
+                  'evaporation': 'same-period hourly mean evaporation capacity',
+                  'dayMethods': used, 'source': payload.get('source', '站点预报' if method == 'station' else '历史同期估算')})
+
+
 def _excel_rows(path):
     from openpyxl import load_workbook
     book = load_workbook(path, read_only=True, data_only=True)
@@ -290,7 +456,7 @@ def import_hourly(db, payload):
         if not source_path: raise ValueError('请提供逐时Excel或逐时记录')
         rows = _excel_rows(within(db.workspace, source_path))
     issue = hour(payload['issueTime'], '起报时刻'); days = int(payload.get('days', 10))
-    if not 7 <= days <= 10: raise ValueError('逐时情景支持7—10天')
+    if not 7 <= days <= 15: raise ValueError('逐时情景支持7—15天')
     times = pd.date_range(issue + pd.Timedelta(hours=1), periods=days * 24, freq='h'); slots = {t: i for i, t in enumerate(times)}
     p = np.full((len(times), len(spatial['units'])), np.nan); t = np.full_like(p, np.nan); e = np.full_like(p, np.nan)
     lp = np.full(len(times), np.nan); lt = lp.copy(); le = lp.copy(); mapping = _regions(spatial); seen = set()

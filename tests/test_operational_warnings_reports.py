@@ -63,6 +63,7 @@ class WarningReportTests(unittest.TestCase):
         published = warnings.publish(self.db, value['id'], {'operator':'业务确认人'})
         payload = reports._data(self.db, {'reportType':'warning','warningId':value['id']})
         self.assertIn('类别：业务预警', payload['sections'][0]['lines'])
+        self.assertEqual(payload['title'], '业务预警单')
         self.assertEqual(payload['warning']['ruleSnapshot']['source'], rules['source'])
         self.assertEqual(published['status'], 'published')
         withdrawn = warnings.withdraw(self.db, value['id'], {'operator':'业务确认人','reason':'更新预测'})
@@ -75,11 +76,13 @@ class WarningReportTests(unittest.TestCase):
             'memberLakeLevels':[[4543.8]]}
         for metadata in ({'provisional':True,'lakeCurve':{'provisional':False}},
                          {'provisional':False,'lakeCurve':{'provisional':True}},
-                         {'lakeCurve':{'provisional':True}}, {}):
+                         {'lakeCurve':{'provisional':True}}, {},
+                         {'provisional':False,'lakeCurve':{'id':'CURVE-DEMO-SELINCO','provisional':False}}):
             with self.subTest(metadata=metadata), patch('backend.forecasts.detail', return_value={**base, **metadata}):
                 value = warnings.draft(self.db, {'forecastId':base['id'],'ruleSetId':rules['id']})
             self.assertEqual(value['mode'], 'scenario')
-            self.assertEqual(value['name'], '色林错漫溢风险IV级蓝色预警')
+            self.assertIn('情景风险提示', value['name'])
+            self.assertEqual(reports._data(self.db, {'reportType':'warning','warningId':value['id']})['title'], '情景风险提示')
 
     def test_default_grades_combine_lake_level_and_breach_outflow(self):
         rules = warnings.default_rules()

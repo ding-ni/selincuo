@@ -1,28 +1,115 @@
 """Truthful monitoring/replay products; no changes to the hydrological kernel."""
 from __future__ import annotations
 
+from functools import lru_cache
 import json
 import re
+import shutil
 import threading
 from pathlib import Path
+from uuid import uuid4
+from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
 
-from .common import ROOT, read_json, digest
+from .common import ROOT, read_json, digest, sha_file, within
 from .observations import daily_series
-from .forcing import load_input, lake_precipitation_factor, lake_precipitation_series
+from .forcing import lake_precipitation_factor, lake_precipitation_series
 
-_lock = threading.RLock()
+_observations_lock = threading.RLock()
+_forcing_lock = threading.RLock()
 _observations = {}
-_forcing = {}
+
+def _map_cache_directory(db, source):
+    _, size, modified, expected_sha = source
+    return within(db.workspace/'numeric-cache'/'map-forcing', f'{expected_sha}-{size}-{modified}')
+
+
+def _unpack_map_array(folder, file, variable):
+    target = folder/(variable+'.npy')
+    if not target.is_file():
+        folder.mkdir(parents=True, exist_ok=True)
+        partial = folder/(variable+'.'+uuid4().hex+'.partial')
+        with ZipFile(file) as archive, archive.open(target.name) as reader, partial.open('xb') as writer:
+            shutil.copyfileobj(reader, writer, length=1024*1024)
+        partial.replace(target)
+    return target
+
+
+@lru_cache(maxsize=4)
+def _map_time_axis(folder, source):
+    file, _, _, expected_sha = source
+    if not (folder/'time.npy').is_file() and sha_file(file) != expected_sha:
+        raise ValueError('输入文件摘要发生变化，拒绝使用')
+    path = _unpack_map_array(folder, file, 'time')
+    return pd.DatetimeIndex(np.load(path, allow_pickle=False).astype('datetime64[ns]'))
+
+
+def map_input(db, identifier, spatial_version=None):
+    from .grid_spatial import load
+    from .land_precipitation import validate_manifest
+    folder = within(db.workspace/'inputs/products', identifier)
+    manifest = read_json(folder/'manifest.json')
+    if not manifest or manifest['id'] != identifier or manifest.get('projectId') != 'selinco':
+        raise ValueError('输入产品不存在或不属于色林错')
+    source = load(manifest['spatialVersion'])
+    spatial = load(spatial_version) if spatial_version and spatial_version != manifest['spatialVersion'] else source
+    if not spatial:
+        raise ValueError('空间资料未建立')
+    if digest(source['grids']) != spatial.get('forcingGridVersion', digest(spatial['grids'])):
+        raise ValueError('气象格网坐标或顺序与显示空间不一致')
+    rule = manifest.get('lakePrecipitationCorrection')
+    if rule and digest(rule) != manifest.get('transformationSHA256'):
+        raise ValueError('湖面降水转换定义摘要不一致')
+    correction = validate_manifest(manifest)
+    file = within(folder, manifest['data'])
+    stat = file.stat()
+    return manifest, spatial, correction, (file, stat.st_size, stat.st_mtime_ns, manifest['dataSHA256'])
+
+
+def map_times(db, source):
+    with _forcing_lock:
+        return _map_time_axis(_map_cache_directory(db, source), source)
+
+
+def map_values(db, source, variables, shape):
+    """Keep weather arrays on disk so the map only reads the hours it needs."""
+    folder = _map_cache_directory(db, source)
+    with _forcing_lock:
+        _map_time_axis(folder, source)
+        files = {name: _unpack_map_array(folder, source[0], name) for name in variables}
+    arrays = {name: np.load(path, mmap_mode='r', allow_pickle=False) for name, path in files.items()}
+    if any(array.shape != shape or array.dtype.kind not in 'iuf' for array in arrays.values()):
+        raise ValueError('气象输入数组布局与登记格网不一致')
+    return arrays
+
+
+def replay(db, identifier):
+    """Return the daily fields and matching map needed by the lake overview."""
+    from .business_context import result_task
+    from .result_query import result_spatial
+    task = result_task(db, identifier)
+    result = task.get('result') or {}
+    if task['status'] != 'succeeded' or not result.get('daily') or not result.get('inputId'):
+        raise ValueError('该成果没有可回放的日过程')
+    version, spatial_base = result_spatial(result)
+    fields = ('date', 'lakeLevel', 'observedLevel', 'total', 'duja', 'observedFlow',
+              'zajia', 'zagen', 'boqu', 'ali', 'fringe', 'lakeInflowM3',
+              'lakePrecipitationM3', 'lakeEvaporationM3', 'lakeDeltaVolumeM3')
+    daily = [{key: row[key] for key in fields if key in row} for row in result['daily']]
+    summary = {key: result.get(key) for key in ('displayCoverage', 'inputId', 'start', 'end', 'inflowComplete')}
+    summary['units'] = [{key: unit[key] for key in ('id', 'name', 'partition', 'basin', 'areaKm2') if key in unit}
+                        for unit in result.get('units') or []]
+    return {'id': task['id'], 'status': task['status'], 'spatialVersion': version,
+            'spatialBase': spatial_base, 'result': {**summary, 'spatialVersion': version, 'daily': daily}}
 
 
 def monitoring(db):
     # Revisions and coverage confirmations invalidate the observation product.
     from .observation_query import revision
     key = revision(db)
-    with _lock:
+    with _observations_lock:
         if key in _observations:
             return _observations[key]
         stations = db.rows('SELECT * FROM stations ORDER BY id')
@@ -75,25 +162,24 @@ def aggregate_frame(times, array, day, operation='sum'):
 def map_frame(db, input_id, day, variable='precipitation',spatial_version=None,result_id=None):
     if variable not in ('precipitation','temperature','evaporation'):
         raise ValueError('地图变量须为降水、气温或蒸发能力')
-    parse_day(day)
-    from .grid_spatial import load
-    native=read_json(db.workspace/'inputs/products'/input_id/'manifest.json')
-    source_spatial=load(native['spatialVersion'])
-    spatial=load(spatial_version) if spatial_version else source_spatial
-    if not spatial:
-        raise ValueError('空间资料未建立')
-    if digest(source_spatial['grids'])!=spatial.get('forcingGridVersion',digest(spatial['grids'])):
-        raise ValueError('气象格网坐标或顺序与显示空间不一致')
-    product=db.workspace/'inputs/products'/input_id
-    key=(str(db.workspace),input_id,spatial['version'],(product/'manifest.json').stat().st_mtime_ns,
-         (product/'forcing.npz').stat().st_mtime_ns)
-    with _lock:
-        if key not in _forcing:
-            manifest,arrays=load_input(db,input_id,source_spatial)
-            _forcing.clear()
-            _forcing[key]=(manifest,arrays)
-        manifest,arrays=_forcing[key]
-    values,hours=aggregate_frame(arrays['time'],arrays[variable],day,'mean' if variable=='temperature' else 'sum')
+    start=parse_day(day)
+    expected=pd.date_range(start+pd.Timedelta(hours=1),start+pd.Timedelta(days=1),freq='h')
+    manifest,spatial,correction,source=map_input(db,input_id,spatial_version)
+    variables=(variable,)
+    lake_rule=(manifest.get('lakePrecipitationCorrection') or {}).get('method')
+    if (variable=='temperature' and result_id) or (variable=='precipitation' and correction is not None):
+        variables=('precipitation','temperature','evaporation')
+    elif variable=='precipitation' and lake_rule=='station-warm-rain-grid-v1':
+        variables=('precipitation','temperature')
+    times=map_times(db,source)
+    positions=times.get_indexer(expected)
+    hours=int(np.count_nonzero(positions>=0))
+    values=None
+    if hours==24:
+        raw=map_values(db,source,variables,(len(times),len(spatial['grids'])))
+        arrays={key:array[positions] for key,array in raw.items()}
+        if np.isfinite(arrays[variable]).all():
+            values=arrays[variable].mean(axis=0) if variable=='temperature' else arrays[variable].sum(axis=0)
     base={'day':day,'inputId':input_id,'variable':variable,'hours':hours,'timeZone':'Asia/Shanghai',
           'source':'ERA5-Land已登记真实驱动','resolution':'0.1°','spatialVersion':spatial['version'],
           'unit':'℃' if variable=='temperature' else 'mm/d','complete':values is not None,
@@ -110,11 +196,9 @@ def map_frame(db, input_id, day, variable='precipitation',spatial_version=None,r
     lake_raw=float(lake_weights@values)
     lake_factor=lake_precipitation_factor(manifest) if variable=='precipitation' else 1.
     lake_used=lake_raw*lake_factor
-    if variable=='precipitation' and (manifest.get('lakePrecipitationCorrection') or {}).get('method') in ('station-warm-rain-grid-v1','station-monthly-total-grid-v1'):
-        times=pd.DatetimeIndex(arrays['time']); start=parse_day(day)
-        ids=times.get_indexer(pd.date_range(start+pd.Timedelta(hours=1),start+pd.Timedelta(days=1),freq='h'))
-        if np.any(ids<0):raise ValueError('湖面暖雨订正缺少完整日气象')
-        lake_used=float(lake_precipitation_series(manifest,spatial,arrays,times,ids).sum())
+    ids=np.arange(24)
+    if variable=='precipitation' and lake_rule in ('station-warm-rain-grid-v1','station-monthly-total-grid-v1'):
+        lake_used=float(lake_precipitation_series(manifest,spatial,arrays,expected,ids).sum())
     domain_used=float(domain_weights@values)+(lake_used-lake_raw)*spatial['lakeAreaKm2']/(areas.sum()+spatial['lakeAreaKm2'])
     unit_values=weights@values
     if variable=='temperature' and result_id:
@@ -126,23 +210,15 @@ def map_frame(db, input_id, day, variable='precipitation',spatial_version=None,r
             raise ValueError('悬停气温的成果、驱动及空间不一致')
         request={key:result.get(key) for key in ('parameters','partitionParameters','parameterTransfer')}
         _,_,parameters,regions,_,_=parameter_configuration(spatial,request)
-        times=pd.DatetimeIndex(arrays['time']);start=parse_day(day)
-        ids=times.get_indexer(pd.date_range(start+pd.Timedelta(hours=1),start+pd.Timedelta(days=1),freq='h'))
         _,temperature,_=unit_forcing(spatial,arrays,ids,parameters,regions)
         unit_values=temperature.mean(axis=0)
         base['unitValuesRepresent']='model-elevation-corrected'
-    if variable=='precipitation' and manifest.get('landPrecipitationCorrection') is not None:
+    if variable=='precipitation' and correction is not None:
         # Reuse the actual per-member model transformation while retaining raw
         # source-grid values for the weather map and the lake correction once.
         from .grid_simulation import unit_forcing
-        from .land_precipitation import validate_manifest
-        correction=validate_manifest(manifest)
-        times=pd.DatetimeIndex(arrays['time'])
-        start=parse_day(day)
-        ids=times.get_indexer(pd.date_range(start+pd.Timedelta(hours=1),start+pd.Timedelta(days=1),freq='h'))
-        if np.any(ids<0):raise ValueError('陆域降水订正缺少完整日气象')
         rain,_,_=unit_forcing(spatial,arrays,ids,
-            {'lapseRate':correction.get('memberLapseRateCPerM',-.0065)},{},correction,times)
+            {'lapseRate':correction.get('memberLapseRateCPerM',-.0065)},{},correction,expected)
         unit_values=rain.sum(axis=0)
         domain_used=float((areas@unit_values+spatial['lakeAreaKm2']*lake_used)/(areas.sum()+spatial['lakeAreaKm2']))
     return {**base,'cells':[{**g,'value':float(v)} for g,v in zip(spatial['grids'],values)],

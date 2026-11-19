@@ -4,34 +4,30 @@ import Chart from './Chart.vue'
 import {api,number} from './api.mjs'
 const props=defineProps({issue:Object,sourceId:String,busy:Boolean})
 const emit=defineEmits(['saved','task','navigate','error'])
-const AREAS=[['zajia','扎加藏布'],['zagen','扎根藏布'],['boqu','波曲'],['ali','阿里藏布'],['fringe','湖周直接入湖区'],['lake','湖面']]
 const REGION_CODES={'全流域':'uniform','扎加藏布':'zajia','杜加站以上':'duja','扎根藏布':'zagen','波曲':'boqu','阿里藏布':'ali','湖周直接入湖区':'fringe','湖周':'fringe','湖面':'lake'}
-const method=ref('manual'),days=ref(10),spatial=ref('uniform'),diurnal=ref('uniform'),name=ref('未来10天情景'),rows=ref([]),evap=ref(null),working=ref(false),file=ref(null),fileRows=ref(null)
-const gen=reactive({total:20,pattern:'middle',temp:2,trend:0,climatology:true}),ratios=ref(null)
+const method=ref('station'),days=ref(10),diurnal=ref('uniform'),name=ref('未来10天站点预报'),working=ref(false),file=ref(null),fileRows=ref(null)
 const weekday=['日','一','二','三','四','五','六']
 const issueDay=computed(()=>props.issue?.issueTime?.slice(0,10))
 const dateAt=i=>{const d=new Date(Date.parse(issueDay.value+'T00:00:00Z')+i*86400000);return {date:d.toISOString().slice(0,10),label:d.toISOString().slice(5,10)+' 周'+weekday[d.getUTCDay()]}}
-function rebuild(){if(!issueDay.value)return;const old=rows.value;rows.value=Array.from({length:days.value},(_,i)=>({...dateAt(i),precipitation:old[i]?.precipitation??'',temperature:old[i]?.temperature??'',evaporation:old[i]?.evaporation??'',areas:old[i]?.areas||Object.fromEntries(AREAS.map(([id])=>[id,'']))}));if(!name.value||/^未来\d+天情景$/.test(name.value))name.value='未来'+days.value+'天情景'}
-watch([issueDay,days],rebuild,{immediate:true})
-watch([()=>props.sourceId,issueDay,days],async()=>{evap.value=null;if(!props.sourceId||!props.issue?.issueTime)return;try{evap.value=await api('forecast-inputs/evaporation-preview',{sourceResultId:props.sourceId,issueTime:props.issue.issueTime,days:days.value,evaporation:{method:'seasonal-hourly'}})}catch{}},{immediate:true})
-function weights(n,pattern){const w=Array.from({length:n},(_,i)=>pattern==='front'?n-i:pattern==='back'?i+1:pattern==='middle'?n/2+.5-Math.abs(i-(n-1)/2):1);const s=w.reduce((a,b)=>a+b,0);return w.map(v=>v/s)}
-async function generate(){if(spatial.value==='areas'&&gen.climatology&&!ratios.value){try{ratios.value=await api('forecast-inputs/precipitation-ratios',{sourceResultId:props.sourceId,issueTime:props.issue.issueTime})}catch(e){emit('error',e.message)}}
- const w=weights(rows.value.length,gen.pattern),k=id=>spatial.value==='areas'&&gen.climatology&&ratios.value?ratios.value.ratios[id]??1:1
- rows.value.forEach((r,i)=>{const p=gen.total*w[i],t=Math.round((gen.temp+gen.trend*i)*10)/10;r.precipitation=Math.round(p*10)/10;r.temperature=t;if(spatial.value==='areas')for(const [id] of AREAS)r.areas[id]=Math.round(p*k(id)*10)/10})}
-watch([()=>props.sourceId,issueDay],()=>{ratios.value=null})
-function fillArea(id){const v=rows.value[0]?.areas[id];for(const r of rows.value)r.areas[id]=v}
+// Station forecast: daily rain per gauge; blank cells use the gauge's same-period mean.
+const info=ref(null),rows=ref([])
+const stations=computed(()=>info.value?.stations||[])
+function rebuild(){if(!issueDay.value)return;const old=rows.value;rows.value=Array.from({length:days.value},(_,i)=>({...dateAt(i),stations:old[i]?.stations||{},temperature:old[i]?.temperature??''}))
+ const base=method.value==='climatology'?'历史同期估算':'站点预报';if(!name.value||/^未来\d+天(情景|站点预报|历史同期估算)$/.test(name.value))name.value='未来'+days.value+'天'+base}
+watch([issueDay,days,method],rebuild,{immediate:true})
+watch([()=>props.sourceId,()=>props.issue?.issueTime,days],async()=>{info.value=null;if(!props.sourceId||!props.issue?.issueTime)return
+ try{info.value=await api('forecast-inputs/station-stations',{sourceResultId:props.sourceId,issueTime:props.issue.issueTime,days:days.value})}catch(e){emit('error',e.message)}},{immediate:true})
 const blank=v=>v===''||v==null
-const preview=computed(()=>rows.value.map(r=>{let rain=null;if(spatial.value==='areas'){const v=AREAS.filter(([id])=>id!=='lake').map(([id])=>r.areas[id]).filter(x=>!blank(x)).map(Number);rain=v.length?v.reduce((a,b)=>a+b,0)/v.length:null}else rain=blank(r.precipitation)?null:Number(r.precipitation);return {date:r.date,rain,temp:blank(r.temperature)?null:Number(r.temperature)}}))
-const totalRain=computed(()=>preview.value.reduce((a,r)=>a+(r.rain||0),0))
-const complete=computed(()=>rows.value.length&&rows.value.every(r=>r.temperature!==''&&(spatial.value==='areas'?AREAS.every(([id])=>r.areas[id]!==''):r.precipitation!=='')))
+const climAt=(sid,i)=>stations.value.find(s=>s.id===sid)?.climatologyMm?.[i]
+const filled=computed(()=>rows.value.reduce((n,r)=>n+Object.values(r.stations).filter(v=>!blank(v)).length,0))
+const preview=computed(()=>rows.value.map((r,i)=>{const vals=stations.value.map(s=>blank(r.stations[s.id])?null:Number(r.stations[s.id])).filter(v=>v!=null)
+ return {date:r.date,rain:method.value==='station'&&vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null,clim:info.value?.basinClimatologyMm?.[i]??null,temp:blank(r.temperature)?null:Number(r.temperature)}}))
+function fillStation(sid){const v=rows.value[0]?.stations[sid];for(const r of rows.value)r.stations[sid]=v}
 function payload(){const shape=diurnal.value==='afternoon'?{rainStartHour:12,rainEndHour:24,rainShape:'triangle'}:{rainStartHour:0,rainEndHour:24,rainShape:'uniform'}
- return rows.value.map(r=>{const base={date:r.date,temperatureC:Number(r.temperature),...shape,overrides:{}}
-  if(r.evaporation!==''&&r.evaporation!=null)base.evaporationMm=Number(r.evaporation)
-  if(spatial.value==='areas'){base.precipitationMm=Number(r.areas.zajia);for(const [id] of AREAS){if(id==='lake')base.lake={precipitationMm:Number(r.areas.lake)};else base.overrides[id]={precipitationMm:Number(r.areas[id])}}}
-  else base.precipitationMm=Number(r.precipitation)
-  return base})}
+ return {...shape,daily:rows.value.map(r=>({date:r.date,stations:method.value==='station'?Object.fromEntries(Object.entries(r.stations).filter(([,v])=>!blank(v)).map(([k,v])=>[k,Number(v)])):{},
+  ...(blank(r.temperature)?{}:{temperatureC:Number(r.temperature)})}))}}
 async function action(fn){working.value=true;try{await fn()}catch(e){emit('error',e.message)}finally{working.value=false}}
-async function saveManual(){await action(async()=>{const value=await api('forecast-inputs/manual',{name:name.value,sourceResultId:props.sourceId,issueTime:props.issue.issueTime,days:days.value,daily:payload(),evaporation:{method:'seasonal-hourly'}});emit('saved',value.id)})}
+async function saveStation(){await action(async()=>{const value=await api('forecast-inputs/station',{name:name.value,sourceResultId:props.sourceId,issueTime:props.issue.issueTime,days:days.value,method:method.value,...payload()});emit('saved',value.id)})}
 // Hourly table: template generated here; CSV is parsed in the browser, XLSX goes through the existing upload path.
 function template(){const start=Date.parse(props.issue.issueTime+'Z'),lines=['时间,区域,降水(mm),气温(℃),蒸发(mm)'];for(let h=1;h<=days.value*24;h++){const t=new Date(start+h*3600000).toISOString().replace('T',' ').slice(0,16);lines.push(`${t},全流域,0,,`)}
  const blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`逐时气象模板-${issueDay.value}-${days.value}天.csv`;a.click();URL.revokeObjectURL(a.href)}
@@ -44,13 +40,14 @@ async function importHourly(){await action(async()=>{let body={name:name.value,s
  if(fileRows.value){if(fileRows.value.some(r=>r.precipitationMm==null||r.temperatureC==null))throw Error('表格中仍有空白的降水或气温');body.rows=fileRows.value}
  else{const response=await fetch('/api/model/upload?'+new URLSearchParams({filename:file.value.name,format:'exchange'}),{method:'PUT',body:file.value});const upload=await response.json();if(!response.ok)throw Error(upload.error||'上传失败');body.filename=upload.filename;body.path='incoming/'+upload.filename}
  const value=await api('forecast-inputs/hourly',body);emit('saved',value.id)})}
-const gapDays=computed(()=>{const t=props.issue?.issueTime;return t?Math.floor((Date.now()-Date.parse(t+'+08:00'))/86400000):null})
+const gapDays=computed(()=>props.issue?.lagDays??null)
 async function ensemble(){await action(async()=>{const task=await api('forecast-inputs/ensemble',{sourceResultId:props.sourceId,days:15});emit('task',task)})}
 </script>
 <template>
 <section class="panel fw">
- <div class="fw-methods" role="tablist">
-  <button :class="{on:method==='manual'}" @click="method='manual'"><b>手工逐日设定</b><span>按天给定雨量和气温，可分子流域赋值</span></button>
+ <div class="fw-methods four" role="tablist">
+  <button :class="{on:method==='station'}" @click="method='station'"><b>站点预报</b><span>按雨量站逐日填写预报雨量，平台按站点比例法换算到各计算单元</span></button>
+  <button :class="{on:method==='climatology'}" @click="method='climatology'"><b>历史同期估算</b><span>无预报时，按多年同期（前后 7 天）平均降水、气温和蒸发能力</span></button>
   <button :class="{on:method==='hourly'}" @click="method='hourly'"><b>导入逐时表格</b><span>下载模板，填写逐小时过程后导入</span></button>
   <button :class="{on:method==='ensemble'}" @click="method='ensemble'"><b>ECMWF 集合预报</b><span>未来15天全球数值预报，51个成员</span></button>
  </div>
@@ -58,44 +55,37 @@ async function ensemble(){await action(async()=>{const task=await api('forecast-
  <template v-if="method!=='ensemble'">
   <div class="fw-bar">
    <label class="grow">情景名称<input v-model="name"></label>
-   <div class="fw-field"><span>预见期</span><div class="seg"><button v-for="d in [7,8,9,10]" :key="d" :class="{on:days===d}" @click="days=d">{{d}}天</button></div></div>
+   <div class="fw-field"><span>预见期</span><div class="seg"><button v-for="d in [7,10,15]" :key="d" :class="{on:days===d}" @click="days=d">{{d}}天</button></div></div>
    <div class="fw-field"><span>起始</span><b class="fw-start">{{issue?.issueTime?.replace('T',' ').slice(0,16)||'—'}}</b></div>
   </div>
  </template>
 
- <template v-if="method==='manual'">
-  <div class="fw-bar">
-   <div class="fw-field"><span>降水赋值</span><div class="seg"><button :class="{on:spatial==='uniform'}" @click="spatial='uniform'">全流域统一</button><button :class="{on:spatial==='areas'}" @click="spatial='areas'">分子流域</button></div></div>
+ <template v-if="method==='station'||method==='climatology'">
+  <div v-if="method==='station'" class="fw-bar">
    <div class="fw-field"><span>日内过程</span><div class="seg"><button :class="{on:diurnal==='uniform'}" @click="diurnal='uniform'">全天均匀</button><button :class="{on:diurnal==='afternoon'}" @click="diurnal='afternoon'">午后集中（12—24时）</button></div></div>
+   <p class="fw-hint">各站填写预报的日雨量；留空的格子按该站多年同期平均（灰色）参与插值。气温留空时用多年同期逐时过程。</p>
   </div>
-  <div class="fw-generator">
-   <b>快速生成</b>
-   <label>过程总雨量 mm<input type="number" min="0" step="any" v-model.number="gen.total"></label>
-   <label>雨型<select v-model="gen.pattern"><option value="uniform">均匀</option><option value="front">前峰</option><option value="middle">中峰</option><option value="back">后峰</option></select></label>
-   <label>首日日均温 ℃<input type="number" step="any" v-model.number="gen.temp"></label>
-   <label>逐日变化 ℃/天<input type="number" step="any" v-model.number="gen.trend"></label>
-   <label v-if="spatial==='areas'" class="fw-clim"><input type="checkbox" v-model="gen.climatology">按历史同月比例分到各子流域</label>
-   <button @click="generate">填入表格</button>
-  </div>
-  <div class="table-wrap fw-table">
+  <p v-else class="fw-hint">全部 {{days}} 天按多年同期（前后 7 天）平均的降水、气温和蒸发能力生成，用于没有天气预报时的趋势估计。下表为各站同期平均日雨量，仅供查看。</p>
+  <p v-if="!info" class="muted">正在读取雨量站与多年同期资料…</p>
+  <div v-else class="table-wrap fw-table">
    <table>
-    <thead><tr><th>日期</th><template v-if="spatial==='uniform'"><th>降水 mm</th></template><template v-else><th v-for="[id,label] in AREAS" :key="id">{{label}} mm<button class="link fw-copy" title="将首日值填入各日" @click="fillArea(id)">↓</button></th></template><th>日均气温 ℃</th><th>蒸发能力 mm</th></tr></thead>
+    <thead><tr><th>日期</th>
+     <th v-for="st in stations" :key="st.id">{{st.name}}<small>日雨量 mm</small><button v-if="method==='station'" class="link fw-copy" title="将首日值填入各日" @click="fillStation(st.id)">↓</button></th>
+     <th>流域日均气温 ℃<small>{{method==='station'?'可留空':'多年同期'}}</small></th><th class="num">同期面雨量 mm</th></tr></thead>
     <tbody><tr v-for="(r,i) in rows" :key="r.date">
      <td class="fw-date">{{r.label}}</td>
-     <td v-if="spatial==='uniform'"><input type="number" min="0" step="any" v-model="r.precipitation" :aria-label="r.date+'降水'"></td>
-     <template v-else><td v-for="[id] in AREAS" :key="id"><input type="number" min="0" step="any" v-model="r.areas[id]" :aria-label="r.date+id+'降水'"></td></template>
-     <td><input type="number" step="any" v-model="r.temperature" :aria-label="r.date+'气温'"></td>
-     <td><input type="number" min="0" step="any" v-model="r.evaporation" :placeholder="evap?number(evap.daily[i]?.evaporationMm,2):''" :aria-label="r.date+'蒸发能力'"></td>
+     <td v-for="st in stations" :key="st.id">
+      <input v-if="method==='station'" type="number" min="0" max="300" step="0.1" v-model="r.stations[st.id]" :placeholder="number(climAt(st.id,i),1)" :aria-label="r.date+st.name+'预报雨量'">
+      <span v-else class="fw-clim-v">{{number(climAt(st.id,i),1)}}</span></td>
+     <td><input v-if="method==='station'" type="number" step="0.1" v-model="r.temperature" placeholder="同期" :aria-label="r.date+'气温'"><span v-else class="fw-clim-v">同期</span></td>
+     <td class="num fw-clim-v">{{number(info.basinClimatologyMm[i],1)}}</td>
     </tr></tbody>
    </table>
   </div>
-  <p v-if="ratios&&spatial==='areas'" class="fw-note">同月比例（{{ratios.years}} 年 ERA5-Land）：<template v-for="[id,label] in AREAS" :key="id">{{label}} {{number(ratios.ratios[id],2)}}　</template></p>
-  <p class="fw-note">气温为流域平均高程处的日均温，模型按高程递减率分配到各计算单元；蒸发能力留空时采用同季节多年平均逐时过程（灰色为参考值）。</p>
-  <div class="fw-preview">
-   <div><h4>逐日降水 <small>合计 {{number(totalRain,1)}} mm</small></h4><Chart :rows="preview" :series="[{key:'rain',label:'流域面雨量',type:'bar'}]" unit="mm" zero context="fw-rain"/></div>
-   <div><h4>日均气温</h4><Chart :rows="preview" :series="[{key:'temp',label:'日均气温'}]" unit="℃" context="fw-temp"/></div>
-  </div>
-  <div class="actions"><button class="primary" :disabled="busy||working||!complete||!sourceId" @click="saveManual">保存未来气象</button><span v-if="!complete" class="muted">请填齐每天的降水和气温</span></div>
+  <div class="fw-preview single"><div><h4>逐日降水 <small v-if="method==='station'">已填 {{filled}} 项站点预报</small></h4>
+   <Chart :rows="preview" :series="method==='station'?[{key:'rain',label:'填写站点平均',type:'bar'},{key:'clim',label:'同期面雨量'}]:[{key:'clim',label:'同期面雨量',type:'bar'}]" unit="mm" zero context="fw-rain"/></div></div>
+  <div class="actions"><button class="primary" :disabled="busy||working||!sourceId||!info" @click="saveStation">保存未来气象</button>
+   <span class="muted">{{method==='station'?(filled?'未填的站日按多年同期补齐':'尚未填写站点预报，将全部按多年同期生成'):'约需 1 分钟'}}</span></div>
  </template>
 
  <template v-if="method==='hourly'">
@@ -110,15 +100,21 @@ async function ensemble(){await action(async()=>{const task=await api('forecast-
  <template v-if="method==='ensemble'">
   <div class="fw-ensemble">
    <div><h4>ECMWF IFS 0.25° 集合预报</h4><p>按流域所在格点下载未来 15 天逐时降水和气温（51 个成员），自动映射到计算单元，结果给出中位数及 10%—90% 范围。</p></div>
-   <dl><dt>历史资料末时刻</dt><dd>{{issue?.forcingEnd?.replace('T',' ').slice(0,16)||'—'}}</dd><dt>距今</dt><dd>{{gapDays==null?'—':gapDays+' 天'}}</dd></dl>
-   <p v-if="gapDays>1" class="fw-gap">集合预报从今天起报，需先把 ERA5-Land 实况补到今天，模型状态才能衔接。<button @click="emit('navigate','model')">前往资料更新补齐</button></p>
+   <dl><dt>模型状态末时刻</dt><dd>{{issue?.stateTime?.replace('T',' ').slice(0,16)||'—'}}</dd><dt>距今</dt><dd>{{gapDays==null?'—':gapDays+' 天'}}</dd></dl>
+   <p v-if="gapDays>1" class="fw-gap">集合预报从当前时刻起报，模型状态须先更新到今日才能衔接。请在“实况更新”中完成状态更新。</p>
    <button class="primary" :disabled="busy||working||gapDays>1||!sourceId" @click="ensemble">获取集合预报</button>
   </div>
  </template>
+
 </section>
 </template>
 <style scoped>
 .fw-methods{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:22px}
+.fw-methods.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.fw-hint{flex:1 1 320px;margin:0 0 12px;font-size:13px;color:#4c6772;line-height:1.6}
+.fw-table th small{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+.fw-clim-v{color:#8a989d;font-variant-numeric:tabular-nums}
+.fw-preview.single{grid-template-columns:1fr}
 .fw-methods>button{display:grid;justify-items:start;gap:4px;text-align:left;padding:14px 16px;border-radius:8px}
 .fw-methods>button span{font-size:12.5px;color:var(--muted)}
 .fw-methods>button.on{border-color:#2f8d9b;background:#eef7f8;box-shadow:inset 0 -3px 0 #2f8d9b}
@@ -157,5 +153,6 @@ async function ensemble(){await action(async()=>{const task=await api('forecast-
 .fw-ensemble dl{grid-template-columns:120px 1fr;margin:0}
 .fw-gap{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:12px 14px;background:#fdf6e9;border:1px solid #ecd9ae;border-radius:6px;color:#7a5a1d!important}
 .fw-ensemble>button{justify-self:start}
-@media(max-width:900px){.fw-methods,.fw-preview{grid-template-columns:1fr}.fw-steps li{grid-template-columns:1fr}}
+@media(max-width:900px){.fw-methods,.fw-preview{grid-template-columns:repeat(2,minmax(0,1fr))}.fw-steps li{grid-template-columns:1fr}}
+
 </style>

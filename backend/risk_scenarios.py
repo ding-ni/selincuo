@@ -74,10 +74,39 @@ def default_scenario(db):
                 {'name': '开挖泄流槽（降槛0.3 m、加宽至120 m）', **base, 'crestM': round(crest - .3, 2), 'widthM': 120.},
                 {'name': '人工泄流 50 m³/s', **base, 'releaseCapacityM3s': 50.},
                 {'name': '封堵抬槛（抬高0.3 m）', **base, 'crestM': round(crest + .3, 2)}],
-            'exposureIds': []}
+            'exposureIds': exposure_ids(db)}
+
+
+EXPOSURE_BUNDLE = ROOT / 'data/derived/spatial/承灾体'
+
+
+def ensure_bundled_exposures(db):
+    """Register the OSM roads and settlements shipped with the installation, once per workspace."""
+    index = read_json(EXPOSURE_BUNDLE / '承灾体资料.json') if (EXPOSURE_BUNDLE / '承灾体资料.json').is_file() else None
+    if not index:
+        return []
+    existing = store.list_records(db, 'exposures')
+    have = {r.get('bundleFile') for r in existing}
+    added = []
+    for item in index.get('adopted', []):
+        if item['file'] in have:
+            continue
+        value = read_json(EXPOSURE_BUNDLE / item['file'])
+        if not value or not value.get('features'):
+            continue
+        record = import_exposure(db, {'name': item['name'], 'kind': item['kind'], 'geojson': value,
+                                      'source': f"{index['source']} / {index['license']} / 下载 {item['downloadedAtUTC']}"})
+        added.append(store.save(db, 'exposures', {**record, 'bundleFile': item['file'], 'builtin': True}, identifier=record['id']))
+    return added
+
+
+def exposure_ids(db):
+    ensure_bundled_exposures(db)
+    return [r['id'] for r in store.list_records(db, 'exposures')]
 
 
 def catalog(db):
+    ensure_bundled_exposures(db)
     return {'scenarios': store.list_records(db, COLLECTION),
             'results': store.list_records(db, RESULTS),
             'exposures': store.list_records(db, 'exposures'),
@@ -262,11 +291,20 @@ def _series_source(result):
     return times, inflow, rain, evap, float(initial), curve
 
 
-def _flood_geometry(depth, terrain):
+# Road surface = ground + embankment; closed when water over the surface exceeds CLOSE_DEPTH_M.
+# Same rule as the front end (overflow-data.mjs ROAD_RULE). Embankment height is a default, not surveyed.
+ROAD_EMBANKMENT_M = 1.0
+ROAD_CLOSE_DEPTH_M = 0.3
+
+
+def _flood_geometry(depth, terrain, threshold=0.):
     from rasterio.features import shapes
     from shapely.geometry import shape
     from shapely.ops import unary_union
-    mask = np.asarray(depth) > 0
+    mask = np.asarray(depth) > threshold
+    if not mask.any():
+        from shapely.geometry import GeometryCollection
+        return GeometryCollection()
     geometries = [shape(g) for g, value in shapes(mask.astype('uint8'), mask=mask,
                     transform=terrain['transform']) if value]
     return unary_union(geometries)
@@ -277,6 +315,8 @@ def assess_exposures(db, exposure_ids, depth, terrain):
     from shapely.ops import transform
     from pyproj import Transformer
     flood = _flood_geometry(depth, terrain)
+    wet_zone = _flood_geometry(depth, terrain, ROAD_EMBANKMENT_M)
+    closed_zone = _flood_geometry(depth, terrain, ROAD_EMBANKMENT_M + ROAD_CLOSE_DEPTH_M)
     project = Transformer.from_crs(4326, 6933, always_xy=True).transform
     rows = []
     for identifier in exposure_ids:
@@ -284,9 +324,12 @@ def assess_exposures(db, exposure_ids, depth, terrain):
         source = read_json(within(db.workspace, record['path']))
         for index, f in enumerate(source['features']):
             geometry = shape(f['geometry'])
-            if geometry.is_empty or flood.is_empty or not geometry.intersects(flood):
+            line = geometry.geom_type in ('LineString', 'MultiLineString')
+            zone = wet_zone if line else flood
+            if geometry.is_empty or zone.is_empty or not geometry.intersects(zone):
                 continue
-            intersection = geometry.intersection(flood)
+            intersection = geometry.intersection(zone)
+            closed = geometry.intersection(closed_zone) if line and not closed_zone.is_empty else None
             values = []
             for coordinate in ([geometry.coords[0]] if geometry.geom_type == 'Point' else [intersection.representative_point().coords[0]]):
                 col, row = ~terrain['transform'] * coordinate
@@ -300,16 +343,23 @@ def assess_exposures(db, exposure_ids, depth, terrain):
                 if mask.any():
                     values.append(float(np.max(depth[mask])))
             props = f.get('properties') or {}
-            rows.append({'exposureId': identifier, 'featureId': str(f.get('id', index)),
+            row = {'exposureId': identifier, 'featureId': str(f.get('id', index)),
                 'name': str(props.get('name') or props.get('名称') or '未命名对象'),
                 'kind': record.get('kind', 'facility'), 'geometryType': geometry.geom_type,
-                'maxDepthM': max(values, default=0.),
-                'affectedLengthM': float(transform(project, intersection).length)
-                                  if geometry.geom_type in ('LineString', 'MultiLineString') else 0.,
-                'source': record.get('source', record['name'])})
+                'maxDepthM': max(values, default=0.), 'affectedLengthM': 0.,
+                'source': record.get('source', record['name'])}
+            if line:
+                wet_m = float(transform(project, intersection).length)
+                closed_m = float(transform(project, closed).length) if closed is not None and not closed.is_empty else 0.
+                row.update({'affectedLengthM': closed_m, 'overtoppedLengthM': max(0., wet_m - closed_m),
+                            'maxDepthOverSurfaceM': max(0., row['maxDepthM'] - ROAD_EMBANKMENT_M),
+                            'roadState': 'closed' if closed_m > 0 else 'overtopped'})
+            rows.append(row)
     return {'objects': rows, 'count': len(rows),
             'roadLengthM': sum(r['affectedLengthM'] for r in rows),
-            'settlementCount': sum(r['kind'] == 'settlement' for r in rows)}
+            'overtoppedRoadLengthM': sum(r.get('overtoppedLengthM', 0.) for r in rows),
+            'settlementCount': sum(r['kind'] == 'settlement' for r in rows),
+            'roadRule': {'embankmentM': ROAD_EMBANKMENT_M, 'closeDepthM': ROAD_CLOSE_DEPTH_M}}
 
 
 def run(db, request, folder=None, progress=None, cancelled=None):
@@ -384,7 +434,18 @@ def run(db, request, folder=None, progress=None, cancelled=None):
     return value
 
 
-def terrain_frame(db, identifier, index=0):
+def result_exposures(db, identifier):
+    """Return the road and point data selected for this saved run."""
+    result = store.get(db, RESULTS, identifier)
+    items = []
+    for exposure_id in result['scenario'].get('exposureIds', []):
+        record = store.get(db, 'exposures', exposure_id)
+        geojson = read_json(within(db.workspace, record['path']))
+        items.append({'id': exposure_id, 'source': record['source'], 'features': geojson['features']})
+    return {'items': items}
+
+
+def terrain_frame(db, identifier, index=0, depth_only=False):
     value = store.get(db, RESULTS, identifier)
     index = int(index)
     with np.load(within(db.workspace, value['path']), allow_pickle=False) as arrays:
@@ -392,11 +453,18 @@ def terrain_frame(db, identifier, index=0):
         if not 0 <= index < len(picks):
             raise ValueError('回放时刻超出结果范围')
         row = value['rows'][picks[index]]
-        valid = arrays['valid']
-        elevations = np.where(valid, arrays['elevation'], 0.)
-        terrain = {**value['terrain'], 'elevations': elevations.tolist(), 'valid': valid.tolist(),
-                   'lakeMask': arrays['lakeMask'].tolist()}
-        return {'terrain': terrain, 'depths': np.round(arrays['depths'][index], 3).tolist(), 'index': index, 'frames': len(picks),
+        terrain = dict(value['terrain'])
+        if not depth_only:
+            valid = arrays['valid']
+            elevations = np.where(valid, arrays['elevation'], 0.)
+            terrain.update(elevations=elevations.tolist(), valid=valid.tolist(), lakeMask=arrays['lakeMask'].tolist())
+        depth = arrays['depths'][index]
+        west, south, east, north = terrain['bounds']
+        height, width = depth.shape
+        latitudes = north-(np.arange(height)+.5)*(north-south)/height
+        cell_area_km2 = (east-west)/width*(north-south)/height*111.195**2*np.cos(np.radians(latitudes))
+        return {'terrain': terrain, 'depths': (depth if depth_only else np.round(depth, 3)).tolist(), 'index': index, 'frames': len(picks),
+                'inundatedAreaKm2': float((np.count_nonzero(depth > 0, axis=1)*cell_area_km2).sum()),
                 'time': row['time'], 'level': row['level'],
                 'outlet': value['scenario']['outlet'], 'demOffsetM': value['scenario']['demOffsetM']}
 
@@ -444,20 +512,24 @@ def fetch_osm(db, request, folder=None, progress=None, cancelled=None):
     west, south, east, north = map(float, bounds)
     bbox = ','.join(map(str, [south, west, north, east]))
     kinds = request.get('features', ['roads', 'settlements'])
-    clauses = []
+    # Ways need full geometry (out geom); settlements need one point per feature (out center).
+    queries = []
     if 'roads' in kinds:
-        clauses.append('way[highway]('+bbox+');')
+        queries.append('way[highway]('+bbox+');out geom;')
     if 'settlements' in kinds:
-        clauses.append('nwr[place~"city|town|village|hamlet"]('+bbox+');')
-    if not clauses:
+        queries.append('nwr[place~"city|town|village|hamlet|isolated_dwelling|locality"]('+bbox+');out center;')
+    if not queries:
         raise ValueError('请选择道路或居民点')
-    if cancelled and cancelled():
-        raise InterruptedError('已停止公开地图读取')
-    response = requests.post('https://overpass-api.de/api/interpreter',
-        data={'data': '[out:json][timeout:45];('+''.join(clauses)+');out geom center;'}, timeout=(10, 60))
-    response.raise_for_status()
+    elements = []
+    for query in queries:
+        if cancelled and cancelled():
+            raise InterruptedError('已停止公开地图读取')
+        response = requests.post('https://overpass-api.de/api/interpreter',
+            data={'data': '[out:json][timeout:90];'+query}, timeout=(10, 120))
+        response.raise_for_status()
+        elements.extend(response.json().get('elements', []))
     features = {'road': [], 'settlement': []}
-    for element in response.json().get('elements', []):
+    for element in elements:
         tags = element.get('tags') or {}
         kind = 'road' if tags.get('highway') else 'settlement'
         if kind == 'road':

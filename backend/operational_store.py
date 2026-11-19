@@ -10,6 +10,14 @@ from .common import canonical, now
 _lock = threading.RLock()
 
 
+def create_schema(connection):
+    connection.execute('''CREATE TABLE IF NOT EXISTS operational_records(
+        collection TEXT NOT NULL, id TEXT NOT NULL, name TEXT NOT NULL,
+        created_at TEXT NOT NULL, updated_at TEXT NOT NULL, payload TEXT NOT NULL,
+        PRIMARY KEY(collection,id))''')
+    connection.execute('CREATE INDEX IF NOT EXISTS operational_lookup ON operational_records(collection,updated_at)')
+
+
 def initialize(db):
     with _lock, db.connect() as connection:
         if connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='operational_records'").fetchone():
@@ -19,11 +27,7 @@ def initialize(db):
         path = folder / ('hydrology-' + uuid.uuid4().hex[:12] + '.sqlite3')
         with sqlite3.connect(str(path)) as target:
             connection.backup(target)
-        connection.execute('''CREATE TABLE operational_records(
-            collection TEXT NOT NULL, id TEXT NOT NULL, name TEXT NOT NULL,
-            created_at TEXT NOT NULL, updated_at TEXT NOT NULL, payload TEXT NOT NULL,
-            PRIMARY KEY(collection,id))''')
-        connection.execute('CREATE INDEX operational_lookup ON operational_records(collection,updated_at)')
+        create_schema(connection)
 
 
 def save(db, collection, value, identifier=None, prefix=''):
@@ -50,6 +54,23 @@ def get(db, collection, identifier):
     return json.loads(rows[0]['payload'])
 
 
-def list_records(db, collection):
+def list_records(db, collection, trashed=False):
+    """Records in the collection; recycled records are hidden unless trashed=True asks for them only."""
     initialize(db)
-    return [json.loads(row['payload']) for row in db.rows('SELECT payload FROM operational_records WHERE collection=? ORDER BY updated_at DESC,id', (collection,))]
+    rows = [json.loads(row['payload']) for row in db.rows('SELECT payload FROM operational_records WHERE collection=? ORDER BY updated_at DESC,id', (collection,))]
+    return [r for r in rows if bool(r.get('trashed')) == bool(trashed)]
+
+
+def set_trashed(db, collection, identifier, trashed, reason=''):
+    """Recoverable recycle: the record and its files stay; only visibility changes, with an audit entry."""
+    record = get(db, collection, identifier)
+    if bool(record.get('trashed')) == bool(trashed):
+        return record
+    if trashed:
+        record.update(trashed=True, trashedAt=now(), trashReason=str(reason or '')[:200])
+    else:
+        for key in ('trashed', 'trashedAt', 'trashReason'):
+            record.pop(key, None)
+    saved = save(db, collection, record, identifier=identifier)
+    db.log('record.trash' if trashed else 'record.restore', {'collection': collection, 'id': identifier})
+    return saved

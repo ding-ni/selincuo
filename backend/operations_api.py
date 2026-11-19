@@ -10,6 +10,7 @@ TASK_HANDLERS = {
     'data-sync': ('data_connections', 'sync'),
     'forecast-input-ensemble': ('forecast_inputs', 'fetch_ensemble'),
     'forecast': ('forecasts', 'run'),
+    'state-update': ('state_update', 'run'),
     'risk-simulation': ('risk_scenarios', 'run'),
     'exposure-fetch': ('risk_scenarios', 'fetch_osm'),
     'report': ('reports', 'run'),
@@ -48,6 +49,11 @@ def get(server, path, query):
     if root == 'data-connections':
         from . import data_connections
         return True, data_connections.get_connection(db, identifier) if identifier else data_connections.catalog(db)
+    if root == 'state-update':
+        from . import state_update
+        if identifier == 'plan':
+            return True, state_update.plan(db, {'end': query.get('end'), 'mode': query.get('mode')})
+        return True, {'items': state_update.state_chain(db), 'today': state_update._today().isoformat()}
     if root in ('forecast-inputs', 'forecasts'):
         from . import forecast_inputs, forecasts
         module = forecast_inputs if root == 'forecast-inputs' else forecasts
@@ -56,30 +62,19 @@ def get(server, path, query):
         if root == 'forecasts' and identifier.endswith('/history'):
             return True, forecasts.history(db, identifier.split('/')[0])
         if path == 'forecasts/sources':
-            from .published_results import catalog, result_file
-            items = []
-            for row in catalog():
-                try:
-                    state = read_json(result_file(row['id'], 'final-state.json'))
-                except (FileNotFoundError, ValueError):
-                    continue
-                if not state or state.get('schemaVersion') != 3:
-                    continue
-                items.append({'id': row['id'], 'name': row.get('name', row['id']),
-                              'stateTime': state['validAt'], 'spatialVersion': state['identity']['spatialVersion'],
-                              'inputId': state['inputId']})
-            for row in db.rows("SELECT id,name,result FROM tasks WHERE status='succeeded' AND trashed=0 AND kind IN ('simulation','continuation','trial','calibration','two-stage-calibration')"):
-                result = json.loads(row['result'] or '{}')
-                if (db.workspace / 'tasks' / row['id'] / 'checkpoint.json').is_file():
-                    items.append({'id': row['id'], 'name': row['name'] or row['id'],
-                                  'stateTime': result.get('end'), 'spatialVersion': result.get('spatialVersion'),
-                                  'inputId': result.get('inputId')})
-            return True, {'items': items}
+            # Business forecasts start from the newest continuous state (published result or state update).
+            from .state_update import state_chain
+            return True, {'items': state_chain(db)}
+        if not identifier and query.get('trashed'):
+            return True, {'items': store.list_records(db, root, trashed=True)}
         return True, module.detail(db, identifier) if identifier else module.catalog(db)
     if root in ('risk-scenarios', 'risk-results'):
         from . import risk_scenarios
         if identifier.endswith('/frame'):
-            return True, risk_scenarios.terrain_frame(db, identifier.split('/')[0], int(query.get('index', 0)))
+            return True, risk_scenarios.terrain_frame(db, identifier.split('/')[0], int(query.get('index', 0)),
+                                                       depth_only=query.get('depthOnly') == '1')
+        if root == 'risk-results' and identifier.endswith('/exposures'):
+            return True, risk_scenarios.result_exposures(db, identifier.split('/')[0])
         if root == 'risk-results' and identifier:
             return True, store.get(db, 'risk-results', identifier)
         if path == 'risk-scenarios/default':
@@ -127,6 +122,23 @@ def post(server, path, value):
         if identifier.endswith('/enabled'):
             return True, module.set_enabled(db, identifier.split('/')[0], value['enabled'])
         return True, module.save_connection(db, value, identifier or None)
+    if root in ('forecasts', 'forecast-inputs') and (identifier.endswith('/trash') or identifier.endswith('/restore')):
+        record_id, _, action = identifier.rpartition('/')
+        return True, store.set_trashed(db, root, record_id, action == 'trash', value.get('reason', ''))
+    if root == 'state-update':
+        from . import state_update
+        if identifier == 'plan':
+            return True, state_update.plan(db, value)
+        if identifier == 'station-entry':
+            from . import station_entry
+            with jobs.lock:
+                if jobs.active():
+                    raise ValueError('请等待计算结束后录入站点资料')
+                # Manual station days feed state updates only; they do not rebuild the
+                # calibrated scheme's precipitation correction.
+                result = station_entry.save(db, value)
+            return True, result
+        return True, jobs.submit('state-update', value)
     if root == 'forecast-inputs':
         from . import forecast_inputs
         if identifier == 'evaporation-preview':
@@ -137,6 +149,10 @@ def post(server, path, value):
             return True, jobs.submit('forecast-input-ensemble', value)
         if identifier == 'hourly':
             return True, forecast_inputs.import_hourly(db, value)
+        if identifier == 'station-stations':
+            return True, forecast_inputs.station_forecast_stations(db, value)
+        if identifier == 'station':
+            return True, forecast_inputs.create_station_forecast(db, value)
         return True, forecast_inputs.create_manual(db, value)
     if root == 'forecasts':
         from . import forecasts

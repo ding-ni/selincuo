@@ -4,9 +4,11 @@ import DataImport from './DataImport.vue'
 import NativeObservationImport from './NativeObservationImport.vue'
 import DataConnections from './DataConnections.vue'
 import BackgroundSettings from './BackgroundSettings.vue'
+import StateUpdatePanel from './StateUpdatePanel.vue'
+import WorkspaceBackup from './WorkspaceBackup.vue'
 import {api,number} from './api.mjs'
 import {variableDefinitions} from './business-view.mjs'
-const props=defineProps({boot:Object,busy:Boolean,active:Array})
+const props=defineProps({boot:Object,busy:Boolean,active:Array,tasks:Array})
 const emit=defineEmits(['navigate','refresh','error','submit','station'])
 const tab=ref('observations'),catalog=ref(null),coverage=ref(null),working=ref(false),message=ref(''),startDate=ref(''),endDate=ref('')
 const activeUpdate=computed(()=>(props.active||[]).find(t=>t.kind==='update-forcing'))
@@ -37,29 +39,31 @@ onMounted(async()=>{
 watch(()=>props.boot,async()=>{try{coverage.value=await api('forcing-coverage')}catch(e){emit('error',e.message)}})
 </script>
 <template>
- <nav class="workspace-tabs"><button v-for="t in [['observations','观测资料'],['forcing','模型气象资料'],['connections','现场数据接入'],['background','后台运行']]" :key="t[0]" :class="{active:tab===t[0]}" @click="tab=t[0]">{{t[1]}}</button></nav>
+ <nav class="workspace-tabs"><button v-for="t in [['observations','观测资料'],['connections','现场数据接入'],['state','模型状态更新'],['forcing','再分析资料（联网）'],['background','后台运行'],['backup','备份与恢复']]" :key="t[0]" :class="{active:tab===t[0]}" @click="tab=t[0]">{{t[1]}}</button></nav>
+ <WorkspaceBackup v-if="tab==='backup'" :tasks="tasks" :busy="busy" @refresh="emit('refresh')"/>
  <DataConnections v-if="tab==='connections'" :stations="boot.stations" @refresh="imported"/>
  <BackgroundSettings v-if="tab==='background'" :boot="boot"/>
+ <StateUpdatePanel v-if="tab==='state'" @updated="emit('refresh')" @error="emit('error',$event)" @navigate="v=>tab=v.split(':')[1]||'observations'"/>
  <template v-if="tab==='forcing'">
   <section class="panel">
-   <div class="panel-title"><h3>更新气象资料</h3><span class="badge">ERA5-Land</span><button :disabled="working||busy" @click="checkCoverage">{{working?'检查中…':'检查官方可用范围'}}</button></div>
+   <div class="panel-title"><h3>补充再分析资料</h3><span class="badge">ERA5-Land · 需联网</span><button :disabled="working||busy" @click="checkCoverage">{{working?'检查中…':'检查官方可用范围'}}</button></div>
    <div class="resource-summary"><div><span>当前可用的完整日</span><b>{{coverage?.current?.complete?coverage.current.firstCompleteDay+' 至 '+coverage.current.lastCompleteDay:'尚未确认'}}</b><small>{{coverage?.current?.complete?'降水、气温和蒸发能力完整':'请检查或补充气象资料'}}</small></div><div><span>官方目录</span><b>{{coverage?.catalog?.availableEndUTC?.slice(0,10)||'尚未检查'}}</b><small>以三变量实际覆盖校验为准</small></div></div>
    <p v-if="coverage?.current&&!coverage.current.complete" class="note warning">{{coverage.current.message}}</p>
-   <p class="muted">按需下载、续传并登记气象资料；已有成果继续使用各自的输入。</p>
+   <p class="muted">联网时可下载 ERA5-Land 再分析资料。下载后在“模型状态更新”中重新更新，再分析覆盖的日子会替换站点及多年同期驱动。现场离线时无需此步。</p>
    <p v-if="correctionSummary" class="note" role="status">{{correctionSummary.message}}<template v-if="correctionSummary.status==='updated'"> · 新输入 {{correctionSummary.inputId}}</template></p>
    <div class="query-grid"><label>补充起日<input type="date" v-model="startDate"></label><label>补充止日<input type="date" v-model="endDate"></label><button :disabled="working||busy||active.length>0" @click="update(true)">更新所选时段</button><button class="primary" :disabled="working||busy||active.length>0" @click="update(false)">更新至可用最新日期</button></div>
    <p v-if="message" class="note warning" role="status">{{message}}</p>
    <p v-if="activeUpdate" class="note">{{activeUpdate.message||'正在更新气象资料'}} · {{number(activeUpdate.progress,1)}}%</p>
    <p v-if="coverage?.update?.status&&coverage.update.status!=='succeeded'" class="note">上次更新：{{coverage.update.message||coverage.update.status}}</p>
    <p class="note">如提示 CDS 账户或许可问题，可查看 <a href="/api/model/cds-help">账户配置说明</a>。</p>
-   <div class="actions"><button @click="emit('navigate','simulation')">前往历史模拟 →</button><button @click="emit('navigate','calibration')">前往方案与率定 →</button></div>
+   <div class="actions"><button @click="tab='state'">前往模型状态更新 →</button></div>
   </section>
  </template>
  <template v-if="tab==='observations'">
   <section class="panel"><div class="panel-title"><h3>更新观测资料</h3><button class="link" @click="emit('navigate','monitor')">查询监测资料 →</button></div>
    <NativeObservationImport :stations="boot.stations" :disabled="busy||working||active.length>0" @imported="imported" @error="emit('error',$event)"/>
    <details><summary>其他格式导入</summary><DataImport :stations="boot.stations" :disabled="busy||working||active.length>0" @imported="imported" @error="emit('error',$event)"/></details>
-   <details><summary>观测资料与模型驱动</summary><p class="muted">更新站点雨量后，自动按现行规则重算降水订正倍率。后续模拟和新率定使用更新后的驱动，已保存成果保留原资料版本。</p><p v-if="boot.currentBusiness?.inputId">当前方案：{{boot.currentBusiness.name}}<br>驱动版本：{{boot.currentBusiness.inputId}}</p></details>
+   <p class="note">导入雨量、水位后，到“模型状态更新”把模型状态推进到今日，预报即从今日起报。<button class="link" @click="tab='state'">前往 →</button></p>
   </section>
   <section class="panel"><div class="panel-title"><h3>站点更新概况</h3><span class="muted">最近有效记录</span></div>
    <div class="station-summary"><button v-for="s in stationSummary" :key="s.id" @click="emit('station',s.id)"><strong>{{s.name}}</strong><span>{{s.variables}}</span><time>{{s.latest}}</time></button></div>

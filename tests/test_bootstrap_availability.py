@@ -48,6 +48,9 @@ class BootstrapAvailabilityTests(unittest.TestCase):
                 try:
                     with urlopen(f'http://127.0.0.1:{server.server_port}/api/model/bootstrap', timeout=5) as response:
                         result = json.load(response)
+                    with patch.object(ObservationOnlyDatabase, 'summary', side_effect=AssertionError('unused startup summary')):
+                        with urlopen(f'http://127.0.0.1:{server.server_port}/api/model/bootstrap?view=app', timeout=5) as response:
+                            app = json.load(response)
                 finally:
                     server.shutdown()
                     worker.join()
@@ -62,6 +65,38 @@ class BootstrapAvailabilityTests(unittest.TestCase):
         self.assertFalse(result['ready'])
         self.assertFalse(result['builtinResultAvailable'])
         self.assertIsNone(result['homeResultId'])
+        self.assertIsNone(app['defaultResultInputId'])
+        self.assertEqual(app, {key: value for key, value in result.items()
+                               if key not in ('database', 'latestObservation')})
+
+    def test_app_bootstrap_prefers_adopted_result_input_over_standard_release(self):
+        published = [
+            {'id': 'JOB-standard', 'inputId': 'INPUT-standard'},
+            {'id': 'JOB-adopted', 'inputId': 'INPUT-adopted', 'files': {'result.json': {}}},
+        ]
+        with patch('backend.server.read_json', return_value=None), \
+             patch('backend.grid_spatial.current', return_value=None), \
+             patch('backend.operational_scheme.catalog', return_value=[]), \
+             patch('backend.research_schemes.builtin', return_value=None), \
+             patch('backend.business_selection.current', return_value={'resultId': 'JOB-adopted'}), \
+             patch('backend.published_results.catalog', return_value=published), \
+             patch('backend.published_results.available', return_value=True), \
+             patch('backend.release_registry.current', return_value={'resultId': 'JOB-standard'}):
+            with ThreadingHTTPServer(('127.0.0.1', 0), Handler) as server:
+                server.db = ObservationOnlyDatabase()
+                worker = threading.Thread(target=server.serve_forever, daemon=True)
+                worker.start()
+                try:
+                    with urlopen(f'http://127.0.0.1:{server.server_port}/api/model/bootstrap?view=app', timeout=5) as response:
+                        app = json.load(response)
+                finally:
+                    server.shutdown()
+                    worker.join()
+
+        self.assertEqual(app['defaultResultInputId'], 'INPUT-adopted')
+        self.assertEqual(app['homeResultId'], 'JOB-adopted')
+        self.assertEqual(app['standardResultId'], 'JOB-standard')
+        self.assertEqual(app['publishedResults'], [{'id': 'JOB-adopted', 'inputId': 'INPUT-adopted'}])
 
     def test_builtin_zarr_requires_bound_manifest_and_every_registered_file(self):
         workspace = (Path.cwd() / '__virtual_builtin_fixture__').resolve()

@@ -9,6 +9,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from backend.common import WORKSPACE, canonical, digest, now, read_json, write_json, sha_file, within
 from backend.database import Database
+from backend.operational_store import create_schema
+from backend.workspace_upgrade import active_lake_seed_rows
 
 
 class ReadOnlySource:
@@ -231,13 +233,40 @@ def seed_registry(source, target, release, task):
     return revision_id
 
 
-def build_seed(source_workspace, output, standard_only=True, business_scheme_id=None):
+def selected_lake_model(source, business, expected_id=None):
+    """Freeze the lake model used at the selected business checkpoint, if adopted."""
+    if expected_id and not business:
+        raise ValueError('指定湖泊模型时须同时指定当前采用业务方案')
+    if not business:
+        return ()
+    with source.connect() as connection:
+        rows = active_lake_seed_rows(connection)
+    if expected_id and (not rows or rows[-1][1] != expected_id):
+        raise ValueError('源工作区当前采用的湖泊模型不是 '+expected_id)
+    if rows:
+        model = json.loads(rows[-1][5])
+        result_id = business['selection']['resultId']
+        if model['sourceResultId'] != result_id:
+            if expected_id:
+                raise ValueError('湖泊模型所绑定的成果不是当前业务默认成果')
+            return ()
+        checkpoint = source.workspace/'tasks'/result_id/'checkpoint.json'
+        if not checkpoint.is_file():
+            from backend.published_results import result_file
+            checkpoint = result_file(result_id, 'final-state.json')
+        if read_json(checkpoint)['validAt'] != model['endState']['time']:
+            raise ValueError('湖泊模型和当前业务成果的期末状态时刻不一致')
+    return rows
+
+
+def build_seed(source_workspace, output, standard_only=True, business_scheme_id=None, lake_model_id=None):
     source = ReadOnlySource(source_workspace)
     output = Path(output).resolve()
     if output.exists() and any(output.iterdir()):
         raise ValueError('种子目标非空，请指定新的空目录，不覆盖既有资料')
     release, item, task, product = release_selection(source)
     selected_business = business_default(source, business_scheme_id)
+    lake_rows = selected_lake_model(source, selected_business, lake_model_id)
     from backend.release_runtime import _packaged_observations
     expected_observation_sha=task['result'].get('identity',{}).get('observationSHA256')
     frozen_observation=_packaged_observations(task['id'],expected_observation_sha)
@@ -280,6 +309,9 @@ def build_seed(source_workspace, output, standard_only=True, business_scheme_id=
             connection.execute('INSERT INTO audit(at,action,payload) VALUES(?,?,?)',
                                (now(), 'business.package-seed', canonical({'schemeId': selection['schemeId'],
                                 'parameterId': selection['parameterId'], 'resultId': selection['resultId']})))
+            if lake_rows:
+                create_schema(connection)
+                connection.executemany('INSERT INTO operational_records VALUES(?,?,?,?,?,?)', lake_rows)
     revision_id = seed_registry(source,target,release,task)
     from backend.release_registry import current
     if current(source)['id'] != release['id']:
@@ -305,6 +337,10 @@ def build_seed(source_workspace, output, standard_only=True, business_scheme_id=
                            'schemePayloadSHA256': selected_business['schemePayloadSHA256'],
                            'parameterPayloadSHA256': selected_business['parameterPayloadSHA256'],
                            'inputManifestSHA256': digest(selected_business['product']['manifest'])}
+        if lake_rows:
+            lake_model = json.loads(lake_rows[-1][5])
+            business_report.update(lakeModelId=lake_model['id'], lakeCurveId=lake_model['curveId'],
+                                   lakeModelStateTime=lake_model['endState']['time'])
     write_json(target.workspace/'seed-report.json',{'schemaVersion':2,'createdAt':now(),'projectId':'selinco','counts':counts,
                'databaseSHA256':sha_file(target.path),'standardOnly':standard_only,'release':{**release,'schemeRevisionId':revision_id},
                'resultId':task['id'],'resultIdentity':task['result']['identity'],'resultFiles':item['files'],
@@ -325,11 +361,12 @@ def main():
     parser.add_argument('--source-workspace', type=Path, default=WORKSPACE)
     parser.add_argument('--standard-only', action='store_true', default=True, help='仅复制当前发布成果冻结输入（默认行为）')
     parser.add_argument('--business-scheme-id', help='将当前已采用的这一条业务方案、参数和驱动加入发行种子')
+    parser.add_argument('--lake-model-id', help='指定须纳入发行的当前采用湖泊模型')
     args = parser.parse_args()
     if args.activate and (ROOT/'seed').resolve() not in args.output.resolve().parents:
         raise ValueError('激活种子必须位于本工程seed目录')
     output = build_seed(args.source_workspace,args.output,standard_only=args.standard_only,
-                        business_scheme_id=args.business_scheme_id)
+                        business_scheme_id=args.business_scheme_id,lake_model_id=args.lake_model_id)
     if args.activate:
         write_json(ROOT / 'seed/current.json', {'directory': output.relative_to(ROOT / 'seed').as_posix()})
     print(output)

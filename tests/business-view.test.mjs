@@ -18,6 +18,6 @@ test('monitoring copy uses readable status and step labels',()=>{
 })
 
 test('adopted continuous result is not labeled as a generic historical simulation',()=>{
- assert.equal(resultTypeName({id:'best',kind:'published-result'},'best'),'当前最佳 · 连续模拟')
+ assert.equal(resultTypeName({id:'best',kind:'published-result'},'best'),'业务方案 · 历史过程')
  assert.equal(resultTypeName({id:'past',kind:'simulation'},'best'),'历史模拟')
 })

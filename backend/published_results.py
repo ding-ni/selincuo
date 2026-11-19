@@ -1,4 +1,8 @@
 """Curated immutable final results, independent of development job history."""
+from collections import defaultdict
+from os import scandir
+from pathlib import PurePosixPath
+
 from .common import ROOT, digest, read_json, sha_file, within
 
 
@@ -49,20 +53,32 @@ def hourly_zarr(identifier, verify_files=False):
         raise ValueError('内置逐时Zarr成果清单或任务身份不一致')
     folder=within(ROOT/'data/final-results',item['directory'])
     indexed=item['files']
+    chunks = defaultdict(dict)
     for name,expected in files.items():
         if (not isinstance(name,str) or not isinstance(expected,str) or len(expected)!=64 or
                 any(ch not in '0123456789abcdef' for ch in expected)):
+            raise ValueError('内置Zarr清单路径或摘要无效')
+        chunk = PurePosixPath(name)
+        if not chunk.name or chunk.is_absolute() or '..' in chunk.parts or '\\' in name or chunk.as_posix() != name:
             raise ValueError('内置Zarr清单路径或摘要无效')
         relative='hourly.zarr/'+name
         row=indexed.get(relative)
         indexed_sha=row.get('sha256') if isinstance(row,dict) else row
         if indexed_sha!=expected:
             raise ValueError('内置Zarr分块与发布目录清单不一致：'+name)
-        path=within(folder,relative)
-        if not path.is_file() or path.is_symlink():
-            raise FileNotFoundError('内置Zarr分块缺失：'+name)
-        if verify_files and sha_file(path)!=expected:
-            raise ValueError('内置Zarr分块摘要校验失败：'+name)
+        chunks[chunk.parent][chunk.name] = (name, expected)
+    # Reading each array directory once avoids resolving and probing thousands of
+    # individual chunks on Windows. Every registered file is still required.
+    for parent, expected_files in chunks.items():
+        directory = within(folder, 'hourly.zarr/' + parent.as_posix())
+        with scandir(directory) as entries:
+            present = {entry.name for entry in entries
+                       if entry.name in expected_files and entry.is_file(follow_symlinks=False)}
+        for filename, (name, expected) in expected_files.items():
+            if filename not in present:
+                raise FileNotFoundError('内置Zarr分块缺失：'+name)
+            if verify_files and sha_file(directory / filename)!=expected:
+                raise ValueError('内置Zarr分块摘要校验失败：'+name)
     return folder/'hourly.zarr'
 
 

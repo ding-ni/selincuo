@@ -109,12 +109,15 @@ def _definition(payload, previous=None):
     return result
 
 
-def _credentials(db, connection, supplied=None):
+def _credentials(db, connection, supplied=None, replace=False):
     value = {}
-    if connection.get('secretFile'):
-        encrypted = within(db.workspace, connection['secretFile']).read_bytes()
-        value = json.loads(_dpapi(encrypted, decrypt=True).decode('utf-8'))
-    if supplied is not None:
+    if not replace and connection.get('secretFile'):
+        try:
+            encrypted = within(db.workspace, connection['secretFile']).read_bytes()
+            value = json.loads(_dpapi(encrypted, decrypt=True).decode('utf-8'))
+        except (OSError, ValueError) as exc:
+            raise ValueError('无法读取原连接凭据，请在编辑连接中选择“重新填写整套凭据”') from exc
+    if supplied is not None or replace:
         if not isinstance(supplied, dict):
             raise ValueError('凭据须为对象')
         value.update(supplied)
@@ -126,15 +129,19 @@ def save_connection(db, payload, id=None):
     previous = store.get(db, COLLECTION, identifier) if (id or payload.get('id')) else None
     value = _definition(payload, previous)
     value['id'] = identifier
-    if 'credentials' in payload:
-        credentials = _credentials(db, value, payload['credentials'])
-        relative = Path('凭据') / '数据连接' / (uuid.uuid4().hex + '.bin')
-        path = db.workspace / relative
-        encrypted = _dpapi(canonical(credentials).encode('utf-8'))
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with path.open('xb') as stream:
-            stream.write(encrypted)
-        value['secretFile'] = relative.as_posix()
+    replace = bool(payload.get('replaceCredentials'))
+    if 'credentials' in payload or replace:
+        credentials = _credentials(db, value, payload.get('credentials'), replace=replace)
+        if credentials:
+            relative = Path('凭据') / '数据连接' / (uuid.uuid4().hex + '.bin')
+            path = db.workspace / relative
+            encrypted = _dpapi(canonical(credentials).encode('utf-8'))
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with path.open('xb') as stream:
+                stream.write(encrypted)
+            value['secretFile'] = relative.as_posix()
+        else:
+            value.pop('secretFile', None)
         value['credentialFields'] = [key for key, item in credentials.items() if item]
         value['credentialConfigured'] = bool(value['credentialFields'])
     value.setdefault('credentialConfigured', False)
@@ -166,7 +173,7 @@ def _resolve(db, payload):
     identifier = payload.get('connectionId') or payload.get('id')
     previous = store.get(db, COLLECTION, identifier) if identifier else None
     value = _definition(payload, previous)
-    return value, _credentials(db, value, payload.get('credentials'))
+    return value, _credentials(db, value, payload.get('credentials'), replace=bool(payload.get('replaceCredentials')))
 
 
 def _plain(value):

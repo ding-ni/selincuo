@@ -10,11 +10,29 @@ from openpyxl import Workbook
 from backend.common import ROOT, write_json
 from backend.database import Database
 from backend.observations import confirm_coverage, import_observations
-from backend.dashboard import aggregate_frame, monitoring, map_frame, parse_day
+from backend.dashboard import aggregate_frame, monitoring, map_frame, parse_day, replay
 from backend.forcing import register_era5, register_lake_correction
 
 
 class DashboardTests(unittest.TestCase):
+    def test_daily_replay_uses_frozen_spatial_and_display_coverage_without_hourly_arrays(self):
+        result = {'inputId': 'INPUT-frozen', 'spatialVersion': 'AGG-SPATIAL-frozen',
+                  'displayCoverage': {'start': '2021-04-23T00:00:00', 'endExclusive': '2027-01-02T00:00:00'},
+                  'units': [{'id': 'u1', 'partition': 'duja', 'areaKm2': 5, 'internalDiagnostic': True}],
+                  'daily': [{'date': '2027-01-01', 'lakeLevel': 4544., 'total': 12.,
+                             'observedLevel': None, 'lakeInflowM3': 1036800., 'unrelatedDiagnostic': [1, 2]}]}
+        task = {'id': 'JOB-frozen', 'status': 'succeeded', 'result': result}
+        with patch('backend.business_context.result_task', return_value=task), \
+             patch('backend.result_query.spatial_base', return_value='/spatial/versions/AGG-SPATIAL-frozen/') as base, \
+             patch('backend.result_query._entry', side_effect=AssertionError('daily view should not open hourly data')):
+            view = replay(None, 'JOB-frozen')
+        base.assert_called_once_with('AGG-SPATIAL-frozen')
+        self.assertEqual(view['spatialBase'], '/spatial/versions/AGG-SPATIAL-frozen/')
+        self.assertEqual(view['result']['displayCoverage'], result['displayCoverage'])
+        self.assertEqual(view['result']['daily'], [{'date': '2027-01-01', 'lakeLevel': 4544., 'total': 12.,
+                                                  'observedLevel': None, 'lakeInflowM3': 1036800.}])
+        self.assertEqual(view['result']['units'], [{'id': 'u1', 'partition': 'duja', 'areaKm2': 5}])
+
     def test_day_uses_24_end_hour_values_and_never_fills_gaps(self):
         times=pd.date_range('2024-01-01T00:00','2024-01-02T00:00',freq='h')
         values=np.arange(25.)[:,None]

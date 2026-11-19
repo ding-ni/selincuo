@@ -7,8 +7,23 @@ import numpy as np
 import pandas as pd
 from backend.dashboard import map_frame
 from backend.map_ranges import range_for, _cache
-from backend.common import digest
+from backend.common import digest, sha_file
 from backend.grid_spatial import AGGREGATE_STRATEGY
+
+def write_forcing(product, spatial, arrays, manifest=None):
+    data=product/'forcing.npz'
+    np.savez_compressed(data, **{**arrays,'time':np.asarray(arrays['time'],dtype='datetime64[ns]')})
+    registered={**(manifest or {}),'id':product.name,'projectId':'selinco','spatialVersion':spatial['version'],
+                'data':data.name,'dataSHA256':sha_file(data)}
+    profile=registered.get('landPrecipitationCorrection')
+    if profile:
+        profile['parentDataSHA256']=registered['dataSHA256']
+        registered['landTransformationSHA256']=digest(profile)
+        rule=registered.get('lakePrecipitationCorrection')
+        if rule and 'landTransformationSHA256' in rule:
+            rule['landTransformationSHA256']=digest(profile)
+            registered['transformationSHA256']=digest(rule)
+    (product/'manifest.json').write_text(json.dumps(registered),encoding='utf-8')
 
 class MapRainfallTests(unittest.TestCase):
     def test_raw_grid_display_and_corrected_lake_reconstruct_the_card_mean(self):
@@ -22,9 +37,8 @@ class MapRainfallTests(unittest.TestCase):
         from contextlib import nullcontext
         with nullcontext(mkdtemp(prefix='selinco-map-rain-')) as temp:
             product=Path(temp)/'inputs/products/test';product.mkdir(parents=True)
-            (product/'manifest.json').write_text(json.dumps({'spatialVersion':'test'}))
-            (product/'forcing.npz').write_bytes(b'identity fixture')
-            with patch('backend.grid_spatial.load',return_value=spatial),patch('backend.dashboard.load_input',return_value=({},arrays)),patch('backend.dashboard.lake_precipitation_factor',return_value=.5):
+            write_forcing(product,spatial,arrays)
+            with patch('backend.grid_spatial.load',return_value=spatial),patch('backend.dashboard.lake_precipitation_factor',return_value=.5):
                 frame=map_frame(SimpleNamespace(workspace=Path(temp)),'test','2024-02-29','precipitation','aggregation-test')
         self.assertTrue(frame['complete']);self.assertEqual(frame['displaySupport'],'raw-grid')
         self.assertEqual([r['value'] for r in frame['cells']],[24.,48.])
@@ -39,23 +53,21 @@ class MapRainfallTests(unittest.TestCase):
         from tempfile import mkdtemp
         temp=Path(mkdtemp(prefix='selinco-map-range-'))
         product=temp/'inputs/products/input';product.mkdir(parents=True)
-        (product/'manifest.json').write_text(json.dumps({'spatialVersion':'space'}))
         times=pd.date_range('2024-02-28','2024-03-01',freq='h')
-        source={'times':times,'arrays':{'precipitation':np.tile([1.,2.],(len(times),1))}}
-        with patch('backend.grid_simulation.prepare',return_value=source):
+        spatial={'version':'space','grids':[{'id':'a'},{'id':'b'}]}
+        write_forcing(product,spatial,{'time':times,'precipitation':np.tile([1.,2.],(len(times),1))})
+        with patch('backend.grid_spatial.load',return_value=spatial):
             frame=range_for(SimpleNamespace(workspace=temp),{'inputId':'input','variable':'precipitation','start':'2024-02-29','end':'2024-02-29'})
         self.assertEqual(frame['displaySupport'],'raw-grid')
         self.assertEqual((frame['minimum'],frame['maximum'],frame['count']),(24.,48.,2))
         _cache.clear()
-        with patch('backend.grid_simulation.prepare',side_effect=AssertionError('persistent cache missed')):
+        with patch('backend.map_ranges.map_values',side_effect=AssertionError('persistent cache missed')):
             self.assertEqual(range_for(SimpleNamespace(workspace=temp),{'inputId':'input','variable':'precipitation','start':'2024-02-29','end':'2024-02-29'}),frame)
 
     def test_station_corrected_land_uses_model_unit_forcing_but_grid_stays_raw(self):
         from tempfile import mkdtemp
         temp=Path(mkdtemp(prefix='selinco-map-corrected-'))
         product=temp/'inputs/products/corrected';product.mkdir(parents=True)
-        (product/'manifest.json').write_text(json.dumps({'spatialVersion':'corrected-space'}))
-        (product/'forcing.npz').write_bytes(b'identity fixture')
         spatial={'version':'corrected-space','schemaVersion':3,'unitStrategy':AGGREGATE_STRATEGY,
                  'grids':[{'id':'a','lon':89.,'lat':32.},{'id':'b','lon':90.,'lat':32.}],
                  'units':[{'id':'u1','areaKm2':10.,'partition':'duja'},{'id':'u2','areaKm2':30.,'partition':'ali'}],
@@ -71,7 +83,8 @@ class MapRainfallTests(unittest.TestCase):
         times=pd.date_range('2024-06-01','2024-06-03',freq='h');shape=(len(times),2)
         arrays={'time':times,'precipitation':np.tile([1.,2.],(len(times),1)),
                 'temperature':np.full(shape,10.),'evaporation':np.zeros(shape)}
-        with patch('backend.grid_spatial.load',return_value=spatial),patch('backend.dashboard.load_input',return_value=(manifest,arrays)),patch('backend.dashboard.lake_precipitation_factor',return_value=.5):
+        write_forcing(product,spatial,arrays,manifest)
+        with patch('backend.grid_spatial.load',return_value=spatial),patch('backend.dashboard.lake_precipitation_factor',return_value=.5):
             frame=map_frame(SimpleNamespace(workspace=temp),'corrected','2024-06-02','precipitation','corrected-space')
         self.assertEqual([c['value'] for c in frame['cells']],[24.,48.])
         self.assertGreater(frame['unitValues'][0]['value'],24.)
@@ -100,12 +113,11 @@ class MapRainfallTests(unittest.TestCase):
         manifest={'id':'monthly','spatialVersion':'monthly-space','dataSHA256':'source',
                   'landPrecipitationCorrection':profile,'landTransformationSHA256':digest(profile),
                   'lakePrecipitationCorrection':rule,'transformationSHA256':digest(rule)}
-        (product/'manifest.json').write_text(json.dumps(manifest),encoding='utf-8')
-        (product/'forcing.npz').write_bytes(b'identity fixture')
         times=pd.date_range('2024-12-31','2025-01-02',freq='h');shape=(len(times),2)
         arrays={'time':times,'precipitation':np.tile([1.,2.],(len(times),1)),
                 'temperature':np.zeros(shape),'evaporation':np.zeros(shape)}
-        with patch('backend.grid_spatial.load',return_value=spatial),patch('backend.dashboard.load_input',return_value=(manifest,arrays)):
+        write_forcing(product,spatial,arrays,manifest)
+        with patch('backend.grid_spatial.load',return_value=spatial):
             frame=map_frame(SimpleNamespace(workspace=temp),'monthly','2025-01-01','precipitation','monthly-space')
         self.assertEqual([cell['value'] for cell in frame['cells']],[24.,48.])
         self.assertGreater(frame['unitValues'][0]['value'],24.)

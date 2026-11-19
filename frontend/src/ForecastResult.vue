@@ -3,8 +3,8 @@ import {computed,ref,watch} from 'vue'
 import Chart from './Chart.vue'
 import {api,number,fixed} from './api.mjs'
 const props=defineProps({forecasts:{type:Array,default:()=>[]},selected:String})
-const emit=defineEmits(['update:selected','warning'])
-const COLORS={blue:'#2d7fc1',yellow:'#c9a21a',orange:'#d9771f',red:'#c0392b'}
+const emit=defineEmits(['update:selected','warning','risk'])
+const COLORS={blue:'#1677ff',yellow:'#f5c400',orange:'#ff7d00',red:'#f5222d'}
 const detail=ref(null),history=ref([]),assessment=ref(null),error=ref(''),loading=ref(false)
 const chosen=computed({get:()=>props.selected,set:v=>emit('update:selected',v)})
 watch(()=>props.selected,load,{immediate:true})
@@ -43,6 +43,7 @@ const issueDay=computed(()=>detail.value?.issueTime?.slice(0,10))
 <section class="panel fr">
  <div class="fr-head">
   <label>预报成果<select v-model="chosen"><option value="">请选择</option><option v-for="f in forecasts" :key="f.id" :value="f.id">{{f.name}} · 起报 {{String(f.issueTime||'').replace('T',' ').slice(0,16)}}</option></select></label>
+  <button v-if="detail" class="primary fr-risk" @click="emit('risk',detail.id)">推演漫溢情景 →</button>
   <span v-if="detail" class="fr-meta">{{ensemble?detail.memberCount+' 个成员':'单情景'}} · {{number(detail.hours/24,0)}} 天 · {{String(detail.issueTime).replace('T',' ').slice(0,16)}} 起报</span>
  </div>
  <p v-if="error" class="message error">{{error}}</p>
@@ -54,8 +55,8 @@ const issueDay=computed(()=>detail.value?.issueTime?.slice(0,10))
    <div><span>最高湖位</span><b>{{fixed(s.maximumMedianLevel,2)}}<em>m</em></b><small>{{time(s.maximumMedianLevelTime)}}</small></div>
    <div><span>期末湖位</span><b>{{fixed(s.finalMedianLevel,2)}}<em>m</em></b><small :class="change>0?'up':'down'">{{change==null?'':(change>=0?'+':'')+number(change*100,1)+' cm'}}</small></div>
    <div><span>杜加最大流量</span><b>{{number(s.peakDujaM3s,1)}}<em>m³/s</em></b><small>{{time(s.peakDujaTime)}}</small></div>
-   <div><span>溃口外泄量</span><b>{{number((s.outflowVolumeM3||0)/1e4,0)}}<em>万m³</em></b><small>预见期累计</small></div>
-   <button class="fr-grade" :style="grade?{'--g':COLORS[grade.color]}:{}" :class="{none:!grade}" @click="emit('warning')"><span>预警等级</span><b>{{grade?grade.grade+' '+({blue:'蓝色',yellow:'黄色',orange:'橙色',red:'红色'})[grade.color]:'未达预警'}}</b><small>{{grade?(grade.basis==='outflow'?'外泄流量':'湖位')+'首达 '+time(grade.firstTime):'查看等级标准 →'}}</small></button>
+   <div><span>溃口出流总量</span><b>{{number((s.outflowVolumeM3||0)/1e4,0)}}<em>万m³</em></b><small>预见期累计</small></div>
+   <button class="fr-grade" :style="grade?{'--g':COLORS[grade.color]}:{}" :class="{none:!grade}" @click="emit('warning')"><span>预警等级</span><b>{{grade?grade.grade+' '+({blue:'蓝色',yellow:'黄色',orange:'橙色',red:'红色'})[grade.color]:'未达预警'}}</b><small>{{grade?(grade.basis==='outflow'?'溃口出流':'湖位')+'首达 '+time(grade.firstTime):'查看等级标准 →'}}</small></button>
   </div>
   <div class="fr-charts">
    <div class="fr-card"><h4>色林错湖位 <small>近60天实况 + 预报（日均）</small></h4><Chart :rows="levelRows" :series="levelSeries" unit="m" :day="issueDay" :include="levelExtent" :context="'fr-level:'+detail.id"/></div>
@@ -63,10 +64,10 @@ const issueDay=computed(()=>detail.value?.issueTime?.slice(0,10))
   </div>
   <div class="fr-charts">
    <div class="fr-card small"><h4>各河入湖流量 <small>日均</small></h4><Chart :rows="riverRows" :series="RIVERS.map(([k,l])=>({key:k,label:l}))" unit="m³/s" zero :context="'fr-rivers:'+detail.id"/></div>
-   <div class="fr-card small"><h4>溃口外泄流量 <small>日均</small></h4><Chart v-if="hasOutflow" :rows="riverRows" :series="[{key:'outflow',label:'外泄流量',options:{areaStyle:{opacity:.15}}}]" unit="m³/s" zero :context="'fr-out:'+detail.id"/><p v-else class="fr-empty">预见期内湖位低于溃口槛高，无外泄。</p></div>
+   <div class="fr-card small"><h4>溃口出流过程 <small>日均</small></h4><Chart v-if="hasOutflow" :rows="riverRows" :series="[{key:'outflow',label:'溃口出流',options:{areaStyle:{opacity:.15}}}]" unit="m³/s" zero :context="'fr-out:'+detail.id"/><p v-else class="fr-empty">预见期内湖位低于溃口堰顶，无出流。</p></div>
   </div>
-  <details><summary>逐时过程</summary><div class="fr-charts"><div><Chart :rows="hourlyRows" :series="[{key:'level',label:'湖位'}]" unit="m" hourly :context="'fr-hl:'+detail.id"/></div><div><Chart :rows="hourlyRows" :series="[{key:'duja',label:'杜加流量'},{key:'outflow',label:'外泄流量'}]" unit="m³/s" hourly zero :context="'fr-hd:'+detail.id"/></div></div></details>
-  <details><summary>逐日数值表</summary><div class="table-wrap"><table><thead><tr><th>日期</th><th>日均湖位 m</th><th>杜加 m³/s</th><th>入湖 m³/s</th><th>外泄 m³/s</th><th>湖面降水 mm</th><th>湖面蒸发 mm</th></tr></thead><tbody><tr v-for="r in tableRows" :key="r.date"><td>{{r.date}}</td><td>{{fixed(r.level,3)}}</td><td>{{number(r.duja,2)}}</td><td>{{number(r.inflow,2)}}</td><td>{{number(r.outflow,2)}}</td><td>{{number(r.rain,1)}}</td><td>{{number(r.evap,1)}}</td></tr></tbody></table></div></details>
+  <details><summary>逐时过程</summary><div class="fr-charts"><div><Chart :rows="hourlyRows" :series="[{key:'level',label:'湖位'}]" unit="m" hourly :context="'fr-hl:'+detail.id"/></div><div><Chart :rows="hourlyRows" :series="[{key:'duja',label:'杜加流量'},{key:'outflow',label:'溃口出流'}]" unit="m³/s" hourly zero :context="'fr-hd:'+detail.id"/></div></div></details>
+  <details><summary>逐日数值表</summary><div class="table-wrap"><table><thead><tr><th>日期</th><th>日均湖位 m</th><th>杜加 m³/s</th><th>入湖 m³/s</th><th>出流 m³/s</th><th>湖面降水 mm</th><th>湖面蒸发 mm</th></tr></thead><tbody><tr v-for="r in tableRows" :key="r.date"><td>{{r.date}}</td><td>{{fixed(r.level,3)}}</td><td>{{number(r.duja,2)}}</td><td>{{number(r.inflow,2)}}</td><td>{{number(r.outflow,2)}}</td><td>{{number(r.rain,1)}}</td><td>{{number(r.evap,1)}}</td></tr></tbody></table></div></details>
  </template>
 </section>
 </template>
@@ -74,6 +75,7 @@ const issueDay=computed(()=>detail.value?.issueTime?.slice(0,10))
 .fr-head{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}
 .fr-head label{flex:0 1 520px}
 .fr-meta{font-size:13px;color:var(--muted);padding-bottom:10px}
+.fr-risk{order:3;margin-left:auto}
 .fr-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:20px}
 .fr-kpis>*{display:grid;gap:4px;align-content:start;padding:14px 16px;border:1px solid var(--line);border-radius:8px;background:#fbfdfd;text-align:left;justify-items:start;min-height:0}
 .fr-kpis span{font-size:12px;color:var(--muted)}

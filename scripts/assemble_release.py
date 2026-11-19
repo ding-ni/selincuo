@@ -194,6 +194,33 @@ def inspect_seed(seed):
     return counts, scheme
 
 
+def overflow_resources(spatial):
+    display = spatial/'漫溢展示'
+    index = display/'overflow-display.json'
+    meta = read_json(index)
+    if not meta or not (meta.get('replay') or {}).get('frames'):
+        raise ValueError('缺少湖泊漫溢历史回放资料')
+    files = [index, *(within(display, name) for name in (
+        meta['overview']['image'], meta['east']['heights'], meta['east']['texture'],
+        meta['east']['domain'], meta['lakes']))]
+    exposure = spatial/'承灾体'
+    exposure_index = exposure/'承灾体资料.json'
+    adopted = (read_json(exposure_index) or {}).get('adopted', [])
+    if not {'road', 'settlement'} <= {row['kind'] for row in adopted}:
+        raise ValueError('缺少已采用的道路或居民点资料')
+    files.append(exposure_index)
+    for row in adopted:
+        path = within(exposure, row['file'])
+        features = (read_json(path) or {}).get('features', [])
+        if not features or len(features) != row['featureCount']:
+            raise ValueError('承灾体数量与资料清单不一致：'+row['file'])
+        files.extend((path, within(exposure, row['provenance'])))
+    for path in files:
+        if not path.is_file():
+            raise ValueError('离线展示资料缺失：'+str(path))
+    return files
+
+
 def selected_resources(scheme, published):
     """Bundle the adopted spatial lineage, source boundaries and model DEM."""
     spatial = ROOT / 'data/derived/spatial'
@@ -459,6 +486,8 @@ def main():
         published = [row for row in published if row['id']!=business_result['id']]
         published.append(business_result)
     resources = selected_resources(scheme, published)
+    if business:
+        resources.extend(overflow_resources(ROOT/'data/derived/spatial'))
     for source in resources:
         target = dest / source.relative_to(ROOT)
         target.parent.mkdir(parents=True, exist_ok=True)

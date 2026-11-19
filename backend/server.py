@@ -176,7 +176,7 @@ class Handler(SimpleHTTPRequestHandler):
             return self.send_json({'enabled': bool(getattr(self.server, 'browser_lifetime', None)),
                                    'instanceId': self.server.instance_id})
         if url.path == '/api/health':
-            return self.send_json({'projectId': 'selinco', 'version': VERSION, 'instanceId': self.server.instance_id,
+            return self.send_json({'projectId': 'selinco', 'version': VERSION, 'instanceId': self.server.instance_id, 'processId': os.getpid(),
                                    'backendSourceSHA256': self.server.jobs.backend_source_identity,
                                    'workspace': str(self.db.workspace)})
         if not url.path.startswith('/api/'):
@@ -204,6 +204,7 @@ class Handler(SimpleHTTPRequestHandler):
             from .business_context import simulation_plan
             return self.send_json(simulation_plan(self.db, query))
         if path == 'bootstrap':
+            app_view = query.get('view') == 'app'
             spatial_message = ''
             try:
                 spatial = read_json(ROOT / 'data/derived/spatial/manifest.json')
@@ -217,8 +218,9 @@ class Handler(SimpleHTTPRequestHandler):
             inputs = self.db.items('input_products')
             for item in inputs:
                 item['compatible'] = bool(spatial and item['manifest'].get('spatialVersion') == spatial.get('version'))
-                from .forcing_latest import provenance_summary
-                item['provenanceSummary']=provenance_summary(self.db,item['manifest'])
+                if not app_view:
+                    from .forcing_latest import provenance_summary
+                    item['provenanceSummary']=provenance_summary(self.db,item['manifest'])
             from .calibration_config import public_config
             from .operational_scheme import catalog
             from .published_results import catalog as published_catalog
@@ -263,15 +265,36 @@ class Handler(SimpleHTTPRequestHandler):
             # result.  Otherwise old package links can expose historical
             # records whose task files are not in the business workspace.
             published_all = published_catalog()
-            published_business = [row for row in published_all if row.get('id') == builtin_result]
+            published_business = [{key: value for key, value in row.items() if key != 'files'}
+                                  for row in published_all if row.get('id') == builtin_result]
+            standard_result = current_release(self.db)['resultId']
+            default_result = selected_business.get('resultId') or standard_result
+            default_input = selected_business.get('inputId') if selected_business.get('resultId') else None
+            if default_result and not default_input:
+                row = next((item for item in published_all if item.get('id') == default_result), {})
+                default_input = row.get('inputId') or (row.get('requestSummary') or {}).get('inputId')
+                if not default_input:
+                    from .business_context import result_task
+                    try:
+                        task = result_task(self.db, default_result)
+                    except (OSError, ValueError, TypeError, KeyError):
+                        task = {}
+                    if task.get('status') == 'succeeded':
+                        default_input = (task.get('result') or {}).get('inputId') or (task.get('request') or {}).get('inputId')
+            database_details = {} if app_view else {
+                'database': self.db.summary(),
+                'latestObservation': self.db.rows(
+                    'SELECT MAX(time) time FROM observations WHERE value IS NOT NULL')[0]['time'],
+            }
             return self.send_json({'projectId': 'selinco', 'name': '色林错预警预报平台', 'version': VERSION, 'gridSpatial':grid_summary,
                                    'spatialResourceMessage': spatial_message, 'operationalSchemesMessage': operational_message,
-                                   'contextKey': CONTEXT_KEY, 'spatial': summary, 'database': self.db.summary(),
+                                   'contextKey': CONTEXT_KEY, 'spatial': summary,
                                    'stations': self.db.rows('SELECT * FROM stations ORDER BY id'),
                                    'inputs': inputs, 'parameters': list_parameters(self.db),
                                    'schemes': scheme_rows,
                                    'operationalSchemes': operational_schemes,
-                                   'publishedResults': published_business, 'standardResultId': current_release(self.db)['resultId'],
+                                   'publishedResults': published_business, 'standardResultId': standard_result,
+                                   'defaultResultInputId': default_input,
                                    'homeResultId': builtin_result if builtin_available else None,
                                    'homeSchemeId':selected_business.get('schemeId') or (builtin_scheme or {}).get('id'),
                                    'currentBusiness':selected_business,
@@ -284,12 +307,15 @@ class Handler(SimpleHTTPRequestHandler):
                                    'historicalPlan': {'warmupYear': calibration_config['warmupYear'], 'calibrationYear': calibration_config['calibrationYear'], 'validationYear': int(active_periods.get('evaluationStart', '2025')[:4]), 'start': active_periods.get('warmupStart', '2023-01-01T00:00:00'), 'end': active_periods.get('evaluationEnd', '2026-01-01T00:00:00'), 'dailyConvention': '(day 00:00, next day 00:00] Asia/Shanghai', 'futureObservationsUsedInSearch': bool(active_payload.get('twoStage', {}).get('finalRefit'))},
                                    'annualValidation': {'ready': annual_ready, 'message': '年度历史驱动完整' if annual_ready else '完整2023—2025年真实驱动尚未齐备，年度率定验证待开展'},
                                    'periodDefaults': {'start': active_payload.get('historyPeriod', {}).get('start', active_periods.get('warmupStart', '2023-01-01T00:00'))[:16], 'end': active_payload.get('historyPeriod', {}).get('end', active_periods.get('evaluationEnd', '2026-01-01T00:00'))[:16]},
-                                   'latestObservation': self.db.rows('SELECT MAX(time) time FROM observations WHERE value IS NOT NULL')[0]['time']})
+                                   **database_details})
         if path == 'cds-help':
             return self.file(ROOT/'docs/CDS账户恢复与继续下载.md',download=True)
         if path == 'dashboard':
             from .dashboard import monitoring
             return self.send_json(monitoring(self.db))
+        if path == 'dashboard-replay':
+            from .dashboard import replay
+            return self.send_json(replay(self.db, query['resultId']))
         if path == 'map-frame':
             from .dashboard import map_frame
             return self.send_json(map_frame(self.db,query['inputId'],query['day'],query.get('variable','precipitation'),query.get('spatialVersion'),query.get('resultId')))
@@ -925,13 +951,10 @@ def warm_up(db):
         with open(db.path, 'rb') as stream:
             while stream.read(4 * 1024 * 1024):
                 pass
-        from .observation_query import catalog, series
-        for station in catalog(db)['stations']:
-            for variable in station.get('variables', []):
-                try:
-                    series(db, station['id'], variable['id'])
-                except (ValueError, KeyError):
-                    continue
+        from .dashboard import monitoring
+        from .observation_query import catalog
+        monitoring(db)
+        catalog(db)
         print(f'监测资料缓存已就绪（{time.time() - started:.1f} 秒）', flush=True)
     except Exception as exc:  # warm-up must never stop the service
         print('监测资料预热未完成：' + str(exc), flush=True)

@@ -1,88 +1,89 @@
 <script setup>
-import {ref,computed,onMounted,onBeforeUnmount,watch} from 'vue'
-import Dashboard from './Dashboard.vue'
+import {ref,computed,defineAsyncComponent,onMounted,onBeforeUnmount,watch} from 'vue'
 import LakeMark from './LakeMark.vue'
-import MonitoringWorkspace from './MonitoringWorkspace.vue'
-import CalibrationWorkspace from './CalibrationWorkbench.vue'
-import HistoricalSimulation from './HistoricalSimulation.vue'
-import HistoricalResult from './HistoricalResult.vue'
-import ResultWorkspace from './ResultWorkspace.vue'
-import ModelStates from './ModelStates.vue'
-import ModelResources from './ModelResources.vue'
-import ForecastWorkspace from './ForecastWorkspace.vue'
-import RiskWorkspace from './RiskWorkspace.vue'
 import {api,number} from './api.mjs'
 import {connectBrowserSession} from './browser-session.mjs'
+const Dashboard=defineAsyncComponent(()=>import('./Dashboard.vue'))
+const MonitoringWorkspace=defineAsyncComponent(()=>import('./MonitoringWorkspace.vue'))
+const CalibrationWorkspace=defineAsyncComponent(()=>import('./CalibrationWorkbench.vue'))
+const HistoricalSimulation=defineAsyncComponent(()=>import('./HistoricalSimulation.vue'))
+const HistoricalResult=defineAsyncComponent(()=>import('./HistoricalResult.vue'))
+const ResultWorkspace=defineAsyncComponent(()=>import('./ResultWorkspace.vue'))
+const ModelStates=defineAsyncComponent(()=>import('./ModelStates.vue'))
+const ModelResources=defineAsyncComponent(()=>import('./ModelResources.vue'))
+const ForecastWorkspace=defineAsyncComponent(()=>import('./ForecastWorkspace.vue'))
+const RiskWorkspace=defineAsyncComponent(()=>import('./RiskWorkspace.vue'))
 let disconnectBrowserSession=()=>{}
 connectBrowserSession().then(stop=>{disconnectBrowserSession=stop}).catch(()=>{})
 const route=new URLSearchParams(location.search)
-const selectedId=ref(route.get('result')||''),viewDay=ref(route.get('date')||''),context=ref(null),tasksOpen=ref(false)
+const selectedId=ref(route.get('result')||''),viewDay=ref(route.get('date')||''),tasksOpen=ref(false)
 const pages=[['overview','⌂','湖情总览'],['monitor','≋','监测资料'],['forecast','◷','预测预警'],['risk','⌁','漫溢与应急'],['calibration','⌘','模型方案与率定'],['simulation','▷','历史模拟'],['results','▥','成果中心'],['process','⊞','过程与状态'],['model','◇','资料更新']]
 const page=ref(pages.some(p=>p[0]===route.get('page'))?route.get('page'):'overview'),boot=ref(null),tasks=ref([]),trashedResults=ref([]),states=ref([]),detail=ref(null),historyDetail=ref(null),calibrationDetail=ref(null),error=ref(''),notice=ref(''),busy=ref(false),collapsed=ref(window.innerWidth<1280),monitorInitial=ref(null),stateResultId=ref(''),continuation=ref(null)
 const continuationCoverage=ref(null),simulationSelection=ref(null),resultWindow=ref(null)
 const active=computed(()=>tasks.value.filter(t=>['queued','running','stopping'].includes(t.status))),resultRecords=computed(()=>tasks.value.filter(t=>['simulation','continuation','two-stage-calibration','trial','calibration'].includes(t.kind)||(['calibration-workflow','sensitivity'].includes(t.kind)&&t.status!=='succeeded'))),title=computed(()=>pages.find(p=>p[0]===page.value)?.[2]||'湖情总览')
-let timer,contextTicket=0,manualNavigation=false
+let timer,manualNavigation=false
 function toggleNavigation(){manualNavigation=true;collapsed.value=!collapsed.value}
 function resizeNavigation(){if(!manualNavigation)collapsed.value=window.innerWidth<1280}
-function syncUrl(replace=false){const url=new URL(location.href);url.searchParams.set('page',page.value);url.searchParams.delete('mode');if(selectedId.value)url.searchParams.set('result',selectedId.value);else url.searchParams.delete('result');if(viewDay.value)url.searchParams.set('date',viewDay.value);else url.searchParams.delete('date');history[replace?'replaceState':'pushState']({},'',url)}
-async function loadContext(){
- const ticket=++contextTicket
- try{
-  if(!selectedId.value&&boot.value?.homeResultId)selectedId.value=boot.value.homeResultId
-  if(!selectedId.value){context.value=null;return}
-  const next=await api('business-context'+(selectedId.value?'?resultId='+encodeURIComponent(selectedId.value):''))
-  if(ticket!==contextTicket)return
-  context.value=next
-  if(boot.value){
-   const standard=next.defaultResult||(next.selectedResult.role==='current-default'?next.selectedResult:await api('result-summary?resultId='+encodeURIComponent(next.release.resultId)))
-   if(ticket!==contextTicket)return
-   boot.value.standardResultId=next.release.resultId
-   boot.value.defaultResultInputId=standard.inputId
-  }
- }catch(e){if(ticket===contextTicket)error.value='业务上下文读取失败：'+e.message}
+function syncUrl(replace=false){const url=new URL(location.href);url.searchParams.set('page',page.value);url.searchParams.delete('mode');if(selectedId.value)url.searchParams.set('result',selectedId.value);else url.searchParams.delete('result');if(viewDay.value)url.searchParams.set('date',viewDay.value);else url.searchParams.delete('date');if(url.href!==location.href)history[replace?'replaceState':'pushState']({},'',url)}
+function selectContext(id,day,urlMode='replace'){if(id)selectedId.value=id;if(day)viewDay.value=day;if(urlMode!=='none')syncUrl(urlMode!=='push')}
+async function refreshPageData(p){
+ if(p==='process')states.value=(await api('states')).states
+ if(p==='results')trashedResults.value=(await api('trashed-results')).tasks
 }
-async function selectContext(id,day,urlMode='replace'){if(id&&id!==selectedId.value){selectedId.value=id;await loadContext()}if(day)viewDay.value=day;if(urlMode!=='none')syncUrl(urlMode!=='push')}
-async function restoreRoute(){const q=new URLSearchParams(location.search);page.value=pages.some(p=>p[0]===q.get('page'))?q.get('page'):'overview';selectedId.value=q.get('result')||boot.value?.homeResultId||'';viewDay.value=q.get('date')||'';if(page.value!=='monitor'&&!boot.value)await action(refresh);if(page.value!=='monitor'&&!boot.value)return;if(page.value!=='monitor')await loadContext();if(page.value==='results')await action(()=>openResult(selectedId.value));if(page.value==='process')stateResultId.value=selectedId.value}
+async function restoreRoute(){
+ const q=new URLSearchParams(location.search),p=pages.some(p=>p[0]===q.get('page'))?q.get('page'):'overview'
+ selectedId.value=q.get('result')||boot.value?.homeResultId||'';viewDay.value=q.get('date')||'';page.value=p
+ if(p==='process')stateResultId.value=selectedId.value
+ await action(async()=>{
+  if(p!=='monitor'&&!boot.value)await refresh()
+  else await refreshPageData(p)
+  if(page.value!==p||!boot.value)return
+  if(p==='results')await openResult(selectedId.value)
+  if(p==='simulation'&&!historyDetail.value)await openResult(boot.value.homeResultId,'history')
+ })
+}
 
 const resultTickets={detail:0,history:0,calibration:0}
 async function action(fn){busy.value=true;error.value='';try{return await fn()}catch(e){error.value=e.message}finally{busy.value=false}}
 async function refresh(){
  const previousHome=boot.value?.homeResultId
- const responses=await Promise.allSettled([api('bootstrap'),api('tasks'),api('states'),api('trashed-results')])
- const [b,t,s,tr]=responses
- if(b.status==='fulfilled'){
-  boot.value=b.value
+ const taskRequest=api('tasks').then(value=>{tasks.value=value.tasks},err=>err)
+ try{
+  boot.value=await api('bootstrap?view=app')
   const nextHome=boot.value.homeResultId
   if(previousHome&&nextHome&&previousHome!==nextHome){
    if(selectedId.value===previousHome){selectedId.value=nextHome;syncUrl(true)}
    if(!historyDetail.value||historyDetail.value.id===previousHome){resultTickets.history++;historyDetail.value=null}
   }
- }else if(!boot.value&&page.value!=='monitor')throw b.reason
- if(t.status==='fulfilled')tasks.value=t.value.tasks
- if(s.status==='fulfilled')states.value=s.value.states
- if(tr.status==='fulfilled')trashedResults.value=tr.value.tasks
- // Links from an earlier installation can point at task IDs that are not in
- // the clean business workspace.  Resolve those links to the adopted result
- // before loading context, so the page never renders a misleading missing
- // record error.
+ }catch(err){if(!boot.value&&page.value!=='monitor')throw err;if(page.value!=='monitor')error.value=err.message}
+ if(!boot.value)return
+ // Older links may reference a result absent from this workspace.
  if(boot.value?.homeResultId && selectedId.value && selectedId.value!==boot.value.homeResultId){
   const allowed=new Set([boot.value.homeResultId,...(boot.value.publishedResults||[]).map(row=>row.id)])
   if(!allowed.has(selectedId.value)){
-   selectedId.value=boot.value.homeResultId
-   syncUrl(true)
-   historyDetail.value=null;detail.value=null;calibrationDetail.value=null
+   const taskFailure=await taskRequest
+   if(!taskFailure&&!tasks.value.some(row=>row.id===selectedId.value&&!row.trashed)){
+    selectedId.value=boot.value.homeResultId
+    syncUrl(true)
+    historyDetail.value=null;detail.value=null;calibrationDetail.value=null
+   }
   }
  }
- const failed=responses.filter(r=>r.status==='rejected')
- if(failed.length&&page.value!=='monitor')error.value='部分内容读取失败：'+failed.map(r=>r.reason.message).join('；')
- if(page.value!=='monitor')await loadContext()
+ if(!selectedId.value&&boot.value.homeResultId)selectedId.value=boot.value.homeResultId
+ const [taskFailure]=await Promise.all([taskRequest,refreshPageData(page.value)])
+ if(taskFailure&&page.value!=='monitor')error.value='任务记录读取失败：'+taskFailure.message
  if(!historyDetail.value&&page.value==='simulation'&&boot.value.homeResultId)await openResult(boot.value.homeResultId,'history')
 }
-async function openResult(id,target='detail'){if(!id)return;const ticket=++resultTickets[target],published=boot.value.publishedResults.some(r=>r.id===id),loaded=await api(published?'published-result?id='+id:'tasks/'+id);if(ticket!==resultTickets[target])return;const value=published?{...loaded,builtin:true,kind:'published-result'}:loaded;if(target==='calibration')calibrationDetail.value=value;else if(target==='history')historyDetail.value=value;else{detail.value=value;if(value.status==='succeeded')await selectContext(id,undefined,id!==selectedId.value?'push':'replace')}return value}
+async function openResult(id,target='detail'){if(!id)return;const ticket=++resultTickets[target],published=boot.value.publishedResults.some(r=>r.id===id),loaded=await api(published?'published-result?id='+id:'tasks/'+id);if(ticket!==resultTickets[target])return;const value=published?{...loaded,builtin:true,kind:'published-result'}:loaded;if(target==='calibration')calibrationDetail.value=value;else if(target==='history')historyDetail.value=value;else{detail.value=value;if(page.value==='results'&&value.status==='succeeded')selectContext(id,undefined,id!==selectedId.value?'push':'replace')}return value}
+const riskForecastId=ref('')
 async function navigate(p,id,viewWindow=null){
+ if(p==='risk'&&typeof id==='string'&&id.startsWith('FORECAST-')){riskForecastId.value=id;id=undefined}
  if(p==='results')resultWindow.value=viewWindow?.id===id?viewWindow:null
- error.value='';if(id)await selectContext(id,undefined,'none');page.value=p;if(p!=='monitor'&&!boot.value)await action(refresh);if(p!=='monitor'&&!boot.value){syncUrl();return}if(p!=='monitor'&&!context.value)await loadContext();syncUrl()
- if(p==='results')await action(()=>openResult(id||selectedId.value||boot.value.homeResultId))
+ error.value='';if(id)selectContext(id,undefined,'none');page.value=p;syncUrl()
+ if(p!=='monitor'&&!boot.value)await action(refresh)
+ else if(p==='process'||p==='results')await action(()=>refreshPageData(p))
+ if(page.value!==p||p!=='monitor'&&!boot.value)return
+ if(p==='results')await action(()=>openResult(selectedId.value||boot.value.homeResultId))
  if(p==='simulation'&&!historyDetail.value&&boot.value.homeResultId)await action(()=>openResult(boot.value.homeResultId,'history'))
  if(p==='process')stateResultId.value=id||selectedId.value
 }
@@ -92,8 +93,8 @@ async function submit(request){
 }
 function simulateWith(selection){simulationSelection.value=selection;navigate('simulation')}
 async function stop(id){await action(async()=>{await api('tasks/'+id+'/stop',{});await refresh()})}
-async function metadata(t,change){await action(async()=>{await api('tasks/'+t.id+'/metadata',change);if(change.trashed&&detail.value?.id===t.id){detail.value=null;const fallback=boot.value.homeResultId;if(fallback&&fallback!==t.id)await selectContext(fallback);else{selectedId.value='';context.value=null;syncUrl(true)}}await refresh();if(detail.value?.id===t.id&&!change.trashed)await openResult(t.id)})}
-async function deletedResults(result){await action(async()=>{const removed=new Set((result.recycledObjects||result.deletedObjects||[]).filter(item=>item.kind==='task').map(item=>item.id));if(removed.has(detail.value?.id))detail.value=null;if(removed.has(historyDetail.value?.id))historyDetail.value=null;if(removed.has(calibrationDetail.value?.id))calibrationDetail.value=null;if(removed.has(selectedId.value)){selectedId.value=boot.value.homeResultId||'';context.value=null;resultWindow.value=null;syncUrl(true)}await refresh();if(page.value==='results'&&!detail.value&&selectedId.value)await openResult(selectedId.value);notice.value=result.destination==='windows-recycle-bin'?'本地文件已移入Windows回收站，关联记录已保留。':'所选记录已整理。'})}
+async function metadata(t,change){await action(async()=>{await api('tasks/'+t.id+'/metadata',change);if(change.trashed&&detail.value?.id===t.id){detail.value=null;const fallback=boot.value.homeResultId;if(fallback&&fallback!==t.id)selectContext(fallback);else{selectedId.value='';syncUrl(true)}}await refresh();if(detail.value?.id===t.id&&!change.trashed)await openResult(t.id)})}
+async function deletedResults(result){await action(async()=>{const removed=new Set((result.recycledObjects||result.deletedObjects||[]).filter(item=>item.kind==='task').map(item=>item.id));if(removed.has(detail.value?.id))detail.value=null;if(removed.has(historyDetail.value?.id))historyDetail.value=null;if(removed.has(calibrationDetail.value?.id))calibrationDetail.value=null;if(removed.has(selectedId.value)){selectedId.value=boot.value.homeResultId||'';resultWindow.value=null;syncUrl(true)}await refresh();if(page.value==='results'&&!detail.value&&selectedId.value)await openResult(selectedId.value);notice.value=result.destination==='windows-recycle-bin'?'本地文件已移入Windows回收站，关联记录已保留。':'所选记录已整理。'})}
 function showState(t){if(!t)return;stateResultId.value=t.id;navigate('process',t.id)}
 async function resume(s){await action(async()=>{const [saved,coverage]=await Promise.all([api('states/'+s.id),api('forcing-coverage')]);const state=saved.state,current=coverage.current;continuationCoverage.value=current;if(!current?.end)throw Error(current?.message||'暂无完整气象资料，请先更新资料');continuation.value={kind:'continuation',name:'状态续算',stateId:s.id,parameters:state.parameters,partitionParameters:state.partitionParameters||{},routingMode:state.identity.routingMode,start:new Date(Date.parse(s.valid_at+'Z')+3600000).toISOString().slice(0,16),end:current.end.slice(0,16)}})}
 async function renameState(s){const name=prompt('状态名称',s.name||'');if(name===null)return;await action(async()=>{await api('states/'+s.id,{name,favorite:true});await refresh()})}
@@ -121,15 +122,15 @@ onBeforeUnmount(()=>{disconnectBrowserSession();clearInterval(timer);window.remo
  <div class="content"><div v-if="error" class="message error" role="alert">{{error}}<button aria-label="关闭错误" @click="error=''">×</button></div><div v-if="notice" class="message success" role="status">{{notice}}<button aria-label="关闭提示" @click="notice=''">×</button></div>
  <div v-if="!boot&&page!=='monitor'" class="panel empty">正在读取工作区…</div><template v-else>
  <div v-if="active.length&&page!=='overview'" class="running-strip"><span>{{taskTitle(active[0])}}</span><progress :value="active[0].progress" max="100"></progress><span>{{number(active[0].progress,1)}}%</span><button @click="stop(active[0].id)">停止</button></div>
- <Dashboard v-if="page==='overview'" :boot="boot" :tasks="tasks" :active="active" :selected-id="selectedId" :view-day="viewDay" :summary="context?.selectedResult" @context="selectContext" @navigate="navigate" @result="navigate('results',$event)" @station="dashboardStation"/>
+ <Dashboard v-if="page==='overview'" :boot="boot" :tasks="tasks" :selected-id="selectedId" :view-day="viewDay" @context="selectContext" @navigate="navigate" @result="navigate('results',$event)" @station="dashboardStation"/>
  <MonitoringWorkspace v-if="page==='monitor'" :initial="monitorInitial" @navigate="navigate"/>
  <ForecastWorkspace v-if="page==='forecast'" :boot="boot" :busy="busy" @refresh="action(refresh)" @navigate="navigate"/>
- <RiskWorkspace v-if="page==='risk'" :boot="boot" :busy="busy" @refresh="action(refresh)"/>
+ <RiskWorkspace v-if="page==='risk'" :boot="boot" :busy="busy" :forecast-id="riskForecastId" @refresh="action(refresh)" @navigate="navigate"/>
  <CalibrationWorkspace v-if="page==='calibration'" :boot="boot" :tasks="tasks" :detail="calibrationDetail" :busy="busy" :active="active" @refresh="action(refresh)" @deleted="deletedResults" @submit="submit" @stop="stop" @select="selectCalibration" @simulate="simulateWith" @replay="replayStarted" @state="showState(calibrationDetail)" @export="exportResult"/>
  <HistoricalSimulation v-if="page==='simulation'" :boot="boot" :selection="simulationSelection" :busy="busy" :active="active" @submit="submit" @navigate="navigate"><HistoricalResult :detail="historyDetail" :busy="busy" @stop="stop" @export="exportResult" @state="showState(historyDetail)" @retry="navigate('simulation')"/></HistoricalSimulation>
  <ResultWorkspace v-if="page==='results'" :tasks="resultRecords" :trashed-results="trashedResults" :published="boot.publishedResults.filter(t=>t.id===boot.homeResultId)" :standard-id="boot.homeResultId" :home-id="boot.homeResultId" :selected-id="detail?.id" :selected-result="detail" :busy="busy" @select="resultWindow=null;action(()=>openResult($event))" @metadata="metadata" @changed="deletedResults" @stop="stop"><HistoricalResult :detail="detail" :view-window="resultWindow?.id===detail?.id?resultWindow:null" :busy="busy" @stop="stop" @export="exportResult" @state="showState(detail)" @retry="navigate('simulation')"/></ResultWorkspace>
  <ModelStates v-if="page==='process'" :boot="boot" :tasks="tasks" :states="states" :initial-id="selectedId||boot.homeResultId" :view-day="viewDay" @context="selectContext" :busy="busy" @resume="resume" @rename="renameState" @unprotect="unprotectState"><div v-if="continuation" class="result-toolbar"><span class="note">后台自动匹配气象资料，并核对已计算时段和完整末状态。</span><label>续算起点<input type="datetime-local" :value="continuation.start" readonly></label><label>结束时刻<input type="datetime-local" v-model="continuation.end" :max="continuationCoverage?.end?.slice(0,16)"></label><button class="primary" :disabled="busy||active.length>0||continuation.end<continuation.start" @click="submit(continuation)">开始续算</button></div></ModelStates>
- <ModelResources v-if="page==='model'" :boot="boot" :active="active" :busy="busy" @navigate="navigate" @refresh="action(refresh)" @error="error=$event" @submit="submit" @station="dashboardStation"/>
+ <ModelResources v-if="page==='model'" :boot="boot" :active="active" :tasks="tasks" :busy="busy" @navigate="navigate" @refresh="action(refresh)" @error="error=$event" @submit="submit" @station="dashboardStation"/>
  </template></div></main>
  <div v-if="tasksOpen" class="task-shade" @click.self="tasksOpen=false"><aside class="task-drawer" role="dialog" aria-modal="true" aria-label="全局任务中心"><div class="panel-title"><h2>任务中心</h2><button aria-label="关闭任务中心" @click="tasksOpen=false">×</button></div><p class="muted">后台任务执行时可继续查询资料和浏览已有成果。</p><article v-for="t in tasks.slice(0,30)" :key="t.id" class="task-item"><b>{{taskTitle(t)}}</b><span>{{({queued:'排队',running:'运行中',stopping:'正在停止',succeeded:'完成',failed:'失败',cancelled:'停止',interrupted:'中断'})[t.status]||t.status}} · {{number(t.progress,1)}}%</span><progress v-if="['queued','running','stopping'].includes(t.status)" :value="t.progress" max="100"></progress><p>{{taskMessage(t)}}</p><details v-if="taskMessage(t)!==t.message"><summary>处理详情</summary><p>{{t.message}}</p></details><small>更新 {{beijingTime(t.heartbeatAt||t.updated_at)}} · 北京时间</small><span v-if="t.termination" class="warning">{{({'completed':'任务完成','user-stopped':'用户停止','service-restarted':'服务重启后中断','failed':'执行失败'})[t.termination]||t.termination}}</span><a v-for="file in t.result?.artifacts||[]" :key="file.name" class="button" :href="file.downloadUrl">下载 {{file.name}} · {{number(file.bytes/1048576,1)}} MiB</a><p v-if="t.result?.restartRequired" class="note warning">恢复与摘要校验成功。退出并重新启动平台后使用新工作区，原工作区保留。</p><button v-if="['queued','running'].includes(t.status)" @click="stop(t.id)">停止任务</button><button v-if="t.status==='succeeded'&&['simulation','continuation','calibration','two-stage-calibration','calibration-replay'].includes(t.kind)" @click="navigate('results',t.id);tasksOpen=false">查看成果</button></article><p v-if="!tasks.length">暂无任务。</p></aside></div></div>
 </template>

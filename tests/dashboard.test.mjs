@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {timelineDates,exactValue,balanceTerms,defaultReplayDay,colorFor,layers,screenResults,replayResultName,hasDashboardCapabilities,replayRows,basinRain,observationDay,timelineTicks,latestObservation,monitoringWindow,recentObservations} from '../frontend/src/dashboard.mjs'
+import {timelineDates,exactValue,balanceTerms,defaultReplayDay,colorFor,layers,screenResults,replayResultName,replayPeriod,hasDashboardCapabilities,replayRows,basinRain,observationDay,timelineTicks,latestObservation,monitoringWindow,recentObservations} from '../frontend/src/dashboard.mjs'
 test('monitoring replay includes missing days but never borrows the latest observation',()=>{
  const monitor={stations:[{id:'SLC',daily:[{date:'2024-01-01',value:4540},{date:'2024-01-03',value:4541}]}]}
  const dates=timelineDates('observation',monitor,null)
@@ -35,7 +35,7 @@ test('dashboard offers only the adopted result',()=>{
   {id:'deleted',kind:'simulation',userSaved:1,status:'succeeded',trashed:1}], 'final')
  assert.deepEqual(rows.map(r=>r.id),['final'])
  assert.equal(rows[0].builtin,true)
- assert.equal(replayResultName(rows[0],'final',{id:'final',result:{daily:[{date:'2021-04-23'},{date:'2026-10-20'}]}}),'当前最佳 · 连续模拟（2021—2026）')
+ assert.equal(replayResultName(rows[0],'final',{id:'final',result:{daily:[{date:'2021-04-23'},{date:'2026-10-20'}]}}),'业务方案 · 历史过程（2021—2026）')
  const task={status:'succeeded',result:{daily:[{date:'2025-01-01',lakeLevel:4540,total:5}],units:[{id:'unit'}],inputId:'input'}}
  const meta={units:[{id:'unit'}],spatialBase:'/spatial/version/',hours:24}
  assert.equal(hasDashboardCapabilities(task,meta,[{id:'input'}]),true)
@@ -54,6 +54,21 @@ test('basin rain weights the Duja and lower Zajia areas once and retains missing
  assert.equal(rows.some(r=>r.id==='fringe'),false)
  assert.equal(basinRain({...frame,unitValues:frame.unitValues.filter(r=>r.id!=='lower')},units)[0].value,null)
  assert.ok(basinRain({...frame,complete:false},units).every(r=>r.value===null))
+})
+test('January 1 observations extend monitoring and only a new result extends historical replay',()=>{
+ const coverage={start:'2021-04-23T00:00:00',endExclusive:'2027-01-01T00:00:00'}
+ const record={id:'final',displayCoverage:coverage}
+ const daily=[{date:'2021-04-23',lakeLevel:4543.7},{date:'2026-12-31',lakeLevel:4544},{date:'2027-01-01',lakeLevel:4544.1}]
+ const current={id:record.id,result:{displayCoverage:coverage,daily}}
+ const monitor={stations:[{id:'SLC',daily:[{date:'2027-01-01',value:4544.1}]}]}
+ assert.equal(timelineDates('observation',monitor,current.result).at(-1),'2027-01-01')
+ assert.equal(timelineDates('model',monitor,current.result).at(-1),'2026-12-31')
+ assert.deepEqual(replayPeriod(record,current),{start:'2021-04-23',end:'2026-12-31'})
+ assert.equal(replayResultName(record,'final'),'业务方案 · 历史过程（2021—2026）')
+ assert.equal(replayResultName(record,'final',current),'业务方案 · 历史过程（2021—2026）')
+ const extended={...current,result:{...current.result,displayCoverage:{...coverage,endExclusive:'2027-01-02T00:00:00'}}}
+ assert.equal(replayResultName({id:record.id,builtin:true,period:'2021—2026'},'final'),'业务方案 · 历史过程（2021—2026）')
+ assert.equal(replayResultName({id:record.id,builtin:true,period:'2021—2026'},'final',extended),'业务方案 · 历史过程（2021—2027）')
 })
 test('selected-day observations distinguish record boundaries, missing days, zero and failure',()=>{
  const station={coverage:{start:'2025-01-01T00:00:00',end:'2025-01-03T00:00:00'},daily:[{date:'2025-01-01',value:0},{date:'2025-01-02',value:null},{date:'2025-01-03',value:2}]}

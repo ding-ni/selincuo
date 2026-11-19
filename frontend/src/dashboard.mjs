@@ -1,3 +1,5 @@
+import {displayCoverageDates} from './result-catalog.mjs'
+
 export const rivers=[{id:'zajia',name:'扎加藏布',short:'扎加'},{id:'zagen',name:'扎根藏布',short:'扎根'},{id:'boqu',name:'波曲藏布',short:'波曲'},{id:'ali',name:'阿里藏布',short:'阿里'},{id:'fringe',name:'湖周直接来水',short:'湖周'}]
 export const layers=[{id:'precipitation',label:'再分析格网日降水',unit:'mm/d',colors:['#edf6ee','#bfdcc6','#7fbfb2','#439fa7','#28758f','#22516f'],stops:[0,.1,1,3,8,20]},
  {id:'temperature',label:'日均气温',unit:'℃',colors:['#486caa','#77a7c1','#afcfcb','#e6d99e','#dcb06c','#bd7554'],stops:[-30,-15,-5,0,5,15]},
@@ -54,14 +56,18 @@ export function basinRain(frame,units=[]){
 export function replayRows(result){
  const rows=result?.daily||[],coverage=result?.displayCoverage
  if(!coverage)return rows
- const start=(coverage.start||'').slice(0,10),end=(coverage.endExclusive||'').slice(0,10)
- return rows.filter(row=>{const day=(row.date||'').slice(0,10);return day&&(!start||day>=start)&&(!end||day<end)})
+ const {start,end}=displayCoverageDates(coverage)
+ return rows.filter(row=>{const day=(row.date||'').slice(0,10);return day&&(!start||day>=start)&&(!end||day<=end)})
 }
 export function timelineDates(mode,monitor,result){
  if(mode==='model')return replayRows(result).map(r=>r.date.slice(0,10))
- const all=(monitor?.stations||[]).flatMap(s=>s.daily||[]).map(r=>r.date).sort()
- if(!all.length)return []
- const start=Date.parse(all[0]+'T00:00:00Z'),end=Date.parse(all.at(-1)+'T00:00:00Z'),dates=[]
+ let first='',last=''
+ for(const station of monitor?.stations||[])for(const {date} of station.daily||[]){
+  if(date&&(!first||date<first))first=date
+  if(date>last)last=date
+ }
+ if(!first)return []
+ const start=Date.parse(first+'T00:00:00Z'),end=Date.parse(last+'T00:00:00Z'),dates=[]
  for(let t=start;t<=end;t+=86400000)dates.push(new Date(t).toISOString().slice(0,10))
  return dates
 }
@@ -75,10 +81,18 @@ export function screenResults(published=[],tasks=[],homeId=''){
 }
 export function replayResultName(t,homeId,loaded){
  if(t.id!==homeId)return t.name||t.displayName||'已保存模拟'
- const result=loaded?.id===t.id?loaded.result:null,rows=result?replayRows(result):null
- const start=(rows?.[0]?.date||result?.displayCoverage?.start||t.request?.start||'').slice(0,4)
- const end=(rows?.at(-1)?.date||result?.displayCoverage?.endExclusive||t.request?.end||'').slice(0,4)
- return start&&end?'当前最佳 · 连续模拟（'+start+(start===end?'':'—'+end)+'）':'当前最佳 · 连续模拟'
+ const {start:startDay,end:endDay}=replayPeriod(t,loaded)
+ const start=startDay.slice(0,4),end=endDay.slice(0,4)
+ const period=start&&end?start+(start===end?'':'—'+end):
+  t.builtin&&/^\d{4}(?:—\d{4})?$/.test(t.period||'')?t.period:''
+ return period?'业务方案 · 历史过程（'+period+'）':'业务方案 · 历史过程'
+}
+export function replayPeriod(task,loaded){
+ const result=loaded?.id===task.id?loaded.result:null,rows=replayRows(result)
+ const coverage=displayCoverageDates(result?.displayCoverage||task.displayCoverage||task.result?.displayCoverage||{
+  start:task.request?.displayStart||task.request?.start,endExclusive:task.request?.end
+ })
+ return {start:rows[0]?.date?.slice(0,10)||coverage.start,end:rows.at(-1)?.date?.slice(0,10)||coverage.end}
 }
 export function hasDashboardCapabilities(task,metadata,inputs=[]){
  const result=task?.result

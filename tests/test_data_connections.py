@@ -171,6 +171,43 @@ class ConnectionTests(unittest.TestCase):
         connections.test_connection(self.db, {'connectionId': saved['id']})
         self.assertEqual(SourceHandler.seen[-1]['key'], 'station-api-secret')
 
+    @unittest.skipUnless(os.name == 'nt', 'Windows DPAPI')
+    def test_restore_connection_can_replace_unreadable_credentials_without_losing_progress(self):
+        payload = self.payload()
+        payload['credentials'] = {'bearerToken': 'old-bearer', 'apiKey': 'old-api-key', 'apiKeyHeader': 'X-Device-Key'}
+        saved = connections.save_connection(self.db, payload)
+        identifier = saved['id']
+        connections.sync(self.db, {'connectionId': identifier})
+        connections.save_connection(self.db, {'credentials': {'bearerToken': 'same-account'}}, id=identifier)
+        connections.test_connection(self.db, {'connectionId': identifier})
+        self.assertEqual(SourceHandler.seen[-1]['authorization'], 'Bearer same-account')
+        self.assertEqual(SourceHandler.seen[-1]['key'], 'old-api-key')
+
+        previous = store.get(self.db, connections.COLLECTION, identifier)
+        # The restored machine cannot decrypt its predecessor's file.
+        old = connections._dpapi
+        def moved_machine(data, decrypt=False):
+            if decrypt:
+                raise ValueError('凭据属于另一台电脑')
+            return old(data)
+        replacement = {'id': identifier, 'replaceCredentials': True, 'credentials': {'bearerToken': 'new-bearer'}}
+        with patch.object(connections, '_dpapi', side_effect=moved_machine):
+            with self.assertRaisesRegex(ValueError, '重新填写整套凭据'):
+                connections.test_connection(self.db, {'connectionId': identifier})
+            connections.test_connection(self.db, replacement)
+            new = connections.save_connection(self.db, replacement)
+        connections.test_connection(self.db, {'connectionId': identifier})
+        self.assertEqual(SourceHandler.seen[-1]['authorization'], 'Bearer new-bearer')
+        self.assertIsNone(SourceHandler.seen[-1]['key'])
+        for field in ('id', 'cursor', 'mapping', 'lastSuccessAt'):
+            self.assertEqual(new[field], previous[field])
+        self.assertTrue((self.workspace / previous['secretFile']).is_file())
+
+        result = connections.save_connection(self.db, {'id': identifier, 'replaceCredentials': True, 'credentials': {}})
+        self.assertFalse(result['credentialConfigured'])
+        connections.test_connection(self.db, {'connectionId': identifier})
+        self.assertIsNone(SourceHandler.seen[-1]['authorization'])
+
     def test_long_mapping_station_registration_intervals_and_invalid_batch(self):
         connection = self.payload()
         connection['mapping'] = {'time': 'at', 'station': 'site', 'variable': 'kind', 'value': 'value',
@@ -312,6 +349,35 @@ class ConnectionTests(unittest.TestCase):
             conn.execute('UPDATE stations SET metadata=? WHERE id=?', ('{}', 'SLC'))
         with self.assertRaisesRegex(ValueError, '主站水位基准尚未确认'):
             _latest_main(self.db, pd.Timestamp('2026-11-01T10:00:00'))
+
+    def test_state_update_uses_eligible_same_day_level_without_hiding_unverified_observations(self):
+        import pandas as pd
+        from backend import state_update
+        from backend.data_exchange import import_records
+        date = pd.Timestamp('2026-11-01')
+        with self.db.connect() as conn:
+            conn.execute('UPDATE stations SET metadata=? WHERE id=?',
+                         (canonical({'verticalDatum': {'role': 'working-reference'}}), 'SLC'))
+        SourceHandler.records = [{'Time': '2026-11-01T04:00:00Z', 'Code': 'K01', 'H': 4544.1}]
+        saved = connections.save_connection(self.db, self.payload())
+        connections.sync(self.db, {'connectionId': saved['id']})
+        self.assertEqual(state_update._level_observations(self.db, date, date), {})
+        self.assertEqual(self.db.observations('SLC', 'level')[0]['value'], 4544.1)
+
+        import_records(self.db, {'schemaVersion': 1, 'projectId': 'selinco', 'timeZone': 'Asia/Shanghai',
+            'sourceKey': '既有主站整编', 'records': [{
+                'station': 'SLC', 'variable': 'level', 'time': '2026-11-01T08:00:00',
+                'step': 'irregular', 'value': 4543.4, 'unit': 'm', 'quality': 'valid'}]})
+        chosen = state_update._level_observations(self.db, date, date)[date]
+        self.assertEqual((chosen['level'], chosen['hour']), (4543.4, 8))
+
+        mapping = saved['mapping']
+        mapping['levelDatum'] = {'status': 'verified', 'name': '工作基准', 'basis': '现场联测记录'}
+        connections.save_connection(self.db, {'mapping': mapping}, id=saved['id'])
+        self.assertEqual(state_update._level_observations(self.db, date, date)[date], chosen)
+        connections.sync(self.db, {'connectionId': saved['id']})
+        chosen = state_update._level_observations(self.db, date, date)[date]
+        self.assertEqual((chosen['level'], chosen['hour']), (4544.1, 12))
 
 
 if __name__ == '__main__':

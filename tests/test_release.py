@@ -206,7 +206,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn('OutputBaseFilename=色林错预警预报平台-v{#AppVersion}-Setup',installer)
         self.assertEqual(json.loads((ROOT/'config/platform.json').read_text(encoding='utf-8-sig'))['version'],VERSION)
         build = (ROOT/'scripts/build_windows.ps1').read_text(encoding='utf-8-sig')
-        self.assertIn('tests/history-workflow.test.mjs',build)
+        self.assertIn("Get-ChildItem -LiteralPath tests -File -Filter '*.test.mjs'",build)
         self.assertIn('verify_delivery.ps1',build)
         self.assertIn('verify_installation.ps1',build)
         self.assertIn('scripts/compile_installer.py',build)

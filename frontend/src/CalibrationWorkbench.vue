@@ -27,7 +27,7 @@ const currentName=computed(()=>props.boot.currentBusiness?.name||schemes.value.f
 const records=computed(()=>{
  const rows=(allHistory.value||props.tasks||[]).filter(t=>!t.trashed&&['two-stage-calibration','calibration','trial','calibration-replay'].includes(t.kind))
  const adopted=(props.boot.publishedResults||[]).filter(t=>t.id===props.boot.homeResultId)
-  .map(t=>({...t,kind:'published-result',status:'succeeded',builtin:true,displayName:'当前最佳 · '+(t.displayName||t.name)}))
+  .map(t=>({...t,kind:'published-result',status:'succeeded',builtin:true,displayName:'业务方案 · '+(t.displayName||t.name)}))
  return [...adopted,...rows.filter(row=>!adopted.some(item=>item.id===row.id))]
 })
 const definitions=computed(()=>props.boot.parameterDefinitions||[])
@@ -279,7 +279,7 @@ onBeforeUnmount(()=>{disposed=true;clearInterval(timer);progressTicket++;replayT
 <template>
  <section class="panel calibration-workbench" :data-coverage-ready="!!data">
   <div class="calibration-heading">
-   <div class="calibration-heading-main"><div class="calibration-heading-meta"><span>模型方案与率定</span><span class="scheme-status" :class="{adopted:schemeId===boot.currentBusiness?.schemeId}">{{!schemeId?'新方案':schemeId===boot.currentBusiness?.schemeId?'当前最佳':'我的方案'}}</span></div><h2>{{draft?.name||currentName}}</h2><p>杜加流量率定 <span>→</span> 流量与湖位联合优选 <span>→</span> 连续模拟</p></div>
+   <div class="calibration-heading-main"><div class="calibration-heading-meta"><span>模型方案与率定</span><span class="scheme-status" :class="{adopted:schemeId===boot.currentBusiness?.schemeId}">{{!schemeId?'新方案':schemeId===boot.currentBusiness?.schemeId?'业务方案':'我的方案'}}</span></div><h2>{{draft?.name||currentName}}</h2><p>杜加流量率定 <span>→</span> 流量与湖位联合优选 <span>→</span> 连续模拟</p></div>
    <div class="calibration-save"><span :class="{unsaved:dirty}">{{dirty?'有未保存的修改':'设置已保存'}}</span><button class="primary" :disabled="locked||!dirty" @click="saveOnly">保存方案</button></div>
   </div>
   <div class="calibration-toolbar"><div class="scheme-tools"><button :disabled="locked" @click="fresh">＋ 新建方案</button><button :disabled="locked||!draft" @click="duplicate">复制方案</button><button :disabled="locked" @click="managerOpen=true">管理方案</button></div><button class="link" @click="showHistory">{{historyOpen?'收起计算记录':'计算记录'}} <span aria-hidden="true">↗</span></button></div>

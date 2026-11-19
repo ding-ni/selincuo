@@ -140,10 +140,16 @@ class RiskTests(unittest.TestCase):
 
     def test_risk_task_keeps_daily_peak_frames_and_comparison(self):
         from rasterio.transform import from_origin
+        from types import SimpleNamespace
+        from backend.operations_api import get
+        selected = risk.import_exposure(self.db, {'name': '现场道路', 'kind': 'road', 'source': '现场测绘',
+            'geojson': {'type': 'FeatureCollection', 'features': [{'type': 'Feature',
+                'properties': {'name': '道路甲'}, 'geometry': {'type': 'MultiLineString',
+                    'coordinates': [[[89.0001,31.9995],[89.0019,31.9995]]]}}]}})
         scenario = risk.save_scenario(self.db, {'name': '隔离演算', 'demOffsetM': 0,
             'outlet': {'lon':89.1,'lat':31.8,'crestM':4543.65,'widthM':30,
                        'releaseCapacityM3s': 2.},
-            'alternatives':[{'name':'增宽方案','widthM':60}]})
+            'alternatives':[{'name':'增宽方案','widthM':60}], 'exposureIds':[selected['id']]})
         forecast = {'id':'F-CHECK','name':'隔离预报','times':['2026-11-15T01:00:00','2026-11-15T02:00:00'],
             'control':{'inflow':[100,200],'lakeRainMm':[0,0],'lakeEvaporationMm':[0,0]},
             'initialLakeLevel':4543.66,'lakeCurve':default_curve()}
@@ -171,6 +177,19 @@ class RiskTests(unittest.TestCase):
         self.assertEqual(frame['terrain']['width'],2)
         self.assertEqual(frame['depths'][1][1],0.)
         self.assertEqual(result['comparisons'][0]['inundatedAreaKm2'],0.)
+        # Editing the scenario used for a later run does not change this run's inputs.
+        risk.save_scenario(self.db, {'exposureIds':[]}, scenario['id'])
+        server = SimpleNamespace(db=self.db)
+        path = 'risk-results/'+result['id']
+        found, exposures = get(server, path+'/exposures', {})
+        self.assertTrue(found)
+        self.assertEqual([x['id'] for x in exposures['items']], [selected['id']])
+        self.assertEqual(exposures['items'][0]['features'][0]['geometry']['type'], 'MultiLineString')
+        _, compact = get(server, path+'/frame', {'index':'0', 'depthOnly':'1'})
+        self.assertEqual(compact['time'], frame['time'])
+        self.assertEqual(compact['depths'], frame['depths'])
+        self.assertNotIn('elevations', compact['terrain'])
+        self.assertIn('elevations', frame['terrain'])
         with self.assertRaises(ValueError):
             risk.terrain_frame(self.db,result['id'],1)
 
@@ -201,6 +220,23 @@ class RiskTests(unittest.TestCase):
         self.assertGreater(affected['roadLengthM'],50)
         self.assertLess(affected['roadLengthM'],120)
         self.assertEqual([r['maxDepthM'] for r in affected['objects']],[2.,2.])
+
+    def test_road_judged_on_surface_not_ground(self):
+        from rasterio.transform import from_origin
+        road = {'type':'FeatureCollection','features':[{'type':'Feature','properties':{'name':'road'},
+            'geometry':{'type':'LineString','coordinates':[[89.0001,31.9995],[89.0029,31.9995]]}}]}
+        record = risk.import_exposure(self.db, {'name':'路面检查','geojson':road,'kind':'road'})
+        terrain = {'transform':from_origin(89.,32.,.001,.001)}
+        below = risk.assess_exposures(self.db,[record['id']],np.array([[0.,.8,0.]]),terrain)
+        self.assertEqual(below['count'],0)           # water under the embankment: road dry
+        over = risk.assess_exposures(self.db,[record['id']],np.array([[0.,1.2,0.]]),terrain)
+        self.assertEqual(over['count'],1)
+        self.assertEqual(over['roadLengthM'],0.)     # 0.2 m over surface: passable
+        self.assertGreater(over['overtoppedRoadLengthM'],50)
+        self.assertEqual(over['objects'][0]['roadState'],'overtopped')
+        closed = risk.assess_exposures(self.db,[record['id']],np.array([[0.,1.5,0.]]),terrain)
+        self.assertGreater(closed['roadLengthM'],50)
+        self.assertEqual(closed['objects'][0]['roadState'],'closed')
 
 
 if __name__ == '__main__':

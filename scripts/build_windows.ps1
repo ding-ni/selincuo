@@ -1,4 +1,4 @@
-﻿param([string]$Python = 'python', [string]$ISCC = "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe")
+﻿param([string]$Python = 'python', [string]$ISCC = "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe", [int]$VerificationPort = 8898)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $projectRoot
@@ -7,10 +7,11 @@ if ($LASTEXITCODE -ne 0 -or -not $releaseVersion) { throw 'Cannot read release v
 & $Python scripts/prepare_windows_text.py
 & $Python -m unittest discover -s tests -v
 if ($LASTEXITCODE -ne 0) { throw 'Tests failed' }
-node --test tests/workflow.test.mjs tests/dashboard.test.mjs tests/history-workflow.test.mjs tests/business-view.test.mjs
+$frontTests = @(Get-ChildItem -LiteralPath tests -File -Filter '*.test.mjs' | ForEach-Object FullName)
+node --test-isolation=none --test @frontTests
 if ($LASTEXITCODE -ne 0) { throw 'Frontend workflow tests failed' }
 Push-Location frontend
-npm ci --offline
+if (Test-Path -LiteralPath node_modules) { npm ls --depth=0 --offline } else { npm ci --offline }
 if ($LASTEXITCODE -ne 0) { throw 'Install frontend dependencies failed' }
 npm run build
 if ($LASTEXITCODE -ne 0) { throw 'Frontend build failed' }
@@ -29,14 +30,14 @@ $releaseSource = Join-Path $distributionRoot 'SelincoPlatform'
 $releaseExe = Join-Path $releaseSource 'SelincoPlatform.exe'
 & $releaseExe --self-check
 if ($LASTEXITCODE -ne 0) { throw 'Packaged runtime self-check failed' }
-& (Join-Path $PSScriptRoot 'verify_delivery.ps1') -Application $releaseExe -VerificationRoot (Join-Path $distributionRoot 'portable-verification') -Python $Python -ExpectedVersion $releaseVersion
+& (Join-Path $PSScriptRoot 'verify_delivery.ps1') -Application $releaseExe -VerificationRoot (Join-Path $distributionRoot 'portable-verification') -Python $Python -ExpectedVersion $releaseVersion -Port $VerificationPort
 if ($LASTEXITCODE -ne 0) { throw 'Packaged workflow verification failed' }
 & $Python -c "import sys; from pathlib import Path; from backend.common import write_json; write_json(Path(sys.argv[1])/'config/active-workspace.json', {'workspace':'workspace-business','purpose':'business-default','seed':'seed/workspace'})" $releaseSource
 if ($LASTEXITCODE -ne 0) { throw 'Restore packaged business workspace pointer failed' }
 & $Python scripts/compile_installer.py --compiler $ISCC --source $releaseSource --version $releaseVersion --verification
 if ($LASTEXITCODE -ne 0) { throw 'Verification installer build failed' }
 $verificationSetup = Join-Path $projectRoot "releases/色林错预警预报平台-v$releaseVersion-Verification-Setup.exe"
-& (Join-Path $PSScriptRoot 'verify_installation.ps1') -Setup $verificationSetup -VerificationRoot (Join-Path $distributionRoot 'installed-verification') -Python $Python -ExpectedVersion $releaseVersion
+& (Join-Path $PSScriptRoot 'verify_installation.ps1') -Setup $verificationSetup -VerificationRoot (Join-Path $distributionRoot 'installed-verification') -Python $Python -ExpectedVersion $releaseVersion -Port $VerificationPort
 if ($LASTEXITCODE -ne 0) { throw 'Installed workflow verification failed' }
 & $Python scripts/compile_installer.py --compiler $ISCC --source $releaseSource --version $releaseVersion
 if ($LASTEXITCODE -ne 0) { throw 'Installer failed' }

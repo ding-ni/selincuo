@@ -63,12 +63,16 @@ def source_context(db, identifier):
         raise ValueError('成果与检查点的参数不一致')
     from . import lake_revision
     model = lake_revision.active(db)
-    lake_model = model if model and model.get('sourceResultId') == identifier and model['endState']['time'] == state['validAt'] else None
+    revision_end = bool(model and model.get('sourceResultId') == identifier and model['endState']['time'] == state['validAt'])
+    # States advanced by a state update already carry the revised lake level.
+    carried = bool(model and (state.get('lake') or {}).get('lakeModelId') == model['id'])
+    lake_model = model if revision_end or carried else None
     if lake_model:
         # Lake-only revision: same land/routing state, V(H) lake level and the fitted lake coefficient.
         params = {**params, 'lakeCoefficient': lake_model['lakeCoefficient']}
-        state = deepcopy(state)
-        state['lake'] = {**(state.get('lake') or {}), 'level': lake_model['endState']['levelM'], 'lakeModelId': lake_model['id']}
+        if revision_end:
+            state = deepcopy(state)
+            state['lake'] = {**(state.get('lake') or {}), 'level': lake_model['endState']['levelM'], 'lakeModelId': lake_model['id']}
     return {'task': task, 'result': result, 'state': state, 'spatial': spatial, 'parameters': params,
             'regions': regions, 'transferAudit': audit, 'sourceResultId': identifier, 'published': bool(published),
             'stateHandoff': handoff, 'lakeModel': lake_model}
@@ -115,7 +119,8 @@ def _history(db, context, issue):
         indexes = source['times'].get_indexer(expected)
         if np.any(indexes < 0): raise ValueError('末状态至起报时刻之间存在逐时气象缺口')
         return source, indexes, expected
-    raise ValueError(f'实际气象未覆盖末状态{state_time:%Y-%m-%d %H:%M}至起报{issue:%Y-%m-%d %H:%M}的状态推进；请更新资料或选择资料覆盖内的起报时刻')
+    raise ValueError(f'模型状态停在{state_time:%Y-%m-%d %H:%M}，再分析资料未覆盖至{issue:%Y-%m-%d %H:%M}；'
+                     f'请先在“实况更新”中把状态更新到起报日')
 
 
 def preflight(db, payload):
@@ -147,23 +152,16 @@ def preflight(db, payload):
 
 
 def _latest_main(db, issue):
-    from .observation_query import SeriesView
-    stations = db.rows("SELECT metadata FROM stations WHERE id='SLC'")
-    metadata = json.loads(stations[0]['metadata']) if stations else {}
-    datum = metadata.get('verticalDatum') or {}
-    if not metadata.get('datumVerified') and datum.get('role') != 'working-reference':
+    from .observation_query import SeriesView, level_source_datum_ok, main_level_datum_ok
+    if not main_level_datum_ok(db):
         raise ValueError('主站水位基准尚未确认为当前模型工作基准')
-    rows = SeriesView(db).observations('SLC', 'level', start=(issue - pd.Timedelta(hours=6)).isoformat(), end=issue.isoformat())
+    rows = SeriesView(db).observations('SLC', 'level', start=(issue - pd.Timedelta(hours=6)).isoformat(),
+                                      end=issue.isoformat(), include_source=True)
     eligible = [r for r in rows if r['step'] != 'day' and r['quality'] in ('valid', 'qualified') and r['value'] is not None]
     if not eligible: raise ValueError('起报前6小时没有同基准的主站合格瞬时水位')
     row = eligible[-1]
-    sources = db.rows('SELECT s.path,s.metadata FROM observations o JOIN sources s ON s.id=o.source_id WHERE o.id=?',
-                      (row['id'],))
-    if sources and sources[0]['path'].startswith('exchange/connection/'):
-        source_metadata = json.loads(sources[0]['metadata']).get('sourceMetadata') or {}
-        level_datum = source_metadata.get('levelDatum') or {}
-        if level_datum.get('status') != 'verified' or not level_datum.get('name') or not level_datum.get('basis'):
-            raise ValueError('最新主站水位的现场来源尚未确认与模型同基准，请在连接映射中核实后重新同步')
+    if not level_source_datum_ok(row):
+        raise ValueError('最新主站水位的现场来源尚未确认与模型同基准，请在连接映射中核实后重新同步')
     return {'level': float(row['value']), 'time': row['time'], 'source': 'SLC合格瞬时观测', 'observationId': row['id'],
             'hoursBeforeIssue': float((issue - pd.Timestamp(row['time'])) / pd.Timedelta(hours=1))}
 
@@ -355,9 +353,10 @@ def detail(db, identifier):
 
 
 def issue_info(db, source_id):
-    """Issue time follows the continuous state; it moves forward only when real forcing covers the gap."""
+    """Forecasts start at the end of the selected continuous state; a state update moves that end forward."""
     from .model_forcing import current_product
     from .station_hover import station_summary
+    from . import state_update
     context = source_context(db, source_id)
     state_time = pd.Timestamp(context['state']['validAt'])
     issue, forcing_end = state_time, None
@@ -378,13 +377,18 @@ def issue_info(db, source_id):
         except (StopIteration, FileNotFoundError, ValueError):
             latest[station] = None
     model = context.get('lakeModel')
+    today = state_update._today()
+    update = (context['state'].get('stateUpdate') or {})
     return {'sourceResultId': source_id, 'stateTime': state_time.isoformat(), 'issueTime': issue.isoformat(),
             'forcingEnd': forcing_end.isoformat() if forcing_end is not None else None,
             'advanceHours': int((issue - state_time) / pd.Timedelta(hours=1)),
             'stateLakeLevelM': context['state'].get('lake', {}).get('level'),
             'lakeModel': None if not model else {'id': model['id'], 'lakeCoefficient': model['lakeCoefficient'],
                                                   'outlet': model['outlet'], 'onsetLevelM': model['onsetLevelM']},
-            'latest': latest}
+            'latest': latest, 'today': today.isoformat(),
+            'lagDays': max(0, int((today - issue) / pd.Timedelta(days=1))),
+            'stateForcing': update.get('forcingLabel') or '再分析（率定成果）',
+            'stateKind': 'state-update' if update else 'published'}
 
 
 def history(db, identifier, days=60):
@@ -393,8 +397,10 @@ def history(db, identifier, days=60):
     from . import lake_revision
     forecast = detail(db, identifier)
     issue = pd.Timestamp(forecast['issueTime'])
+    task_daily = db.workspace / 'tasks' / forecast['sourceResultId'] / 'daily.csv'
     try:
-        daily = pd.read_csv(result_file(forecast['sourceResultId'], 'daily.csv'), encoding='utf-8-sig').set_index('date')
+        daily = pd.read_csv(task_daily if task_daily.is_file() else result_file(forecast['sourceResultId'], 'daily.csv'),
+                            encoding='utf-8-sig').set_index('date')
     except (FileNotFoundError, OSError, ValueError):
         return {'rows': []}
     start = (issue - pd.Timedelta(days=days)).date().isoformat()
